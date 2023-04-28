@@ -1,0 +1,7 @@
+---
+version: "3.4"
+services:
+  shlips:
+    build: ./
+    ports:
+      - "127.0.0.1:${EXTERNAL_PORT:-9003}:3000"
