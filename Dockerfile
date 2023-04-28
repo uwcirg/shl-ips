@@ -1,6 +1,6 @@
 FROM node:18 as build-deps
 
-EXPOSE 5173
+EXPOSE 8080
 
 # ENV DIRPATH /opt/app
 ENV REACT_APP_REAL_SERVER_BASE=https://smart-health-links-server.cirg.washington.edu/api
