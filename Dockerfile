@@ -15,7 +15,7 @@ COPY ./fix-popper.sh ./
 RUN ./fix-popper.sh
 
 COPY . .
-RUN npm run build
+RUN npm run dev
 
 RUN cp build/404.html build/index.html
 
