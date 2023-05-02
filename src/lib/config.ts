@@ -3,8 +3,8 @@ import { dev } from '$app/environment';
 
 export const API_BASE = 'https://smart-health-links-server.cirg.washington.edu/api';
 export const VIEWER_BASE = new URL(
-  `/ips${dev ? '/index.html' : ''}#`,
-  // `/ips/index.html#`,
+  // `/ips${dev ? '/index.html' : ''}#`,
+  `/ips/index.html#`,
   window.location.href
 ).toString();
 export const EXAMPLE_IPS =
