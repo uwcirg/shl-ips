@@ -15,9 +15,9 @@ COPY ./fix-popper.sh ./
 RUN ./fix-popper.sh
 
 COPY . .
-RUN npm run dev
+RUN npm run build
 
 RUN cp build/404.html build/index.html
 
 
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "build"]
