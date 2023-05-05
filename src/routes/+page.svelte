@@ -9,6 +9,7 @@
   if ($shlStore.length) {
     goto('/view/' + $shlStore[0].id);
   } else {
-    goto('/create');
+    goto('/home');
+    // goto('/create');
   }
 </script>
