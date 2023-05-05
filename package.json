@@ -3,7 +3,7 @@
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
-		"start": "npm install -g serve && serve -s build",
+		"start": "npm install serve && serve build/",
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
@@ -33,6 +33,7 @@
 		"jose": "^4.11.4",
 		"pako": "^2.1.0",
 		"qrcode": "^1.5.1",
+		"serve": "^14.2.0",
 		"sveltestrap": "^5.10.0"
 	}
 }

@@ -18,4 +18,8 @@ RUN npm run build
 
 RUN cp build/404.html build/index.html
 
-CMD ["npm", "run", "dev"]
+RUN mv build/ips/assets build/assets
+
+RUN mv build/ips/templates build/templates
+
+CMD ["npm", "run", "start"]
