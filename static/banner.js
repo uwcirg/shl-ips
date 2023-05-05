@@ -9,17 +9,6 @@ document.write(`
 							</div>
 							<!--<div style="vertical-align: middle;">Washington State<br>Department of Health</div>-->
 						</div>
-						<!--This is the section added-->
-						<div class="translationContainer" style="display: flex; align-items: center;">
-							<button class="MuiButtonBase-root MuiButton-root MuiButton-text" tabindex="0" type="button" aria-controls="simple-menu" aria-haspopup="true" style="font-weight: 400; padding: 5px 5px 5px; margin-right: 20px; text-transform: none;">login</button>
-							<div>
-								<img class="menu" style="margin-right: 20px;" alt="menu" width="24px" src="${imgPath}/menu.png">
-							</div>
-								
-								<span class="MuiTouchRipple-root"></span>
-							</button>
-						</div>
-						<!--This is the section added-->
 					</div>
 				</div>
 			</div>
