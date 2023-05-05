@@ -47,7 +47,7 @@
 
 <Container class="main" fluid>
 <Styles />
-<Navbar color="light" light expand="md">
+<Navbar color="light" light expand="md" style="border-bottom: 1px solid rgb(204, 204, 204);">
   <NavbarBrand>
     <Image class="doh_logo_doh-black.png" alt="Washington State Department of Health Logo" width="240" src="/doh_logo_doh-black.png"/>
   </NavbarBrand>
@@ -79,7 +79,7 @@
   </Collapse>
 </Navbar>
 <Row>
-  <Col style="padding-bottom: 20px">
+  <Col style="margin-bottom: 20px; border-bottom: 1px solid rgb(204, 204, 204);">
     <Image alt="WA Verify Logo" width="200" src="/waverifylogo.png" style="align-self: center"></Image>
     <div style="vertical-align: middle; font-size: 18px; display: inline-block; padding-left: 17px; font-family: Verdana, sans-serif; color: rgb(34, 72, 156);">WA Verify International Patient Summary Portal</div>
   </Col>
