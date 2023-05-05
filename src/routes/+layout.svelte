@@ -79,9 +79,9 @@
   </Collapse>
 </Navbar>
 <Row>
-  <Col>
+  <Col style="padding-bottom: 20px">
     <Image alt="WA Verify Logo" width="200" src="/waverifylogo.png" style="align-self: center"></Image>
-    <div style="vertical-align: middle; font-size: 18px; display: inline-block; padding-left: 17px; font-family: Verdana, sans-serif; color: rgb(34, 72, 156);">WA Verify International Patient Summary Viewer</div>
+    <div style="vertical-align: middle; font-size: 18px; display: inline-block; padding-left: 17px; font-family: Verdana, sans-serif; color: rgb(34, 72, 156);">WA Verify International Patient Summary Portal</div>
   </Col>
 </Row>
 <Row class="main-row">

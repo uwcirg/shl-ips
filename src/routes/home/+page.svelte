@@ -9,7 +9,7 @@
 
 				<p style="padding-left: 17px;">The system provides a digital copy of state records. If you received your vaccinations from a federal agency (Department of Defense, Indian Health Services, or Veterans Affairs), you will need to contact those agencies for assistance.</p>
 
-				<p style="padding-left: 17px;">If you have questions about your Digital IPS, visit the <a href="aspot">Frequently Asked Questions (FAQ) page</a>.</p>
+				<p style="padding-left: 17px;">If you have questions about your Digital IPS, visit the <a href="aspot">Frequently Asked Questions (FAQ)</a>.</p>
 			</span>
 		</div>
 		<hr>
