@@ -80,8 +80,8 @@
 </Navbar>
 <Row>
   <Col style="margin-bottom: 20px; border-bottom: 1px solid rgb(204, 204, 204);">
-    <Image alt="WA Verify Logo" width="200" src="/waverifylogo.png" style="align-self: center"></Image>
-    <div style="vertical-align: middle; font-size: 18px; display: inline-block; padding-left: 17px; font-family: Verdana, sans-serif; color: rgb(34, 72, 156);">WA Verify International Patient Summary Portal</div>
+    <Image alt="WA Verify Logo" width="200" src="/waverifypluslogo.png" style="align-self: center"></Image>
+    <div style="vertical-align: middle; font-size: 18px; display: inline-block; padding-left: 17px; font-family: Verdana, sans-serif; color: rgb(34, 72, 156);">International Patient Summary</div>
   </Col>
 </Row>
 <Row class="main-row">
