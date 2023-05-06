@@ -34,23 +34,17 @@
 </script>
 <Styles />
 <Row>
-    <Button href={'/create'}><span style="font-size: medium"><b>+</b></span> New IPS SHLink</Button>
-    <Table borderless>
-        <tbody>
+    <Button color="primary" href={'/create'}><span style="font-size: medium"><b>+</b></span> New IPS SHLink</Button>
+</Row>
+<br>
+<Row>
+    <h2>Your Stored SHLinks</h2>
+    {#if $shlStore.length > 0}
+        {#each $shlStore as shl, i}
             <tr>
-                <thead>
-                    <td><h2>Your Stored SHLinks</h2></td>
-                </thead>
+                <!-- <th scope="row">shl</th> -->
+                <td><Button color="primary" href={'/view/' + shl.id}>{shl.label || `SHLink ${i + 1}`}</Button></td>
             </tr>
-            {#if $shlStore.length > 0}
-        
-            {#each $shlStore as shl, i}
-                <tr>
-                    <!-- <th scope="row">shl</th> -->
-                    <td><Button href={'/view/' + shl.id}>{shl.label || `SHLink ${i + 1}`}</Button></td>
-                </tr>
-            {/each}
-            {/if}
-        </tbody>
-    </Table>
+        {/each}
+    {/if}
 </Row>
