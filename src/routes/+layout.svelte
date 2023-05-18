@@ -49,11 +49,14 @@
 <Styles />
 <Navbar color="light" light expand="md" style="border-bottom: 1px solid rgb(204, 204, 204);">
   <NavbarBrand>
-    <Image class="doh_logo_doh-black.png" alt="Washington State Department of Health Logo" width="240" src="/doh_logo_doh-black.png"/>
+    <Image href="/home" class="doh_logo_doh-black.png" alt="Washington State Department of Health Logo" width="240" src="/doh_logo_doh-black.png"/>
   </NavbarBrand>
   <NavbarToggler on:click={() => (isOpen = !isOpen)} />
   <Collapse {isOpen} navbar expand="md" on:update={handleUpdate}>
     <Nav class="ms-auto" navbar>
+      <NavItem>
+        <NavLink href="/home">Home</NavLink>
+      </NavItem>
       <NavItem>
         <NavLink>Login</NavLink>
       </NavItem>
