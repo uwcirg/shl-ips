@@ -18,7 +18,7 @@ document.write(`
 				<div class="vaccineLogo" style="padding: 5px 1.5vw;">
 					<div style="display: flex; align-items: center;">
 						<div>
-							<img alt="WaVerify Logo" width="200px" src="${imgPath}/waverifypluslogo.png" style="align-self: center;">
+							<img alt="WaVerify+ Logo" width="200px" src="${imgPath}/waverifypluslogo.png" style="align-self: center;">
 						</div>
 						<div style="vertical-align: middle; font-size: 18px; display: inline-block; padding-left: 17px; font-family: Verdana, sans-serif; color: rgb(34, 72, 156);">International Patient Summary Viewer</div>
 						</div>
@@ -27,6 +27,6 @@ document.write(`
 			</div>
 		</div>
 		<div>
-			<h1 style="padding-left: 17px; font-size: 38px; font-weight: 200; font-family: Verdana, sans-serif; color: rgb(200, 76, 14); margin: 50px 0px;">WA Verify International Patient Summary Viewer</h1>
+			<h1 style="padding-left: 17px; font-size: 38px; font-weight: 200; font-family: Verdana, sans-serif; color: rgb(200, 76, 14); margin: 50px 0px;">WA Verify<sup>+</sup> International Patient Summary Viewer</h1>
 		</div>
 `);
