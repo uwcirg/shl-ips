@@ -245,6 +245,8 @@
     };
 </script>
 <script type="module">
+    // import * as shlClient from 'https://smart-health-links-client.cirg.washington.edu/index.js';
+    // import { verify } from 'https://smart-health-links-client/shc-decoder.js';
     import * as shlClient from 'https://demo.vaxx.link/viewer/index.js';
     import { verify } from 'https://demo.vaxx.link/viewer/shc-decoder.js';
 
@@ -275,8 +277,10 @@
         window.update(data);
     }
 </script>
+<script>var imgPath = "";</script>
+<script src="../banner.js"></script>
 
-<h1>International Patient Summary (IPS) Viewer for Connectathon</h1>
+<!-- <h1>International Patient Summary (IPS) Viewer for Connectathon</h1>
 <div>
     Links to <a href="https://hl7.org/fhir/uv/ips/">published Implementation Guide</a> and the <a href="http://build.fhir.org/ig/HL7/fhir-ips/">latest CI build</a> 
 </div>
@@ -285,24 +289,24 @@
 </div>
 <hr>
 <div><h2>Submit Data</h2>This is for test data only. <strong style="color:red">Please do not submit PHI.</strong></div>
-<div style="float:clear"></div>
+<div style="float:clear"></div> -->
 <div class="container" style="margin:15px;">
     <div class="row">
         <form class="col col-md-8">
             <div class="form-group">
-                <label for="ipsInput">Paste your IPS here:</label>
+                <!-- <label for="ipsInput">Paste your IPS here:</label>
                 <br>
                 <textarea id="ipsInput" rows="8" style="width: 100%; max-width: 100%;"></textarea>
             </div>
             <button type="button" id="clearSample" class="btn btn-danger">Clear</button>
-            <button type="button" id="submit" class="btn btn-primary">View IPS</button>
+            <button type="button" id="submit" class="btn btn-primary">View IPS</button> -->
            
             <span class="dropdown">
                 <button class="btn btn-secondary dropdown-toggle" id="mode" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Displaying Entries
                 </button>
                 <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                    <a class="dropdown-item" href="javascript:mode='Entries'; $('#mode').html('Displaying Entries Content'); updateFromText();">
+                    <a class="dropdown-item" href="javascript:mode='Entries'; $('#mode').html('Displaying Entries'); updateFromText();">
                         Display Entries
                     </a>
                     <a class="dropdown-item" href="javascript:mode='Text'; $('#mode').html('Displaying Text'); updateFromText();">
@@ -313,16 +317,16 @@
 
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         </form>
-        <div class="col col-md-4">
+        <!-- <div class="col col-md-4">
             <br />
             <button type="button" id="loadSample" class= "btn btn-success">Try a sample</button>
             <br />
             <a href="https://github.com/jddamore/IPSviewer/tree/main/samples" target="_blank">Repository of IPS Samples</a>
-        </div>
+        </div> -->
     </div>
 </div>
 <hr>
-<h2>View IPS</h2>
+<!-- <h2>View IPS</h2> -->
 <div class="container" style="margin:15px;">
     <div class="row">
         <div class="row col-md-12" style="margin: 15px;">
@@ -356,13 +360,11 @@
 
 </div>
 <footer>
-    <lead>Originally created by Alejandro Lopez Osornio, Diego Kaminker and Fernando Campos. Modified in 2021 by John D'Amore</lead>
+    <lead>Originally created by Alejandro Lopez Osornio, Diego Kaminker and Fernando Campos. Modified in 2021 by John D'Amore, and in 2023 by CIRG.</lead>
     <br />
     <lead>Based on <a href="https://salud-ar.github.io/IPS-Argentina/demo.html">prior work</a> from <a href="https://github.com/SALUD-AR/IPS-Argentina">this repository</a></lead>
     <br />
     <lead>Licensed according to Apache 2.0. See <a href="https://github.com/jddamore/IPSviewer">current code repository</a> for details</lead>
-    <br />
-    <lead>Hosted by <a href="https://www.moreinformatics.com">More Informatics, Inc.</a></lead>
 </footer>
 </body>
 </html>

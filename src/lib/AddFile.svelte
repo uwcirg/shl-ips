@@ -75,16 +75,17 @@
 
 <form bind:this={inputUrl} on:submit|preventDefault={() => fetchIps(summaryUrlValidated)}>
   <FormGroup>
-    <Label>Bundle <code>.json</code>, or signed <code>.smart-health-card</code></Label>
+    <Label>Source of IPS data (query, local path, or signed <code>.smart-health-card</code>)</Label>
+    <!-- <Label>Bundle <code>.json</code>, or signed <code>.smart-health-card</code></Label> -->
     <Input width="100%" type="text" bind:value={summaryUrl} />
   </FormGroup>
   <FormGroup>
-    <Label>Label</Label>
+    <Label>New SHLink Label</Label>
     <Input width="100%" type="text" bind:value={label} />
   </FormGroup>
   <Button color="primary" disabled={!summaryUrlValidated || submitting} type="submit">
     {#if !submitting}
-      Fetch IPS
+      Query for IPS
     {:else}
       Fetching...
     {/if}
