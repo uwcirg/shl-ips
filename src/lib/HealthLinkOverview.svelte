@@ -33,21 +33,27 @@
 	}
 </script>
 <Styles />
-<Row>
-    <Button color="success" href={'/create'}><span style="font-size: medium"><b>+</b></span> New IPS SHLink</Button>
-</Row>
-<br>
-<Row>
-    <h2 style="border-bottom: 1px solid rgb(204, 204, 204);">Your Stored SHLinks</h2>
-</Row>
 {#if $shlStore.length > 0}
+<Row>
+    <h2 style="margin-bottom: 0px; border-bottom: 1px solid rgb(204, 204, 204);">Your Stored SHLinks</h2>
+</Row>
+{#each $shlStore as shl, i}
+<Row style="display:flex; align-items:center; padding: 10px; border-bottom: 1px solid rgb(204, 204, 204);">
+    <Col>{shl.label || `SHLink ${i + 1}`}</Col>
+    <Col><Button color="primary" style="width:100%" href={'/view/' + shl.id}>View/Manage</Button></Col>
+</Row>
+{/each}
 <table style="width:100%">
-    {#each $shlStore as shl, i}
-        <tr>
-            <td>{shl.label || `SHLink ${i + 1}`}</td>
-            <td><Button color="primary" style="width:100%" href={'/view/' + shl.id}>View/Manage</Button></td>
-        </tr>
-    {/each}
+    
 </table>
 {/if}
+<br>
+<Row>
+    <Col md="1"></Col>
+    <Col md="10">
+        <Button color="success" style="width:100%" href={'/create'}><span style="font-size: medium"><b>+</b></span> New IPS SHLink</Button>
+    </Col>
+    <Col md="1"></Col>
+</Row>
+<br>
 
