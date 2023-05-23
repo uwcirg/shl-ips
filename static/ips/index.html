@@ -291,13 +291,15 @@
 <div class="container" style="margin:15px;">
     <div class="row">
         <form class="col col-md-8">
-            <div class="form-group">
-                <!-- <label for="ipsInput">Paste your IPS here:</label>
-                <br>
-                <textarea id="ipsInput" rows="8" style="width: 100%; max-width: 100%;"></textarea>
+            <div id="ips-editor" style="display:none">
+                <div class="form-group">
+                    <label for="ipsInput">Paste your IPS here:</label>
+                    <br>
+                    <textarea id="ipsInput" rows="8" style="width: 100%; max-width: 100%;"></textarea>
+                </div>
+                <button type="button" id="clearSample" class="btn btn-danger">Clear</button>
+                <button type="button" id="submit" class="btn btn-primary">View IPS</button>
             </div>
-            <button type="button" id="clearSample" class="btn btn-danger">Clear</button>
-            <button type="button" id="submit" class="btn btn-primary">View IPS</button> -->
            
             <span class="dropdown">
                 <button class="btn btn-secondary dropdown-toggle" id="mode" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
