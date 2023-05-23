@@ -87,7 +87,7 @@
                 }).fail(function(e) {
                     console.log( "error",e );
                 });
-        } else {
+        } else if (mode == "Text") {
             var content = { titulo: data.title, div: "No text defined." };
             if (!content.titulo) content.titulo = data.resourceType;
             if (data.text) content.div = data.text.div;
@@ -245,10 +245,8 @@
     };
 </script>
 <script type="module">
-    // import * as shlClient from 'https://smart-health-links-client.cirg.washington.edu/index.js';
-    // import { verify } from 'https://smart-health-links-client/shc-decoder.js';
-    import * as shlClient from 'https://demo.vaxx.link/viewer/index.js';
-    import { verify } from 'https://demo.vaxx.link/viewer/shc-decoder.js';
+    import * as shlClient from 'https://smart-health-links-demo.cirg.washington.edu/index.js';
+    import { verify } from 'https://smart-health-links-demo.cirg.washington.edu/shc-decoder.js';
 
     const shl = window.location.hash.match(/shlink:\/.*/)?.[0];
     if (shl) {

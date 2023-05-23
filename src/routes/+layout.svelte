@@ -49,7 +49,7 @@
 <Styles />
 <Navbar color="light" light expand="md" style="border-bottom: 1px solid rgb(204, 204, 204);">
   <NavbarBrand>
-    <Image href="/home" class="doh_logo_doh-black.png" alt="Washington State Department of Health Logo" width="240" src="/doh_logo_doh-black.png"/>
+    <a href="https://doh.wa.gov/" rel="noreferrer" target="_blank"><Image class="doh_logo_doh-black.png" alt="Washington State Department of Health Logo" width="240" src="/doh_logo_doh-black.png"/></a>
   </NavbarBrand>
   <NavbarToggler on:click={() => (isOpen = !isOpen)} />
   <Collapse {isOpen} navbar expand="md" on:update={handleUpdate}>
@@ -83,7 +83,7 @@
 </Navbar>
 <Row>
   <Col style="margin-bottom: 20px; border-bottom: 1px solid rgb(204, 204, 204);">
-    <Image alt="WA Verify Logo" width="200" src="/waverifypluslogo.png" style="align-self: center"></Image>
+    <a href="\home"><Image alt="WA Verify Logo" width="200" src="/waverifypluslogo.png" style="align-self: center"></Image></a>
     <div style="vertical-align: middle; font-size: 18px; display: inline-block; padding-left: 17px; font-family: Verdana, sans-serif; color: rgb(34, 72, 156);">International Patient Summary</div>
   </Col>
 </Row>

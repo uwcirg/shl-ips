@@ -10,10 +10,12 @@
     CardSubtitle,
     CardText,
     CardTitle,
+    Col,
     FormGroup,
     Icon,
     Input,
-    Label
+    Label,
+    Row
   } from 'sveltestrap';
 
   import { goto } from '$app/navigation';
@@ -63,100 +65,104 @@
     goto('/');
   }
 </script>
-
-<Card class="mb-3" color="light">
-  <CardHeader>
-    <CardTitle>
-      <Icon name={shl.passcode ? 'lock' : 'unlock'} />
-      {shl.label}</CardTitle
-    >
-  </CardHeader>
-  <CardBody>
-    {#if shl.exp}
-      <CardSubtitle color="success"
-        >Expires: {new Date(shl.exp * 1000).toISOString().slice(10)}
-      </CardSubtitle>
-    {/if}
-
-    <CardText>
-      {#await qrCode then dataUrl}
-        <p class="logo">
-          <img class="qr" alt="QR Code for SHL" src={dataUrl} />
-          <img class="logo" alt="SMART Logo" src={'/smart-logo.svg'} />
-        </p>
-      {/await}
-    </CardText>
-  </CardBody>
-  <CardFooter>
-    {#if canShare}
+<Row cols={{ md: 2, sm: 1 }}>
+  <Col>
+    <Card class="mb-3" color="light">
+      <CardHeader>
+        <CardTitle>
+          <Icon name={shl.passcode ? 'lock' : 'unlock'} />
+          {shl.label}</CardTitle
+        >
+      </CardHeader>
+      <CardBody>
+        {#if shl.exp}
+          <CardSubtitle color="success"
+            >Expires: {new Date(shl.exp * 1000).toISOString().slice(10)}
+          </CardSubtitle>
+        {/if}
+    
+        <CardText>
+          {#await qrCode then dataUrl}
+            <p class="logo">
+              <img class="qr" alt="QR Code for SHL" src={dataUrl} />
+              <img class="logo" alt="SMART Logo" src={'/waverifypluslogo.png'} />
+            </p>
+          {/await}
+        </CardText>
+      </CardBody>
+      <CardFooter>
+        {#if canShare}
+          <Button
+            size="sm"
+            color="success"
+            on:click={async () => {
+              navigator.share({ url: await href, title: shl.label });
+            }}><Icon name="share" /> Share</Button
+          >
+        {/if}
+        <Button size="sm" color="success" on:click={copyShl} disabled={!!copyNotice}>
+          <Icon name="clipboard" />
+          {#if copyNotice}
+            {copyNotice}
+          {:else}
+            Copy
+          {/if}
+        </Button>
+        {#await href then href}
+          <Button size="sm" color="success" {href} target="_blank">
+            <Icon name="window" /> Open
+          </Button>
+        {/await}
+      </CardFooter>
+    </Card>
+  </Col>
+  <Col>
+    <FormGroup class="label shlbutton">
+      <Label for="label">Label for SMART Health Link</Label>
+      <Input
+        name="label"
+        maxlength={40}
+        type="text"
+        bind:value={shlControlled.label}
+        placeholder="label"
+      />
       <Button
         size="sm"
-        color="success"
+        color="secondary"
+        disabled={(shl.label || '') === (shlControlled.label || '')}
         on:click={async () => {
-          navigator.share({ url: await href, title: shl.label });
-        }}><Icon name="share" /> Share</Button
+          $shlStore = $shlStore.map((e) =>
+            e.id === shl.id ? { ...shl, label: shlControlled.label } : e
+          );
+        }}><Icon name="sticky" /> Update Label</Button
       >
-    {/if}
-    <Button size="sm" color="success" on:click={copyShl} disabled={!!copyNotice}>
-      <Icon name="clipboard" />
-      {#if copyNotice}
-        {copyNotice}
-      {:else}
-        Copy
-      {/if}
-    </Button>
-    {#await href then href}
-      <Button size="sm" color="success" {href} target="_blank">
-        <Icon name="window" /> Open
-      </Button>
-    {/await}
-  </CardFooter>
-</Card>
-<h5>Configuration</h5>
-<FormGroup class="label shlbutton">
-  <Label for="label">Label for SMART Health Link</Label>
-  <Input
-    name="label"
-    maxlength={40}
-    type="text"
-    bind:value={shlControlled.label}
-    placeholder="label"
-  />
-  <Button
-    size="sm"
-    color="secondary"
-    disabled={(shl.label || '') === (shlControlled.label || '')}
-    on:click={async () => {
-      $shlStore = $shlStore.map((e) =>
-        e.id === shl.id ? { ...shl, label: shlControlled.label } : e
-      );
-    }}><Icon name="sticky" /> Update Label</Button
-  >
-</FormGroup>
-<FormGroup class="passcode shlbutton">
-  <Label for="passcode">Protect with Passcode (optional)</Label>
-  <Input
-    maxlength={40}
-    name="passcode"
-    type="text"
-    bind:value={shlControlled.passcode}
-    placeholder="Assign Passcode"
-  />
-  <Button
-    size="sm"
-    color="secondary"
-    disabled={(shl.passcode || '') === (shlControlled.passcode || '')}
-    on:click={async () => {
-      await shlClient.resetShl({ ...shl, passcode: shlControlled.passcode });
-      $shlStore = $shlStore.map((e) =>
-        e.id === shl.id ? { ...shl, passcode: shlControlled.passcode } : e
-      );
-    }}><Icon name="lock" /> Update Passcode</Button
-  >
-</FormGroup>
-<FormGroup class="shlbutton">
-  <Button size="sm" on:click={deleteShl} color="danger">Delete SMART Health Link</Button>
-</FormGroup>
+    </FormGroup>
+    <FormGroup class="passcode shlbutton">
+      <Label for="passcode">Protect with Passcode (optional)</Label>
+      <Input
+        maxlength={40}
+        name="passcode"
+        type="text"
+        bind:value={shlControlled.passcode}
+        placeholder="Assign Passcode"
+      />
+      <Button
+        size="sm"
+        color="secondary"
+        disabled={(shl.passcode || '') === (shlControlled.passcode || '')}
+        on:click={async () => {
+          await shlClient.resetShl({ ...shl, passcode: shlControlled.passcode });
+          $shlStore = $shlStore.map((e) =>
+            e.id === shl.id ? { ...shl, passcode: shlControlled.passcode } : e
+          );
+        }}><Icon name="lock" /> Update Passcode</Button
+      >
+    </FormGroup>
+    <FormGroup class="shlbutton">
+      <Button size="sm" on:click={deleteShl} color="danger">Delete SMART Health Link</Button>
+    </FormGroup>
+  </Col>
+</Row>
 
 <style>
   img.qr {
