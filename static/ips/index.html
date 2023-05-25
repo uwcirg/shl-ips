@@ -209,9 +209,16 @@
                             var statement = getEntry(ips, medication.reference);
                             // console.log(statement)
                             var medicationReference; 
-                            if (statement.medicationReference && statement.medicationReference.reference) medicationReference = getEntry(ips, statement.medicationReference.reference);
-                            else if (statement.medicationCodeableConcept) medicationReference = { code: statement.medicationCodeableConcept };
-                            else medicationReference = {code: { coding: [ { system: '', display: '', code: '' } ] } }
+                            if (statement.medicationReference && statement.medicationReference.reference) {
+                                medicationReference = getEntry(ips, statement.medicationReference.reference);
+                                if ($.isEmptyObject(medicationReference)) {
+                                    medicationReference = {code: { coding: [ { system: '', display: statement.medicationReference.display, code: '' } ] } };
+                                }
+                            } else if (statement.medicationCodeableConcept) {
+                                medicationReference = { code: statement.medicationCodeableConcept };
+                            } else {
+                                medicationReference = {code: { coding: [ { system: '', display: '', code: '' } ] } };
+                            }
                             // console.log(medicationReference);
                             section.medications.push({
                                 statement: statement,
@@ -254,7 +261,7 @@
     }
 
     async function retrieve(){
-        const recipient = "IPS Viewer Demonstration";
+        const recipient = "WA Verify+ IPS Viewer";
 
         let passcode;
         const needPasscode = shlClient.flag({ shl}).includes('P');
@@ -299,21 +306,21 @@
                 </div>
                 <button type="button" id="clearSample" class="btn btn-danger">Clear</button>
                 <button type="button" id="submit" class="btn btn-primary">View IPS</button>
+            
+                <span class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle" id="mode" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Displaying Entries
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <a class="dropdown-item" href="javascript:mode='Entries'; $('#mode').html('Displaying Entries'); updateFromText();">
+                            Display Entries
+                        </a>
+                        <a class="dropdown-item" href="javascript:mode='Text'; $('#mode').html('Displaying Text'); updateFromText();">
+                            Display Text
+                        </a>
+                    </div>
+                </span>
             </div>
-           
-            <span class="dropdown">
-                <button class="btn btn-secondary dropdown-toggle" id="mode" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Displaying Entries
-                </button>
-                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                    <a class="dropdown-item" href="javascript:mode='Entries'; $('#mode').html('Displaying Entries'); updateFromText();">
-                        Display Entries
-                    </a>
-                    <a class="dropdown-item" href="javascript:mode='Text'; $('#mode').html('Displaying Text'); updateFromText();">
-                        Display Text
-                    </a>
-                </div>
-            </span>
 
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         </form>
