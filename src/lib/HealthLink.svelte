@@ -85,7 +85,7 @@
           {#await qrCode then dataUrl}
             <p class="logo">
               <img class="qr" alt="QR Code for SHL" src={dataUrl} />
-              <img class="logo" alt="SMART Logo" src={'/waverifypluslogo.png'} />
+              <img class="logo" alt="WA Verify+ Logo" src='/img/waverifypluslogo.png' />
             </p>
           {/await}
         </CardText>

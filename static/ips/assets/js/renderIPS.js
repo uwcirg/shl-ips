@@ -1,6 +1,10 @@
 // check variable to see if header, which includes data loading active
 let headerLength = 0;
 
+import config from "./config.js";
+
+export { update };
+
 let sectionCount = 0;
 
 // Set the mode for the default mode for data presentation
@@ -15,7 +19,7 @@ $(document).ready(function () {
   headerLength = $("#header").length;
   let footerLength = $("#footer").length;
   if (headerLength === 1) {
-    $("#header").load("assets/html/header.html", function () {
+    $("#header").load(config.html_dir + "header.html", function () {
       $("#submit").click(function () {
         updateFromText();
       });
@@ -33,11 +37,12 @@ $(document).ready(function () {
           .fail(function (e) {
             console.log("error", e);
           });
-      });
+      });      
+      $("#content").show();
     });
   }
   if (footerLength === 1) {
-    $("#footer").load("assets/html/footer.html", function () {
+    $("#footer").load(config.html_dir + "footer.html", function () {
       // no actions on footer currently
     });
   }
@@ -86,7 +91,7 @@ const render = function (templateName, data, targetLocation) {
     entryCheck = data.entry.length
   }
   if (mode == "Entries" && templateName !== "Other") {
-    var jqxhr = $.get("templates/" + templateName + ".html", function () { })
+    var jqxhr = $.get(config.template_dir + templateName + ".html", function () { })
       .done(function (template) {
         // console.log(template);
         console.log(data);
@@ -103,7 +108,7 @@ const render = function (templateName, data, targetLocation) {
     var content = { titulo: data.title, div: "No text defined.", index: sectionCount };
     if (!content.titulo) content.titulo = data.resourceType;
     if (data.text) content.div = data.text.div;
-    var jqxhr = $.get("templates/Text.html", function () { })
+    var jqxhr = $.get(config.template_dir + "Text.html", function () { })
       .done(function (template) {
         var templateResult = Sqrl.Render(template, content);
         $("#" + targetLocation).html(templateResult);
@@ -115,7 +120,7 @@ const render = function (templateName, data, targetLocation) {
 
 // This is the header table for some basic data checks
 const renderTable = function (data) {
-  let jqxhr = $.get("templates/Checks.html", function () { })
+  let jqxhr = $.get(config.template_dir + "Checks.html", function () { })
     .done(function (template) {
       let templateResult = Sqrl.Render(template, data);
       console.log(data);
@@ -184,7 +189,7 @@ const update = function (ips) {
         console.log(patient)
         render("Patient", patient, "Patient");
       }
-      alertMissingComposition = false;
+      let alertMissingComposition = false;
       composition.section.forEach(function (section) {
         if (!section || !section.code || !section.code.coding || !section.code.coding[0]) {
           alertMissingComposition = true;
@@ -222,9 +227,14 @@ const update = function (ips) {
             let statement = getEntry(ips, medication.reference);
             let medicationReference;
             // Either MedicationRequest or MedicationStatement may have a reference to Medication 
-            if (statement.medicationReference && statement.medicationReference.reference) medicationReference = getEntry(ips, statement.medicationReference.reference);
-            else if (statement.medicationCodeableConcept) medicationReference = { code: statement.medicationCodeableConcept };
-            else medicationReference = { code: { coding: [{ system: '', display: '', code: '' }] } }
+            if (statement.medicationReference && statement.medicationReference.reference) {
+              medicationReference = getEntry(ips, statement.medicationReference.reference);
+
+            } else if (statement.medicationCodeableConcept) {
+                medicationReference = { code: statement.medicationCodeableConcept };
+            } else {
+                medicationReference = {code: { coding: [ { system: '', display: '', code: '' } ] } };
+            }
             // MedicationStatement has dosage while MedicationRequest has dosageInstruction. Use alias to simplify template
             if (statement.dosageInstruction) statement.dosage = statement.dosageInstruction;
             section.medications.push({
