@@ -37,8 +37,7 @@ $(document).ready(function () {
           .fail(function (e) {
             console.log("error", e);
           });
-      });      
-      $("#content").show();
+      });
     });
   }
   if (footerLength === 1) {
@@ -46,6 +45,10 @@ $(document).ready(function () {
       // no actions on footer currently
     });
   }
+});
+
+$(window).on('load', function () {
+  $("#content").show();
 });
 
 // Clear data button function. Should be called on all new data loads 

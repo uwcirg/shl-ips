@@ -1,6 +1,6 @@
 import * as shlClient from 'https://smart-health-links-demo.cirg.washington.edu/index.js';
 import { verify } from 'https://smart-health-links-demo.cirg.washington.edu/shc-decoder.js';
-import { update } from "./assets/js/renderIPS.js";
+import { update } from "./renderIPS.js";
 
 const shl = window.location.hash.match(/shlink:\/.*/)?.[0];
 if (shl) {
