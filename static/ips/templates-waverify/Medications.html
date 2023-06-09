@@ -9,11 +9,12 @@
         <ul class="list-group">
         {{each(options.medications)}}
             <li class="list-group-item">
-              {{@this.statement.resourceType}} 
-              <br />
+              <!-- {{@this.statement.resourceType}}  -->
+              <!-- <br /> -->
               {{if(options.medications[@index].medication.code && options.medications[@index].medication.code.coding && options.medications[@index].medication.code.coding.length)}}
                 {{each(options.medications[@index].medication.code.coding)}}
-                  <span class="badge badge-primary">{{@this.system}}</span> 
+                  <span class="badge badge-primary">{{@this.system}}</span>
+                  <br>
                   {{@this.display}} 
                   {{if (@this.code)}}
                       ({{@this.code}})
@@ -21,7 +22,14 @@
                 <br>
                 {{/each}}
               {{#else}}
-                <span class="badge badge-primary">(Uncoded</span> {{@this.medication.code.text}})<br>
+                <span class="badge badge-secondary">uncoded</span> 
+                <br>
+                  {{if(@this.medication.code && @this.medication.code.text)}}
+                    {{@this.medication.code.text}}
+                  {{#else}}
+                    {{@this.statement.medicationReference.display}}
+                  {{/if}}
+                  <br>
               {{/if}}
               {{if(options.medications[@index].medication.ingredient && options.medications[@index].medication.ingredient.itemCodeableConcept)}}
                 {{each(options.medications[@index].medication.ingredient)}}
