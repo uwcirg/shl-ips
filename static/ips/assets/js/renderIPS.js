@@ -125,6 +125,7 @@ const render = function (templateName, data, targetLocation) {
 const renderTable = function (data) {
   let jqxhr = $.get(config.template_dir + "Checks.html", function () { })
     .done(function (template) {
+      $("#ips-loader").hide();
       let templateResult = Sqrl.Render(template, data);
       console.log(data);
       $("#checksTable").html(templateResult);
