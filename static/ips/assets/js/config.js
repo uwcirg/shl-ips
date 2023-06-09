@@ -1,6 +1,6 @@
 const config = {
-    html_dir: "/ips/assets/html-wanotify/",
-    template_dir: "/ips/templates-wanotify/"
+    html_dir: "/ips/assets/html-waverify/",
+    template_dir: "/ips/templates-waverify/"
 }
 
 export default config;
