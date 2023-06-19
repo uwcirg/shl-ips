@@ -48,13 +48,11 @@
           </button>
           <br>
           <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-            <a class="dropdown-item"
-              href="javascript:mode='Entries'; $('#mode').html('Displaying FHIR Entries'); updateFromText();">
-              Display FHIR Resource Entries
+            <a id="FhirDropdown" class="dropdown-item"> 
+              Display FHIR Entries
             </a>
-            <a class="dropdown-item"
-              href="javascript:mode='Text'; $('#mode').html('Displaying Narrative'); updateFromText();">
-              Display Narrative from Composition
+            <a id= "NarrativeDropdown" class="dropdown-item" >
+              Display Narrative
             </a>
           </div>
           <div class="text-info" id="renderMessage" style="display: none;">
