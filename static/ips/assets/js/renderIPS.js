@@ -40,7 +40,7 @@ $(document).ready(function () {
       });
     });
   }
-  
+
   $('#FhirDropdown').on('click', () => updateDisplayMode('Entries'));
   $('#NarrativeDropdown').on('click', () => updateDisplayMode('Text'));
 
@@ -273,6 +273,18 @@ const update = function (ips) {
           section.entry.forEach(function (immunization) {
             console.log(immunization.reference);
             section.immunizations.push(getEntry(ips, immunization.reference));
+          });
+          section.immunizations.sort((a, b) => {
+            let fa = a.occurrenceDateTime,
+                fb = b.occurrenceDateTime;
+        
+            if (fa < fb) {
+                return -1;
+            }
+            if (fa > fb) {
+                return 1;
+            }
+            return 0;
           });
           render("Immunizations", section, "Immunizations");
         }
