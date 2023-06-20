@@ -21,16 +21,20 @@
     crossorigin="anonymous"></script>
   <script src="https://unpkg.com/squirrelly@7.9.2/dist/squirrelly.min.js"></script>
   <!-- IPS Specific Custom CSS-->
-  <link rel="stylesheet" href="ips/assets/css/custom.css">
+  <link rel="stylesheet" href="./assets/css/custom.css">
 
   <!-- IPS Rendering -->
-  <script type="module" src="ips/assets/js/renderIPS.js"></script>
-  <script type="module" src="ips/assets/js/retreiveIPS.js"></script>
+  <script type="module" src="./assets/js/renderIPS.js"></script>
+  <script type="module" src="./assets/js/retreiveIPS.js"></script>
+  
 
   <title>IPS Viewer</title>
 </head>
 
 <body style="margin: 10px;">
+  <div id="ips-editor" style="display:none">
+    <textarea id="ipsInput" rows="8" style="width: 100%; max-width: 100%;"></textarea>
+  </div>
   <div id="content" style="display:none">
     <!-- IPS Default Header for Connectathons -->
     <!-- Removing header id element will remove header -->
@@ -41,25 +45,24 @@
     <!-- IPS documents have both machine-processable FHIR resources and Narrative HTML -->
     <div style="padding-left: 17px">
       <h2>Patient Summary Viewer</h2>
-        <div class="dropdown" style="display:inline">
-          <button class="btn btn-secondary dropdown-toggle" id="mode" type="button" data-toggle="dropdown"
-            aria-haspopup="true" aria-expanded="false">
+      <div class="dropdown" style="display:inline">
+        <button class="btn btn-secondary dropdown-toggle" id="mode" type="button" data-toggle="dropdown"
+          aria-haspopup="true" aria-expanded="false">
+          Displaying FHIR Entries
+        </button>
+        <br>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+          <a id="FhirDropdown" class="dropdown-item" style="cursor:pointer"> 
             Display FHIR Entries
-          </button>
-          <br>
-          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-            <a id="FhirDropdown" class="dropdown-item"> 
-              Display FHIR Entries
-            </a>
-            <a id= "NarrativeDropdown" class="dropdown-item" >
-              Display Narrative
-            </a>
-          </div>
-          <div class="text-info" id="renderMessage" style="display: none;">
-            Unsupported sections displayed using composition narratives
-          </div>
+          </a>
+          <a id= "NarrativeDropdown" class="dropdown-item" style="cursor:pointer">
+            Display Narrative
+          </a>
         </div>
-      </h2>
+      </div>
+      <div class="text-info" id="renderMessage" style="display: none;">
+        Unsupported sections displayed using composition narratives
+      </div>
     </div>
     <div id="ips-loader" class="row">
       <span class="loader"></span>
