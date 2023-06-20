@@ -41,7 +41,7 @@
 
 <p>WA Verify<sup>+</sup> allows people to access augment, and electively share their own health data using the Intternational Patient Summary (IPS) standard. IPS data include important clinical data, immunizations, advance directives, and other data useful for urgent medical care. This data may be helpful to those traveling, to parents or caregivers, and to anyone who wants to be able to see their own records, or securely share their data with healthcare providers or others of their choosing.  WA Verify<sup>+</sup> uses the secure, patient-controlled SMART Health Link (SHL) standard to allow people to share information collected and stored on their behalf by the Washington State Department of Health. 
 
-		<p>This system generates QR codes and links which demonstrate the ability of WA Verify<sup>+</sup> to facilitate sharing directly controlled by individuals. You can see a list of SHLs generated <i>on this device</i>, as well as generate a new one.</p> 
+		<p>This system generates QR codes and links which demonstrate the ability of WA Verify<sup>+</sup> to facilitate sharing directly controlled by individuals. You can see a list of SHLs previously generated <i>on this device</i>, and you can generate a new SHL.</p> 
 	</span>
 </div>
 <Row style="padding: 0px 17px">
