@@ -3,7 +3,7 @@ let headerLength = 0;
 
 import config from "./config.js";
 
-export { update, updateFromText, mode };
+export { update };
 
 let sectionCount = 0;
 
@@ -40,8 +40,10 @@ $(document).ready(function () {
       });
     });
   }
-  $('#FhirDropdown').attr('href', "javascript:mode='Entries'; $('#mode').html('Displaying FHIR Entries'); updateFromText();");
-  $('#NarrativeDropdown').attr('href', "javascript:mode='Text'; $('#mode').html('Displaying Narrative'); updateFromText();");
+  
+  $('#FhirDropdown').on('click', () => updateDisplayMode('Entries'));
+  $('#NarrativeDropdown').on('click', () => updateDisplayMode('Text'));
+
   if (footerLength === 1) {
     $("#footer").load(config.html_dir + "footer.html", function () {
       // no actions on footer currently
@@ -52,6 +54,21 @@ $(document).ready(function () {
 $(window).on('load', function () {
   $("#content").show();
 });
+
+const updateDisplayMode = function (displayMode) {
+  let dropdown = $('#mode');
+
+  if (displayMode == 'Entries') {
+    var newText = 'Displaying FHIR Entries';
+  } else if (displayMode == 'Text') {
+    var newText = 'Displaying Narrative';
+  }
+  if (newText) {
+    mode = displayMode
+    dropdown.html(newText);
+  }
+  updateFromText();
+};
 
 // Clear data button function. Should be called on all new data loads 
 const clearData = function () {

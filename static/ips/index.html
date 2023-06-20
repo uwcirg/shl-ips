@@ -21,16 +21,11 @@
     crossorigin="anonymous"></script>
   <script src="https://unpkg.com/squirrelly@7.9.2/dist/squirrelly.min.js"></script>
   <!-- IPS Specific Custom CSS-->
-  <link rel="stylesheet" href="/ips/assets/css/custom.css">
+  <link rel="stylesheet" href="./assets/css/custom.css">
 
   <!-- IPS Rendering -->
-  <script type="module" src="/ips/assets/js/renderIPS.js"></script>
-  <script type="module" src="/ips/assets/js/retreiveIPS.js"></script>
-  <script type="module">
-    import { updateFromText, mode } from "/ips/assets/js/renderIPS.js";
-    window.updateFromText = updateFromText;
-    window.mode = mode;
-  </script>
+  <script type="module" src="./assets/js/renderIPS.js"></script>
+  <script type="module" src="./assets/js/retreiveIPS.js"></script>
   
 
   <title>IPS Viewer</title>
@@ -50,17 +45,17 @@
     <!-- IPS documents have both machine-processable FHIR resources and Narrative HTML -->
     <div style="padding-left: 17px">
       <h2>Patient Summary Viewer</h2>
-      <div class="dropdown" style="display:none">
+      <div class="dropdown" style="display:inline">
         <button class="btn btn-secondary dropdown-toggle" id="mode" type="button" data-toggle="dropdown"
           aria-haspopup="true" aria-expanded="false">
-          Display FHIR Entries
+          Displaying FHIR Entries
         </button>
         <br>
         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-          <a id="FhirDropdown" class="dropdown-item"> 
+          <a id="FhirDropdown" class="dropdown-item" style="cursor:pointer"> 
             Display FHIR Entries
           </a>
-          <a id= "NarrativeDropdown" class="dropdown-item" >
+          <a id= "NarrativeDropdown" class="dropdown-item" style="cursor:pointer">
             Display Narrative
           </a>
         </div>
