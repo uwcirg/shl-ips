@@ -3,7 +3,7 @@ let headerLength = 0;
 
 import config from "./config.js";
 
-export { update };
+export { update, updateFromText, mode };
 
 let sectionCount = 0;
 
