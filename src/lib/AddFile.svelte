@@ -2,26 +2,40 @@
   import * as jose from 'jose';
   import * as pako from 'pako';
   import { createEventDispatcher, onMount } from 'svelte';
-  import { Button, FormGroup, Input, Label } from 'sveltestrap';
+  import { Button,
+    Dropdown,
+    DropdownMenu,
+    DropdownItem,
+    DropdownToggle,
+    FormGroup,
+    Input,
+    Label,
+    Row } from 'sveltestrap';
 
-  import { EXAMPLE_IPS } from './config';
+  import { EXAMPLE_IPS, EXAMPLE_IPS_DEFAULT } from './config';
   import issuerKeys from './issuer.private.jwks.json';
   import type { SHCRetrieveEvent } from './types';
 
   const dispatch = createEventDispatcher<{ 'shc-retrieved': SHCRetrieveEvent }>();
   let submitting = false;
-  let summaryUrl = EXAMPLE_IPS;
+  let summaryUrls = EXAMPLE_IPS;
+  let defaultUrl = summaryUrls[EXAMPLE_IPS_DEFAULT];
   let uploadFiles: FileList | undefined;
 
   let inputUrl: HTMLFormElement;
   let label = 'SHL from ' + new Date().toISOString().slice(0, 10);
+  let isOpen = false;
 
   let expiration: number | null;
 
   let summaryUrlValidated: URL | undefined = undefined;
   $: {
+    setSummaryUrlValidated(defaultUrl);
+  }
+
+  function setSummaryUrlValidated(url: string) {
     try {
-      summaryUrlValidated = new URL(summaryUrl);
+      summaryUrlValidated = new URL(url);
     } catch {
       summaryUrlValidated = undefined;
     }
@@ -91,15 +105,26 @@
 <form bind:this={inputUrl} on:submit|preventDefault={() => fetchIps()}>
   <FormGroup>
     <Label>Upload Bundle (<code>.json</code> or signed <code>.smart-health-card</code>)</Label>
-    <Input width="100%" type="file" name="file" bind:files={uploadFiles} />
+    <Input type="file" name="file" bind:files={uploadFiles} />
   </FormGroup>
   <FormGroup>
     <Label>Or fetch from URL</Label>
-    <Input width="100%" type="text" bind:value={summaryUrl} />
+    <Dropdown {isOpen} toggle={() => (isOpen = !isOpen)}>
+      <DropdownToggle tag="div" class="d-inline-block" style="width:100%">
+        <Input type="text" bind:value={summaryUrlValidated} />
+      </DropdownToggle>
+      <DropdownMenu style="width:100%">
+        {#each Object.entries(summaryUrls) as [title, url]}
+          <DropdownItem style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"  on:click={() => {
+            setSummaryUrlValidated(url);
+          }}>{title} - {url}</DropdownItem>
+        {/each}
+      </DropdownMenu>
+    </Dropdown>
   </FormGroup>
   <FormGroup>
     <Label>New SHLink Label</Label>
-    <Input width="100%" type="text" bind:value={label} />
+    <Input type="text" bind:value={label} />
   </FormGroup>
   <FormGroup>
     <Label>Expires</Label>

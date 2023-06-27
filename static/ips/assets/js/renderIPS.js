@@ -134,6 +134,7 @@ const render = function (templateName, data, targetLocation) {
       .done(function (template) {
         var templateResult = Sqrl.Render(template, content);
         $("#" + targetLocation).html(templateResult);
+        $("#text-body1").removeClass('show');
       }).fail(function (e) {
         console.log("error", e);
       });
@@ -221,7 +222,7 @@ const update = function (ips) {
         else if (section.code.coding[0].code == "11450-4") {
           console.log('Problems Section');
           section.problems = [];
-          section.entry.forEach(function (problem) {
+          section.entry?.forEach(function (problem) {
             console.log(problem.reference)
             section.problems.push(getEntry(ips, problem.reference));
           });
@@ -231,7 +232,7 @@ const update = function (ips) {
         else if (section.code.coding[0].code == "48765-2") {
           console.log('Allergies Section');
           section.allergies = [];
-          section.entry.forEach(function (allergy) {
+          section.entry?.forEach(function (allergy) {
             console.log(allergy.reference)
             let allergy2 = getEntry(ips, allergy.reference);
             if (!allergy2.category) allergy2.category = [' '];
@@ -244,7 +245,7 @@ const update = function (ips) {
         else if (section.code.coding[0].code == "10160-0") {
           console.log('Medications Section');
           section.medications = [];
-          section.entry.forEach(function (medication) {
+          section.entry?.forEach(function (medication) {
             console.log(medication.reference);
             // while variable name is Statement, this may be either MedicationStatement or MedicationRequest
             let statement = getEntry(ips, medication.reference);
@@ -270,7 +271,7 @@ const update = function (ips) {
         else if (section.code.coding[0].code == "11369-6") {
           console.log('Immunizations Section');
           section.immunizations = [];
-          section.entry.forEach(function (immunization) {
+          section.entry?.forEach(function (immunization) {
             console.log(immunization.reference);
             section.immunizations.push(getEntry(ips, immunization.reference));
           });
@@ -291,7 +292,7 @@ const update = function (ips) {
         else if (section.code.coding[0].code == "30954-2") {
           console.log('Observations Section');
           section.observations = [];
-          section.entry.forEach(function (observation) {
+          section.entry?.forEach(function (observation) {
             console.log(observation.reference);
             section.observations.push(getEntry(ips, observation.reference));
           });
@@ -300,7 +301,7 @@ const update = function (ips) {
         else if (section.code.coding[0].code == "42348-3") {
           console.log('Advance Directives Section');
           section.ad = [];
-          section.entry.forEach(function (ad) {
+          section.entry?.forEach(function (ad) {
             console.log(ad.reference);
             section.ad.push(getEntry(ips, ad.reference));
           });
