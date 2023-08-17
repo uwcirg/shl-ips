@@ -186,7 +186,7 @@ function prepareSHLContents(contents) {
   shlContents = contents;
   var jqxhr = $.get(config.template_dir + "IPS.html", function () { })
     .done(function (template) {
-      shlContents.forEach((e, i) => {
+      shlContents.slice().reverse().forEach((e, i) => {
         let data = { index: i };
         if (shlContents.length > (config.show_demo ? 0 : 1)) {
           addTab(`IPS ${i+1}`, i);
@@ -253,6 +253,9 @@ function update(ips, index) {
         patient = getEntry(ips, composition.subject.reference);
       } else {
         console.log('no subject reference');
+      }
+      if (index !== "Demo" && composition.date) {
+        $(`#tab${index}`).text(`IPS ${composition.date.split('T')[0]}`);
       }
       render("Composition", composition, `Composition${index}`);
       console.log('Patient Card');
