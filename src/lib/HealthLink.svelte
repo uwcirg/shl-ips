@@ -15,6 +15,10 @@
     Icon,
     Input,
     Label,
+    Modal,
+    ModalBody,
+    ModalHeader,
+    ModalFooter,
     Row
   } from 'sveltestrap';
 
@@ -24,6 +28,8 @@
 
   export let shl: SHLAdminParams;
   let shlControlled: SHLAdminParams;
+  let open = false;
+  const toggle = () => (open = !open);
 
   function syncProps(shl: SHLAdminParams) {
     shlControlled = JSON.parse(JSON.stringify(shl));
@@ -64,6 +70,14 @@
     $shlStore = $shlStore.filter((l) => l.id !== shl.id);
     goto('/');
   }
+
+  async function addFile() {
+    goto(`/create/${shl.id}`)
+  }
+
+  async function deleteFile(fileContent) {
+    shl = shlClient.deleteFile(shl, fileContent);
+  }
 </script>
 <Row cols={{ md: 2, sm: 1 }}>
   <Col>
@@ -76,8 +90,8 @@
       </CardHeader>
       <CardBody>
         {#if shl.exp}
-          <CardSubtitle color="success"
-            >Expires: {new Date(shl.exp * 1000).toISOString().slice(0, 10)}
+          <CardSubtitle color="success">
+            Expires: {new Date(shl.exp * 1000).toISOString().slice(0, 10)}
           </CardSubtitle>
         {/if}
     
@@ -110,7 +124,7 @@
         </Button>
         {#await href then href}
           <Button size="sm" color="success" {href} target="_blank">
-            <Icon name="window" /> Open
+            <Icon name="box-arrow-up-right" /> Open
           </Button>
         {/await}
       </CardFooter>
@@ -131,11 +145,17 @@
         color="secondary"
         disabled={(shl.label || '') === (shlControlled.label || '')}
         on:click={async () => {
-          $shlStore = $shlStore.map((e) =>
-            e.id === shl.id ? { ...shl, label: shlControlled.label } : e
-          );
-        }}><Icon name="sticky" /> Update Label</Button
-      >
+          $shlStore = $shlStore.map((e) => {
+            if (e.id === shl.id) {
+              shl = { ...shl, label: shlControlled.label };
+              return shl;
+            } else {
+              return e;
+            }
+          });
+        }}>
+        <Icon name="sticky" /> Update Label
+      </Button>
     </FormGroup>
     <FormGroup class="passcode shlbutton">
       <Label for="passcode">Protect with Passcode (optional)</Label>
@@ -155,12 +175,57 @@
           $shlStore = $shlStore.map((e) =>
             e.id === shl.id ? { ...shl, passcode: shlControlled.passcode } : e
           );
-        }}><Icon name="lock" /> Update Passcode</Button
-      >
+        }}><Icon name="lock" /> Update Passcode</Button>
     </FormGroup>
     <FormGroup class="shlbutton">
-      <Button size="sm" on:click={deleteShl} color="danger">Delete SMART Health Link</Button>
+      <Button size="sm" on:click={toggle} color="danger">Delete SMART Health Link</Button>
+      <Modal isOpen={open} backdrop="static" {toggle}>
+        <ModalHeader {toggle}>Delete SMART Health Link</ModalHeader>
+        <ModalBody>
+          "{shl.label}" will be permanently deleted. Continue?
+        </ModalBody>
+        <ModalFooter>
+          <Button color="danger"  on:click={deleteShl}><Icon name="trash" /> Delete SHL</Button>
+          <Button color="secondary" on:click={toggle}>Cancel</Button>
+        </ModalFooter>
+      </Modal>
     </FormGroup>
+  </Col>
+</Row>
+<Row>
+  <h2>SHL Contents</h2>
+</Row>
+{#each shl.files as file, i (file.contentEncrypted)}
+<Row>
+  <Col>
+    <Card class="mb-3" color="light">
+      <CardHeader>
+        <CardTitle>
+          Record {i+1}
+          {#if file.date}
+            ({file.date})
+          {/if}
+        </CardTitle>
+      </CardHeader>
+      <CardBody>
+        {#if file.contentType}
+        <CardText color="light" style="overflow: hidden; text-overflow: ellipsis">
+          <Icon name="file-earmark-text" /> {file.contentType}
+        </CardText>
+        {/if}
+      </CardBody>
+      <CardFooter>
+        <Button size="sm" color="danger" on:click={deleteFile(file.contentEncrypted)}>
+          <Icon name="trash" /> Delete
+        </Button>
+      </CardFooter>
+    </Card>
+  </Col>
+</Row>
+{/each}
+<Row>
+  <Col>
+    <Button class="mb-3" color="success" on:click={addFile}><Icon name="file-earmark-plus" /> Add Record</Button>
   </Col>
 </Row>
 

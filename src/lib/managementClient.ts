@@ -11,6 +11,7 @@ export interface SHLAdminParams {
   files: {
     contentEncrypted: string;
     contentType: string;
+    date?: string;
   }[];
   passcode?: string;
   exp?: number;
@@ -89,7 +90,8 @@ export class SHLClient {
       })
       .encrypt(jose.base64url.decode(shl.encryptionKey));
 
-    new TextEncoder().encode(contentEncrypted), shl.files.push({ contentEncrypted, contentType });
+    let date = new Date().toISOString().slice(0, 10);
+    new TextEncoder().encode(contentEncrypted), shl.files.push({ contentEncrypted, contentType, date });
     const add = await fetch(`${API_BASE}/shl/${shl.id}/file`, {
       method: 'POST',
       headers: {
@@ -98,6 +100,18 @@ export class SHLClient {
       },
       body: contentEncrypted
     });
+    return shl;
+  }
+
+  async deleteFile(shl: SHLAdminParams, contentEncrypted: string): Promise<SHLAdminParams> {
+    const req = await fetch(`${API_BASE}/shl/${shl.id}/file`, {
+      method: 'DELETE',
+      headers: {
+        authorization: `Bearer ${shl.managementToken}`
+      },
+      body: contentEncrypted
+    });
+    const res = await req.json();
     return shl;
   }
 }
