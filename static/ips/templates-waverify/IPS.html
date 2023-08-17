@@ -1,0 +1,56 @@
+<div id="ips{{index}}" class="tab-pane">
+    {{if(options.index === "Demo")}}
+    <div><h2>Submit Data</h2>This is for test data only. <strong style="color:red">Please do not submit PHI.</strong></div>
+    <div style="float:clear"></div>
+    <div class="container" style="margin:15px;">
+        <div class="row">
+            <form class="col col-md-8">
+                <div class="form-group">
+                    <label for="ipsInput">Paste your IPS here:</label>
+                    <br>
+                    <textarea id="ipsInput" rows="8" style="width: 100%; max-width: 100%;"></textarea>
+                </div>
+                <button type="button" id="clearSample" class="btn btn-danger">Clear</button>
+                <button type="button" id="submit" class="btn btn-primary">View IPS</button>
+            </form>
+            <div class="col col-md-4">
+                <br />
+                <button type="button" id="loadSample" class= "btn btn-success">Try a sample</button>
+                <br />
+                <a href="https://github.com/jddamore/IPSviewer/tree/main/samples" target="_blank">Repository of IPS Samples</a>
+            </div>
+        </div>
+    </div>
+    <hr>
+    {{/if}}
+    <div class="row">
+        <div class="row col-md-12">
+            <div class="col-md-12 output{{index}} data{{index}}" id="Composition{{index}}"></div>
+        </div>
+        <div class="row col-md-12">
+            <div class="col-md-12 output{{index}} data{{index}}" id="Patient{{index}}"></div>
+        </div>
+        <div class="row col-md-12">
+            <div class="col-md-12 output{{index}} data{{index}}" id="Allergies{{index}}"></div>
+        </div>
+        <div class="row col-md-12">
+            <div class="col-md-12 output{{index}} data{{index}}" id="Problems{{index}}"></div>
+        </div>
+        <div class="row col-md-12">
+            <div class="col-md-12 output{{index}} data{{index}}" id="Medications{{index}}"></div>
+        </div>
+        <div class="row col-md-12">
+            <div class="col-md-12 output{{index}} data{{index}}" id="Immunizations{{index}}"></div>
+        </div>
+        <div class="row col-md-12">
+            <div class="col-md-12 output{{index}} data{{index}}" id="Observations{{index}}"></div>
+        </div>
+        <div class="row col-md-12">
+            <div class="col-md-12 output{{index}} data{{index}}" id="AdvanceDirectives{{index}}"></div>
+        </div>
+        <!-- Note that any section not listed above will be shown in other-->
+        <div class="row col-md-12">
+            <div class="col-md-12 output{{index}} data{{index}}" id="Other{{index}}"></div>
+        </div>
+    </div>
+</div>

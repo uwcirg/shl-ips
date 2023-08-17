@@ -3,13 +3,15 @@ let headerLength = 0;
 
 import config from "./config.js";
 
-export { update };
+export { prepareSHLContents };
 
 let sectionCount = 0;
 
 // Set the mode for the default mode for data presentation
 // Entries = machine readable FHIR resources, Narrative = Compostion.section.text.div
 let mode = "Entries";
+
+let shlContents;
 
 // Sqrl setting. See https://v7--squirrellyjs.netlify.app/docs/v7/auto-escaping
 Sqrl.autoEscaping(false);
@@ -19,35 +21,14 @@ $(document).ready(function () {
   headerLength = $("#header").length;
   let footerLength = $("#footer").length;
   if (headerLength === 1) {
-    $("#header").load(config.html_dir + "header.html", function () {
-      $("#submit").click(function () {
-        updateFromText();
-      });
-      $('#clearSample').click(function () {
-        clearData();
-      })
-      $("#loadSample").click(function () {
-        $.getJSON('./samples/sample.json', function () {
-          console.log("success");
-        })
-          .done(function (data) {
-            $('#ipsInput').val(JSON.stringify(data));
-            update(data);
-          })
-          .fail(function (e) {
-            console.log("error", e);
-          });
-      });
-    });
+    $("#header").load(config.html_dir + "header.html", () => { });
   }
 
   $('#FhirDropdown').on('click', () => updateDisplayMode('Entries'));
   $('#NarrativeDropdown').on('click', () => updateDisplayMode('Text'));
 
   if (footerLength === 1) {
-    $("#footer").load(config.html_dir + "footer.html", function () {
-      // no actions on footer currently
-    });
+    $("#footer").load(config.html_dir + "footer.html", () => { });
   }
 });
 
@@ -55,50 +36,65 @@ $(window).on('load', function () {
   $("#content").show();
 });
 
-const updateDisplayMode = function (displayMode) {
+function loadSample() {
+  $.getJSON('./samples/sample.json', function () {
+    console.log("success");
+  })
+    .done(function (data) {
+      $('#ipsInput').val(JSON.stringify(data));
+      updateFromText();
+    })
+    .fail(function (e) {
+      console.log("error", e);
+    });
+}
+
+function updateDisplayMode(displayMode) {
   let dropdown = $('#mode');
 
   if (displayMode == 'Entries') {
-    var newText = 'Displaying FHIR Entries';
+    var newText = 'App Interpretation';
   } else if (displayMode == 'Text') {
-    var newText = 'Displaying Narrative';
+    var newText = 'Generated Text';
   }
   if (newText) {
     mode = displayMode
     dropdown.html(newText);
   }
+  shlContents.forEach((e, i) => {
+    update(e, (shlContents.length === 1 && !config.show_demo ? "" : i));
+  });
   updateFromText();
 };
 
 // Clear data button function. Should be called on all new data loads 
-const clearData = function () {
+function clearData() {
   // clear textbox
   $("#ipsInput").val("");
   // clear prior message
   $("#renderMessage").hide();
   // clear all viewer data and data checks table
-  $('.data').empty();
+  $('.dataDemo').empty();
 }
 
 // Update the contents from new JSON pasted in TextBox
-const updateFromText = function () {
+function updateFromText() {
   var ipsTxt = $('#ipsInput').val();
   if (ipsTxt) {
     try {
       var ips = JSON.parse(ipsTxt);
-      update(ips);
+      update(ips, "Demo");
     } catch (e) {
       console.log(e);
       alert("Invalid IPS - " + e);
     }
-  }
-  else {
+  } else {
     alert('Invalid content - Enter IPS Bundle (JSON) in "Paste Your IPS Here" box');
   }
 };
 
 // Update the data in viewer based on mode and data
-const render = function (templateName, data, targetLocation) {
+function render(templateName, data, targetLocation) {
   let entryCheck = 0;
   sectionCount++;
   if (templateName === 'Patient') {
@@ -108,8 +104,7 @@ const render = function (templateName, data, targetLocation) {
       data.custodian.address = [{ city: '', country: '' }];
     }
     entryCheck = 1;
-  }
-  else if (data.entry) {
+  } else if (data.entry) {
     entryCheck = data.entry.length
   }
   if (mode == "Entries" && templateName !== "Other") {
@@ -122,11 +117,13 @@ const render = function (templateName, data, targetLocation) {
       }).fail(function (e) {
         console.log("error", e);
       });
-  }
-  else {
+  } else {
     // if the mode was intended as Entries and narrative fallback used, display message
-    if (mode === "Entries") $("#renderMessage").attr("style", "display:inline");
-    else $("#renderMessage").hide();
+    if (mode === "Entries") {
+      $("#renderMessage").attr("style", "display:inline");
+    } else {
+      $("#renderMessage").hide();
+    }
     var content = { titulo: data.title, div: "No text defined.", index: sectionCount };
     if (!content.titulo) content.titulo = data.resourceType;
     if (data.text) content.div = data.text.div;
@@ -142,7 +139,7 @@ const render = function (templateName, data, targetLocation) {
 };
 
 // This is the header table for some basic data checks
-const renderTable = function (data) {
+function renderTable(data) {
   let jqxhr = $.get(config.template_dir + "Checks.html", function () { })
     .done(function (template) {
       $("#ips-loader").hide();
@@ -153,15 +150,14 @@ const renderTable = function (data) {
 }
 
 // For machine-readable content, use the reference in the Composition.section.entry to retrieve resource from Bundle
-const getEntry = function (ips, fullUrl) {
+function getEntry(ips, fullUrl) {
   var result;
   ips.entry.forEach(function (entry) {
     if (entry.fullUrl.includes(fullUrl)) {
       console.log(`match ${fullUrl}`);
       result = entry.resource;
-    }
+    } else {
     // Attempt to match based on resource and uuid
-    else {
       let newMatch = fullUrl
       if (entry.resource && entry.resource.resourceType) {
         // remove the resource from reference
@@ -183,11 +179,62 @@ const getEntry = function (ips, fullUrl) {
   return result;
 };
 
+function prepareSHLContents(contents) {
+  if (!Array.isArray(contents)){
+    contents = [contents];
+  }
+  shlContents = contents;
+  var jqxhr = $.get(config.template_dir + "IPS.html", function () { })
+    .done(function (template) {
+      shlContents.forEach((e, i) => {
+        let data = { index: i };
+        if (shlContents.length > (config.show_demo ? 0 : 1)) {
+          addTab(`IPS ${i+1}`, i);
+        } else {
+          data = { index: "" };
+        }
+        // console.log(template);
+        console.log(data);
+        $(Sqrl.Render(template, data))
+          .appendTo('#rendered-ips');
+        update(e, data.index);
+      });
+
+      if (config.show_demo) {
+        addTab("IPS Demo", "Demo");
+        $(Sqrl.Render(template, {index: "Demo"}))
+          .appendTo('#rendered-ips');
+        loadSample();
+        $("#submit").on('click', updateFromText);
+        $('#clearSample').on('click', clearData);
+        $("#loadSample").on('click', loadSample);
+      }
+      $('#tabs').children().first().children().first().addClass('active show');
+      $('#rendered-ips').children().first().addClass('active show');
+    }).fail(function (e) {
+      console.log("error", e);
+    });
+}
+
+function addTab(name, id) {
+  $('<li></li>')
+    .addClass('nav-item')
+    .html(
+      $('<a></a>')
+        .attr('data-toggle', "tab")
+        .attr('id', `tab${id}`)
+        .attr('href', `#ips${id}`)
+        .addClass('nav-link')
+        .text(name)
+    )
+    .appendTo('#tabs');
+}
+
 // Primary function to traverse the Bundle and get data
 // Calls the render function to display contents 
-const update = function (ips) {
+function update(ips, index) {
   sectionCount = 0;
-  $(".output").html("");
+  $(`.output${index}`).html("");
   $("#renderMessage").hide();
   ips.entry.forEach(function (entry) {
     if (!entry.resource) console.log(entry);
@@ -197,39 +244,36 @@ const update = function (ips) {
       if (composition.custodian && composition.custodian.reference) {
         console.log(composition.custodian.reference);
         composition.custodian = getEntry(ips, composition.custodian.reference);
-      }
-      else {
+      } else {
         console.log('no custodian reference');
         composition.custodian = {};
       }
       if (composition.subject && composition.subject.reference) {
         console.log(composition.subject.reference);
         patient = getEntry(ips, composition.subject.reference);
+      } else {
+        console.log('no subject reference');
       }
-      else console.log('no subject reference');
-      render("Composition", composition, "Composition");
+      render("Composition", composition, `Composition${index}`);
       console.log('Patient Card');
       if (patient) {
         console.log(patient)
-        render("Patient", patient, "Patient");
+        render("Patient", patient, `Patient${index}`);
       }
       let alertMissingComposition = false;
       composition.section.forEach(function (section) {
         if (!section || !section.code || !section.code.coding || !section.code.coding[0]) {
           alertMissingComposition = true;
           console.log('Section is missing coding information');
-        }
-        else if (section.code.coding[0].code == "11450-4") {
+        } else if (section.code.coding[0].code == "11450-4") {
           console.log('Problems Section');
           section.problems = [];
           section.entry?.forEach(function (problem) {
             console.log(problem.reference)
             section.problems.push(getEntry(ips, problem.reference));
           });
-          render("Problems", section, "Problems");
-        }
-
-        else if (section.code.coding[0].code == "48765-2") {
+          render("Problems", section, `Problems${index}`);
+        } else if (section.code.coding[0].code == "48765-2") {
           console.log('Allergies Section');
           section.allergies = [];
           section.entry?.forEach(function (allergy) {
@@ -239,10 +283,8 @@ const update = function (ips) {
             if (!allergy2.type) allergy2.type = ' ';
             section.allergies.push(allergy2);
           });
-          render("Allergies", section, "Allergies");
-        }
-
-        else if (section.code.coding[0].code == "10160-0") {
+          render("Allergies", section, `Allergies${index}`);
+        } else if (section.code.coding[0].code == "10160-0") {
           console.log('Medications Section');
           section.medications = [];
           section.entry?.forEach(function (medication) {
@@ -266,9 +308,8 @@ const update = function (ips) {
               medication: medicationReference
             });
           });
-          render("Medications", section, "Medications");
-        }
-        else if (section.code.coding[0].code == "11369-6") {
+          render("Medications", section, `Medications${index}`);
+        } else if (section.code.coding[0].code == "11369-6") {
           console.log('Immunizations Section');
           section.immunizations = [];
           section.entry?.forEach(function (immunization) {
@@ -278,7 +319,6 @@ const update = function (ips) {
           section.immunizations.sort((a, b) => {
             let fa = a.occurrenceDateTime,
                 fb = b.occurrenceDateTime;
-        
             if (fa < fb) {
                 return -1;
             }
@@ -287,28 +327,25 @@ const update = function (ips) {
             }
             return 0;
           });
-          render("Immunizations", section, "Immunizations");
-        }
-        else if (section.code.coding[0].code == "30954-2") {
+          render("Immunizations", section, `Immunizations${index}`);
+        } else if (section.code.coding[0].code == "30954-2") {
           console.log('Observations Section');
           section.observations = [];
           section.entry?.forEach(function (observation) {
             console.log(observation.reference);
             section.observations.push(getEntry(ips, observation.reference));
           });
-          render("Observations", section, "Observations");
-        }
-        else if (section.code.coding[0].code == "42348-3") {
+          render("Observations", section, `Observations${index}`);
+        } else if (section.code.coding[0].code == "42348-3") {
           console.log('Advance Directives Section');
           section.ad = [];
           section.entry?.forEach(function (ad) {
             console.log(ad.reference);
             section.ad.push(getEntry(ips, ad.reference));
           });
-          render("AdvanceDirectives", section, "AdvanceDirectives");
-        }
-        else {
-          render("Other", section, "Other");
+          render("AdvanceDirectives", section, `AdvanceDirectives${index}`);
+        } else {
+          render("Other", section, `Other${index}`);
           console.log(`Section with code: ${section.code.coding[0].code} not rendered since no template`);
         }
       });
@@ -322,7 +359,7 @@ const update = function (ips) {
 };
 
 // Updates the header data for simple data checks. Note that this is NOT full FHIR validation 
-const checks = function (ips) {
+function checks(ips) {
   let composition = ips.entry[0];
   let data = { 
     data: [],
@@ -344,16 +381,14 @@ const checks = function (ips) {
       if (section.entry) {
         newData.entries =   section.entry.length;
         newData.entriesColor = "green";
-      }
-      else {
+      } else {
         newData.entries = 0;
         newData.entriesColor = "red";
       }
       if (section.text && section.text.div) {
         newData.narrative = "✓"
         newData.narrativeColor = "green";
-      }
-      else {
+      } else {
         newData.narrative = "✗"
         newData.narrativeColor = "red";
       }

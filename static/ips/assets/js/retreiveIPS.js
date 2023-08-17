@@ -1,7 +1,9 @@
-import * as shlClient from 'https://smart-health-links-demo.cirg.washington.edu/index.js';
-import { verify } from 'https://smart-health-links-demo.cirg.washington.edu/shc-decoder.js';
-import { update } from "./renderIPS.js";
+import * as shlClient from 'http://localhost:6002/index.js';
+// import { verify } from 'https://smart-health-links-demo.cirg.washington.edu/shc-decoder.js';
+import { verify } from 'https://demo.vaxx.link/viewer/shc-decoder.js';
+import { prepareSHLContents } from "./renderIPS.js";
 
+let data = [];
 const shl = window.location.hash.match(/shlink:\/.*/)?.[0];
 if (shl) {
     retrieve()
@@ -23,8 +25,6 @@ async function retrieve(){
     });
 
     const decoded = await Promise.all(retrieved.shcs.map(verify));
-    const data = decoded[0].fhirBundle
-
-    $('#ipsInput').val(JSON.stringify(data, null, 2));
-    update(data);
+    data = decoded.map((e) => e.fhirBundle);
+    prepareSHLContents(data);
 }
