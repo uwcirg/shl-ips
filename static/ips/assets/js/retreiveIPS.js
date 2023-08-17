@@ -1,6 +1,5 @@
-import * as shlClient from 'http://localhost:6002/index.js';
-// import { verify } from 'https://smart-health-links-demo.cirg.washington.edu/shc-decoder.js';
-import { verify } from 'https://demo.vaxx.link/viewer/shc-decoder.js';
+import * as shlClient from 'http://smart-health-links-demo.cirg.washington.edu/index.js';
+import { verify } from 'https://smart-health-links-demo.cirg.washington.edu/shc-decoder.js';
 import { prepareSHLContents } from "./renderIPS.js";
 
 let data = [];
