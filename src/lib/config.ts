@@ -1,8 +1,7 @@
 // import {PUBLIC_BASE_URL} from '$env/static/public';
 import { dev } from '$app/environment';
 
-export const API_BASE = 'http://localhost:6001/api';
-// export const API_BASE = 'https://smart-health-links-server.cirg.washington.edu/api'
+export const API_BASE = 'https://smart-health-links-server.cirg.washington.edu/api'
 export const VIEWER_BASE = new URL(
   `/ips${dev ? '/index.html' : ''}#`,
   window.location.href
