@@ -32,10 +32,12 @@
   <span style="font-size: 18px; font-weight: 200; font-family: Verdana, sans-serif; margin: 50px 0px;">
     <p class="text-danger">Test System - no protected health information</p>
 
-    <p>The WA Verify<sup>+</sup> system enhances the WA Verify COVID-19 vaccination verification system which, since 2021, has allowed people receiving COVID-19 vaccinations in Washington State to access and share that information using SMART Health Card QR codes.</p>
+    <p>The WA Verify<sup>+</sup> system builds on the ideas and technologies in the WA Verify COVID-19 vaccination verification system. Since 2021, WA Verify has made it easy for people receiving COVID-19 vaccinations in Washington State to access and share that information using SMART Health Card QR codes.</p>
 
 
-    <p>WA Verify<sup>+</sup> allows people to access augment, and electively share their own health data using the International Patient Summary (IPS) standard. IPS data include important clinical data, immunizations, advance directives, and other data useful for urgent medical care. This data may be helpful to those traveling, to parents or caregivers, and to anyone who wants to be able to see their own records, or securely share their data with healthcare providers or others of their choosing.  WA Verify<sup>+</sup> uses the secure, patient-controlled SMART Health Link (SHL) standard to allow people to share information collected and stored on their behalf by the Washington State Department of Health.</p>
+    <p>WA Verify<sup>+</sup> allows people to access augment, and electively share their own health data using the International Patient Summary (IPS) standard.  They might choose to do so to verify immunizations, to summarize traveler health information, to have a medical summary in the event they require urgent or emergency care, or for routine sharing of their full history with others.</p>
+    
+    <p>IPS information includes important clinical history, medications, immunizations, advance directives, and other data vital for health care. This data may be helpful to those traveling, to parents or caregivers, and to anyone who wants to be able to see their own records, or securely share their data with healthcare providers or others of their choosing. WA Verify<sup>+</sup> uses the secure, patient-controlled SMART Health Link (SHL) standard to allow people to share information collected and stored on their behalf by the Washington State Department of Health.</p>
 
     <p>This system generates QR codes and links which demonstrate the ability of WA Verify<sup>+</sup> to facilitate sharing directly controlled by individuals. You can view listed SHLs previously generated <i>on this device</i>, and you can generate a new SHL.</p>
   </span>
