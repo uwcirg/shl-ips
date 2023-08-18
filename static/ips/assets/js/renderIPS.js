@@ -62,7 +62,7 @@ function updateDisplayMode(displayMode) {
     dropdown.html(newText);
   }
   shlContents.forEach((e, i) => {
-    update(e, (shlContents.length === 1 && !config.show_demo ? "" : i));
+    update(e, (shlContents.length === 1 ? "" : i));
   });
   updateFromText();
 };
