@@ -4,7 +4,12 @@ import { prepareSHLContents } from "./renderIPS.js";
 
 const shl = window.location.hash.match(/shlink:\/.*/)?.[0];
 if (shl) {
-    retrieve()
+    try {
+        retrieve()
+    } catch (e) {
+        console.error("Unable to retrieve SHL: " + e);
+        
+    }
 }
 
 async function retrieve(){

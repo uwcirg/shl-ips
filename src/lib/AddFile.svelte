@@ -17,19 +17,21 @@
     TabContent,
     TabPane } from 'sveltestrap';
 
-  import { EXAMPLE_IPS, EXAMPLE_IPS_DEFAULT } from './config';
+  import { EXAMPLE_IPS, EXAMPLE_IPS_DEFAULT, IPS_URL_KEY } from './config';
   import issuerKeys from './issuer.private.jwks.json';
   import type { SHCRetrieveEvent } from './types';
   import { page } from '$app/stores';
+  import { authorize } from './sofClientTSWrapper';
   
-  const tab = $page.url.searchParams.get('tab');
+  const tabParam = $page.url.searchParams.get('tab');
+  let shlIdParam = $page.url.searchParams.get('shlid');
 
   const dispatch = createEventDispatcher<{ 'shc-retrieved': SHCRetrieveEvent }>();
   let submitting = false;
   let summaryUrls = EXAMPLE_IPS;
   let defaultUrl = summaryUrls[EXAMPLE_IPS_DEFAULT];
   let uploadFiles: FileList | undefined;
-  let currentTab : string | number;
+  let currentTab: string | number;
   currentTab = 'url';
 
   let inputUrl: HTMLFormElement;
@@ -45,6 +47,12 @@
     setSummaryUrlValidated(defaultUrl);
   }
 
+  onMount(() => {
+    if (sessionStorage.getItem(IPS_URL_KEY)) {
+      fetchIps();
+    }
+  })
+
   function setSummaryUrlValidated(url: string) {
     try {
       summaryUrlValidated = new URL(url);
@@ -59,9 +67,18 @@
     try {
       let content;
 
-      if (uploadFiles?.[0] instanceof File) {
+      if (currentTab == 'file' && uploadFiles?.[0] instanceof File) {
         content = JSON.parse(new TextDecoder().decode(await uploadFiles[0].arrayBuffer()));
       } else {
+        if (currentTab == 'smart') {
+          // TODO: do sof auth
+          authorize(sofHost);
+          return;
+        }
+        let preparedIPS = sessionStorage.getItem(IPS_URL_KEY);
+        if (preparedIPS) {
+          setSummaryUrlValidated(preparedIPS);
+        }
         const contentResponse = await fetch(summaryUrlValidated!, {
           headers: { accept: 'application/fhir+json' }
         }).then(function(response) {
@@ -84,6 +101,7 @@
 
       const shc = await signJws(content);
 
+      sessionStorage.removeItem(IPS_URL_KEY);
       dispatch('shc-retrieved', {
         shc: {
           verifiableCredential: [shc]
@@ -156,7 +174,7 @@
     </TabPane>
     <TabPane tabId="smart" style="padding-top:10px">
       <span slot="tab">
-        SMART Access
+        SMART Patient Access
       </span>
         <FormGroup>
           <Label>Fetch via SMART authorization</Label>
@@ -167,7 +185,7 @@
         </FormGroup>
     </TabPane>
   </TabContent>
-
+  {#if shlIdParam == null}
   <FormGroup>
     <Label>New SHLink Label</Label>
     <Input type="text" bind:value={label} />
@@ -179,6 +197,7 @@
     <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 7 * 365} label="1 year" />
     <Input type="radio" bind:group={expiration} value={null} label="Never" />
   </FormGroup>
+  {/if}
 
   <Row>
     <Col xs="auto">

@@ -43,6 +43,9 @@
   function handleUpdate(event) {
     isOpen = event.detail.isOpen;
   }
+  function closeNav() {
+    isOpen = false;
+  }
 </script>
 
 <Container class="main" fluid>
@@ -55,25 +58,34 @@
   <Collapse {isOpen} navbar expand="md" on:update={handleUpdate}>
     <Nav class="ms-auto" navbar>
       <NavItem>
-        <NavLink href="/home">Home</NavLink>
+        <NavLink href="/home" on:click={closeNav}>Home</NavLink>
       </NavItem>
       <NavItem>
-        <NavLink>Login</NavLink>
+        <NavLink on:click={closeNav}>Login</NavLink>
       </NavItem>
       <Dropdown nav inNavbar size="sm" direction="down">
         <DropdownToggle color="primary" nav caret>Actions</DropdownToggle>
         <DropdownMenu end>
-          <DropdownItem href="/create">Add New SHLink</DropdownItem>
           <DropdownItem
             on:click={() => {
-              delete window.localStorage[LOCAL_STORAGE_KEY];
+              closeNav();
+              goto("/create");
+            }}>Add New SHLink</DropdownItem>
+          <DropdownItem
+            on:click={() => {
+              closeNav();
+              $shlStore = [];
               goto('/');
             }}>Reset Demo</DropdownItem>
           {#if $shlStore.length > 0}
             <DropdownItem divider />
             <DropdownItem header>View Stored SHLinks</DropdownItem>
             {#each $shlStore as shl, i}
-              <DropdownItem href={'/view/' + shl.id}>{shl.label || `SHLink ${i + 1}`}</DropdownItem>
+              <DropdownItem
+                on:click={() => {
+                closeNav();
+                goto('/view/' + shl.id);
+              }}>{shl.label || `SHLink ${i + 1}`}</DropdownItem>
             {/each}
           {/if}
         </DropdownMenu>

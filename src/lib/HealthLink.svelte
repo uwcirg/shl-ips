@@ -68,15 +68,21 @@
   async function deleteShl() {
     shlClient.deleteShl(shl);
     $shlStore = $shlStore.filter((l) => l.id !== shl.id);
+    toggle();
     goto('/');
   }
 
   async function addFile() {
-    goto(`/create/${shl.id}`)
+    goto(`/create?shlid=${shl.id}`);
   }
 
-  async function deleteFile(fileContent) {
-    shl = shlClient.deleteFile(shl, fileContent);
+  async function deleteFile(fileContent:string) {
+    shl = await shlClient.deleteFile(shl, fileContent).then((shl) => {
+      let updatedFiles = shl.files.filter((f) => f.contentEncrypted !== fileContent);
+      shl.files = updatedFiles;
+      return shl;
+    });
+    $shlStore[$shlStore.findIndex(obj => obj.id === shl.id)] = shl;
   }
 </script>
 <Row cols={{ md: 2, sm: 1 }}>
@@ -195,15 +201,20 @@
 <Row>
   <h2>SHL Contents</h2>
 </Row>
-{#each shl.files as file, i (file.contentEncrypted)}
+{#if shl.files.length == 0}
+<Row>
+  <p><em>No records found</em></p>
+</Row>
+{/if}
+{#each shl.files as file (file.contentEncrypted)}
 <Row>
   <Col>
     <Card class="mb-3" color="light">
       <CardHeader>
         <CardTitle>
-          Record {i+1}
+          IPS 
           {#if file.date}
-            ({file.date})
+            {file.date}
           {/if}
         </CardTitle>
       </CardHeader>
@@ -215,7 +226,9 @@
         {/if}
       </CardBody>
       <CardFooter>
-        <Button size="sm" color="danger" on:click={deleteFile(file.contentEncrypted)}>
+        <Button size="sm" color="danger" on:click={(e) => {
+          deleteFile(file.contentEncrypted);
+        }}>
           <Icon name="trash" /> Delete
         </Button>
       </CardFooter>

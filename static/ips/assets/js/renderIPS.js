@@ -1,6 +1,3 @@
-// check variable to see if header, which includes data loading active
-let headerLength = 0;
-
 import config from "./config.js";
 
 export { prepareSHLContents };
@@ -18,22 +15,18 @@ Sqrl.autoEscaping(false);
 
 // Load header and footer on document ready and attach button actions
 $(document).ready(function () {
-  headerLength = $("#header").length;
-  let footerLength = $("#footer").length;
-  if (headerLength === 1) {
-    $("#header").load(config.html_dir + "header.html", () => { });
-  }
+  Promise.all([
+    $("#header").load(config.html_dir + "header.html"),
+    $("#footer").load(config.html_dir + "footer.html")
+  ]).then((success) => {
+    $("#content").show();
+  }, (failure) => {
+    console.log(failure);
+    $('#content').show();
+  });
 
   $('#FhirDropdown').on('click', () => updateDisplayMode('Entries'));
   $('#NarrativeDropdown').on('click', () => updateDisplayMode('Text'));
-
-  if (footerLength === 1) {
-    $("#footer").load(config.html_dir + "footer.html", () => { });
-  }
-});
-
-$(window).on('load', function () {
-  $("#content").show();
 });
 
 function loadSample() {
@@ -183,10 +176,10 @@ function prepareSHLContents(contents) {
   if (!Array.isArray(contents)){
     contents = [contents];
   }
-  shlContents = contents;
+  shlContents = contents.reverse();
   var jqxhr = $.get(config.template_dir + "IPS.html", function () { })
     .done(function (template) {
-      shlContents.slice().reverse().forEach((e, i) => {
+      shlContents.forEach((e, i) => {
         let data = { index: i };
         if (shlContents.length > (config.show_demo ? 0 : 1)) {
           addTab(`IPS ${i+1}`, i);
@@ -356,7 +349,7 @@ function update(ips, index) {
     }
   });
   //don't need to do anything if the header is not shown
-  if (headerLength === 1) {
+  if ($('#ipsInput')) {
     checks(ips)
   }
 };

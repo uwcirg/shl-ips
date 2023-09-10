@@ -30,6 +30,7 @@
 		"@types/qrcode": "^1.5.0",
 		"base64url": "^3.0.1",
 		"bootstrap": "^5.2.3",
+		"fhirclient": "^2.5.2",
 		"jose": "^4.11.4",
 		"pako": "^2.1.0",
 		"qrcode": "^1.5.1",
