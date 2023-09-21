@@ -30,6 +30,23 @@ const allowableResourceTypes = [
     'MedicationStatement'
 ];
 
+export function getIPSResources(ips) {
+    let entries = ips.entry;
+    let resources = [];
+    entries.forEach((entry) => {
+        if (entry.resource.resourceType == 'Condition') return;
+
+        entry.resource.id = entry.fullUrl;
+        if (entry.resource.extension) {
+            entry.resource.extension = entry.resource.extension.filter(function(item) {
+                return item.url !== "http://hl7.org/fhir/StructureDefinition/narrativeLink";
+            })
+        }
+        resources.push(entry.resource);
+    });
+    return resources;
+}
+
 export function prepareResources(resources) {
     let resourcesToLoad = [];
     let queuedResources = sessionStorage.getItem(RESOURCES_TO_LOAD_KEY);
@@ -43,11 +60,16 @@ export function prepareResources(resources) {
             if (resource.resourceType == 'Patient') {
                 Patient = `${resource.resourceType}/${resource.id}`
                 sessionStorage.setItem(PATIENT_REFERENCE_KEY, Patient);
+                resourcesToLoad.push(resource);
+                break;
             }
         }
     }
     for (let i = 0; i < resources.length; i++) {
         let resource = resources[i];
+        if (Patient && resource.resourceType == 'Patient') {
+            continue;
+        }
         if (resource.subject) {
             resource.subject.reference = Patient;
         } else if (resource.patient) {

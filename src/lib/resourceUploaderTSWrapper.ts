@@ -1,6 +1,7 @@
 import {
     prepareResources as prepareResourcesJS,
-    uploadResources as uploadResourcesJS
+    uploadResources as uploadResourcesJS,
+    getIPSResources as getIPSResourcesJS
 } from './resourceUploader.js';
 
 export function prepareResources(resources: Array<any> | undefined) {
@@ -9,4 +10,8 @@ export function prepareResources(resources: Array<any> | undefined) {
 
 export async function uploadResources() {
     return await uploadResourcesJS();
+}
+
+export function getIPSResources(ips) {
+    return getIPSResourcesJS(ips);
 }

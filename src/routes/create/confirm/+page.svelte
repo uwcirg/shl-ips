@@ -8,12 +8,6 @@
   
     let shlClient: SHLClient = getContext('shlClient');
     let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
-
-    // $: {
-    //     // if (!sessionStorage.getItem('SMART_KEY')) {
-    //     //     goto('/create');
-    //     // }
-    // }
   </script>
 
   <SoFResult></SoFResult>

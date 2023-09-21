@@ -17,11 +17,15 @@
     TabContent,
     TabPane } from 'sveltestrap';
 
-  import { EXAMPLE_IPS, EXAMPLE_IPS_DEFAULT, IPS_URL_KEY } from './config';
+  import { EXAMPLE_IPS, EXAMPLE_IPS_DEFAULT, RESOURCES_TO_LOAD_KEY,
+    PATIENT_REFERENCE_KEY,
+    IPS_URL_KEY, } from './config';
   import issuerKeys from './issuer.private.jwks.json';
   import type { SHCRetrieveEvent } from './types';
   import { page } from '$app/stores';
   import { authorize } from './sofClientTSWrapper';
+  import { prepareResources } from './resourceUploaderTSWrapper';
+    import { goto } from '$app/navigation';
   
   const tabParam = $page.url.searchParams.get('tab');
   let shlIdParam = $page.url.searchParams.get('shlid');
@@ -78,6 +82,9 @@
         let preparedIPS = sessionStorage.getItem(IPS_URL_KEY);
         if (preparedIPS) {
           setSummaryUrlValidated(preparedIPS);
+        } else if (sessionStorage.getItem(RESOURCES_TO_LOAD_KEY)) {
+          goto(`/create/confirm?type=${currentTab}`+(currentTab == 'url' ? `&url=${summaryUrlValidated}` : ''));
+          return;
         }
         const contentResponse = await fetch(summaryUrlValidated!, {
           headers: { accept: 'application/fhir+json' }
@@ -101,7 +108,10 @@
 
       const shc = await signJws(content);
 
+      sessionStorage.removeItem(RESOURCES_TO_LOAD_KEY);
+      sessionStorage.removeItem(PATIENT_REFERENCE_KEY);
       sessionStorage.removeItem(IPS_URL_KEY);
+
       dispatch('shc-retrieved', {
         shc: {
           verifiableCredential: [shc]
