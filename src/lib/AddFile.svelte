@@ -24,7 +24,6 @@
   import type { SHCRetrieveEvent } from './types';
   import { page } from '$app/stores';
   import { authorize } from './sofClientTSWrapper';
-  import { prepareResources } from './resourceUploaderTSWrapper';
     import { goto } from '$app/navigation';
   
   const tabParam = $page.url.searchParams.get('tab');

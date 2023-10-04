@@ -16,7 +16,9 @@
         // Your code for DOM manipulation or other tasks
         console.log('Component is mounted, DOM is ready');
         let newResources = await getResourcesFromType();
-        resources = prepareResources(newResources);
+        if (newResources) {
+            resources = prepareResources(newResources);
+        }
         console.log(resources);
     });
 

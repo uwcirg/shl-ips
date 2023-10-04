@@ -64,6 +64,9 @@ export function prepareResources(resources) {
                 break;
             }
         }
+        if (!Patient) {
+            throw Error("Missing patient resource");
+        }
     }
     for (let i = 0; i < resources.length; i++) {
         let resource = resources[i];

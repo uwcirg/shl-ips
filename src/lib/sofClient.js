@@ -14,7 +14,7 @@ const config = {
         redirect_uri: SOF_REDIRECT_URI
     };
 
-function authorize(inputFhirUrl, ) {
+function authorize(inputFhirUrl) {
     config.iss = inputFhirUrl;
     return FHIR.oauth2.authorize(config);
 };
