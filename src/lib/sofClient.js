@@ -1,5 +1,5 @@
 import FHIR from 'fhirclient';
-import { SOF_REDIRECT_URI, SOF_RESOURCES, EPIC_CLIENT_ID } from './config';
+import { SOF_REDIRECT_URI, SOF_RESOURCES } from './config';
 
 export { authorize, retrieve };
 
@@ -7,15 +7,16 @@ const patientResourceScope = SOF_RESOURCES.map(resourceType => `patient/${resour
 const resourceScope = patientResourceScope.join(" ");
 const config = {
         // This client ID worked through 2023-04-17, and then I marked the app as ready for production. I think at that point I was assigned new prod & non-prod client ID's...
-        clientId: EPIC_CLIENT_ID, // I believe clientId is ignored at smit.
+        clientId: '', // clientId is ignored at smit
         scope: `openid fhirUser launch/patient ${resourceScope} offline_access`,
         iss: '(authorization url, populated later)',
         completeInTarget: true,
         redirect_uri: SOF_REDIRECT_URI
     };
 
-function authorize(inputFhirUrl) {
+function authorize(inputFhirUrl, clientId) {
     config.iss = inputFhirUrl;
+    config.clientId = clientId;
     return FHIR.oauth2.authorize(config);
 };
 

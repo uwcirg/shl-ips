@@ -17,14 +17,18 @@
     TabContent,
     TabPane } from 'sveltestrap';
 
-  import { EXAMPLE_IPS, EXAMPLE_IPS_DEFAULT, RESOURCES_TO_LOAD_KEY,
+  import { EXAMPLE_IPS,
+    EXAMPLE_IPS_DEFAULT,
+    EPIC_CLIENT_ID,
+    CERNER_CLIENT_ID,
+    RESOURCES_TO_LOAD_KEY,
     PATIENT_REFERENCE_KEY,
-    IPS_URL_KEY, } from './config';
+    IPS_URL_KEY } from './config';
   import issuerKeys from './issuer.private.jwks.json';
   import type { SHCRetrieveEvent } from './types';
   import { page } from '$app/stores';
   import { authorize } from './sofClientTSWrapper';
-    import { goto } from '$app/navigation';
+  import { goto } from '$app/navigation';
   
   const tabParam = $page.url.searchParams.get('tab');
   let shlIdParam = $page.url.searchParams.get('shlid');
@@ -187,10 +191,12 @@
       </span>
         <FormGroup>
           <Label>Fetch via SMART authorization</Label>
-          <Input type="radio" bind:group={sofHost} value="https://launch.smarthealthit.org/v/r4/sim/WzMsIiIsIiIsIkFVVE8iLDAsMCwwLCIiLCIiLCIiLCIiLCIiLCIiLCIiLDAsMF0/fhir" label="SMIT (Demo)"/>
+          <Input id="smit" type="radio" bind:group={sofHost} value="https://launch.smarthealthit.org/v/r4/sim/WzMsIiIsIiIsIkFVVE8iLDAsMCwwLCIiLCIiLCIiLCIiLCIiLCIiLCIiLDAsMF0/fhir" label="SMIT (Demo)"/>
           <p class="text-secondary" style="margin-left:25px">Credentials provided</p>
-          <Input type="radio" bind:group={sofHost} value="https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4" label="EPIC (Demo)" />
+          <Input id="epic" type="radio" bind:group={sofHost} value="https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4" label="EPIC (Demo)" />
           <p style="margin-left:25px"><a href="https://fhir.epic.com/Documentation?docId=testpatients" class="text-secondary" target="_blank" rel="noreferrer">Test patient credentials <Icon name="box-arrow-up-right" /></a></p>
+          <Input id="cerner" type="radio" bind:group={sofHost} value="https://fhir-myrecord.cerner.com/r4/ec2458f2-1e24-41c8-b71b-0e701af7583d" label="Oracle Cerner (Demo)" />
+          <p style="margin-left:25px"><a href="https://docs.google.com/document/u/1/d/e/2PACX-1vQwyX3px4qi5t1O6_El6022zYt4ymKAWCrcgxcX5NvYGUJAkJ4WFwOnLoikow6rEccpFZzDWBdcBqsQ/pub" class="text-secondary" target="_blank" rel="noreferrer">Test patient credentials <Icon name="box-arrow-up-right" /></a></p>
         </FormGroup>
     </TabPane>
   </TabContent>

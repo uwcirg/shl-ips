@@ -47,11 +47,20 @@ export function getIPSResources(ips) {
     return resources;
 }
 
-export function prepareResources(resources) {
+export function prepareResources(resources, append=true) {
+    resources = resources.map(element => {
+        if (typeof element == "string") {
+            return JSON.parse(element);
+        }
+        return element;
+    });
+
     let resourcesToLoad = [];
-    let queuedResources = sessionStorage.getItem(RESOURCES_TO_LOAD_KEY);
-    if (queuedResources) {
-        resourcesToLoad = JSON.parse(queuedResources);
+    if (append) {
+        let queuedResources = sessionStorage.getItem(RESOURCES_TO_LOAD_KEY);
+        if (queuedResources) {
+            resourcesToLoad = JSON.parse(queuedResources);
+        }
     }
     let Patient = sessionStorage.getItem(PATIENT_REFERENCE_KEY);
     if (!Patient) {
@@ -70,7 +79,7 @@ export function prepareResources(resources) {
     }
     for (let i = 0; i < resources.length; i++) {
         let resource = resources[i];
-        if (Patient && resource.resourceType == 'Patient') {
+        if (append && Patient && resource.resourceType == 'Patient') {
             continue;
         }
         if (resource.subject) {
@@ -83,7 +92,43 @@ export function prepareResources(resources) {
             resourcesToLoad.push(newResource);
         }
     }
-    // TODO Sort resource list
+    resourcesToLoad.sort((a, b) => {
+        // Compare 'resourceType' values
+        const resourceTypeA = a.resourceType.toUpperCase();
+        const resourceTypeB = b.resourceType.toUpperCase();
+      
+        if (resourceTypeA < resourceTypeB) {
+          return -1;
+        }
+        if (resourceTypeA > resourceTypeB) {
+          return 1;
+        }
+
+        if (resourceTypeA === "Immunization") {
+            // 'resourceType' values are equal, so compare 'lastName' values
+            const occurrenceDateTimeA = a.occurrenceDateTime;
+            const occurrenceDateTimeB = b.occurrenceDateTime;
+        
+            if (occurrenceDateTimeA < occurrenceDateTimeB) {
+                return -1;
+            }
+            if (occurrenceDateTimeA > occurrenceDateTimeB) {
+                return 1;
+            }
+            const vaccineCodetextA = a.vaccineCode.text;
+            const vaccineCodetextB = b.vaccineCode.text;
+        
+            if (vaccineCodetextA < vaccineCodetextB) {
+                return -1;
+            }
+            if (vaccineCodetextA > vaccineCodetextB) {
+                return 1;
+            }
+        }
+      
+        // Both 'resourceType' and 'lastName' values are equal
+        return 0;
+      });
     sessionStorage.setItem(RESOURCES_TO_LOAD_KEY, JSON.stringify(resourcesToLoad));
     return resourcesToLoad;
 }

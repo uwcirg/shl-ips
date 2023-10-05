@@ -18,7 +18,7 @@ export const SOF_RESOURCES = [
   'MedicationRequest',
   // 'Medication', // can't search by patient; "Only an _ID search is allowed."
   'Condition',
-  'Observation', // "Must have either code or category."
+  // 'Observation', // "Must have either code or category."
   // 'Organization', // can't search by patient; "Only an _ID search is allowed."
   'Immunization',
   // 'Device',
@@ -41,7 +41,7 @@ export const EXAMPLE_IPS = {
   'Peter Keith Jones': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/11013/$summary',
   'Angela Roster': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/10965/$summary',
   'Horace Skelly': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/11142/$summary',
-  'Anonymous': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/10999/$summary'
+  'Anonymous': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/10999/$summary',
+  'Desiree': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/Pat1-System2/$summary'
 };
 export const EXAMPLE_IPS_DEFAULT = 'Maria SEATTLE Gravitate';
-  // 'https://ips.health/fhir/Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299/$summary';

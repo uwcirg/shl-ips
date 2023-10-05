@@ -3,11 +3,12 @@
     import { getIPSResources, prepareResources, uploadResources } from './resourceUploaderTSWrapper';
     import { onMount } from 'svelte';
     import { goto } from '$app/navigation';
-    import { Button } from 'sveltestrap';
+    import { Button, Input } from 'sveltestrap';
     import { page } from '$app/stores';
     let typeParam = $page.url.searchParams.get('type');
 
     let resources: Array<any> | undefined;
+    let resourceStates: { [key: string]: boolean } = {};
     let submitting = false;
     let reference: string;
 
@@ -18,11 +19,21 @@
         let newResources = await getResourcesFromType();
         if (newResources) {
             resources = prepareResources(newResources);
+            if (resources) {
+                resources.forEach(element => {
+                    resourceStates[JSON.stringify(element)] = true;
+                });
+            }
         }
         console.log(resources);
     });
 
+    function getSelectedResources() {
+        return Object.keys(resourceStates).filter(key => resourceStates[key]);
+    }
+
     async function confirm() {
+        prepareResources(getSelectedResources(), false);
         reference = await uploadResources();
         goto("/create");
     }
@@ -48,11 +59,15 @@
     }
 </script>
 
-<Button color="secondary" style="width:fit-content" on:click={ () => {goto('/create')} }>Add More</Button><br/>
+<Button color="secondary" style="width:fit-content" on:click={ () => {
+    prepareResources(getSelectedResources(), false);
+    goto('/create')
+} }>Add More</Button><br/>
 <form on:submit|preventDefault={() => confirm()}>
     {#if resources != null}
         {#each resources as resource}
-            <p>{JSON.stringify(resource)}</p>
+            <Input class="resource" type="checkbox" bind:checked={resourceStates[JSON.stringify(resource)]} label={JSON.stringify(resource)} value={JSON.stringify(resource)}/>
+            <br/>
         {/each}
     {/if}
     {#if reference}
