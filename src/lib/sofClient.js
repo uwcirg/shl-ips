@@ -7,16 +7,18 @@ const patientResourceScope = SOF_RESOURCES.map(resourceType => `patient/${resour
 const resourceScope = patientResourceScope.join(" ");
 const config = {
         // This client ID worked through 2023-04-17, and then I marked the app as ready for production. I think at that point I was assigned new prod & non-prod client ID's...
-        clientId: '', // clientId is ignored at smit
+        clientId: '451709b5-ab93-4dc1-8fb1-6cd9104bee7a', // clientId is ignored at smit
         scope: `openid fhirUser launch/patient ${resourceScope} offline_access`,
         iss: '(authorization url, populated later)',
         completeInTarget: true,
-        redirect_uri: SOF_REDIRECT_URI
+        redirect_uri: SOF_REDIRECT_URI,
+        target: "popup",
+        completeInTarget: true
     };
 
 function authorize(inputFhirUrl, clientId) {
     config.iss = inputFhirUrl;
-    config.clientId = clientId;
+    config.clientId = clientId ?? "no clientId provided";
     return FHIR.oauth2.authorize(config);
 };
 
@@ -47,6 +49,7 @@ async function retrieve() {
             }));
             return [].concat(...resources);
         }
+        throw Error("No patient id found");
     } catch(e) {
         console.error(e);
     }

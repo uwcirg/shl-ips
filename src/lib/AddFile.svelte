@@ -1,237 +1,185 @@
 <script lang="ts">
-  import * as jose from 'jose';
-  import * as pako from 'pako';
-  import { createEventDispatcher, onMount } from 'svelte';
-  import { Button,
-    Col,
-    Dropdown,
-    DropdownMenu,
-    DropdownItem,
-    DropdownToggle,
-    FormGroup,
-    Icon,
-    Input,
-    Label,
-    Row,
-    Spinner,
-    TabContent,
-    TabPane } from 'sveltestrap';
+    import * as jose from 'jose';
+    import * as pako from 'pako';
+    import { createEventDispatcher } from 'svelte';
+    import {
+        FormGroup,
+        Input,
+        Label,
+        Nav,
+        NavItem,
+        NavLink,
+        TabContent,
+        TabPane } from 'sveltestrap';
+    import FetchUrl from './FetchUrl.svelte';
+    import FetchFile from './FetchFile.svelte';
+    import FetchSoF from './FetchSoF.svelte';
+    import ResourceSelector from './ResourceSelector.svelte';
 
-  import { EXAMPLE_IPS,
-    EXAMPLE_IPS_DEFAULT,
-    EPIC_CLIENT_ID,
-    CERNER_CLIENT_ID,
-    RESOURCES_TO_LOAD_KEY,
-    PATIENT_REFERENCE_KEY,
-    IPS_URL_KEY } from './config';
-  import issuerKeys from './issuer.private.jwks.json';
-  import type { SHCRetrieveEvent } from './types';
-  import { page } from '$app/stores';
-  import { authorize } from './sofClientTSWrapper';
-  import { goto } from '$app/navigation';
-  
-  const tabParam = $page.url.searchParams.get('tab');
-  let shlIdParam = $page.url.searchParams.get('shlid');
+    import issuerKeys from './issuer.private.jwks.json';
+    import type { SHCFile,
+      Bundle,
+      SHCRetrieveEvent,
+      ResourceRetrieveEvent,
+      IPSRetrieveEvent,
+      SHLSubmitEvent } from './types';
+    import { page } from '$app/stores';
+    
+    let shlIdParam = $page.url.searchParams.get('shlid');
+    let tabParam = $page.url.searchParams.get('tab');
 
-  const dispatch = createEventDispatcher<{ 'shc-retrieved': SHCRetrieveEvent }>();
-  let submitting = false;
-  let summaryUrls = EXAMPLE_IPS;
-  let defaultUrl = summaryUrls[EXAMPLE_IPS_DEFAULT];
-  let uploadFiles: FileList | undefined;
-  let currentTab: string | number;
-  currentTab = 'url';
+    const shlDispatch = createEventDispatcher<{ 'shl-submitted': SHLSubmitEvent }>();
+    let submitting = false;
+    let fetchError = "";
+    let currentTab: string | number;
+    currentTab = tabParam ?? 'url';
 
-  let inputUrl: HTMLFormElement;
-  let label = 'SHL from ' + new Date().toISOString().slice(0, 10);
-  let isOpen = false;
-  let fetchError = "";
 
-  let sofHost = "https://launch.smarthealthit.org/v/r4/sim/WzMsIiIsIiIsIkFVVE8iLDAsMCwwLCIiLCIiLCIiLCIiLCIiLCIiLCIiLDAsMF0/fhir";
-  let expiration: number | null;
-
-  let summaryUrlValidated: URL | undefined = undefined;
-  $: {
-    setSummaryUrlValidated(defaultUrl);
-  }
-
-  onMount(() => {
-    if (sessionStorage.getItem(IPS_URL_KEY)) {
-      fetchIps();
+    let resourceResult: ResourceRetrieveEvent = {
+      resources: undefined
     }
-  })
-
-  function setSummaryUrlValidated(url: string) {
-    try {
-      summaryUrlValidated = new URL(url);
-    } catch {
-      summaryUrlValidated = undefined;
+    let shcResult: SHCRetrieveEvent = {
+      shc: undefined
     }
-  }
+    let ipsResult: IPSRetrieveEvent = {
+      ips: undefined
+    }
 
-  async function fetchIps() {
-    submitting = true;
-    fetchError = "";
-    try {
-      let content;
+    let resourcesToReview: any[] | undefined = [];
+    let shcsToAdd: SHCFile[] = [];
 
-      if (currentTab == 'file' && uploadFiles?.[0] instanceof File) {
-        content = JSON.parse(new TextDecoder().decode(await uploadFiles[0].arrayBuffer()));
-      } else {
-        if (currentTab == 'smart') {
-          // TODO: do sof auth
-          authorize(sofHost);
-          return;
-        }
-        let preparedIPS = sessionStorage.getItem(IPS_URL_KEY);
-        if (preparedIPS) {
-          setSummaryUrlValidated(preparedIPS);
-        } else if (sessionStorage.getItem(RESOURCES_TO_LOAD_KEY)) {
-          goto(`/create/confirm?type=${currentTab}`+(currentTab == 'url' ? `&url=${summaryUrlValidated}` : ''));
-          return;
-        }
-        const contentResponse = await fetch(summaryUrlValidated!, {
-          headers: { accept: 'application/fhir+json' }
-        }).then(function(response) {
-          if (!response.ok) {
-            // make the promise be rejected if we didn't get a 2xx response
-            throw new Error("Unable to fetch IPS", {cause: response});
-          } else {
-            return response;
+    let label = 'SHL from ' + new Date().toISOString().slice(0, 10);
+    let expiration: number | null;
+
+    async function handleResourceResultUpdate(details: ResourceRetrieveEvent) {
+        try {
+          resourceResult = details;
+          if (resourceResult.resources) {
+            resourcesToReview = resourceResult.resources;
           }
-        });
-        content = await contentResponse.json();
+        } catch (e) {
+          console.log('Failed', e);
+          submitting = false;
+          fetchError = "Error preparing IPS";
+        }
+    }
+
+    async function handleSHCResultUpdate(details: SHCRetrieveEvent) {
+        try {
+          shcResult = details;
+          if (shcResult.shc) {
+            shcsToAdd.push(await packageSHC(shcResult.shc));
+          }
+        } catch (e) {
+          console.log('Failed', e);
+          submitting = false;
+          fetchError = "Error processing SHC";
+        }
+    }
+
+    async function handleRetrievedIPS(details: IPSRetrieveEvent) {
+      try {
+        ipsResult = details;
+        if (ipsResult.ips) {
+          shcsToAdd.unshift(await packageSHC(ipsResult.ips));
+        }
+      } catch (e) {
+        console.log('Failed', e);
+        submitting = false;
+        fetchError = "Error preparing IPS";
       }
+    }
+    
+    function isSHCFile(object: any): object is SHCFile {
+      return 'verifiableCredential' in object;
+    }
 
-      if (content != undefined && content.verifiableCredential) {
-        return dispatch('shc-retrieved', {
-          shc: content,
-          content
-        });
-      }
+    async function packageSHC(content:SHCFile | Bundle | undefined): Promise<SHCFile> {
+        if (content != undefined && isSHCFile(content) && content.verifiableCredential) {
+          return content;
+        }
 
-      const shc = await signJws(content);
+        const shc = await signJws(content);
 
-      sessionStorage.removeItem(RESOURCES_TO_LOAD_KEY);
-      sessionStorage.removeItem(PATIENT_REFERENCE_KEY);
-      sessionStorage.removeItem(IPS_URL_KEY);
+        return { verifiableCredential: [shc] };
+    }
 
-      dispatch('shc-retrieved', {
-        shc: {
-          verifiableCredential: [shc]
-        },
-        content,
+    async function submitSHL() {
+      return shlDispatch('shl-submitted', {
+        shcs: shcsToAdd,
         label,
         exp: expiration ? new Date().getTime() / 1000 + expiration : undefined
       });
-    } catch (e) {
-      console.log('Failed', e);
-      submitting = false;
-      fetchError = "Error fetching IPS";
     }
-  }
 
-  const exampleSigningKey = jose.importJWK(issuerKeys.keys[0]);
-  async function signJws(payload: unknown) {
-    const fields = { zip: 'DEF', alg: 'ES256', kid: issuerKeys.keys[0].kid };
-    const body = pako.deflateRaw(
-      JSON.stringify({
-        iss: 'https://spec.smarthealth.cards/examples/issuer',
-        nbf: new Date().getTime() / 1000,
-        vc: {
-          type: ['https://smarthealth.cards#health-card'],
-          credentialSubject: {
-            fhirVersion: '4.0.1',
-            fhirBundle: payload
-          }
-        }
-      })
-    );
+    const exampleSigningKey = jose.importJWK(issuerKeys.keys[0]);
+    async function signJws(payload: unknown) {
+        const fields = { zip: 'DEF', alg: 'ES256', kid: issuerKeys.keys[0].kid };
+        const body = pako.deflateRaw(
+            JSON.stringify({
+                iss: 'https://spec.smarthealth.cards/examples/issuer',
+                nbf: new Date().getTime() / 1000,
+                vc: {
+                    type: ['https://smarthealth.cards#health-card'],
+                    credentialSubject: {
+                        fhirVersion: '4.0.1',
+                        fhirBundle: payload
+                    }
+                }
+            })
+        );
 
-    const signed = new jose.CompactSign(body)
-      .setProtectedHeader(fields)
-      .sign(await exampleSigningKey);
-    return signed;
-  }
+        const signed = new jose.CompactSign(body)
+        .setProtectedHeader(fields)
+        .sign(await exampleSigningKey);
+        return signed;
+    }
 </script>
 
-<form bind:this={inputUrl} on:submit|preventDefault={() => fetchIps()}>
-  <TabContent on:tab={(e) => (currentTab = e.detail)}>
-    <TabPane tabId="url" style="padding-top:10px" active>
-      <span slot="tab">
-        FHIR URL
-      </span>
-      <FormGroup>
-        <Label>Fetch summary from URL</Label>
-        <Dropdown {isOpen} toggle={() => (isOpen = !isOpen)}>
-          <DropdownToggle tag="div" class="d-inline-block" style="width:100%">
-            <Input type="text" bind:value={summaryUrlValidated} />
-          </DropdownToggle>
-          <DropdownMenu style="width:100%">
-            {#each Object.entries(summaryUrls) as [title, url]}
-              <DropdownItem style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"  on:click={() => {
-                setSummaryUrlValidated(url);
-              }}>{title} - {url}</DropdownItem>
-            {/each}
-          </DropdownMenu>
-        </Dropdown>
-      </FormGroup>
-    </TabPane>
-    <TabPane tabId="file" style="padding-top:10px">
-      <span slot="tab">
-        File Upload
-      </span>
-      <FormGroup>
-        <Label>Upload Bundle (<code>.json</code> or signed <code>.smart-health-card</code>)</Label>
-        <Input type="file" name="file" bind:files={uploadFiles} />
-      </FormGroup>
-    </TabPane>
-    <TabPane tabId="smart" style="padding-top:10px">
-      <span slot="tab">
-        SMART Patient Access
-      </span>
-        <FormGroup>
-          <Label>Fetch via SMART authorization</Label>
-          <Input id="smit" type="radio" bind:group={sofHost} value="https://launch.smarthealthit.org/v/r4/sim/WzMsIiIsIiIsIkFVVE8iLDAsMCwwLCIiLCIiLCIiLCIiLCIiLCIiLCIiLDAsMF0/fhir" label="SMIT (Demo)"/>
-          <p class="text-secondary" style="margin-left:25px">Credentials provided</p>
-          <Input id="epic" type="radio" bind:group={sofHost} value="https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4" label="EPIC (Demo)" />
-          <p style="margin-left:25px"><a href="https://fhir.epic.com/Documentation?docId=testpatients" class="text-secondary" target="_blank" rel="noreferrer">Test patient credentials <Icon name="box-arrow-up-right" /></a></p>
-          <Input id="cerner" type="radio" bind:group={sofHost} value="https://fhir-myrecord.cerner.com/r4/ec2458f2-1e24-41c8-b71b-0e701af7583d" label="Oracle Cerner (Demo)" />
-          <p style="margin-left:25px"><a href="https://docs.google.com/document/u/1/d/e/2PACX-1vQwyX3px4qi5t1O6_El6022zYt4ymKAWCrcgxcX5NvYGUJAkJ4WFwOnLoikow6rEccpFZzDWBdcBqsQ/pub" class="text-secondary" target="_blank" rel="noreferrer">Test patient credentials <Icon name="box-arrow-up-right" /></a></p>
-        </FormGroup>
-    </TabPane>
-  </TabContent>
+<TabContent on:tab={(e) => {
+  currentTab = e.detail;
+}}>
+  <TabPane tabId="url" style="padding-top:10px" active={currentTab == "url"}>
+    <span slot="tab">FHIR URL</span>
+    <FetchUrl
+      on:updateResources={ async ({ detail }) => { handleResourceResultUpdate(detail) } }
+      on:updateSHC={ async ({ detail }) => { handleSHCResultUpdate(detail) } }>
+    </FetchUrl>
+  </TabPane>
+  <TabPane tabId="file" style="padding-top:10px" active={currentTab == "file"}>
+    <span slot="tab">File Upload</span>
+    <FetchFile
+      on:updateResources={ async ({ detail }) => { handleResourceResultUpdate(detail) } }
+      on:updateSHC={ async ({ detail }) => { handleSHCResultUpdate(detail) } }>
+    </FetchFile>
+  </TabPane>
+  <TabPane tabId="smart" style="padding-top:10px" active={currentTab == "smart"}>
+    <span slot="tab">SMART Patient Access</span>
+    <FetchSoF
+      on:updateResources={ async ({ detail }) => { handleResourceResultUpdate(detail) } }
+      on:updateSHC={ async ({ detail }) => { handleSHCResultUpdate(detail) } }>
+    </FetchSoF>
+  </TabPane>
+</TabContent>
+
+{#if resourcesToReview != undefined && resourcesToReview.length > 0}
+<br/>
+  <ResourceSelector bind:newResources={resourcesToReview}
+    on:ips-retrieved={ async ({ detail }) => { handleRetrievedIPS(detail) } }>
+  </ResourceSelector>
   {#if shlIdParam == null}
-  <FormGroup>
-    <Label>New SHLink Label</Label>
-    <Input type="text" bind:value={label} />
-  </FormGroup>
-  <FormGroup>
-    <Label>Expiration</Label>
-    <Input type="radio" bind:group={expiration} value={60 * 60} label="1 hour" />
-    <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 7} label="1 week" />
-    <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 7 * 365} label="1 year" />
-    <Input type="radio" bind:group={expiration} value={null} label="Never" />
-  </FormGroup>
+  <br/>
+    <FormGroup>
+      <Label>New SHLink Label</Label>
+      <Input type="text" bind:value={label} />
+    </FormGroup>
+    <FormGroup>
+      <Label>Expiration</Label>
+      <Input type="radio" bind:group={expiration} value={60 * 60} label="1 hour" />
+      <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 7} label="1 week" />
+      <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 7 * 365} label="1 year" />
+      <Input type="radio" bind:group={expiration} value={null} label="Never" />
+    </FormGroup>
   {/if}
-
-  <Row>
-    <Col xs="auto">
-      <Button color="primary" style="width:fit-content" disabled={!summaryUrlValidated || submitting} type="submit">
-        {#if !submitting}
-          Fetch IPS
-        {:else}
-          Fetching...
-        {/if}
-      </Button>
-    </Col>
-    {#if submitting}
-    <Col xs="auto">
-      <Spinner color="primary" type="border" size="md"/>
-    </Col>
-    {/if}
-  </Row>
   <span class="text-danger">{fetchError}</span>
-</form>
-
-<style>
-</style>
+{/if}

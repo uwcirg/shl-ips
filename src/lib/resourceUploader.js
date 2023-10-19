@@ -1,9 +1,4 @@
-import {
-    INTERMEDIATE_FHIR_SERVER_BASE,
-    RESOURCES_TO_LOAD_KEY,
-    PATIENT_REFERENCE_KEY,
-    IPS_URL_KEY,
- } from './config';
+import { INTERMEDIATE_FHIR_SERVER_BASE } from './config';
 
 // This is both allowable and reverse order of loading
 const allowableResourceTypes = [
@@ -30,11 +25,12 @@ const allowableResourceTypes = [
     'MedicationStatement'
 ];
 
-export function getIPSResources(ips) {
+export function getResourcesFromIPS(ips) {
     let entries = ips.entry;
     let resources = [];
     entries.forEach((entry) => {
-        if (entry.resource.resourceType == 'Condition') return;
+        if (entry.resource.resourceType == 'Condition') return; // Omit conditions until ips fhir server is upgraded
+        if (entry.resource.resourceType == 'Composition') return;
 
         entry.resource.id = entry.fullUrl;
         if (entry.resource.extension) {
@@ -47,98 +43,10 @@ export function getIPSResources(ips) {
     return resources;
 }
 
-export function prepareResources(resources, append=true) {
-    resources = resources.map(element => {
-        if (typeof element == "string") {
-            return JSON.parse(element);
-        }
-        return element;
-    });
-
-    let resourcesToLoad = [];
-    if (append) {
-        let queuedResources = sessionStorage.getItem(RESOURCES_TO_LOAD_KEY);
-        if (queuedResources) {
-            resourcesToLoad = JSON.parse(queuedResources);
-        }
-    }
-    let Patient = sessionStorage.getItem(PATIENT_REFERENCE_KEY);
-    if (!Patient) {
-        for (let i = 0; i < resources.length; i++) {
-            let resource = resources[i];
-            if (resource.resourceType == 'Patient') {
-                Patient = `${resource.resourceType}/${resource.id}`
-                sessionStorage.setItem(PATIENT_REFERENCE_KEY, Patient);
-                resourcesToLoad.push(resource);
-                break;
-            }
-        }
-        if (!Patient) {
-            throw Error("Missing patient resource");
-        }
-    }
-    for (let i = 0; i < resources.length; i++) {
-        let resource = resources[i];
-        if (append && Patient && resource.resourceType == 'Patient') {
-            continue;
-        }
-        if (resource.subject) {
-            resource.subject.reference = Patient;
-        } else if (resource.patient) {
-            resource.patient.reference = Patient;
-        }
-        let newResource = checkResource(resource);
-        if (newResource != null) {
-            resourcesToLoad.push(newResource);
-        }
-    }
-    resourcesToLoad.sort((a, b) => {
-        // Compare 'resourceType' values
-        const resourceTypeA = a.resourceType.toUpperCase();
-        const resourceTypeB = b.resourceType.toUpperCase();
-      
-        if (resourceTypeA < resourceTypeB) {
-          return -1;
-        }
-        if (resourceTypeA > resourceTypeB) {
-          return 1;
-        }
-
-        if (resourceTypeA === "Immunization") {
-            // 'resourceType' values are equal, so compare 'lastName' values
-            const occurrenceDateTimeA = a.occurrenceDateTime;
-            const occurrenceDateTimeB = b.occurrenceDateTime;
-        
-            if (occurrenceDateTimeA < occurrenceDateTimeB) {
-                return -1;
-            }
-            if (occurrenceDateTimeA > occurrenceDateTimeB) {
-                return 1;
-            }
-            const vaccineCodetextA = a.vaccineCode.text;
-            const vaccineCodetextB = b.vaccineCode.text;
-        
-            if (vaccineCodetextA < vaccineCodetextB) {
-                return -1;
-            }
-            if (vaccineCodetextA > vaccineCodetextB) {
-                return 1;
-            }
-        }
-      
-        // Both 'resourceType' and 'lastName' values are equal
-        return 0;
-      });
-    sessionStorage.setItem(RESOURCES_TO_LOAD_KEY, JSON.stringify(resourcesToLoad));
-    return resourcesToLoad;
-}
-
 // Create Bundle and POST
-export async function uploadResources() {
-    let queuedResources = JSON.parse(sessionStorage.getItem(RESOURCES_TO_LOAD_KEY));
+export async function uploadResources(resources) {
     let entries = [];
-    for (let i = 0; i < queuedResources.length; i++) {
-        let resource = queuedResources[i];
+    resources.forEach(resource => {
         let entry = {
             request: {
                 method: "POST",
@@ -147,7 +55,7 @@ export async function uploadResources() {
             resource: resource
         };
         entries.push(entry);
-    }
+    });
     let bundle = {
         resourceType: "Bundle",
         type: "transaction",
@@ -164,48 +72,19 @@ export async function uploadResources() {
         }).then((response) => {
             return response.json()
         }).then((body) => {
-            let IPSURL = "";
+            let ipsUrl = "";
             body.entry.forEach(entry => {
                 if (entry.response.location.startsWith('Patient')) {
                     let createdPatient = entry.response.location.split('/_history')[0];
-                    IPSURL = `${INTERMEDIATE_FHIR_SERVER_BASE}/${createdPatient}/$summary`;
+                    ipsUrl = `${INTERMEDIATE_FHIR_SERVER_BASE}/${createdPatient}/$summary`;
                 }
                 console.log(entry.response.outcome.issue[0].diagnostics);
             });
-            sessionStorage.setItem(IPS_URL_KEY, IPSURL);
-            return IPSURL;
+            return ipsUrl;
         });
 }
 
-// export async function uploadResources() {
-//     if (!Patient) {
-//         for (let i = 0; i < resourcesToLoad.length; i++) {
-//             if (resourcesToLoad[i].resourceType === 'Patient') {
-//                 let data = resourcesToLoad[i];
-//                 resourcesToLoad.splice(i, 1);
-//                 upload(data, function () {
-//                     uploadResources();
-//                 });
-//                 break;
-//             }
-//         }
-//     } else {
-//         for (let i = 0; i < allowableResourceTypes.length; i++) {
-//             for (let j = 0; j < resourcesToLoad.length; j++) {
-//                 if (allowableResourceTypes[i] === resourcesToLoad[j].resourceType) {
-//                     resourcesToLoad[j].loadingOrder = i;
-//                 }
-//             }
-//         }
-//         arrayLoad();
-//         // sessionStorage.removeItem(SESSION_STORAGE_KEY);
-//     }
-//     return await Promise.all(uploads).then((results) => {
-//         return `${INTERMEDIATE_FHIR_SERVER_BASE}/${Patient}`;
-//     });
-// }
-
-function checkResource(data) {
+export function checkResource(data) {
     if (data.resourceType && allowableResourceTypes.includes(data.resourceType)) {
         return data;
     } else if (data.resourceType === 'Patient') {
@@ -231,74 +110,3 @@ function checkResource(data) {
         return null;
     }
 }
-
-// function upload(data, cb) {
-//     let fullUrl = data.fullUrl;
-//     delete data.fullUrl;
-//     uploads.push(fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/${data.resourceType}`, {
-//         method: 'POST',
-//         headers: {
-//             'Content-Type': 'application/json',
-//             // Add any additional headers if needed
-//         },
-//         body: JSON.stringify(data),
-//     }).then((response) => {
-//         if (!response.ok) {
-//             throw new Error('Network response was not ok');
-//         } else if (response.status !== 201) {
-//             throw new Error('Reponse ok, but resource was not loaded');
-//         }
-//         return response.json();
-//     }).then((body) => {
-//         hashMap[`${data.resourceType}/${data.id}`] = `${data.resourceType}/${body.id}`;
-//         hashMap[`${fullUrl}`] = `${data.resourceType}/${body.id}`;
-//         if (data.resourceType === 'Patient') {
-//             Patient = `${data.resourceType}/${body.id}`;
-//         }
-//         cb();
-//     }).catch((error) => {
-//         console.error(`Failed to load ${data.resourceType}/${data.id}`);
-//         console.error(error);
-//         cb();
-//     }));
-// }
-
-// function arrayLoad() {
-//     if (resourcesToLoad.length) {
-//         resourcesToLoad.sort(function (a, b) { return b.loadingOrder - a.loadingOrder });
-//         // console.log(pd.json(resourcesToLoad));
-//         let nextObject = resourcesToLoad.pop();
-//         delete nextObject.loadingOrder;
-//         if (nextObject.subject) {
-//             nextObject.subject.reference = Patient;
-//         } else if (nextObject.patient) {
-//             nextObject.patient.reference = Patient;
-//         }
-//         delete nextObject.encounter;
-//         for (let k1 in nextObject) {
-//             if (nextObject.hasOwnProperty(k1)) {
-//                 if (Array.isArray(nextObject[k1])) {
-//                     for (let i = 0; i < nextObject[k1].length; i++) {
-//                         if (nextObject[k1][i].reference && hashMap[nextObject[k1][i].reference]) {
-//                             nextObject[k1][i].reference = hashMap[nextObject[k1][i].reference];
-//                         } else if (nextObject[k1][i].individual && nextObject[k1][i].individual.reference) {
-//                             nextObject[k1][i].individual.reference = hashMap[nextObject[k1][i].individual.reference];
-//                         } else if (nextObject[k1][i].actor && nextObject[k1][i].actor.reference) {
-//                             nextObject[k1][i].actor.reference = hashMap[nextObject[k1][i].actor.reference];
-//                         }
-//                     }
-//                 } else {
-//                     let reference = nextObject[k1].reference;
-//                     if (reference && hashMap[reference]) {
-//                         nextObject[k1].reference = hashMap[reference];
-//                     }
-//                 }
-//             }
-//         }
-//         upload(nextObject, arrayLoad);
-//     } else {
-//         Patients.push(Patient);
-//         Patient = null;
-//         hashMap = {};
-//     }
-// }

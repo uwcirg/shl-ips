@@ -4,7 +4,7 @@
   import { getContext } from 'svelte';
   import type { Writable } from 'svelte/store';
   import type { SHLAdminParams, SHLClient } from '$lib/managementClient';
-  import type { SHCRetrieveEvent } from '$lib/types';
+  import type { SHLSubmitEvent, SHCFile } from '$lib/types';
   import AddFile from '$lib/AddFile.svelte';
 
   let shlClient: SHLClient = getContext('shlClient');
@@ -21,12 +21,23 @@
     }
   }
 
-  async function newShlFromShc(details: SHCRetrieveEvent): Promise<SHLAdminParams> {
-    let shlCreated = await shlClient.createShl({exp: details.exp});
-    shlCreated = await shlClient.addFile(shlCreated, details.shc, 'application/smart-health-card');
-    shlCreated.label = details.label;
-    return shlCreated;
+  function addFiles(shl:SHLAdminParams, fileList:SHCFile[]) {
+    return Promise.all(fileList.map((shc:SHCFile) => {
+      shlClient.addFile(shl, shc, 'application/smart-health-card');
+    }))
   }
+
+  async function newShlFromShc(details: SHLSubmitEvent): Promise<SHLAdminParams> {
+    let shlCreated = await shlClient.createShl({exp: details.exp});
+    return addFiles(shlCreated, details.shcs).then(success => {
+      shlCreated.label = details.label;
+      return shlCreated;
+    });
+  }
+
+
+
+
 </script>
 
 {#if shl}
@@ -34,16 +45,12 @@
 {/if}
 
 <AddFile
-  on:shc-retrieved={async ({ detail }) => {
+  on:shl-submitted={async ({ detail }) => {
     if (shl) {
-      let updatedShl = await shlClient.addFile(shl, detail.shc, 'application/smart-health-card');
-      if (updatedShl != null) {
-        shl = updatedShl;
+      addFiles(shl, detail.shcs).then(success => {
         $shlStore[$shlStore.findIndex(obj => obj.id === shl?.id)] = shl;
         goto(`/view/${shl.id}`);
-      } else {
-        throw Error('Unable to add file to shl ' + shl.id);
-      }
+      });
     } else {
       const newShl = await newShlFromShc(detail);
       $shlStore = [...$shlStore, newShl];

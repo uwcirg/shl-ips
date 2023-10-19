@@ -1,17 +1,17 @@
 import {
-    prepareResources as prepareResourcesJS,
+    checkResource as checkResourceJS,
     uploadResources as uploadResourcesJS,
-    getIPSResources as getIPSResourcesJS
+    getResourcesFromIPS as getResourcesFromIPSJS
 } from './resourceUploader.js';
 
-export function prepareResources(resources: Array<any> | undefined, append=true) {
-    return prepareResourcesJS(resources, append);
+export function checkResource(resource:any) {
+    return checkResourceJS(resource);
 }
 
-export async function uploadResources() {
-    return await uploadResourcesJS();
+export async function uploadResources(resources:any[]) {
+    return await uploadResourcesJS(resources);
 }
 
-export function getIPSResources(ips) {
-    return getIPSResourcesJS(ips);
+export function getResourcesFromIPS(ips: any) {
+    return getResourcesFromIPSJS(ips);
 }
