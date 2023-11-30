@@ -5,10 +5,6 @@ export const API_BASE = 'https://shl-server.fl.dlorigan.dev.cirg.uw.edu/api';
 
 export const INTERMEDIATE_FHIR_SERVER_BASE = 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir';
 
-export const RESOURCES_TO_LOAD_KEY = 'RESOURCES_TO_LOAD';
-export const PATIENT_REFERENCE_KEY = 'PATIENT_REFERENCE_TO_LOAD';
-export const IPS_URL_KEY = 'IPS_URL';
-
 export const SOF_HOSTS = [
   {
     id: "smit",
@@ -33,7 +29,7 @@ export const SOF_HOSTS = [
   }
 
 ];
-export const SOF_REDIRECT_URI = '/create/confirm';
+export const SOF_REDIRECT_URI = '/create';
 export const SOF_RESOURCES = [
   'Patient',
   'AllergyIntolerance',

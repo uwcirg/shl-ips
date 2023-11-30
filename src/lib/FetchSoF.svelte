@@ -10,14 +10,15 @@
     Spinner } from 'sveltestrap';
 
   import { SOF_HOSTS } from './config';
-  import type { ResourceRetrieveEvent, SOFHost } from './types';
-  import { authorize, retrieve } from './sofClientTSWrapper';
+  import type { ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from './types';
+  import { authorize, retrieve, activePatient } from './sofClientTSWrapper';
   import { createEventDispatcher, onMount } from 'svelte';
   
+  const authDispatch = createEventDispatcher<{'sofAuthEvent': SOFAuthEvent}>();
   const resourceDispatch = createEventDispatcher<{'updateResources': ResourceRetrieveEvent}>();
   let processing = false;
   let fetchError = "";
-  export let result: ResourceRetrieveEvent = {
+  let result: ResourceRetrieveEvent = {
     resources: undefined
   };
 
@@ -34,6 +35,7 @@
     fetchError = "";
     try {
       if (sofHost) {
+        authDispatch('sofAuthEvent')
         authorize(sofHost.url, sofHost.clientId);
       }
     } catch (e) {
@@ -53,6 +55,8 @@
           sofHost = sofHostAuthd;
           sofHostSelection = sofHost.id;
           await fetchData();
+          sessionStorage.removeItem(key);
+          sessionStorage.removeItem('SMART_KEY');
         }
       }
     }
@@ -61,7 +65,7 @@
   function endSession() {
     let key = sessionStorage.getItem('SMART_KEY');
     if (key) {
-      sessionStorage.removeItem(key);
+      sessionStorage.removeItem(JSON.parse(key));
       sessionStorage.removeItem('SMART_KEY');
     }
   }
@@ -79,36 +83,27 @@
 <form on:submit|preventDefault={() => prepareIps()}>
   <FormGroup>
       <Label>Fetch via SMART authorization</Label>
-      {#each SOF_HOSTS as host}
+    {#each SOF_HOSTS as host}
       <Input type="radio" bind:group={sofHostSelection} value={host.id} label={host.name}/>
       <p class="text-secondary" style="margin-left:25px">{@html host.note}</p>
-      {/each}
+    {/each}
   </FormGroup>
 
   <Row>
     <Col xs="auto">
     <Button color="primary" style="width:fit-content" disabled={processing} type="submit">
-        {#if !processing}
-        Authenticate
-        {:else}
-        Authenticating...
-        {/if}
+      {#if !processing}
+        Fetch Data
+      {:else}
+        Fetching...
+      {/if}
     </Button>
     </Col>
-    {#if processing}
+  {#if processing}
     <Col xs="auto">
-    <Spinner color="primary" type="border" size="md"/>
+      <Spinner color="primary" type="border" size="md"/>
     </Col>
-    {/if}
-    <Col xs="auto">
-      <Button on:click={fetchData} color="primary" style="width:fit-content" disabled={processing} type="button">
-          {#if !processing}
-          Fetch Data
-          {:else}
-          Fetching...
-          {/if}
-      </Button>
-    </Col>
+  {/if}
   </Row>
 </form>
 <span class="text-danger">{fetchError}</span>

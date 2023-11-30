@@ -21,22 +21,19 @@
     }
   }
 
-  function addFiles(shl:SHLAdminParams, fileList:SHCFile[]) {
-    return Promise.all(fileList.map((shc:SHCFile) => {
-      shlClient.addFile(shl, shc, 'application/smart-health-card');
-    }))
+  async function addFiles(shl:SHLAdminParams, fileList:SHCFile[]) {
+    for (let i=0; i < fileList.length; i++) {
+      shl = await shlClient.addFile(shl, fileList[i], 'application/smart-health-card');
+    }
+    return shl;
   }
 
   async function newShlFromShc(details: SHLSubmitEvent): Promise<SHLAdminParams> {
     let shlCreated = await shlClient.createShl({exp: details.exp});
-    return addFiles(shlCreated, details.shcs).then(success => {
-      shlCreated.label = details.label;
-      return shlCreated;
-    });
+    shlCreated = await addFiles(shlCreated, details.shcs);
+    shlCreated.label = details.label;
+    return shlCreated;
   }
-
-
-
 
 </script>
 
@@ -47,10 +44,9 @@
 <AddFile
   on:shl-submitted={async ({ detail }) => {
     if (shl) {
-      addFiles(shl, detail.shcs).then(success => {
-        $shlStore[$shlStore.findIndex(obj => obj.id === shl?.id)] = shl;
-        goto(`/view/${shl.id}`);
-      });
+      shl = await addFiles(shl, detail.shcs);
+      $shlStore[$shlStore.findIndex(obj => obj.id === shl?.id)] = shl;
+      goto(`/view/${shl.id}`);
     } else {
       const newShl = await newShlFromShc(detail);
       $shlStore = [...$shlStore, newShl];

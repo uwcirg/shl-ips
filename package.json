@@ -26,6 +26,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@types/node": "^20.8.7",
 		"@types/pako": "^2.0.0",
 		"@types/qrcode": "^1.5.0",
 		"base64url": "^3.0.1",

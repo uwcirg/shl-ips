@@ -4,20 +4,27 @@
     import {
         Button,
         Col,
-        Input,
         Row,
         Spinner } from 'sveltestrap';
-    import type { IPSRetrieveEvent } from './types';
+    import { ResourceHelper, type IPSRetrieveEvent } from './types';
+    import AdvanceDirectives from './resource-templates/AdvanceDirective.svelte';
+    import Allergies from './resource-templates/AllergyIntolerance.svelte';
+    import Immunizations from './resource-templates/Immunization.svelte';
+    import Medications from './resource-templates/Medication.svelte';
+    import Observations from './resource-templates/Observation.svelte';
     import Patient from './resource-templates/Patient.svelte';
+    import Problems from './resource-templates/Problem.svelte';
+    import Procedure from './resource-templates/Procedure.svelte';
+
 
     export let newResources: Array<any> | undefined;
 
     const ipsDispatch = createEventDispatcher<{ 'ips-retrieved': IPSRetrieveEvent }>();
-    let resourceStates: { [key: string]: boolean } = {};
+    let resources:{ [key: string]: ResourceHelper } = {};
     let submitting = false;
     let reference: string;
     let patientReference: string;
-    let patientResources: {[key: string]: boolean} = {};
+    let patients: {[key: string]: ResourceHelper} = {};
 
     // This function will be executed when the resource list is updated
     $: {
@@ -26,124 +33,138 @@
         }
     };
 
-    function addResource(resource:any, resourceList:{ [key: string]: boolean }) {
-        let key = JSON.stringify(resource);
-        if (!(key in resourceList)) {
-            resourceList[key] = true;
+    function addResource(resource:ResourceHelper, resourceList:{[key:string]: ResourceHelper}) {
+        if (!(resource.tempId in resourceList)) {
+            resourceList[resource.tempId] = resource;
         }
     }
 
-    function addResources(resources:any[] | undefined, resourceList=resourceStates) {
+    function addResources(resources:ResourceHelper[] | undefined, resourceList:{[key:string]: ResourceHelper}) {
         if (resources != undefined) {
-            resources.forEach(element => {
-                addResource(element, resourceList);
+            let allResources = Object.values(resourceList).concat(resources).sort(sortResources);
+            for (var key in resourceList){
+                if (resourceList.hasOwnProperty(key)){
+                    delete resourceList[key];
+                }
+            }
+            allResources.forEach(resource => {
+                addResource(resource, resourceList);
             });
         }
     }
 
-    function updatePatient(patient:any) {
-        if (typeof patient != "string") {
-            patient = JSON.stringify(patient);
+    function updatePatient(patient:ResourceHelper) {
+        if (patients[patient.tempId] == undefined) {
+            patients[patient.tempId] = patient;
         }
-        Object.keys(patientResources).forEach(patientResource => {
-            if (patientResource == patient) {
-                patientResources[patient] = true;
-            } else {
-                patientResources[patientResource] = false;
-            }
+        Object.keys(patients).forEach(key => {
+            patients[key].include = (key == patient.tempId);
         });
-        patientReference = `Patient/${patient.id}`;
+        patientReference = `Patient/${patient.resource.id}`;
     }
 
-    function setPatientRefs(resources:any[]) {
+    function setPatientRefs(resources:ResourceHelper[]) {
         return resources.map(r => {
-            if (r.subject) {
-                r.subject.reference = patientReference;
-            } else if (r.patient) {
-                r.patient.reference = patientReference;
+            if (r.resource.subject) {
+                r.resource.subject.reference = patientReference;
+            } else if (r.resource.patient) {
+                r.resource.patient.reference = patientReference;
             }
+            return r;
         });
     }
 
     function getSelectedResources() {
-        return Object.keys(resourceStates).filter(key => resourceStates[key]);
+        let selectedPatient = Object.values(patients).filter(patient => patient.include);
+        let selectedResources = Object.values(resources).filter(resource => resource.include);
+        return selectedPatient.concat(selectedResources);
+    }
+
+    function sortResources(a:ResourceHelper, b:ResourceHelper) {
+        let aR = a.resource;
+        let bR = b.resource;
+        // Compare 'resourceType' values
+        const resourceTypeA = aR.resourceType.toUpperCase();
+        const resourceTypeB = bR.resourceType.toUpperCase();
+    
+        if (resourceTypeA < resourceTypeB) {
+            return -1;
+        }
+        if (resourceTypeA > resourceTypeB) {
+            return 1;
+        }
+
+        if (resourceTypeA === "Immunization") {
+            const occurrenceDateTimeA = aR.occurrenceDateTime;
+            const occurrenceDateTimeB = bR.occurrenceDateTime;
+        
+            if (occurrenceDateTimeA < occurrenceDateTimeB) {
+                return -1;
+            }
+            if (occurrenceDateTimeA > occurrenceDateTimeB) {
+                return 1;
+            }
+            const vaccineCodetextA = aR.vaccineCode.text;
+            const vaccineCodetextB = bR.vaccineCode.text;
+        
+            if (vaccineCodetextA < vaccineCodetextB) {
+                return -1;
+            }
+            if (vaccineCodetextA > vaccineCodetextB) {
+                return 1;
+            }
+        }
+        return 0;
     }
 
     function addNewResources(newResources:any[]) {
         if (newResources) {
-            // newResources = newResources.map(element => {
-            //     if (typeof element == "string") {
-            //         return JSON.parse(element);
-            //     }
-            //     return element;
-            // });
-
             newResources = newResources.filter(r => {
                 if (checkResource(r) == null) {
-                    console.warn("Invalid resource: " + JSON.stringify(r));
+                    // console.warn("Invalid resource: " + JSON.stringify(r));
                     return false;
                 }
                 return true;
+            })
+            newResources = newResources.map(resource => {
+                return new ResourceHelper(resource);
             });
-            let patients = newResources.filter(resource => resource.resourceType == "Patient");
-            addResources(patients, patientResources);
-            if (!patientReference && patients.length > 0) {
-                updatePatient(patients[0]);
-            }
-            if (!patientReference) {
-                throw Error("Missing valid patient resource");
-            }
-            newResources = newResources.filter(resource => resource.resourceType != "Patient")
-                .sort((a, b) => {
-                    // Compare 'resourceType' values
-                    const resourceTypeA = a.resourceType.toUpperCase();
-                    const resourceTypeB = b.resourceType.toUpperCase();
-                
-                    if (resourceTypeA < resourceTypeB) {
-                        return -1;
-                    }
-                    if (resourceTypeA > resourceTypeB) {
-                        return 1;
-                    }
 
-                    if (resourceTypeA === "Immunization") {
-                        const occurrenceDateTimeA = a.occurrenceDateTime;
-                        const occurrenceDateTimeB = b.occurrenceDateTime;
-                    
-                        if (occurrenceDateTimeA < occurrenceDateTimeB) {
-                            return -1;
-                        }
-                        if (occurrenceDateTimeA > occurrenceDateTimeB) {
-                            return 1;
-                        }
-                        const vaccineCodetextA = a.vaccineCode.text;
-                        const vaccineCodetextB = b.vaccineCode.text;
-                    
-                        if (vaccineCodetextA < vaccineCodetextB) {
-                            return -1;
-                        }
-                        if (vaccineCodetextA > vaccineCodetextB) {
-                            return 1;
-                        }
-                    }
-                    return 0;
-                });
-            addResources(newResources, resourceStates);
+            let newPatients = newResources.filter(rh => rh.resource.resourceType == "Patient");
+            addResources(newPatients, patients);
+            patients = patients;
+            if (!patientReference) {
+                if (newPatients.length > 0) {
+                    updatePatient(newPatients[0]);
+                } else {
+                    throw Error("Missing valid patient resource");
+                }
+            }
+            newResources = newResources.filter(rh => {
+                return rh.resource.resourceType != "Patient"
+            });
+            addResources(newResources, resources);
+            resources = resources;
+            return;
         }
+        return;
     }
 
-    function prepareResources(resources:any[], append=true) {
+    function prepareResources(resources:ResourceHelper[]) {
         resources = setPatientRefs(resources);
-        return resources;
+        return resources.map(rh => {
+            return rh.resource;
+        });
     }
 
     async function confirm() {
-        let preparedResources = prepareResources(getSelectedResources(), false);
+        submitting = true;
+        let preparedResources = prepareResources(getSelectedResources());
         reference = await uploadResources(preparedResources);
 
         let content;
         const contentResponse = await fetch(reference!, {
-        headers: { accept: 'application/fhir+json' }
+            headers: { accept: 'application/fhir+json' }
         }).then(function(response) {
             if (!response.ok) {
                 // make the promise be rejected if we didn't get a 2xx response
@@ -154,27 +175,30 @@
         });
         content = await contentResponse.json();
         ipsDispatch('ips-retrieved', { ips: content });
+        submitting = false;
     }
 </script>
 
-<h2 style="border-bottom: 1px solid rgb(204, 204, 204);">Edit IPS Content</h2>
+<h3 style="margin-bottom: 1rem; border-bottom: 1px solid rgb(204, 204, 204);">Customize IPS Content</h3>
+<p>Select resources from the list below to include in a new customized Summary:</p>
 <form on:submit|preventDefault={() => confirm()}>
-    {#if resourceStates != null}
-        {#each Object.keys(resourceStates) as resource}
-            <Input class="resource" type="checkbox" bind:checked={resourceStates[resource]} label={resource} value={resource}/>
+    {#if resources != null}
+        {#each Object.keys(resources) as key}
+            <div class="resource form-check">
+                <input id={key} class="form-check-input" type="checkbox" bind:checked={resources[key].include} value={key}/>
+                <label class="form-check-label" for={key}>{@html JSON.stringify(resources[key].original_resource)}</label>
+            </div>
             <br/>
         {/each}
     {/if}
-    {#if reference}
-    <p>{reference}</p>
-    {/if}
+    <br/>
     <Row>
         <Col xs="auto">
           <Button color="primary" style="width:fit-content" disabled={submitting} type="submit">
             {#if !submitting}
-              Create IPS
+              Submit Custom IPS
             {:else}
-              Creating IPS...
+              Submitting IPS...
             {/if}
           </Button>
         </Col>
@@ -183,5 +207,6 @@
           <Spinner color="primary" type="border" size="md"/>
         </Col>
         {/if}
-      </Row>
+    </Row>
+    <br/>
 </form>
