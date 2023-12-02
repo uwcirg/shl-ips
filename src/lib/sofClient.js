@@ -92,9 +92,15 @@ async function retrieve() {
                     });
                 });
                 resources = await Promise.all(Object.keys(referenceMap).map(reference => {
-                    return client.request(reference, { flat: true });
+                    let resource;
+                    try {
+                        resource = client.request(reference, {flat:true});
+                    } catch (e) {
+                        console.log(`Error requesting referenced resource: ${e}`);
+                    }
+                    return resource;
                 }));
-                allResources = allResources.concat(...resources);
+                allResources = allResources.concat(...resources.filter(x => x !== undefined));
                 referenceMap = {};
             }
 
