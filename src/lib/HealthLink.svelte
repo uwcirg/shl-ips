@@ -125,12 +125,12 @@
           {#if copyNotice}
             {copyNotice}
           {:else}
-            Copy
+            Copy Link
           {/if}
         </Button>
         {#await href then href}
           <Button size="sm" color="success" {href} target="_blank">
-            <Icon name="box-arrow-up-right" /> Open
+            <Icon name="box-arrow-up-right" /> View IPS
           </Button>
         {/await}
       </CardFooter>
@@ -164,7 +164,7 @@
       </Button>
     </FormGroup>
     <FormGroup class="passcode shlbutton">
-      <Label for="passcode">Protect with Passcode (optional)</Label>
+      <Label for="passcode">Add or Update Passcode (optional)</Label>
       <Input
         maxlength={40}
         name="passcode"
