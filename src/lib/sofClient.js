@@ -1,9 +1,9 @@
 import FHIR from 'fhirclient';
-import { SOF_REDIRECT_URI, SOF_RESOURCES } from './config';
+import { SOF_REDIRECT_URI, SOF_PATIENT_RESOURCES, SOF_RESOURCES } from './config';
 
 export { authorize, retrieve, activePatient };
 
-const patientResourceScope = SOF_RESOURCES.map(resourceType => `patient/${resourceType}.read`);
+const patientResourceScope = SOF_PATIENT_RESOURCES.map(resourceType => `patient/${resourceType}.read`);
 const resourceScope = patientResourceScope.join(" ");
 const config = {
         // This client ID worked through 2023-04-17, and then I marked the app as ready for production. I think at that point I was assigned new prod & non-prod client ID's...
@@ -69,47 +69,40 @@ async function activePatient() {
 }
 
 async function retrieve() {
-    try {
-        client = await FHIR.oauth2.ready();
-        let pid = client.getPatientId();
-        if (pid) {
-            // Establish resource display methods
-            let resources = await Promise.all(SOF_RESOURCES.map((resourceType) => {
-                return requestResources(client, resourceType);
-            }));
-            let allResources = [].concat(...resources);
-            let referenceMap = {};
-            let retrievedResources = {};
-            while (resources.length > 0) {
-                resources.forEach(resource => {
-                    let retrieved = `${resource.resourceType}/${resource.id}`;
-                    retrievedResources[retrieved] = true;
-                    let refs = getReferences(resource);
-                    refs.forEach(ref => {
-                        if (!(ref in retrievedResources)) {
-                            referenceMap[ref] = true;
-                        }
-                    });
-                });
-                resources = await Promise.all(Object.keys(referenceMap).map(reference => {
-                    let resource;
-                    try {
-                        resource = client.request(reference, {flat:true});
-                    } catch (e) {
-                        console.log(`Error requesting referenced resource: ${e}`);
-                    }
-                    return resource;
-                }));
-                allResources = allResources.concat(...resources.filter(x => x !== undefined));
-                referenceMap = {};
-            }
-
-            return allResources;
-        }
-        throw Error("No patient id found");
-    } catch(e) {
-        console.error(e);
+    client = await FHIR.oauth2.ready();
+    let pid = client.getPatientId();
+    if (!pid) {
+        throw Error('No patient id found');
     }
+    // Establish resource display methods
+    let resources = await Promise.all(SOF_PATIENT_RESOURCES.map((resourceType) => {
+        return requestResources(client, resourceType);
+    }));
+    let allResources = [].concat(...resources);
+    let referenceMap = {};
+    let retrievedResources = [];
+    while (resources.length > 0) {
+        console.log(resources);
+        resources.forEach(resource => {
+            let retrieved = `${resource.resourceType}/${resource.id}`;
+            retrievedResources[retrieved] = true;
+            let refs = getReferences(resource);
+            for (let i=0; i<refs.length; i++) {
+                referenceMap[refs[i]] = true;
+            }
+        });
+        let referencedResources = Object.keys(referenceMap);
+        let referencedResourcesToFetch = referencedResources.filter(x => {
+            return (!(x in retrievedResources) && SOF_RESOURCES.indexOf(x.split('/')[0]) >= 0);
+        });
+        resources = (await Promise.allSettled(referencedResourcesToFetch.map(reference => {
+            return client.request(reference, {flat:true});;
+        }))).filter(x => x.status == "fulfilled").map(x => x.value);
+        allResources = allResources.concat(...resources);
+        referenceMap = {};
+    }
+
+    return allResources;
 }
 
 // Utility function to validate a URL
