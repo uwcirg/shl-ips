@@ -29,9 +29,10 @@
   }
 
   async function newShlFromShc(details: SHLSubmitEvent): Promise<SHLAdminParams> {
-    let shlCreated = await shlClient.createShl({exp: details.exp});
+    let shlCreated = await shlClient.createShl({exp: details.exp, passcode: details.passcode });
     shlCreated = await addFiles(shlCreated, details.shcs);
     shlCreated.label = details.label;
+    shlCreated.passcode = details.passcode;
     return shlCreated;
   }
 

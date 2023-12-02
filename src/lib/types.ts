@@ -3,6 +3,7 @@ export interface SHLSubmitEvent {
   shcs: SHCFile[];
   label?: string;
   // content: Bundle;
+  passcode?: string;
   exp?: number;
 }
 

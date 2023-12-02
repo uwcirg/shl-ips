@@ -59,6 +59,7 @@
     let singleIPS = true;
 
     let label = 'SHL from ' + new Date().toISOString().slice(0, 10);
+    let passcode = "";
     let expiration: number | null = -1;
 
     onMount(() => {
@@ -69,6 +70,7 @@
       }
       currentTab = sessionStorage.getItem('TAB') ?? currentTab;
       label = sessionStorage.getItem('LABEL') ?? label;
+      passcode = sessionStorage.getItem('PASSCODE') ?? passcode;
       if (sessionStorage.getItem('RESOURCES')) {
         resourcesToReview = JSON.parse(sessionStorage.getItem('RESOURCES') ?? "") ?? resourcesToReview;
       }
@@ -78,6 +80,7 @@
       sessionStorage.removeItem('RESOURCES');
       sessionStorage.removeItem('TAB');
       sessionStorage.removeItem('LABEL');
+      sessionStorage.removeItem('PASSCODE');
       sessionStorage.removeItem('EXPIRE');
     });
 
@@ -149,6 +152,7 @@
       sessionStorage.setItem('RESOURCES', JSON.stringify(resourcesToReview ?? ""));
       sessionStorage.setItem('TAB', String(currentTab ?? ""));
       sessionStorage.setItem('LABEL', label ?? "");
+      sessionStorage.setItem('PASSCODE', passcode ?? "");
       sessionStorage.setItem('EXPIRE', JSON.stringify(expiration ?? -1));
     }
     
@@ -170,6 +174,7 @@
       return shlDispatch('shl-submitted', {
         shcs: shcsToAdd,
         label,
+        passcode: passcode ?? undefined,
         exp: expiration && expiration > 0 ? new Date().getTime() / 1000 + expiration : undefined
       });
     }
@@ -231,6 +236,16 @@
     <FormGroup>
       <Label>New SHLink Label</Label>
       <Input type="text" bind:value={label} />
+    </FormGroup>
+    <FormGroup>
+      <Label for="passcode">Protect with Passcode (optional)</Label>
+      <Input
+        maxlength={40}
+        name="passcode"
+        type="text"
+        bind:value={passcode}
+        placeholder="Passcode"
+      />
     </FormGroup>
     <FormGroup>
       <Label>Expiration</Label>
