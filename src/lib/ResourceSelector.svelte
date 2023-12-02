@@ -7,15 +7,6 @@
         Row,
         Spinner } from 'sveltestrap';
     import { ResourceHelper, type IPSRetrieveEvent } from './types';
-    import AdvanceDirectives from './resource-templates/AdvanceDirective.svelte';
-    import Allergies from './resource-templates/AllergyIntolerance.svelte';
-    import Immunizations from './resource-templates/Immunization.svelte';
-    import Medications from './resource-templates/Medication.svelte';
-    import Observations from './resource-templates/Observation.svelte';
-    import Patient from './resource-templates/Patient.svelte';
-    import Problems from './resource-templates/Problem.svelte';
-    import Procedure from './resource-templates/Procedure.svelte';
-
 
     export let newResources: Array<any> | undefined;
 
