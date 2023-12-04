@@ -199,7 +199,7 @@
   </Col>
 </Row>
 <Row>
-  <h2>SHL Contents</h2>
+  <h2>SHL Content</h2>
 </Row>
 {#if shl.files.length == 0}
 <Row>

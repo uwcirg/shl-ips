@@ -9,7 +9,7 @@
 </script>
 <Styles />
 <div style="padding-left: 17px">
-  <span style="font-size: 18px; font-weight: 200; font-family: Verdana, sans-serif; margin: 50px 0px;">
+  <span style="font-size: 16px; font-weight: 200; font-family: Verdana, sans-serif; margin: 50px 0px;">
     <p class="text-danger">Test System - do not enter protected health information</p>
 
     <p>The WA Verify<sup>+</sup> system builds on the ideas and technologies in the WA Verify COVID-19 vaccination verification system. Since 2021, WA Verify has made it easy for people receiving COVID-19 vaccinations in Washington State to access and share that information using SMART Health Card QR codes.</p>

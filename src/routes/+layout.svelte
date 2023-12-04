@@ -116,9 +116,9 @@
       <a href="https://build.fhir.org/ig/HL7/fhir-ips/" target="_blank" rel="noreferrer"
         >International Patient Summary</a
       >
-      document. SHLinks can be shared by copy/paste, or by presenting a QR. Source at
-      <a href="https://github.com/jmandel/shlips" target="_blank" rel="noreferrer"
-        >github.com/jmandel/shlips</a
+      document. SHLinks can be shared by copy/paste, or by presenting a QR code. Source at
+      <a href="https://github.com/uwcirg/shl-ips" target="_blank" rel="noreferrer"
+        >https://github.com/uwcirg/shl-ips</a
       >.
     </footer>
   </Col>
