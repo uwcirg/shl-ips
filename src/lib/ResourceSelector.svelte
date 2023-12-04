@@ -2,6 +2,8 @@
     import { uploadResources, checkResource } from './resourceUploaderTSWrapper';
     import { createEventDispatcher } from 'svelte';
     import {
+        Accordion,
+        AccordionItem,
         Button,
         Col,
         Row,
@@ -170,32 +172,34 @@
     }
 </script>
 
-<h3 style="margin-bottom: 1rem; border-bottom: 1px solid rgb(204, 204, 204);">Customize IPS Content</h3>
-<p>Select resources from the list below to include in a new customized Summary:</p>
 <form on:submit|preventDefault={() => confirm()}>
-    {#if resources != null}
-        {#each Object.keys(resources) as key}
-            <div class="resource form-check">
-                <input id={key} class="form-check-input" type="checkbox" bind:checked={resources[key].include} value={key}/>
-                <label class="form-check-label" for={key}>{@html JSON.stringify(resources[key].original_resource)}</label>
-            </div>
-            <br/>
-        {/each}
-    {/if}
+    <Accordion>
+        <AccordionItem header="Customize IPS Content">
+        {#if resources != null}
+            <p>Select resources from the list below to include in a new customized Summary:</p>
+            {#each Object.keys(resources) as key}
+                <div class="resource form-check">
+                    <input id={key} class="form-check-input" type="checkbox" bind:checked={resources[key].include} value={key}/>
+                    <label class="form-check-label" style="width:100%" for={key}><p style="overflow-wrap:break-word">{@html JSON.stringify(resources[key].original_resource)}</p></label>
+                </div>
+            {/each}
+        {/if}
+    </AccordionItem>
+</Accordion>
     <br/>
     <Row>
         <Col xs="auto">
-          <Button color="primary" style="width:fit-content" disabled={submitting} type="submit">
+        <Button color="primary" style="width:fit-content" disabled={submitting} type="submit">
             {#if !submitting}
-              Submit Custom IPS
+            Submit Custom IPS
             {:else}
-              Submitting IPS...
+            Submitting IPS...
             {/if}
-          </Button>
+        </Button>
         </Col>
         {#if submitting}
         <Col xs="auto">
-          <Spinner color="primary" type="border" size="md"/>
+        <Spinner color="primary" type="border" size="md"/>
         </Col>
         {/if}
     </Row>
