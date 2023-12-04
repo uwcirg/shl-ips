@@ -72,7 +72,8 @@ async function retrieve() {
     client = await FHIR.oauth2.ready();
     let pid = client.getPatientId();
     if (!pid) {
-        throw Error('No patient id found');
+        console.error("No patient ID found");
+        return undefined;
     }
     // Establish resource display methods
     let resources = await Promise.all(SOF_PATIENT_RESOURCES.map((resourceType) => {
