@@ -44,11 +44,11 @@ function loadSample() {
 
 function updateDisplayMode(displayMode) {
   let dropdown = $('#mode');
-
+  let newText;
   if (displayMode == 'Entries') {
-    var newText = 'App Interpretation';
+    newText = 'App Interpretation';
   } else if (displayMode == 'Text') {
-    var newText = 'Generated Text';
+    newText = 'Generated Text';
   }
   if (newText) {
     mode = displayMode
@@ -57,7 +57,9 @@ function updateDisplayMode(displayMode) {
   shlContents.forEach((e, i) => {
     update(e, (shlContents.length === 1 ? "" : i));
   });
-  updateFromText();
+  if (config.show_demo) {
+    updateFromText();
+  }
 };
 
 // Clear data button function. Should be called on all new data loads 
