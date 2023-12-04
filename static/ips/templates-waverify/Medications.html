@@ -12,10 +12,16 @@
               <!-- {{@this.statement.resourceType}}  -->
               <!-- <br /> -->
               {{if(options.medications[@index].medication.code && options.medications[@index].medication.code.coding && options.medications[@index].medication.code.coding.length)}}
+                {{if(@this.medication.code.text)}}
+                {{@this.medication.code.text}}
+                <br>
+                {{/if}}
                 {{each(options.medications[@index].medication.code.coding)}}
                   <span class="badge badge-primary">{{@this.system}}</span>
                   <br>
-                  {{@this.display}} 
+                  {{if(@this.display)}}
+                  {{@this.display}}
+                  {{/if}}
                   {{if (@this.code)}}
                       ({{@this.code}})
                   {{ /if }}
