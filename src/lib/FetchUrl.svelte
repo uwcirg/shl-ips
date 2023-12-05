@@ -12,7 +12,7 @@
     Row,
     Spinner } from 'sveltestrap';
 
-  import { EXAMPLE_IPS, EXAMPLE_IPS_DEFAULT } from './config';
+  import { PATIENT_IPS, EXAMPLE_IPS, IPS_DEFAULT } from './config';
   import type { SHCRetrieveEvent, IPSRetrieveEvent } from './types';
   import { createEventDispatcher } from 'svelte';
 
@@ -20,7 +20,7 @@
   const ipsDispatch = createEventDispatcher<{'ips-retrieved': IPSRetrieveEvent}>();
 
   let summaryUrls = EXAMPLE_IPS;
-  let defaultUrl = summaryUrls[EXAMPLE_IPS_DEFAULT];
+  let defaultUrl = summaryUrls[IPS_DEFAULT];
   let isOpen = false;
   let processing = false;
   let fetchError = "";
@@ -92,11 +92,23 @@
       <Input type="text" bind:value={summaryUrlValidated} />
     </DropdownToggle>
     <DropdownMenu style="width:100%">
-      {#each Object.entries(summaryUrls) as [title, url]}
-        <DropdownItem style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"  on:click={() => {
-            setSummaryUrlValidated(url);
-        }}>{title} - {url}</DropdownItem>
-      {/each}
+      {#if Object.keys(PATIENT_IPS).length > 0}
+        <DropdownItem header>Actual Patient Data (permitted for use)</DropdownItem>
+        {#each Object.entries(PATIENT_IPS) as [title, url]}
+          <DropdownItem style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"  on:click={() => {
+              setSummaryUrlValidated(url);
+          }}>{title} - {url}</DropdownItem>
+        {/each}
+        <DropdownItem divider></DropdownItem>
+      {/if}
+      {#if Object.keys(EXAMPLE_IPS).length > 0}
+        <DropdownItem header>Test Patient Data</DropdownItem>
+        {#each Object.entries(EXAMPLE_IPS) as [title, url]}
+          <DropdownItem style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"  on:click={() => {
+              setSummaryUrlValidated(url);
+          }}>{title} - {url}</DropdownItem>
+        {/each}
+      {/if}
     </DropdownMenu>
   </Dropdown>
 </FormGroup>

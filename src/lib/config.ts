@@ -76,6 +76,9 @@ export const SOF_PATIENT_RESOURCES = [
 //   window.location.href
 // ).toString();
 export const VIEWER_BASE = 'https://smart-health-links-ips.cirg.washington.edu/ips#';
+export const PATIENT_IPS = {
+  'Dave deBronkart': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/11013/$summary'
+}
 export const EXAMPLE_IPS = {
   'Maria SEATTLE Gravitate': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/14599/$summary',
   'Peter Keith Jones': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/11013/$summary',
@@ -84,4 +87,4 @@ export const EXAMPLE_IPS = {
   'Anonymous': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/10999/$summary',
   'Desiree': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/Pat1-System2/$summary'
 };
-export const EXAMPLE_IPS_DEFAULT = 'Maria SEATTLE Gravitate';
+export const IPS_DEFAULT = 'Maria SEATTLE Gravitate';
