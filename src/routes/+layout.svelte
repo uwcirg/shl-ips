@@ -105,7 +105,7 @@
   </Col>
 </Row>
 <Row>
-  <Col>
+  <Col style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgb(204, 204, 204);" >
     <footer>
       This demonstration shows how to create a <a
         target="_blank"
@@ -116,7 +116,7 @@
       <a href="https://build.fhir.org/ig/HL7/fhir-ips/" target="_blank" rel="noreferrer"
         >International Patient Summary</a
       >
-      document. SHLinks can be shared by copy/paste, or by presenting a QR code. Source at
+      document. SHLinks can be shared by copy/paste, or by presenting a QR code. Source code and license at
       <a href="https://github.com/uwcirg/shl-ips" target="_blank" rel="noreferrer"
         >https://github.com/uwcirg/shl-ips</a
       >.

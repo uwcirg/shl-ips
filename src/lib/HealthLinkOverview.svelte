@@ -28,6 +28,7 @@
     let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
 </script>
 <Styles />
+<h4 style="padding-bottom: 5px; border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 10px;">Create a new shareable health summary</h4>
 <Row>
     <Col md="1"></Col>
     <Col md="10">
@@ -38,7 +39,7 @@
 <br>
 {#if $shlStore.length > 0}
 <Row>
-    <h2 style="padding-bottom: 5px; border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 0px;">Your Stored SHLinks</h2>
+    <h4 style="padding-bottom: 5px; border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 0px;">Summaries created and stored on this device</h4>
 </Row>
 {#each $shlStore as shl, i}
 <Row style="display:flex; align-items:center; padding: 10px; border-bottom: 1px solid rgb(204, 204, 204);">
