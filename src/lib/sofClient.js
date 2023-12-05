@@ -76,9 +76,10 @@ async function retrieve() {
         return undefined;
     }
     // Establish resource display methods
-    let resources = await Promise.all(SOF_PATIENT_RESOURCES.map((resourceType) => {
+    let resources = (await Promise.allSettled(SOF_PATIENT_RESOURCES.map((resourceType) => {
         return requestResources(client, resourceType);
-    }));
+    }))).filter(x => x.status == "fulfilled").map(x => x.value);
+
     let allResources = [].concat(...resources);
     let referenceMap = {};
     let retrievedResources = [];
@@ -97,7 +98,7 @@ async function retrieve() {
             return (!(x in retrievedResources) && SOF_RESOURCES.indexOf(x.split('/')[0]) >= 0);
         });
         resources = (await Promise.allSettled(referencedResourcesToFetch.map(reference => {
-            return client.request(reference, {flat:true});;
+            return client.request(reference, {flat:true});
         }))).filter(x => x.status == "fulfilled").map(x => x.value);
         allResources = allResources.concat(...resources);
         referenceMap = {};
