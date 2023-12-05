@@ -17,7 +17,7 @@ export const SOF_HOSTS = [
     id: "cerner",
     name: "Oracle Cerner Demo",
     url: "https://fhir-myrecord.cerner.com/r4/ec2458f2-1e24-41c8-b71b-0e701af7583d",
-    clientId: "2b8c090d-04e3-4df7-b2f9-5a4c281cfd66",
+    clientId: "93f6cc1b-969a-4dd3-bc71-e701f7a93184",
     note: "<a href='https://docs.google.com/document/u/1/d/e/2PACX-1vQwyX3px4qi5t1O6_El6022zYt4ymKAWCrcgxcX5NvYGUJAkJ4WFwOnLoikow6rEccpFZzDWBdcBqsQ/pub' target='_blank' rel='noreferrer'>Test patient credentials <Icon name='box-arrow-up-right' /></a>"
   },
   {
