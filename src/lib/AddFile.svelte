@@ -59,8 +59,11 @@
     let singleIPS = true;
 
     let label = 'SHL from ' + new Date().toISOString().slice(0, 10);
-    let passcode = "";
     let expiration: number | null = -1;
+    let type = 'password';
+    let showPassword = false;
+    let passcode = "";
+    $: type = showPassword ? 'text' : 'password'
 
     onMount(() => {
       if (sessionStorage.getItem('URL')) {
@@ -239,13 +242,24 @@
     </FormGroup>
     <FormGroup>
       <Label for="passcode">Protect with Passcode (optional)</Label>
-      <Input
-        maxlength={40}
-        name="passcode"
-        type="text"
-        bind:value={passcode}
-        placeholder="Passcode"
-      />
+      <div style="position:relative">
+        <Input
+          maxlength={40}
+          name="passcode"
+          type={type}
+          bind:value={passcode}
+          placeholder="Assign Passcode"
+        />
+        <Icon name="eye" 
+          style="position: absolute;
+          cursor: pointer;
+          height: 25px;
+          width: 20px;
+          top: 6px;
+          right: 10px;
+          color: rgb(50, 50, 50);"
+          onclick={() => showPassword = !showPassword}/>
+      </div>
     </FormGroup>
     <FormGroup>
       <Label>Expiration</Label>

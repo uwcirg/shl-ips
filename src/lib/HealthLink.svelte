@@ -43,9 +43,10 @@
 
   let href: Promise<string>;
   let qrCode: Promise<string>;
-
+  let showPassword = false;
+  $: type = showPassword ? 'text' : 'password'
   $: {
-    href = shlClient.toLink(shl);
+    href = getUrl(shl);
   }
 
   $: {
@@ -54,10 +55,20 @@
 
   let canShare = navigator?.canShare?.({ url: 'https://example.com', title: 'Title' });
 
+  async function getUrl(shl: SHLAdminParams) {
+    let shlMin = {
+      id: shl.id,
+      managementToken: shl.managementToken,
+      encryptionKey: shl.encryptionKey,
+      files: []
+    }
+    return await shlClient.toLink(shlMin);
+  }
+
   async function copyShl() {
     let copyNoticePrev = copyNotice;
     copyNotice = '...';
-    let text = await shlClient.toLink(shl);
+    let text = await getUrl(shl);
     navigator.clipboard.writeText(text);
     copyNotice = 'Copied!';
     setTimeout(() => {
@@ -165,13 +176,24 @@
     </FormGroup>
     <FormGroup class="passcode shlbutton">
       <Label for="passcode">Add or Update Passcode (optional)</Label>
-      <Input
-        maxlength={40}
-        name="passcode"
-        type="text"
-        bind:value={shlControlled.passcode}
-        placeholder="Assign Passcode"
-      />
+      <div style="position:relative">
+        <Input
+          maxlength={40}
+          name="passcode"
+          type={type}
+          bind:value={shlControlled.passcode}
+          placeholder="Assign Passcode"
+        />
+        <Icon name="eye" 
+          style="position: absolute;
+          cursor: pointer;
+          height: 25px;
+          width: 20px;
+          top: 6px;
+          right: 10px;
+          color: rgb(50, 50, 50);"
+          onclick={() => showPassword = !showPassword}/>
+      </div>
       <Button
         size="sm"
         color="secondary"
