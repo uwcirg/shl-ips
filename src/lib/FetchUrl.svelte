@@ -7,6 +7,7 @@
     DropdownItem,
     DropdownToggle,
     FormGroup,
+    Icon,
     Input,
     Label,
     Row,
@@ -36,6 +37,7 @@
   $: {
     setSummaryUrlValidated(defaultUrl);
   }
+  $: icon = isOpen ? 'chevron-up' : 'chevron-down';
 
   function setSummaryUrlValidated(url: string) {
     try {
@@ -89,7 +91,18 @@
   <Label>Fetch summary from URL</Label>
   <Dropdown {isOpen} toggle={() => (isOpen = !isOpen)}>
     <DropdownToggle tag="div" class="d-inline-block" style="width:100%">
-      <Input type="text" bind:value={summaryUrlValidated} />
+      <div style="position:relative">
+        <Input type="text" bind:value={summaryUrlValidated} />
+        <Icon name={icon} 
+          style="position: absolute;
+          cursor: pointer;
+          height: 25px;
+          width: 20px;
+          top: 6px;
+          right: 10px;
+          color: rgb(50, 50, 50);"
+          onclick={() => showPassword = !showPassword}/>
+      </div>
     </DropdownToggle>
     <DropdownMenu style="width:100%">
       {#if Object.keys(PATIENT_IPS).length > 0}

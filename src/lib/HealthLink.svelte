@@ -44,7 +44,8 @@
   let href: Promise<string>;
   let qrCode: Promise<string>;
   let showPassword = false;
-  $: type = showPassword ? 'text' : 'password'
+  $: type = showPassword ? 'text' : 'password';
+  $: icon = showPassword ? 'eye-slash-fill' : 'eye-fill';
   $: {
     href = getUrl(shl);
   }
@@ -184,7 +185,7 @@
           bind:value={shlControlled.passcode}
           placeholder="Assign Passcode"
         />
-        <Icon name="eye" 
+        <Icon name={icon}
           style="position: absolute;
           cursor: pointer;
           height: 25px;

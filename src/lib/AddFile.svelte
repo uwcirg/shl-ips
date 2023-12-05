@@ -63,7 +63,8 @@
     let type = 'password';
     let showPassword = false;
     let passcode = "";
-    $: type = showPassword ? 'text' : 'password'
+    $: type = showPassword ? 'text' : 'password';
+    $: icon = showPassword ? 'eye-slash-fill' : 'eye-fill';
 
     onMount(() => {
       if (sessionStorage.getItem('URL')) {
@@ -250,7 +251,7 @@
           bind:value={passcode}
           placeholder="Assign Passcode"
         />
-        <Icon name="eye" 
+        <Icon name={icon} 
           style="position: absolute;
           cursor: pointer;
           height: 25px;
