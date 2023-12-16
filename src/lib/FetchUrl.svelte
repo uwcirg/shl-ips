@@ -100,8 +100,7 @@
           width: 20px;
           top: 6px;
           right: 10px;
-          color: rgb(50, 50, 50);"
-          onclick={() => showPassword = !showPassword}/>
+          color: rgb(50, 50, 50);"/>
       </div>
     </DropdownToggle>
     <DropdownMenu style="width:100%">
