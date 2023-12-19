@@ -15,22 +15,13 @@ Sqrl.autoEscaping(false);
 
 // Load header and footer on document ready and attach button actions
 $(document).ready(function () {
-  Promise.all([
-    $("#header").load(config.html_dir + "header.html"),
-    $("#footer").load(config.html_dir + "footer.html")
-  ]).then((success) => {
-    $("#content").show();
-  }, (failure) => {
-    console.log(failure);
-    $('#content').show();
-  });
-
+  $('#content').show();
   $('#FhirDropdown').on('click', () => updateDisplayMode('Entries'));
   $('#NarrativeDropdown').on('click', () => updateDisplayMode('Text'));
 });
 
 function loadSample() {
-  $.getJSON('./samples/sample.json', function () {
+  $.getJSON(new URL('../samples/sample.json', import.meta.url).href, function () {
     console.log("success");
   })
     .done(function (data) {
@@ -103,9 +94,8 @@ function render(templateName, data, targetLocation) {
     entryCheck = data.entry.length
   }
   if (mode == "Entries" && templateName !== "Other") {
-    var jqxhr = $.get(config.template_dir + templateName + ".html", function () { })
+    var jqxhr = $.get(new URL(`../templates/${templateName}.html`, import.meta.url).href, function () { })
       .done(function (template) {
-        // console.log(template);
         console.log(data);
         var templateResult = Sqrl.Render(template, data);
         $("#" + targetLocation).html(templateResult);
@@ -122,7 +112,7 @@ function render(templateName, data, targetLocation) {
     var content = { titulo: data.title, div: "No text defined.", index: sectionCount };
     if (!content.titulo) content.titulo = data.resourceType;
     if (data.text) content.div = data.text.div;
-    var jqxhr = $.get(config.template_dir + "Text.html", function () { })
+    var jqxhr = $.get(new URL(`../templates/Text.html`, import.meta.url).href, function () { })
       .done(function (template) {
         var templateResult = Sqrl.Render(template, content);
         $("#" + targetLocation).html(templateResult);
@@ -135,7 +125,7 @@ function render(templateName, data, targetLocation) {
 
 // This is the header table for some basic data checks
 function renderTable(data) {
-  let jqxhr = $.get(config.template_dir + "Checks.html", function () { })
+  let jqxhr = $.get(new URL(`../templates/Checks.html`, import.meta.url).href, function () { })
     .done(function (template) {
       $("#ips-loader").hide();
       let templateResult = Sqrl.Render(template, data);
@@ -179,7 +169,7 @@ function prepareSHLContents(contents) {
     contents = [contents];
   }
   shlContents = contents.reverse();
-  var jqxhr = $.get(config.template_dir + "IPS.html", function () { })
+  var jqxhr = $.get(new URL(`../templates/IPS.html`, import.meta.url).href, function () { })
     .done(function (template) {
       shlContents.forEach((e, i) => {
         let data = { index: i };
@@ -205,7 +195,7 @@ function prepareSHLContents(contents) {
         $("#loadSample").on('click', loadSample);
       }
       $('#tabs').children().first().children().first().addClass('active show');
-      $('#rendered-ips').children().first().addClass('active show');
+      $('#rendered-ips div').first().addClass('active show');
     }).fail(function (e) {
       console.log("error", e);
     });
