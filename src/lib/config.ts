@@ -1,23 +1,23 @@
 // import {PUBLIC_BASE_URL} from '$env/static/public';
 import { dev } from '$app/environment';
 
-export const API_BASE = 'https://shl-server.fl.dlorigan.dev.cirg.uw.edu/api';
+export const API_BASE = import.meta.env.VITE_API_BASE;
 
-export const INTERMEDIATE_FHIR_SERVER_BASE = 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir';
+export const INTERMEDIATE_FHIR_SERVER_BASE = import.meta.env.VITE_INTERMEDIATE_FHIR_SERVER_BASE;
 
 export const SOF_HOSTS = [
   {
     id: "epic",
     name: "EPIC Demo",
     url: "https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4",
-    clientId: "83c9b11b-c3f1-497b-969f-43d0ab2181ec",
+    clientId: import.meta.env.VITE_EPIC_CLIENT_ID,
     note: "<a href='https://fhir.epic.com/Documentation?docId=testpatients' target='_blank' rel='noreferrer'>Test patient credentials <Icon name='box-arrow-up-right' /></a>"
   },
   { 
     id: "cerner",
     name: "Oracle Cerner Demo",
     url: "https://fhir-myrecord.cerner.com/r4/ec2458f2-1e24-41c8-b71b-0e701af7583d",
-    clientId: "93f6cc1b-969a-4dd3-bc71-e701f7a93184",
+    clientId: import.meta.env.VITE_CERNER_CLIENT_ID,
     note: "<a href='https://docs.google.com/document/u/1/d/e/2PACX-1vQwyX3px4qi5t1O6_El6022zYt4ymKAWCrcgxcX5NvYGUJAkJ4WFwOnLoikow6rEccpFZzDWBdcBqsQ/pub' target='_blank' rel='noreferrer'>Test patient credentials <Icon name='box-arrow-up-right' /></a>"
   },
   {
@@ -71,11 +71,10 @@ export const SOF_PATIENT_RESOURCES = [
   // 'Specimen', // Not in EPIC USCDI R4
 ];
 
-// export const VIEWER_BASE = new URL(
-//   `/ips${dev ? '/index.html' : ''}#`,
-//   window.location.href
-// ).toString();
-export const VIEWER_BASE = 'https://smart-health-links-ips.cirg.washington.edu/ips#';
+export const VIEWER_BASE = new URL(
+  (import.meta.env.VITE_VIEWER_BASE ?? `/ips${dev ? '/index.html' : ''}`)+'#',
+  window.location.href
+).toString();
 export const PATIENT_IPS = {
   'Dave deBronkart': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/11013/$summary'
 }

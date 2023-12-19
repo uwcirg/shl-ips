@@ -1,15 +1,17 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig, loadEnv } from 'vite';
 
-export default ({ mode }) => {
-    // Load app-level env vars to node-level env vars.
-    process.env = {...process.env, ...loadEnv(mode, process.cwd())};
-
-    return defineConfig({
+export default defineConfig(({ mode }) => {
+	// Load env file based on `mode` in the current working directory.
+	// Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
+	// const env = {...process.env, ...loadEnv(mode, process.cwd(), '')};
+	process.env = {...process.env, ...loadEnv(mode, process.cwd(), '')};
+	return {
+		// vite config
 		plugins: [sveltekit()],
 		server: {
 			host: true,
-			port: 3000
+			port: process.env.DEV_SERVER_PORT ? process.env.DEV_SERVER_PORT : 3000
 		}
-	});
-}
+	}
+});
