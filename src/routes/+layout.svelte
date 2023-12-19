@@ -60,9 +60,6 @@
       <NavItem>
         <NavLink href="/home" on:click={closeNav}>Home</NavLink>
       </NavItem>
-      <NavItem>
-        <NavLink on:click={closeNav}>Login</NavLink>
-      </NavItem>
       <Dropdown nav inNavbar size="sm" direction="down">
         <DropdownToggle color="primary" nav caret>Actions</DropdownToggle>
         <DropdownMenu end>
@@ -93,8 +90,8 @@
     </Nav>
   </Collapse>
 </Navbar>
-<Row>
-  <Col style="margin-bottom: 20px; border-bottom: 1px solid rgb(204, 204, 204);">
+<Row style="padding:0px 12px">
+  <Col style="padding:0; margin-bottom: 20px; border-bottom: 1px solid rgb(204, 204, 204);">
     <a href="\home"><Image alt="WA Verify Logo" width="200" src="/img/waverifypluslogo.png" style="align-self: center"></Image></a>
     <div style="vertical-align: middle; font-size: 18px; display: inline-block; padding-left: 17px; font-family: Verdana, sans-serif; color: rgb(34, 72, 156);">International Patient Summary</div>
   </Col>

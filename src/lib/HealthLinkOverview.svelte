@@ -39,10 +39,12 @@
 <br>
 {#if $shlStore.length > 0}
 <Row>
-    <h4 style="padding-bottom: 5px; border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 0px;">Summaries created and stored on this device</h4>
+    <Col>
+        <h4 style="padding-left: 0; padding-bottom: 5px; border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 0px;">Summaries created and stored on this device</h4>
+    </Col>
 </Row>
 {#each $shlStore as shl, i}
-<Row style="display:flex; align-items:center; padding: 10px; border-bottom: 1px solid rgb(204, 204, 204);">
+<Row style="display:flex; align-items:center; padding: 10px;">
     <Col>{shl.label || `SHLink ${i + 1}`}</Col>
     <Col><Button color="primary" style="width:100%" href={'/view/' + shl.id}>View/Manage</Button></Col>
 </Row>
