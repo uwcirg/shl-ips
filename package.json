@@ -3,7 +3,7 @@
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
-		"start": "npm install serve && serve build/",
+		"start": "serve build/",
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
