@@ -1,6 +1,3 @@
-// check variable to see if header, which includes data loading active
-let headerLength = 0;
-
 import config from "./config.js";
 
 export { prepareSHLContents };
@@ -18,26 +15,13 @@ Sqrl.autoEscaping(false);
 
 // Load header and footer on document ready and attach button actions
 $(document).ready(function () {
-  headerLength = $("#header").length;
-  let footerLength = $("#footer").length;
-  if (headerLength === 1) {
-    $("#header").load(config.html_dir + "header.html", () => { });
-  }
-
+  $('#content').show();
   $('#FhirDropdown').on('click', () => updateDisplayMode('Entries'));
   $('#NarrativeDropdown').on('click', () => updateDisplayMode('Text'));
-
-  if (footerLength === 1) {
-    $("#footer").load(config.html_dir + "footer.html", () => { });
-  }
-});
-
-$(window).on('load', function () {
-  $("#content").show();
 });
 
 function loadSample() {
-  $.getJSON('./samples/sample.json', function () {
+  $.getJSON(new URL('../samples/sample.json', import.meta.url).href, function () {
     console.log("success");
   })
     .done(function (data) {
@@ -51,11 +35,11 @@ function loadSample() {
 
 function updateDisplayMode(displayMode) {
   let dropdown = $('#mode');
-
+  let newText;
   if (displayMode == 'Entries') {
-    var newText = 'App Interpretation';
+    newText = 'App Interpretation';
   } else if (displayMode == 'Text') {
-    var newText = 'Generated Text';
+    newText = 'Generated Text';
   }
   if (newText) {
     mode = displayMode
@@ -64,7 +48,9 @@ function updateDisplayMode(displayMode) {
   shlContents.forEach((e, i) => {
     update(e, (shlContents.length === 1 ? "" : i));
   });
-  updateFromText();
+  if (config.show_demo) {
+    updateFromText();
+  }
 };
 
 // Clear data button function. Should be called on all new data loads 
@@ -108,9 +94,8 @@ function render(templateName, data, targetLocation) {
     entryCheck = data.entry.length
   }
   if (mode == "Entries" && templateName !== "Other") {
-    var jqxhr = $.get(config.template_dir + templateName + ".html", function () { })
+    var jqxhr = $.get(new URL(`../templates/${templateName}.html`, import.meta.url).href, function () { })
       .done(function (template) {
-        // console.log(template);
         console.log(data);
         var templateResult = Sqrl.Render(template, data);
         $("#" + targetLocation).html(templateResult);
@@ -127,7 +112,7 @@ function render(templateName, data, targetLocation) {
     var content = { titulo: data.title, div: "No text defined.", index: sectionCount };
     if (!content.titulo) content.titulo = data.resourceType;
     if (data.text) content.div = data.text.div;
-    var jqxhr = $.get(config.template_dir + "Text.html", function () { })
+    var jqxhr = $.get(new URL(`../templates/Text.html`, import.meta.url).href, function () { })
       .done(function (template) {
         var templateResult = Sqrl.Render(template, content);
         $("#" + targetLocation).html(templateResult);
@@ -140,7 +125,7 @@ function render(templateName, data, targetLocation) {
 
 // This is the header table for some basic data checks
 function renderTable(data) {
-  let jqxhr = $.get(config.template_dir + "Checks.html", function () { })
+  let jqxhr = $.get(new URL(`../templates/Checks.html`, import.meta.url).href, function () { })
     .done(function (template) {
       $("#ips-loader").hide();
       let templateResult = Sqrl.Render(template, data);
@@ -183,10 +168,10 @@ function prepareSHLContents(contents) {
   if (!Array.isArray(contents)){
     contents = [contents];
   }
-  shlContents = contents;
-  var jqxhr = $.get(config.template_dir + "IPS.html", function () { })
+  shlContents = contents.reverse();
+  var jqxhr = $.get(new URL(`../templates/IPS.html`, import.meta.url).href, function () { })
     .done(function (template) {
-      shlContents.slice().reverse().forEach((e, i) => {
+      shlContents.forEach((e, i) => {
         let data = { index: i };
         if (shlContents.length > (config.show_demo ? 0 : 1)) {
           addTab(`IPS ${i+1}`, i);
@@ -210,7 +195,7 @@ function prepareSHLContents(contents) {
         $("#loadSample").on('click', loadSample);
       }
       $('#tabs').children().first().children().first().addClass('active show');
-      $('#rendered-ips').children().first().addClass('active show');
+      $('#rendered-ips div').first().addClass('active show');
     }).fail(function (e) {
       console.log("error", e);
     });
@@ -356,7 +341,7 @@ function update(ips, index) {
     }
   });
   //don't need to do anything if the header is not shown
-  if (headerLength === 1) {
+  if ($('#ipsInput')) {
     checks(ips)
   }
 };

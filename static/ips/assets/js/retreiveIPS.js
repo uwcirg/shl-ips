@@ -1,10 +1,15 @@
-import * as shlClient from 'https://smart-health-links-demo.cirg.washington.edu/index.js';
-import { verify } from 'https://smart-health-links-demo.cirg.washington.edu/shc-decoder.js';
+import * as shlClient from 'https://shl-client.fl.dlorigan.dev.cirg.uw.edu/index.js';
+import { verify } from 'https://shl-client.fl.dlorigan.dev.cirg.uw.edu/shc-decoder.js';
 import { prepareSHLContents } from "./renderIPS.js";
 
 const shl = window.location.hash.match(/shlink:\/.*/)?.[0];
 if (shl) {
-    retrieve()
+    try {
+        retrieve()
+    } catch (e) {
+        console.error("Unable to retrieve SHL: " + e);
+        
+    }
 }
 
 async function retrieve(){

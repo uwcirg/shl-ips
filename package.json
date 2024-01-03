@@ -3,7 +3,7 @@
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
-		"start": "npm install serve && serve build/",
+		"start": "serve build/",
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
@@ -26,10 +26,12 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@types/node": "^20.8.7",
 		"@types/pako": "^2.0.0",
 		"@types/qrcode": "^1.5.0",
 		"base64url": "^3.0.1",
 		"bootstrap": "^5.2.3",
+		"fhirclient": "^2.5.2",
 		"jose": "^4.11.4",
 		"pako": "^2.1.0",
 		"qrcode": "^1.5.1",

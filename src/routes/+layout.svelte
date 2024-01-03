@@ -43,6 +43,9 @@
   function handleUpdate(event) {
     isOpen = event.detail.isOpen;
   }
+  function closeNav() {
+    isOpen = false;
+  }
 </script>
 
 <Container class="main" fluid>
@@ -55,25 +58,31 @@
   <Collapse {isOpen} navbar expand="md" on:update={handleUpdate}>
     <Nav class="ms-auto" navbar>
       <NavItem>
-        <NavLink href="/home">Home</NavLink>
-      </NavItem>
-      <NavItem>
-        <NavLink>Login</NavLink>
+        <NavLink href="/home" on:click={closeNav}>Home</NavLink>
       </NavItem>
       <Dropdown nav inNavbar size="sm" direction="down">
         <DropdownToggle color="primary" nav caret>Actions</DropdownToggle>
         <DropdownMenu end>
-          <DropdownItem href="/create">Add New SHLink</DropdownItem>
           <DropdownItem
             on:click={() => {
-              delete window.localStorage[LOCAL_STORAGE_KEY];
+              closeNav();
+              goto("/create");
+            }}>Add New SHLink</DropdownItem>
+          <DropdownItem
+            on:click={() => {
+              closeNav();
+              $shlStore = [];
               goto('/');
             }}>Reset Demo</DropdownItem>
           {#if $shlStore.length > 0}
             <DropdownItem divider />
             <DropdownItem header>View Stored SHLinks</DropdownItem>
             {#each $shlStore as shl, i}
-              <DropdownItem href={'/view/' + shl.id}>{shl.label || `SHLink ${i + 1}`}</DropdownItem>
+              <DropdownItem
+                on:click={() => {
+                closeNav();
+                goto('/view/' + shl.id);
+              }}>{shl.label || `SHLink ${i + 1}`}</DropdownItem>
             {/each}
           {/if}
         </DropdownMenu>
@@ -81,8 +90,8 @@
     </Nav>
   </Collapse>
 </Navbar>
-<Row>
-  <Col style="margin-bottom: 20px; border-bottom: 1px solid rgb(204, 204, 204);">
+<Row style="padding:0px 12px">
+  <Col style="padding:0; margin-bottom: 20px; border-bottom: 1px solid rgb(204, 204, 204);">
     <a href="\home"><Image alt="WA Verify Logo" width="200" src="/img/waverifypluslogo.png" style="align-self: center"></Image></a>
     <div style="vertical-align: middle; font-size: 18px; display: inline-block; padding-left: 17px; font-family: Verdana, sans-serif; color: rgb(34, 72, 156);">International Patient Summary</div>
   </Col>
@@ -93,7 +102,7 @@
   </Col>
 </Row>
 <Row>
-  <Col>
+  <Col style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgb(204, 204, 204);" >
     <footer>
       This demonstration shows how to create a <a
         target="_blank"
@@ -104,9 +113,9 @@
       <a href="https://build.fhir.org/ig/HL7/fhir-ips/" target="_blank" rel="noreferrer"
         >International Patient Summary</a
       >
-      document. SHLinks can be shared by copy/paste, or by presenting a QR. Source at
-      <a href="https://github.com/jmandel/shlips" target="_blank" rel="noreferrer"
-        >github.com/jmandel/shlips</a
+      document. SHLinks can be shared by copy/paste, or by presenting a QR code. Source code and license at
+      <a href="https://github.com/uwcirg/shl-ips" target="_blank" rel="noreferrer"
+        >https://github.com/uwcirg/shl-ips</a
       >.
     </footer>
   </Col>
