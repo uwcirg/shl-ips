@@ -1,5 +1,5 @@
 <script lang='ts'>
-    import { uploadResources, checkResource } from './resourceUploaderTSWrapper';
+    import { uploadResources, checkResource } from './resourceUploader.js';
     import { createEventDispatcher } from 'svelte';
     import {
         Accordion,

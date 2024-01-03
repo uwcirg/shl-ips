@@ -3,7 +3,6 @@
     Button,
     Col,
     FormGroup,
-    Icon,
     Input,
     Label,
     Row,
@@ -11,7 +10,7 @@
 
   import { SOF_HOSTS } from './config';
   import type { ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from './types';
-  import { authorize, retrieve, activePatient } from './sofClientTSWrapper';
+  import { authorize, getResourcesWithReferences } from './sofClient.js';
   import { createEventDispatcher, onMount } from 'svelte';
   
   const authDispatch = createEventDispatcher<{'sofAuthEvent': SOFAuthEvent}>();
@@ -72,7 +71,7 @@
 
   async function fetchData() {
     processing = true;
-    let resources = await retrieve();
+    let resources = await getResourcesWithReferences(1);
     result.resources = resources;
     console.log(resources)
     processing = false;

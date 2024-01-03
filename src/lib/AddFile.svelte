@@ -31,7 +31,7 @@
       SHLSubmitEvent, 
       SOFAuthEvent} from './types';
     import { page } from '$app/stores';
-    import { getResourcesFromIPS } from './resourceUploaderTSWrapper';
+    import { getResourcesFromIPS } from './resourceUploader.js';
     import { goto } from '$app/navigation';
     
     let shlIdParam = $page.url.searchParams.get('shlid');

@@ -1,12 +1,11 @@
 import FHIR from 'fhirclient';
 import { SOF_REDIRECT_URI, SOF_PATIENT_RESOURCES, SOF_RESOURCES } from './config';
 
-export { authorize, retrieve, activePatient };
+export { authorize, getResources, getResourcesWithReferences, activePatient };
 
 const patientResourceScope = SOF_PATIENT_RESOURCES.map(resourceType => `patient/${resourceType}.read`);
 const resourceScope = patientResourceScope.join(" ");
 const config = {
-        // This client ID worked through 2023-04-17, and then I marked the app as ready for production. I think at that point I was assigned new prod & non-prod client ID's...
         clientId: '(ehr client id, populated later)', // clientId() is ignored at smit
         scope: `openid fhirUser launch/patient ${resourceScope} offline_access`,
         iss: '(authorization url, populated later)',
@@ -68,7 +67,7 @@ async function activePatient() {
     return null
 }
 
-async function retrieve() {
+async function getResources() {
     client = await FHIR.oauth2.ready();
     let pid = client.getPatientId();
     if (!pid) {
@@ -80,11 +79,15 @@ async function retrieve() {
         return requestResources(client, resourceType);
     }))).filter(x => x.status == "fulfilled").map(x => x.value);
 
+    return resources;
+}
+
+async function getResourcesWithReferences(depth=1) {
+    let resources = await getResources();
     let allResources = [].concat(...resources);
     let referenceMap = {};
-    let retrievedResources = [];
-    while (resources.length > 0) {
-        console.log(resources);
+    let retrievedResources = {};
+    while (resources.length > 0 && depth > 0) {
         resources.forEach(resource => {
             let retrieved = `${resource.resourceType}/${resource.id}`;
             retrievedResources[retrieved] = true;
@@ -102,6 +105,7 @@ async function retrieve() {
         }))).filter(x => x.status == "fulfilled").map(x => x.value);
         allResources = allResources.concat(...resources);
         referenceMap = {};
+        depth--;
     }
 
     return allResources;
