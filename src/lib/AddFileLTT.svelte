@@ -2,8 +2,8 @@
     import * as jose from 'jose';
     import * as pako from 'pako';
     import { createEventDispatcher, onMount } from 'svelte';
-    import FetchSoF from './FetchSoF.svelte';
-    import ResourceSelector from './ResourceSelector.svelte';
+    import FetchSoFLTT from './FetchSoFLTT.svelte';
+    import ResourceSelectorLTT from './ResourceSelectorLTT.svelte';
     import { verify } from './shc-decoder.js';
 
     import issuerKeys from './issuer.private.jwks.json';
@@ -76,7 +76,7 @@
         try {
           resourceResult = details;
           if (resourceResult.resources) {
-            // Trigger update in ResourceSelector
+            // Trigger update in ResourceSelectorLTT
             resourcesToReview = resourceResult.resources;
           }
         } catch (e) {
@@ -191,17 +191,17 @@
     }
 </script>
 
-<FetchSoF
+<FetchSoFLTT
   on:sofAuthEvent={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
   on:updateResources={ async ({ detail }) => { handleNewResources(detail) } }
   on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }>
-</FetchSoF>
+</FetchSoFLTT>
 
 {#if resourcesToReview.length > 0}
   <span class="text-danger">{fetchError}</span>
   {#if resourcesToReview.length > 0}
-    <ResourceSelector bind:newResources={resourcesToReview}
+    <ResourceSelectorLTT bind:newResources={resourcesToReview}
       on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }>
-    </ResourceSelector>
+    </ResourceSelectorLTT>
   {/if}
 {/if}
