@@ -2,22 +2,6 @@
     import * as jose from 'jose';
     import * as pako from 'pako';
     import { createEventDispatcher, onMount } from 'svelte';
-    import {
-        Button,
-        Card,
-        CardBody,
-        CardText,
-        Col,
-        FormGroup,
-        Icon,
-        Input,
-        Label,
-        Row,
-        Spinner,
-        TabContent,
-        TabPane } from 'sveltestrap';
-    import FetchUrl from './FetchUrl.svelte';
-    import FetchFile from './FetchFile.svelte';
     import FetchSoF from './FetchSoF.svelte';
     import ResourceSelector from './ResourceSelector.svelte';
     import { verify } from './shc-decoder.js';
@@ -207,104 +191,15 @@
     }
 </script>
 
-<TabContent on:tab={(e) => {
-  currentTab = e.detail;
-}}>
-  <TabPane tabId="url" style="padding-top:10px" active={currentTab == "url"}>
-    <span slot="tab">FHIR URL</span>
-    <FetchUrl
-      on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }
-      on:ips-retrieved={ async ({ detail }) => { stageRetrievedIPS(detail) } }>
-    </FetchUrl>
-  </TabPane>
-  <TabPane tabId="file" style="padding-top:10px" active={currentTab == "file"}>
-    <span slot="tab">File Upload</span>
-    <FetchFile
-      on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }
-      on:ips-retrieved={ async ({ detail }) => { stageRetrievedIPS(detail) } }>
-    </FetchFile>
-  </TabPane>
-  <TabPane tabId="smart" style="padding-top:10px" active={currentTab == "smart"}>
-    <span slot="tab">SMART Patient Access</span>
-    <FetchSoF
-      on:sofAuthEvent={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
-      on:updateResources={ async ({ detail }) => { handleNewResources(detail) } }
-      on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }>
-    </FetchSoF>
-  </TabPane>
-</TabContent>
+<FetchSoF
+  on:sofAuthEvent={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
+  on:updateResources={ async ({ detail }) => { handleNewResources(detail) } }
+  on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }>
+</FetchSoF>
 
 {#if resourcesToReview.length > 0}
-  {#if shlIdParam == null}
-  <br/>
-    <FormGroup>
-      <Label>New SHLink Label</Label>
-      <Input type="text" bind:value={label} />
-    </FormGroup>
-    <FormGroup>
-      <Label for="passcode">Protect with Passcode (optional)</Label>
-      <div style="position:relative">
-        <Input
-          maxlength={40}
-          name="passcode"
-          type={type}
-          bind:value={passcode}
-          placeholder="Assign Passcode"
-        />
-        <Icon name={icon} 
-          style="position: absolute;
-          cursor: pointer;
-          height: 25px;
-          width: 20px;
-          top: 6px;
-          right: 10px;
-          color: rgb(50, 50, 50);"
-          onclick={() => showPassword = !showPassword}/>
-      </div>
-    </FormGroup>
-    <FormGroup>
-      <Label>Expiration</Label>
-      <Input type="radio" bind:group={expiration} value={60 * 60} label="1 hour" />
-      <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 7} label="1 week" />
-      <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 7 * 365} label="1 year" />
-      <Input type="radio" bind:group={expiration} value={-1} label="Never" />
-    </FormGroup>
-  {/if}
   <span class="text-danger">{fetchError}</span>
   {#if resourcesToReview.length > 0}
-    {#if ipsResult.ips}
-      <Row class="align-items-center">
-        <Col xs="auto">
-          <Button
-            color="secondary"
-            style="width:fit-content"
-            disabled={submitting}
-            type="button"
-            on:click={() => {uploadRetrievedIPS(ipsResult)}}>
-            {#if !submitting}
-            Submit Unchanged IPS
-            {:else}
-            Submitting...
-            {/if}
-          </Button>
-        </Col>
-        {#if submitting}
-        <Col xs="auto">
-          <Spinner color="primary" type="border" size="md"/>
-        </Col>
-        {/if}
-        <Col xs="auto">
-          <Card color="light">
-            <CardBody>
-              <CardText color="light" style="overflow: hidden; text-overflow: ellipsis">
-                <Icon name="file-earmark-text" /> {ipsResult.source}
-              </CardText>
-            </CardBody>
-          </Card>
-        </Col>
-      </Row>
-      <br/>
-    {/if}
     <ResourceSelector bind:newResources={resourcesToReview}
       on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }>
     </ResourceSelector>
