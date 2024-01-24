@@ -58,6 +58,8 @@
           sessionStorage.removeItem('SMART_KEY');
         }
       }
+    } else {
+      prepareIps();
     }
   });
 

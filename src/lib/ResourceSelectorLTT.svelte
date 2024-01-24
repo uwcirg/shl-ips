@@ -23,6 +23,7 @@
     $: {
         if (newResources) {
             addNewResources(newResources);
+            confirm();
         }
     };
 
