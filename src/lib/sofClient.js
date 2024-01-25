@@ -1,7 +1,7 @@
 import FHIR from 'fhirclient';
-import { SOF_REDIRECT_URI, SOF_PATIENT_RESOURCES, SOF_RESOURCES } from './config';
+import { SOF_REDIRECT_URI, SOF_PATIENT_RESOURCES, SOF_RESOURCES } from './config.ts';
 
-export { authorize, getResources, getResourcesWithReferences, activePatient };
+export { authorize, getResources, getResourcesWithReferences, activePatient, endSession };
 
 const patientResourceScope = SOF_PATIENT_RESOURCES.map(resourceType => `patient/${resourceType}.read`);
 const resourceScope = patientResourceScope.join(" ");
@@ -44,7 +44,8 @@ function getReferences(obj, references) {
   }
 
 async function requestResources(client, resourceType) {
-    let endpoint = (resourceType == 'Patient' ? 'Patient/' : `${resourceType}?patient=`) + client.getPatientId();
+    // let endpoint = (resourceType == 'Patient' ? 'Patient/' : `${resourceType}?patient=`) + client.getPatientId();
+    let endpoint = "https://fhir.inform.dev.cirg.uw.edu/fhir/Patient";
     return client.request(endpoint, { flat: true }).then((result) => {
         let resourcesToPass = [];
         if (Array.isArray(result)) {
@@ -109,6 +110,14 @@ async function getResourcesWithReferences(depth=1) {
     }
 
     return allResources;
+}
+
+function endSession() {
+    let key = sessionStorage.getItem('SMART_KEY');
+    if (key) {
+        sessionStorage.removeItem(JSON.parse(key));
+        sessionStorage.removeItem('SMART_KEY');
+    }
 }
 
 // Utility function to validate a URL

@@ -63,14 +63,6 @@
     }
   });
 
-  function endSession() {
-    let key = sessionStorage.getItem('SMART_KEY');
-    if (key) {
-      sessionStorage.removeItem(JSON.parse(key));
-      sessionStorage.removeItem('SMART_KEY');
-    }
-  }
-
   async function fetchData() {
     processing = true;
     let resources = await getResourcesWithReferences(1);
