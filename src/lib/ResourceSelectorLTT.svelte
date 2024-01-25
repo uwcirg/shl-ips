@@ -24,6 +24,7 @@
         if (newResources) {
             addNewResources(newResources);
             confirm();
+            newResources = [];
         }
     };
 
@@ -111,20 +112,20 @@
         return 0;
     }
 
-    function addNewResources(newResources:any[]) {
-        if (newResources) {
-            newResources = newResources.filter(r => {
+    function addNewResources(resourcesToAdd:any[]) {
+        if (resourcesToAdd) {
+            resourcesToAdd = resourcesToAdd.filter(r => {
                 if (checkResource(r) == null) {
                     // console.warn("Invalid resource: " + JSON.stringify(r));
                     return false;
                 }
                 return true;
             })
-            newResources = newResources.map(resource => {
+            resourcesToAdd = resourcesToAdd.map(resource => {
                 return new ResourceHelper(resource);
             });
 
-            let newPatients = newResources.filter(rh => rh.resource.resourceType == "Patient");
+            let newPatients = resourcesToAdd.filter(rh => rh.resource.resourceType == "Patient");
             addResources(newPatients, patients);
             patients = patients;
             if (!patientReference) {
@@ -134,10 +135,10 @@
                     throw Error("Missing valid patient resource");
                 }
             }
-            newResources = newResources.filter(rh => {
+            resourcesToAdd = resourcesToAdd.filter(rh => {
                 return rh.resource.resourceType != "Patient"
             });
-            addResources(newResources, resources);
+            addResources(resourcesToAdd, resources);
             resources = resources;
             return;
         }
