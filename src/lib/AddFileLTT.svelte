@@ -199,9 +199,7 @@
 
 {#if resourcesToReview.length > 0}
   <span class="text-danger">{fetchError}</span>
-  {#if resourcesToReview.length > 0}
-    <ResourceSelectorLTT bind:newResources={resourcesToReview}
-      on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }>
-    </ResourceSelectorLTT>
-  {/if}
+  <ResourceSelectorLTT bind:newResources={resourcesToReview}
+    on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }>
+  </ResourceSelectorLTT>
 {/if}
