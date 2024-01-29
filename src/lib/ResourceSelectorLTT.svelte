@@ -22,9 +22,10 @@
     // This function will be executed when the resource list is updated
     $: {
         if (newResources) {
+            console.log(newResources);
             addNewResources(newResources);
-            confirm();
-            newResources = [];
+            // confirm();
+            // newResources = [];
         }
     };
 
@@ -140,6 +141,11 @@
             });
             addResources(resourcesToAdd, resources);
             resources = resources;
+            console.log("Patients");
+            console.log(patients);
+            console.log("Resources");
+            console.log(resources);
+
             return;
         }
         return;
@@ -177,17 +183,23 @@
 <form on:submit|preventDefault={() => confirm()}>
     <Accordion>
         <AccordionItem header="Customize IPS Content">
-        {#if resources != null}
-            <p>Select resources from the list below to include in a new customized Summary:</p>
-            {#each Object.keys(resources) as key}
-                <div class="resource form-check">
-                    <input id={key} class="form-check-input" type="checkbox" bind:checked={resources[key].include} value={key}/>
-                    <label class="form-check-label" style="width:100%" for={key}><p style="overflow-wrap:break-word">{@html JSON.stringify(resources[key].original_resource)}</p></label>
-                </div>
-            {/each}
-        {/if}
-    </AccordionItem>
-</Accordion>
+            <!-- {#if patients != null || resources != null} -->
+                <p>Select resources from the list below to include in a new customized Summary:</p>
+                {#each Object.keys(patients) as key}
+                    <div class="resource form-check">
+                        <input id={key} class="form-check-input" type="checkbox" bind:checked={patients[key].include} value={key}/>
+                        <label class="form-check-label" style="width:100%" for={key}><p style="overflow-wrap:break-word">{@html JSON.stringify(patients[key].original_resource)}</p></label>
+                    </div>
+                {/each}
+                {#each Object.keys(resources) as key}
+                    <div class="resource form-check">
+                        <input id={key} class="form-check-input" type="checkbox" bind:checked={resources[key].include} value={key}/>
+                        <label class="form-check-label" style="width:100%" for={key}><p style="overflow-wrap:break-word">{@html JSON.stringify(resources[key].original_resource)}</p></label>
+                    </div>
+                {/each}
+            <!-- {/if} -->
+        </AccordionItem>
+    </Accordion>
     <br/>
     <Row>
         <Col xs="auto">
