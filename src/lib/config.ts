@@ -6,11 +6,18 @@ export const API_BASE = import.meta.env.VITE_API_BASE;
 export const INTERMEDIATE_FHIR_SERVER_BASE = import.meta.env.VITE_INTERMEDIATE_FHIR_SERVER_BASE;
 
 export const SOF_HOSTS = [
+  // {
+  //   id: "smit",
+  //   name: "SMART Health IT Demo",
+  //   url: "https://launch.smarthealthit.org/v/r4/sim/WzMsIiIsIiIsIkFVVE8iLDAsMCwwLCIiLCIiLCIiLCIiLCIiLCIiLCIiLDAsMF0/fhir",
+  //   clientId: "<no client id>",
+  //   note: "Credentials provided"
+  // },
   {
-    id: "smit",
-    name: "SMART Health IT Demo",
-    url: "https://launch.smarthealthit.org/v/r4/sim/WzMsIiIsIiIsIkFVVE8iLDAsMCwwLCIiLCIiLCIiLCIiLCIiLCIiLCIiLDAsMF0/fhir",
-    clientId: "<no client id>",
+    id: "keycloak",
+    name: "Let's Talk Tech Login",
+    url: "https://keycloak.inform.dev.cirg.uw.edu/realms/ltt",
+    clientId: "shl_creator",
     note: "Credentials provided"
   }
 ];

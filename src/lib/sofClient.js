@@ -17,6 +17,12 @@ let client;
 function authorize(inputFhirUrl, clientId) {
     config.iss = inputFhirUrl;
     config.clientId = clientId ?? "no clientId configured";
+    // TODO: Remove in favor of producing correct token response on server side
+    let fakeTokenResponse = {
+        authorizeUri: "https://keycloak.inform.dev.cirg.uw.edu/realms/ltt/protocol/openid-connect/auth",
+        tokenUri: "https://keycloak.inform.dev.cirg.uw.edu/realms/ltt/protocol/openid-connect/token"
+    }
+    config.fakeTokenResponse = fakeTokenResponse;
     return FHIR.oauth2.authorize(config);
 };
 
