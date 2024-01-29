@@ -17,7 +17,7 @@ let client;
 function authorize(inputFhirUrl, clientId) {
     config.iss = inputFhirUrl;
     config.clientId = clientId ?? "no clientId configured";
-    // TODO: Remove in favor of producing correct token response on server side
+    // TODO SOF: Remove in favor of producing correct token response on server side
     let fakeTokenResponse = {
         authorizeUri: "https://keycloak.inform.dev.cirg.uw.edu/realms/ltt/protocol/openid-connect/auth",
         tokenUri: "https://keycloak.inform.dev.cirg.uw.edu/realms/ltt/protocol/openid-connect/token"
@@ -50,8 +50,9 @@ function getReferences(obj, references) {
   }
 
 async function requestResources(client, resourceType) {
+    // TODO SOF: Replace with appropriate query once server is configured
     // let endpoint = (resourceType == 'Patient' ? 'Patient/' : `${resourceType}?patient=`) + client.getPatientId();
-    let endpoint = "https://fhir.inform.dev.cirg.uw.edu/fhir/Patient";
+    let endpoint = "Patient";
     return client.request(endpoint, { flat: true }).then((result) => {
         let resourcesToPass = [];
         if (Array.isArray(result)) {
@@ -77,10 +78,11 @@ async function activePatient() {
 async function getResources() {
     client = await FHIR.oauth2.ready();
     let pid = client.getPatientId();
-    if (!pid) {
-        console.error("No patient ID found");
-        return undefined;
-    }
+    // TODO SOF: Bring back in once SMART Auth is set up
+    // if (!pid) {
+    //     console.error("No patient ID found");
+    //     return undefined;
+    // }
     // Establish resource display methods
     let resources = (await Promise.allSettled(SOF_PATIENT_RESOURCES.map((resourceType) => {
         return requestResources(client, resourceType);

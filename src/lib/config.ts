@@ -16,7 +16,7 @@ export const SOF_HOSTS = [
   {
     id: "keycloak",
     name: "Let's Talk Tech Login",
-    url: "https://keycloak.inform.dev.cirg.uw.edu/realms/ltt",
+    url: "https://fhir.inform.dev.cirg.uw.edu/fhir",
     clientId: "shl_creator",
     note: "Credentials provided"
   }
