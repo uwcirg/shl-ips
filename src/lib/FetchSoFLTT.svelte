@@ -54,7 +54,7 @@
           sofHost = sofHostAuthd;
           sofHostSelection = sofHost.id;
           await fetchData();
-          sessionStorage.removeItem(key);
+          sessionStorage.removeItem(JSON.parse(key));
           sessionStorage.removeItem('SMART_KEY');
         }
       }
