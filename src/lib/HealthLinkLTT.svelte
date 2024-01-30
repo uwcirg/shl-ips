@@ -233,11 +233,13 @@
   }
   img.logo {
     position: absolute;
-    background: white;
-    width: 100px;
-    left: calc(50% - 50px);
+    background: #325c33;
+    width: 110px;
+    height: 25px;
+    /* padding: 2px; */
+    left: calc(50% - 55px);
     top: calc(50% - 1em);
-    border: 2px solid white;
+    border: 5px solid #325c33;
     box-sizing: border-box;
   }
   :global(.shlbutton) {
