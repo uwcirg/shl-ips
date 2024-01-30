@@ -42,7 +42,7 @@
     let shcsToAdd: SHCFile[] = [];
     let singleIPS = true;
 
-    let label = 'SHL from ' + new Date().toISOString().slice(0, 10);
+    let label = 'Let’s Talk Tech Choices Summary (' + new Date().toISOString().slice(0, 10) + ')';
     let expiration: number | null = -1;
     let type = 'password';
     let showPassword = false;

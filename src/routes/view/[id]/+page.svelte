@@ -2,7 +2,7 @@
   import { page } from '$app/stores';
   import { getContext } from 'svelte';
   import type { Writable } from 'svelte/store';
-  import HealthLink from '$lib/HealthLink.svelte';
+  import HealthLinkLTT from '$lib/HealthLinkLTT.svelte';
   import type { SHLAdminParams } from '$lib/managementClient';
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
   let shl: SHLAdminParams | undefined;
@@ -12,7 +12,7 @@
 </script>
 
 {#if shl}
-  <HealthLink {shl} />
+  <HealthLinkLTT {shl} />
 {:else}
   SHLink {$page.params.id} Not Found
 {/if}
