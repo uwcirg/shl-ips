@@ -50,18 +50,18 @@
 
 <Container class="main" fluid>
 <Styles />
-<Navbar color="light" light expand="md" style="border-bottom: 1px solid rgb(204, 204, 204);">
+<Navbar class="navbar" expand="md" style="background: #325c33; border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 10px">
   <NavbarBrand>
-    <a href="https://doh.wa.gov/" rel="noreferrer" target="_blank"><Image alt="Washington State Department of Health Logo" width="240" src="/img/doh_logo_doh-black.png"/></a>
+    <a href="https://letstalktech.uw.edu" rel="noreferrer" target="_blank"><div style="background:#325c33;"><Image alt="Let's Talk Tech Logo" width="240" src="/img/ltt-logo.svg"/></div></a>
   </NavbarBrand>
   <NavbarToggler on:click={() => (isOpen = !isOpen)} />
   <Collapse {isOpen} navbar expand="md" on:update={handleUpdate}>
     <Nav class="ms-auto" navbar>
       <NavItem>
-        <NavLink href="/home" on:click={closeNav}>Home</NavLink>
+        <NavLink class="text-white" href="/home" on:click={closeNav}>Home</NavLink>
       </NavItem>
       <Dropdown nav inNavbar size="sm" direction="down">
-        <DropdownToggle color="primary" nav caret>Actions</DropdownToggle>
+        <DropdownToggle class="text-white" nav caret>Actions</DropdownToggle>
         <DropdownMenu end>
           <DropdownItem
             on:click={() => {
@@ -90,12 +90,6 @@
     </Nav>
   </Collapse>
 </Navbar>
-<Row style="padding:0px 12px">
-  <Col style="padding:0; margin-bottom: 20px; border-bottom: 1px solid rgb(204, 204, 204);">
-    <a href="\home"><Image alt="WA Verify Logo" width="200" src="/img/waverifypluslogo.png" style="align-self: center"></Image></a>
-    <div style="vertical-align: middle; font-size: 18px; display: inline-block; padding-left: 17px; font-family: Verdana, sans-serif; color: rgb(34, 72, 156);">International Patient Summary</div>
-  </Col>
-</Row>
 <Row class="main-row">
   <Col>
     <slot />
@@ -142,6 +136,6 @@
     height: 100%;
   }
   :global(.navbar .container-fluid) {
-    padding: 0px;
+    padding: 0,0.5rem;
   }
 </style>
