@@ -16,7 +16,7 @@ export const SOF_HOSTS = [
   {
     id: "keycloak",
     name: "Let's Talk Tech Login",
-    url: "https://fhir.inform.dev.cirg.uw.edu/fhir",
+    url: "https://fhir-auth.inform.dev.cirg.uw.edu/fhir",
     clientId: "shl_creator",
     note: "Credentials provided"
   }
@@ -45,22 +45,23 @@ export const SOF_RESOURCES = [
 
 export const SOF_PATIENT_RESOURCES = [
   'Patient',
-  'AllergyIntolerance',
+  'DocumentReference',
+  // 'AllergyIntolerance',
   // 'MedicationStatement', // Not in EPIC USCDI R4
-  'MedicationRequest',
+  // 'MedicationRequest',
   // 'Medication', // can't search by patient; "Only an _ID search is allowed."
-  'Condition',
+  // 'Condition',
   // 'Observation', // "Must have either code or category."
   // 'Organization', // can't search by patient; "Only an _ID search is allowed."
-  'Immunization',
+  // 'Immunization',
   // 'Device',
   // 'DeviceUseStatement', // Not in EPIC USCDI R4
-  'DiagnosticReport', // TODO change to subject
+  // 'DiagnosticReport', // TODO change to subject
   // 'ImagingStudy', // Not in EPIC USCDI R4
   // 'Media', // Not in EPIC USCDI R4
   // 'Practitioner', // can't search by patient; "Either name, family, or identifier is a required parameter."
   // 'PractitionerRole',  // can't search by patient; "An identifier, practitioner, organization, location, or specialty parameter is required."
-  'Procedure', // TODO change to subject
+  // 'Procedure', // TODO change to subject
   // 'Specimen', // Not in EPIC USCDI R4
 ];
 
