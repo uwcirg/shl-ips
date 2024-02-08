@@ -1,45 +1,28 @@
 <script lang="ts">
-  import {
-    Button,
-    Col,
-    FormGroup,
-    Input,
-    Label,
-    Row,
-    Spinner } from 'sveltestrap';
-
   import { SOF_HOSTS } from './config';
-  import type { ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from './types';
-  import { authorize, getResourcesWithReferences } from './sofClient.js';
+  import type { IPSRetrieveEvent, SOFHost } from './types';
+  import { authorize, getResources } from './sofClient.js';
   import { createEventDispatcher, onMount } from 'svelte';
-  
-  const authDispatch = createEventDispatcher<{'sofAuthEvent': SOFAuthEvent}>();
-  const resourceDispatch = createEventDispatcher<{'updateResources': ResourceRetrieveEvent}>();
+
+  const resourceDispatch = createEventDispatcher<{'ips-retrieved': IPSRetrieveEvent}>();
   let processing = false;
   let fetchError = "";
-  let result: ResourceRetrieveEvent = {
-    resources: undefined
+  let result: IPSRetrieveEvent = {
+    ips: undefined
   };
 
   let sofHostSelection = SOF_HOSTS[0].id;
   let sofHost:SOFHost | undefined = SOF_HOSTS.find(e => e.id == sofHostSelection);
-  
-  $: {
-    if (sofHostSelection) {
-      sofHost = SOF_HOSTS.find(e => e.id == sofHostSelection);
-    }
-  }
 
-  async function prepareIps() {
+  async function authorizeClient() {
     fetchError = "";
     try {
       if (sofHost) {
-        authDispatch('sofAuthEvent')
         authorize(sofHost.url, sofHost.clientId);
       }
     } catch (e) {
-      console.log('Failed', e);
-      fetchError = "Error preparing IPS";
+      console.error('Failed', e);
+      fetchError = "Unable to authorize account. Please log out and try again later.";
     }
   }
 
@@ -48,55 +31,30 @@
     if (key) {
       let token = sessionStorage.getItem(JSON.parse(key));
       if (token) {
-        let url = JSON.parse(token).serverUrl;
-        let sofHostAuthd = SOF_HOSTS.find(e => e.url == url);
-        if (sofHostAuthd) {
-          sofHost = sofHostAuthd;
-          sofHostSelection = sofHost.id;
-          await fetchData();
-          sessionStorage.removeItem(JSON.parse(key));
-          sessionStorage.removeItem('SMART_KEY');
-        }
+        token = JSON.parse(token);
+        await fetchData();
+        return;
       }
-    } else {
-      prepareIps();
     }
+    authorizeClient();
   });
 
   async function fetchData() {
-    processing = true;
-    let resources = await getResourcesWithReferences(1);
-    result.resources = resources;
-    console.log(resources)
-    processing = false;
-    return resourceDispatch('updateResources', result);
+    try {
+      processing = true;
+      let resources = await getResources();
+      // TODO: build IPS structure
+      // result.ips = toIPS(resources);
+      result.ips = resources;
+      console.log(resources);
+      processing = false;
+      return resourceDispatch('ips-retrieved', result);
+    } catch (e) {
+      processing = false;
+      console.error("Error while fetching data", e);
+      fetchError = "Unable to fetch summary. Please try again later.";
+    }
   }
-
 </script>
-<form on:submit|preventDefault={() => prepareIps()}>
-  <FormGroup>
-      <Label>Fetch via SMART authorization</Label>
-    {#each SOF_HOSTS as host}
-      <Input type="radio" bind:group={sofHostSelection} value={host.id} label={host.name}/>
-      <p class="text-secondary" style="margin-left:25px">{@html host.note}</p>
-    {/each}
-  </FormGroup>
 
-  <Row>
-    <Col xs="auto">
-    <Button color="primary" style="width:fit-content" disabled={processing} type="submit">
-      {#if !processing}
-        Fetch Data
-      {:else}
-        Fetching...
-      {/if}
-    </Button>
-    </Col>
-  {#if processing}
-    <Col xs="auto">
-      <Spinner color="primary" type="border" size="md"/>
-    </Col>
-  {/if}
-  </Row>
-</form>
 <span class="text-danger">{fetchError}</span>
