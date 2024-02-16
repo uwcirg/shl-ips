@@ -5,23 +5,6 @@ export const API_BASE = import.meta.env.VITE_API_BASE;
 
 export const INTERMEDIATE_FHIR_SERVER_BASE = import.meta.env.VITE_INTERMEDIATE_FHIR_SERVER_BASE;
 
-export const SOF_HOSTS = [
-  // {
-  //   id: "smit",
-  //   name: "SMART Health IT Demo",
-  //   url: "https://launch.smarthealthit.org/v/r4/sim/WzMsIiIsIiIsIkFVVE8iLDAsMCwwLCIiLCIiLCIiLCIiLCIiLCIiLCIiLDAsMF0/fhir",
-  //   clientId: "<no client id>",
-  //   note: "Credentials provided"
-  // },
-  {
-    id: "keycloak",
-    name: "Let's Talk Tech Login",
-    url: "https://fhir-auth.inform.dev.cirg.uw.edu/fhir",
-    clientId: "shl_creator",
-    note: "Credentials provided"
-  }
-];
-export const SOF_REDIRECT_URI = '/authenticate';
 export const SOF_RESOURCES = [
   'Patient',
   'AllergyIntolerance',
@@ -63,6 +46,32 @@ export const SOF_PATIENT_RESOURCES = [
   // 'PractitionerRole',  // can't search by patient; "An identifier, practitioner, organization, location, or specialty parameter is required."
   // 'Procedure', // TODO change to subject
   // 'Specimen', // Not in EPIC USCDI R4
+];
+
+export const RESOURCE_SCOPE = SOF_PATIENT_RESOURCES.map(resourceType => `patient/${resourceType}.read`).join(" ");
+const keycloakScope = `openid offline_access`;
+const fullScope = `${keycloakScope} fhirUser ${RESOURCE_SCOPE}`;
+const SOF_REDIRECT_URI = '/share';
+
+export const SOF_HOSTS = [
+  // {
+  //   id: "smit",
+  //   name: "SMART Health IT Demo",
+  //   iss: "https://launch.smarthealthit.org/v/r4/sim/WzMsIiIsIiIsIkFVVE8iLDAsMCwwLCIiLCIiLCIiLCIiLCIiLCIiLCIiLDAsMF0/fhir",
+  //   clientId: "<no client id>",
+  //   scope: fullScope,
+  //   redirect_uri: SOF_REDIRECT_URI,
+  //   note: "Credentials provided"
+  // },
+  {
+    id: "keycloak",
+    name: "Let's Talk Tech Login",
+    iss: "https://fhir-auth.inform.dev.cirg.uw.edu/fhir",
+    clientId: "shl_creator",
+    scope: keycloakScope,
+    redirect_uri: SOF_REDIRECT_URI,
+    note: "Credentials provided"
+  }
 ];
 
 export const VIEWER_BASE = new URL(
