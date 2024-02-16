@@ -6,6 +6,7 @@ type ConfigForServer = Pick<SHLAdminParams, 'passcode' | 'exp'>;
 
 export interface SHLAdminParams {
   id: string;
+  sessionId?: string;
   managementToken: string;
   encryptionKey: string;
   files: {
@@ -15,6 +16,7 @@ export interface SHLAdminParams {
   }[];
   passcode?: string;
   exp?: number;
+  date?: string;
   label?: string;
   v?: number;
 }
@@ -51,6 +53,34 @@ export class SHLClient {
       files: [],
       ...config
     };
+  }
+
+  async getShl(pid: string): Promise<SHLAdminParams> {
+    let shl = {
+      id: "string",
+      managementToken: pid,
+      encryptionKey: "string",
+      passcode: "",
+      exp: 123456,
+      label: "label",
+      v: 1,
+      files: [
+        {
+          contentEncrypted: "string",
+          contentType: "application/smart-health-link",
+          date: new Date().toString(),
+        }
+      ]
+    };
+    return shl;
+    const req = await fetch(`${API_BASE}/shl`, {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${pid}`
+      }
+    });
+    const res = await req.json();
+    return res;
   }
 
   async deleteShl(shl: SHLAdminParams): Promise<boolean> {
