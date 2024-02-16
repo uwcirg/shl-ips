@@ -1,15 +1,10 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import { setContext } from 'svelte';
+  import { setContext, onMount } from 'svelte';
   import { writable } from 'svelte/store';
   import {
-    Dropdown,
     Col,
     Collapse,
     Container,
-    DropdownItem,
-    DropdownMenu,
-    DropdownToggle,
     Icon,
     Image,
     Nav,
@@ -22,22 +17,25 @@
     Styles
   } from 'sveltestrap';
   import { SHLClient, type SHLAdminParams } from '$lib/managementClient';
-
-  const LOCAL_STORAGE_KEY = 'shlips_store_shls';
-  let shlStore = writable<SHLAdminParams[]>(
-    window.localStorage[LOCAL_STORAGE_KEY] ? JSON.parse(window.localStorage[LOCAL_STORAGE_KEY]) : []
-  );
-
-  $: {
-    if ($shlStore) window.localStorage[LOCAL_STORAGE_KEY] = JSON.stringify($shlStore);
-  }
+  import { SOFClient } from '$lib/sofClient';
+  import { SOF_HOSTS } from '$lib/config';
+  let shlStore = writable<SHLAdminParams>(undefined);
   setContext('shlStore', shlStore);
 
   let shlClient = new SHLClient();
   setContext('shlClient', shlClient);
 
-  let reset = writable(0);
-  setContext('reset', reset);
+  // TODO: Consider passing full configuration
+  // TODO: Consider array config
+  let sofClient = new SOFClient(SOF_HOSTS[0]);
+  setContext('sofClient', sofClient);
+  let initialized = false;
+
+  onMount(() => {
+    sofClient.initialize()?.then(() => {
+      initialized = true;
+    });
+  });
 
   let isOpen = false;
   function handleUpdate(event) {
@@ -50,46 +48,41 @@
 
 <Container class="main" fluid>
 <Styles />
-<Navbar class="navbar" expand="md" style="background: #325c33; border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 10px">
+<Navbar class="navbar d-none d-sm-block" expand="sm" style="background: #325c33; border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 10px">
+  <Nav pills>
+    <NavItem>
+      <NavLink active style="background-color:white" class="text-black" href="https://letstalktech.uw.edu/" on:click={closeNav}><strong><Icon name="arrow-left" /></strong> Back</NavLink>
+    </NavItem>
+  </Nav>
+  <NavbarBrand class="mx-auto">
+    <a href="https://letstalktech.uw.edu" rel="noreferrer" target="_blank"><div style="background:#325c33;"><Image alt="Let's Talk Tech Logo" width="240" src="/img/ltt-logo.svg"/></div></a>
+  </NavbarBrand>
+  <Nav pills>
+    <NavItem active>
+      <NavLink active style="background-color:white" class="text-black" href="https://letstalktech.uw.edu/help" on:click={closeNav}>Log Out</NavLink>
+    </NavItem>
+  </Nav>
+</Navbar>
+<Navbar class="navbar d-block d-sm-none" expand="sm" style="background: #325c33; border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 10px">
   <NavbarBrand>
     <a href="https://letstalktech.uw.edu" rel="noreferrer" target="_blank"><div style="background:#325c33;"><Image alt="Let's Talk Tech Logo" width="240" src="/img/ltt-logo.svg"/></div></a>
   </NavbarBrand>
   <NavbarToggler on:click={() => (isOpen = !isOpen)} />
-  <Collapse {isOpen} navbar expand="md" on:update={handleUpdate}>
+  <Collapse {isOpen} navbar expand="sm" on:update={handleUpdate}>
     <Nav class="ms-auto" navbar>
       <NavItem>
-        <NavLink class="text-white" href="/home" on:click={closeNav}>Home</NavLink>
+        <NavLink class="text-white" href="https://letstalktech.uw.edu/" on:click={closeNav}>Back</NavLink>
       </NavItem>
-      <Dropdown nav inNavbar size="sm" direction="down">
-        <DropdownToggle class="text-white" nav caret>Actions</DropdownToggle>
-        <DropdownMenu end>
-          <DropdownItem
-            on:click={() => {
-              closeNav();
-              goto("/create");
-            }}>Add New SHLink</DropdownItem>
-          <DropdownItem
-            on:click={() => {
-              closeNav();
-              $shlStore = [];
-              goto('/');
-            }}>Reset Demo</DropdownItem>
-          {#if $shlStore.length > 0}
-            <DropdownItem divider />
-            <DropdownItem header>View Stored SHLinks</DropdownItem>
-            {#each $shlStore as shl, i}
-              <DropdownItem
-                on:click={() => {
-                closeNav();
-                goto('/view/' + shl.id);
-              }}>{shl.label || `SHLink ${i + 1}`}</DropdownItem>
-            {/each}
-          {/if}
-        </DropdownMenu>
-      </Dropdown>
+      <NavItem>
+        <NavLink class="text-white" href="https://letstalktech.uw.edu/help" on:click={closeNav}>Log Out</NavLink>
+      </NavItem>
     </Nav>
   </Collapse>
 </Navbar>
+
+{#if !initialized}
+  Loading...
+{:else}
 <Row class="main-row">
   <Col>
     <slot />
@@ -114,6 +107,7 @@
     </footer>
   </Col>
 </Row>
+{/if}
 </Container>
 
 <style>
