@@ -200,7 +200,7 @@
         color="secondary"
         disabled={(shl.passcode || '') === (shlControlled.passcode || '')}
         on:click={async () => {
-          await shlClient.resetShl({ ...shl, passcode: shlControlled.passcode });
+          await shlClient.updateShl({ ...shl, passcode: shlControlled.passcode });
           $shlStore = $shlStore.map((e) =>
             e.id === shl.id ? { ...shl, passcode: shlControlled.passcode } : e
           );

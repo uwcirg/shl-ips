@@ -94,7 +94,7 @@ export class SHLClient {
     return true;
   }
 
-  async resetShl(shl: SHLAdminParams): Promise<boolean> {
+  async updateShl(shl: SHLAdminParams): Promise<boolean> {
     const req = await fetch(`${API_BASE}/shl/${shl.id}`, {
       method: 'PUT',
       body: JSON.stringify({ passcode: shl.passcode, exp: shl.exp }),
