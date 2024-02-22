@@ -49,9 +49,9 @@
 <Container class="main" fluid>
 <Styles />
 <Navbar class="navbar d-none d-sm-block" expand="sm" style="background: #325c33; border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 10px">
-  <Nav pills>
+  <Nav navbar pills>
     <NavItem>
-      <NavLink active style="background-color:white" class="text-black" href="https://letstalktech.uw.edu/" on:click={closeNav}><strong><Icon name="arrow-left" /></strong> Back</NavLink>
+      <NavLink active style="background-color:white" class="text-black" href="https://letstalktech.uw.edu/" on:click={closeNav}><Icon name="arrow-left"/> Back</NavLink>
     </NavItem>
   </Nav>
   <NavbarBrand class="mx-auto">
@@ -67,11 +67,11 @@
   <NavbarBrand>
     <a href="https://letstalktech.uw.edu" rel="noreferrer" target="_blank"><div style="background:#325c33;"><Image alt="Let's Talk Tech Logo" width="240" src="/img/ltt-logo.svg"/></div></a>
   </NavbarBrand>
-  <NavbarToggler on:click={() => (isOpen = !isOpen)} />
+  <NavbarToggler style="background-color: white" on:click={() => (isOpen = !isOpen)} />
   <Collapse {isOpen} navbar expand="sm" on:update={handleUpdate}>
     <Nav class="ms-auto" navbar>
       <NavItem>
-        <NavLink class="text-white" href="https://letstalktech.uw.edu/" on:click={closeNav}>Back</NavLink>
+        <NavLink class="text-white" href="https://letstalktech.uw.edu/" on:click={closeNav}><Icon name="arrow-left"/> Back</NavLink>
       </NavItem>
       <NavItem>
         <NavLink class="text-white" href="https://letstalktech.uw.edu/help" on:click={closeNav}>Log Out</NavLink>
@@ -79,7 +79,6 @@
     </Nav>
   </Collapse>
 </Navbar>
-
 {#if !initialized}
   Loading...
 {:else}

@@ -19,7 +19,7 @@
     ModalFooter,
     Row
   } from 'sveltestrap';
-
+  import { fade } from 'svelte/transition';
   import { goto } from '$app/navigation';
   import type { Writable } from 'svelte/store';
   import type { SHLAdminParams, SHLClient } from './managementClient';
@@ -90,7 +90,7 @@
 
   async function renewShl() {}
 </script>
-
+<div transition:fade>
 <Row class="justify-content-center">
   <Col sm="8">
     <!-- <h2>{$shlStore.label}</h2> -->
@@ -104,7 +104,7 @@
           <li>First, to copy the link, click the copy button below:</li>
           <Row class="justify-content-center">
             <Col xs="5">
-              <Button size="sm" color="success" on:click={copyShl} disabled={!!copyNotice}>
+              <Button size="sm" color="success" style="width:100px !important" on:click={copyShl} disabled={!!copyNotice}>
                 <Icon name="clipboard" />
                 {#if copyNotice}
                   {copyNotice}
@@ -137,7 +137,7 @@
     </ol>
     <Row class="justify-content-center mx-4" cols={{ xs: 1, md: 2 }}>
       <Col xs=12 md=7>
-        <Row>
+        <Row class="justify-content-center">
           <Card class="mb-2 p-0" color="light">
             <CardBody>
               <CardText>
@@ -199,7 +199,7 @@
                 label="1 year"
               />
               <br />
-              <Button size="sm" on:click={renewShl} color="primary">Renew Expiration</Button>
+              <Button size="sm" on:click={renewShl} color="primary">Renew Access</Button>
             </FormGroup>
           {/if}
         </Row>
@@ -224,6 +224,7 @@
     <p><strong>If you have any questions or problems using the system, please get in touch at ?clara@email.com? for assistance.</strong></p>
   </Col>
 </Row>
+</div>
 
 <style>
   img.qr {
