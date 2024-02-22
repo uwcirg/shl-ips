@@ -75,6 +75,7 @@ export class SOFClient {
     }
 
     getPatientID() {
+        return "a473c2b3-4f7d-409e-8feb-b3479ab9e849";
         return this.client.getPatientId();
     }
 
