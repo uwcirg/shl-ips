@@ -9,7 +9,6 @@
   let sofClient: SOFClient = getContext('sofClient');
 
   let processing = false;
-  let fetchError = "";
   let result: ResourceRetrieveEvent = {
     resources: undefined
   };
@@ -33,9 +32,6 @@
     } catch (e) {
       processing = false;
       console.error("Error while fetching data: ", e);
-      fetchError = "Unable to fetch summary. Please try again later.";
     }
   }
 </script>
-
-<span class="text-danger">{fetchError}</span>
