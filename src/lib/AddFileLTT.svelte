@@ -1,7 +1,7 @@
 <script lang="ts">
     import * as jose from 'jose';
     import * as pako from 'pako';
-    import { createEventDispatcher, onMount, getContext } from 'svelte';
+    import { createEventDispatcher, getContext } from 'svelte';
     import FetchSoFLTT from './FetchSoFLTT.svelte';
     import type { Writable } from 'svelte/store';
     import type { SHLAdminParams, SHLClient } from '$lib/managementClient';
@@ -36,10 +36,6 @@
     let label = `Let’s Talk Tech Choices Report (${new Date().toLocaleDateString('en-US', {day: 'numeric', month: 'long', year: 'numeric'})})`;
     let expiration: number | null = -1;
     let passcode = "";
-
-    onMount(() => {
-
-    });
 
     $: {
       if (resourcesToReview.length > 0 && $shlStore !== undefined) {
