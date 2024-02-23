@@ -7,8 +7,29 @@ export const INTERMEDIATE_FHIR_SERVER_BASE = import.meta.env.VITE_INTERMEDIATE_F
 
 export const SOF_HOSTS = [
   {
+    id: "epic-himss",
+    name: "Epic - HIMSS Demo",
+    url: "https://demo/MyChart107/authentication/oauth/start?redirect_uri=https://smart-health-links-ips.cirg.washington.edu/create&response_type=code&client_id=dddddddd-5541-445b-9d7e-000000000005",
+    clientId: import.meta.env.VITE_EPIC_HIMSS_CLIENT_ID,
+    note: "hsoni1010 / Cures@2022"
+  },
+  {
+    id: "ecw-himss",
+    name: "eClinicalWorks - HIMSS Demo",
+    url: "https://fhirstagingsrv.eclinicalweb.com/fhir/r4/JCBJCD",
+    clientId: import.meta.env.VITE_ECW_HIMSS_CLIENT_ID,
+    note: "azzfhir / epic"
+  },
+  {
+    id: "stc-himss",
+    name: "WA Immunization Registry - HIMSS Demo",
+    url: "https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4",
+    clientId: import.meta.env.VITE_STC_HIMSS_CLIENT_ID,
+    note: "user / pass"
+  },
+  {
     id: "epic",
-    name: "EPIC Demo",
+    name: "Epic Demo",
     url: "https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4",
     clientId: import.meta.env.VITE_EPIC_CLIENT_ID,
     note: "<a href='https://fhir.epic.com/Documentation?docId=testpatients' target='_blank' rel='noreferrer'>Test patient credentials <Icon name='box-arrow-up-right' /></a>"

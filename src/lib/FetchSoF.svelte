@@ -84,7 +84,9 @@
       <Label>Fetch via SMART authorization</Label>
     {#each SOF_HOSTS as host}
       <Input type="radio" bind:group={sofHostSelection} value={host.id} label={host.name}/>
-      <p class="text-secondary" style="margin-left:25px">{@html host.note}</p>
+      {#if host.note}
+        <p class="text-secondary" style="margin-left:25px">{@html host.note}</p>
+      {/if}
     {/each}
   </FormGroup>
 
