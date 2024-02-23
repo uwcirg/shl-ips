@@ -9,9 +9,30 @@
         Row,
         Spinner } from 'sveltestrap';
     import { ResourceHelper, type IPSRetrieveEvent } from './types';
+    import AdvanceDirective from './resource-templates/AdvanceDirective.svelte';
+    import Immunization from './resource-templates/Immunization.svelte';
+    import Medication from './resource-templates/Medication.svelte';
+    import Observation from './resource-templates/Observation.svelte';
+    import Patient from './resource-templates/Patient.svelte';
+    import Problem from './resource-templates/Problem.svelte';
+    import Procedure from './resource-templates/Procedure.svelte';
+    import AllergyIntolerance from './resource-templates/AllergyIntolerance.svelte';
 
     export let newResources: Array<any> | undefined;
     export let submitSelections: boolean;
+
+    const components = {
+        "AdvanceDirective": AdvanceDirective,
+        "AllergyIntolerance": AllergyIntolerance,
+        "Immunization": Immunization,
+        "Medication": Medication,
+        "MedicationRequest": Medication,
+        "MedicationStatement": Medication,
+        "Observation": Observation,
+        "Patient": Patient,
+        "Problem": Problem,
+        "Procedure": Procedure,
+    };
 
     const ipsDispatch = createEventDispatcher<{ 'ips-retrieved': IPSRetrieveEvent }>();
     let resources:{ [key: string]: ResourceHelper } = {};
