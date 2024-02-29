@@ -1,7 +1,7 @@
 // import {PUBLIC_BASE_URL} from '$env/static/public';
 import { dev } from '$app/environment';
 
-export const API_BASE = import.meta.env.VITE_API_BASE;
+export const API_BASE = import.meta.env.VITE_API_BASE ?? "https://shl-server.inform.dev.cirg.uw.edu/api";
 
 export const INTERMEDIATE_FHIR_SERVER_BASE = import.meta.env.VITE_INTERMEDIATE_FHIR_SERVER_BASE;
 
