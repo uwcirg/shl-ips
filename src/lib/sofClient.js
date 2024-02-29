@@ -1,5 +1,8 @@
 import FHIR from 'fhirclient';
+import * as crypto from 'crypto';
+import Handlebars from 'handlebars';
 import { SOF_PATIENT_RESOURCES, SOF_RESOURCES } from './config.ts';
+// import shlDocumentReference from './resourceTemplates.js';
 
 const patientResourceScope = SOF_PATIENT_RESOURCES.map(resourceType => `patient/${resourceType}.read`);
 const resourceScope = patientResourceScope.join(" ");
@@ -70,12 +73,53 @@ export class SOFClient {
         });
     }
 
+    async postShl(shl, docRef, label) {
+        // Check that a patient is logged in
+        let pid = this.getPatientID();
+        if (!pid) {
+            throw Error('No valid patient session found.');
+        }
+
+        // Check that we can write to the server
+        if (!(SOF_PATIENT_RESOURCES.find('Binary') && SOF_PATIENT_RESOURCES.find('DocumentReference'))) {
+            throw Error('Unable to access resources required to save SHL.');
+        }
+
+        /* This SHL metadata DocumentReference:
+        * links the SHL to the session
+        * holds the managementToken to delete, update or renew the link
+        * holds the key to include in the SHL url
+        */
+        const shlData = {
+            id: shl.id,
+            created: shl.created,
+            patientId: shl.patientId,
+            sessionId: shl.sessionId,
+            managementToken: shl.managementToken,
+            key: shl.key
+        };
+        const shlPayload = btoa(shlData);
+        const shlPayloadHash = crypto.createHash('sha1').update(shlPayload).digest().toString('base64');
+        let shlDocRefInputs = {
+            date: new Date().toISOString(),
+            patientId: shl.patientId,
+            documentReferenceId: docRef,
+            data: shlPayload,
+            hash: shlPayloadHash,
+            label: label,
+            created: shl.created
+        }
+        const shlDocRefTemplate = Handlebars.compile(shlDocumentReference);
+        let docRefResource = shlDocRefTemplate(shlDocRefInputs);
+        let docRefResult = this.client.create(docRefResource);
+    }
+
     getClient() {
         return this.client;
     }
 
     getPatientID() {
-        return "a473c2b3-4f7d-409e-8feb-b3479ab9e849";
+        return "ltt-test-patient";
         return this.client.getPatientId();
     }
 
@@ -91,7 +135,6 @@ export class SOFClient {
         let resources = (await Promise.allSettled(SOF_PATIENT_RESOURCES.map((resourceType) => {
             return self.requestResources(resourceType);
         }))).filter(x => x.status == "fulfilled").map(x => x.value);
-
         return [].concat(...resources);
     }
 

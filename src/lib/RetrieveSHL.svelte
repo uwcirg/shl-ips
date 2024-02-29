@@ -12,21 +12,24 @@
     let fetchError = "";
 
     onMount(async () => {
-        let patientID = undefined;
+        let patientId = undefined;
         try {
           // get current patient from sofClient
-          let patientID = sofClient.getPatientID();
+          let patientId = sofClient.getPatientID();
           // retrieve SHLs for current patient via shlClient
-          let shl = await shlClient.getShl(patientID);
+          let shl = await shlClient.getUserShl(patientId).catch((reason) => {
+            console.log(reason);
+            return undefined;
+          });
           return shlRetrievalDispatch('shl-retrieved', {
             shl: shl
           });
         } catch (error) {
           fetchError = "Unable to retrieve most recent sharing link. Please try again later.";
-          console.error(`Error retrieving SHL for patient ${patientID}: ${error}`);
+          console.error(`Error retrieving SHL for patient ${patientId}: ${error}`);
         }
         // Meanwhile, in FetchSOF:
-          // retrieve DocRefs for current patient
+          // retrieve DocRefs for current patient (reports and shl metadata)
         
         // Then, in AddFile:
           // Compare sessionIDs in most recent DocRef with sessionID in most recent SHL

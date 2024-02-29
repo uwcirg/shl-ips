@@ -4,6 +4,7 @@
   import {
     Button,
     Card,
+    CardHeader,
     CardBody,
     CardFooter,
     CardImg,
@@ -37,7 +38,6 @@
   let exp: Date;
   let today: Date;
   let expDisplay: string;
-  let newExpiration: number = 60 * 60;
   let inactive = false;
 
   $: {
@@ -49,8 +49,9 @@
   }
 
   $: {
-    if ($shlStore.exp) {
-      exp = new Date($shlStore.exp * 1000);
+    let rawExp =  $shlStore.exp ?? $shlStore.config?.exp;
+    if (rawExp) {
+      exp = new Date(rawExp * 1000);
       today = new Date();
       expDisplay = exp.toLocaleDateString('en-US', {
         day: 'numeric',
@@ -139,6 +140,17 @@
       <Col xs=12 md=7>
         <Row class="justify-content-center">
           <Card class="mb-2 p-0" color="light">
+            <CardHeader>
+              <strong>
+                {#if expDisplay}
+                  {#if exp > today}
+                    Expires {expDisplay}
+                  {:else}
+                    <span class="text-danger">Expired {expDisplay}</span>
+                  {/if}
+                {/if}
+              </strong>
+            </CardHeader>
             <CardBody>
               <CardText>
                 {#await qrCode then qrImage}
@@ -149,7 +161,7 @@
               width: 110px;
               height: 27px;
               left: calc(50% - 55px);
-              top: calc(50% - 2em);
+              top: calc(50% - 1em);
               border: 5px solid #325c33;
               box-sizing: border-box;"
                     class="logo"
@@ -174,54 +186,29 @@
             </CardFooter>
           </Card>
         </Row>
-      </Col>
-      <Col xs=12 md=5>
-        <Row class="mt-1">
-          {#if expDisplay}
-            {#if exp > today}
-              Expires {expDisplay}
-            {:else}
-              <span class="text-danger">Expired on {expDisplay}</span>
-            {/if}
-            <FormGroup>
-              <Label>Renew summary link?</Label>
-              <Input type="radio" bind:group={newExpiration} value={60 * 60} label="1 hour" />
-              <Input
-                type="radio"
-                bind:group={newExpiration}
-                value={60 * 60 * 24 * 7}
-                label="1 week"
-              />
-              <Input
-                type="radio"
-                bind:group={newExpiration}
-                value={60 * 60 * 24 * 7 * 365}
-                label="1 year"
-              />
-              <br />
-              <Button size="sm" on:click={renewShl} color="primary">Renew Access</Button>
-            </FormGroup>
-          {/if}
+        {#if exp <= today}
+          <Row class="justify-content-center mb-2">
+            Your link has expired. Click here to create a new link:
+          </Row>
+        {/if}
+        <Row class="justify-content-center mx-1 mt-1">
+          <Button size="sm" style="width:100%" on:click={toggle} color="danger">Recreate Summary Link</Button>
+          <Modal isOpen={open} backdrop="static" {toggle}>
+            <ModalHeader {toggle}>Recreate Summary Link</ModalHeader>
+            <ModalBody>
+              Those with the old link to your "{$shlStore.label}" will no longer be able to view its contents. A new link to your Summary will be generated that you may share.
+            </ModalBody>
+            <ModalFooter>
+              <Button color="secondary" on:click={toggle}>Cancel</Button>
+              <Button color="danger" on:click={deactivateShl}>Confirm</Button>
+            </ModalFooter>
+          </Modal>
         </Row>
       </Col>
     </Row>
-    <Row class="justify-content-center m-4">
-      <Col xs=12 class="pt-4" style="border-top:1px solid rgb(204,204,204)">
-        <Button size="sm" style="width:100%" on:click={toggle} color="danger">Deactivate Summary Link</Button>
-        <Modal isOpen={open} backdrop="static" {toggle}>
-          <ModalHeader {toggle}>Deactivate Summary Link</ModalHeader>
-          <ModalBody>
-            The link to view "{$shlStore.label}" will be deactivated, and those it was shared with will no longer
-            be able to view its contents. A new link will be generated for you that you may share.
-          </ModalBody>
-          <ModalFooter>
-            <Button color="secondary" on:click={toggle}>Cancel</Button>
-            <Button color="danger" on:click={deactivateShl}>Confirm</Button>
-          </ModalFooter>
-        </Modal>
-      </Col>
+    <Row class="mx-1 mt-4">
+      <p><strong>If you have any questions or problems using the system, please get in touch at ?clara@email.com? for assistance.</strong></p>
     </Row>
-    <p><strong>If you have any questions or problems using the system, please get in touch at ?clara@email.com? for assistance.</strong></p>
   </Col>
 </Row>
 </div>

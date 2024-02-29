@@ -2,10 +2,11 @@ import { randomStringWithEntropy, base64url } from './util';
 import { API_BASE, VIEWER_BASE } from './config';
 import * as jose from 'jose';
 
-type ConfigForServer = Pick<SHLAdminParams, 'passcode' | 'exp'>;
+type ConfigForServer = Pick<SHLAdminParams, 'passcode' | 'exp' | 'userId'>;
 
 export interface SHLAdminParams {
   id: string;
+  userId?: string;
   sessionId?: string;
   managementToken: string;
   encryptionKey: string;
@@ -16,7 +17,6 @@ export interface SHLAdminParams {
   }[];
   passcode?: string;
   exp?: number;
-  date?: string;
   label?: string;
   v?: number;
 }
@@ -37,7 +37,7 @@ export class SHLClient {
   }
 
   async createShl(config: ConfigForServer = {}): Promise<SHLAdminParams> {
-    const ek = randomStringWithEntropy();
+    const ek = "ElRqo8OE_b19jtV49CxI6JCNSRsUV-q_9bd60kelroU" // randomStringWithEntropy();
     const create = await fetch(`${API_BASE}/shl`, {
       method: 'POST',
       headers: {
@@ -55,32 +55,21 @@ export class SHLClient {
     };
   }
 
-  async getShl(pid: string): Promise<SHLAdminParams> {
-    let shl = {
-      id: "string",
-      managementToken: pid,
-      encryptionKey: "string",
-      passcode: "",
-      exp: 123456,
-      label: "label",
-      v: 1,
-      files: [
-        {
-          contentEncrypted: "string",
-          contentType: "application/smart-health-link",
-          date: new Date().toString(),
-        }
-      ]
-    };
-    return shl;
-    const req = await fetch(`${API_BASE}/shl`, {
-      method: 'GET',
-      headers: {
-        authorization: `Bearer ${pid}`
+  async getUserShl(pid: string): Promise<SHLAdminParams>{
+    try {
+      const req = await fetch(`${API_BASE}/user/${pid}`, {
+        method: 'GET'
+      }).catch((reason) => {
+        console.error(reason);
+      });
+      let res;
+      if (req && req.status < 400) {
+        res = await req.json();
       }
-    });
-    const res = await req.json();
-    return res;
+      return res;
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   async deleteShl(shl: SHLAdminParams): Promise<boolean> {
