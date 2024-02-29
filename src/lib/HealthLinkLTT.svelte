@@ -137,7 +137,7 @@
       </li>
     </ol>
     <Row class="justify-content-center mx-4" cols={{ xs: 1, md: 2 }}>
-      <Col xs=12 md=7>
+      <Col>
         <Row class="justify-content-center">
           <Card class="mb-2 p-0" color="light">
             <CardHeader>
@@ -192,7 +192,7 @@
           </Row>
         {/if}
         <Row class="justify-content-center mx-1 mt-1">
-          <Button size="sm" style="width:100%" on:click={toggle} color="danger">Recreate Summary Link</Button>
+          <Button size="sm" style="max-width:266px" on:click={toggle} color="danger">Recreate Summary Link</Button>
           <Modal isOpen={open} backdrop="static" {toggle}>
             <ModalHeader {toggle}>Recreate Summary Link</ModalHeader>
             <ModalBody>
