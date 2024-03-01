@@ -1,8 +1,10 @@
 {
 	"extends": "./.svelte-kit/tsconfig.json",
 	"compilerOptions": {
+		"ignoreDeprecations": "5.0",
 		"allowJs": true,
 		"checkJs": false,
+		"outDir": "/src/lib",
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true,
 		"resolveJsonModule": true,
