@@ -71,11 +71,16 @@
 
   async function fetchData() {
     processing = true;
-    let resources = await getResourcesWithReferences(1);
-    result.resources = resources;
-    console.log(resources)
-    processing = false;
-    return resourceDispatch('updateResources', result);
+    try {
+      let resources = await getResourcesWithReferences(1);
+      result.resources = resources;
+      console.log(resources)
+      processing = false;
+      return resourceDispatch('updateResources', result);
+    } catch (e) {
+      processing = false;
+      endSession();
+    }
   }
 
 </script>
