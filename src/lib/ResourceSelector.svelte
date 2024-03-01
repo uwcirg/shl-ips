@@ -175,17 +175,17 @@
 <form on:submit|preventDefault={() => confirm()}>
     <Accordion>
         <AccordionItem header="Customize IPS Content">
-        {#if resources != null}
-            <p>Select resources from the list below to include in a new customized Summary:</p>
-            {#each Object.keys(resources) as key}
-                <div class="resource form-check">
-                    <input id={key} class="form-check-input" type="checkbox" bind:checked={resources[key].include} value={key}/>
-                    <label class="form-check-label" style="width:100%" for={key}><p style="overflow-wrap:break-word">{@html JSON.stringify(resources[key].original_resource)}</p></label>
-                </div>
-            {/each}
-        {/if}
-    </AccordionItem>
-</Accordion>
+            {#if resources != null}
+                <p><em>Selected resources from the list below will be included in your customized IPS</em></p>
+                {#each Object.keys(resources) as key}
+                    <div class="resource form-check">
+                        <input id={key} class="form-check-input" type="checkbox" bind:checked={resources[key].include} value={key}/>
+                        <label class="form-check-label" style="width:100%" for={key}><p style="overflow-wrap:break-word">{@html JSON.stringify(resources[key].original_resource)}</p></label>
+                    </div>
+                {/each}
+            {/if}
+        </AccordionItem>
+    </Accordion>
     <br/>
     <Row>
         <Col xs="auto">
