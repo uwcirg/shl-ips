@@ -14,7 +14,7 @@
   import { createEventDispatcher, onMount } from 'svelte';
   
   const authDispatch = createEventDispatcher<{'sofAuthEvent': SOFAuthEvent}>();
-  const resourceDispatch = createEventDispatcher<{'updateResources': ResourceRetrieveEvent}>();
+  const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
   let processing = false;
   let fetchError = "";
   let result: ResourceRetrieveEvent = {
@@ -34,8 +34,12 @@
     fetchError = "";
     try {
       if (sofHost) {
-        authDispatch('sofAuthEvent')
-        authorize(sofHost.url, sofHost.clientId);
+        try {
+          authorize(sofHost.url, sofHost.clientId);
+          authDispatch('sof-auth-init');
+        } catch (e) {
+          authDispatch('sof-auth-fail')
+        }
       }
     } catch (e) {
       console.log('Failed', e);
@@ -76,7 +80,7 @@
       result.resources = resources;
       console.log(resources)
       processing = false;
-      return resourceDispatch('updateResources', result);
+      return resourceDispatch('update-resources', result);
     } catch (e) {
       processing = false;
       endSession();

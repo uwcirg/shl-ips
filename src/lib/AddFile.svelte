@@ -24,6 +24,7 @@
   import FetchUrl from './FetchUrl.svelte';
   import FetchFile from './FetchFile.svelte';
   import FetchSoF from './FetchSoF.svelte';
+  import FetchIIS from './FetchIIS.svelte';
   import ResourceSelector from './ResourceSelector.svelte';
   import { verify } from './shc-decoder.js';
 
@@ -38,6 +39,7 @@
   import { page } from '$app/stores';
   import { getResourcesFromIPS } from './resourceUploader.js';
   import { goto } from '$app/navigation';
+    import FetchIis from './FetchIIS.svelte';
   
   let shlIdParam = $page.url.searchParams.get('shlid');
 
@@ -73,10 +75,6 @@
   $: icon = showPassword ? 'eye-slash-fill' : 'eye-fill';
 
   onMount(() => {
-    if (sessionStorage.getItem('AUTH_REDIRECT')) {
-      sessionStorage.removeItem('AUTH_REDIRECT');
-      addDataHeader = "Add More Data";
-    }
     if (sessionStorage.getItem('URL')) {
       let url = sessionStorage.getItem('URL') ?? '/create';
       let currentUrl = window.location.href.split('?')[0];
@@ -103,12 +101,8 @@
     if (accordion) {
       accordion.style.overflow = 'visible';
     }
-    document.querySelector('a.nav-link.active')?.classList.remove('active');
-    document.querySelector('div.tab-pane.active')?.classList.remove('active')
-    document.querySelector('div.tab-pane.show')?.classList.remove('show')
-    document.querySelector(`span.${currentTab}-tab`)?.parentElement?.classList.add('active');
-    document.querySelector(`div.tab-pane.${currentTab}-tab`)?.classList.add('active');
-    document.querySelector(`div.tab-pane.${currentTab}-tab`)?.classList.add('show');
+
+    document.querySelector(`span.${currentTab}-tab`)?.parentElement?.click();
   });
 
   async function handleNewResources(details: ResourceRetrieveEvent) {
@@ -183,13 +177,21 @@
   }
 
   async function preAuthRedirectHandler(details: SOFAuthEvent|undefined) {
-    sessionStorage.setItem('AUTH_REDIRECT', "1");
     sessionStorage.setItem('URL', window.location.href);
     sessionStorage.setItem('RESOURCES', JSON.stringify(resourcesToReview ?? ""));
     sessionStorage.setItem('TAB', String(currentTab ?? ""));
     sessionStorage.setItem('LABEL', label ?? "");
     sessionStorage.setItem('PASSCODE', passcode ?? "");
     sessionStorage.setItem('EXPIRE', JSON.stringify(expiration ?? -1));
+  }
+
+  async function revertPreAuth(details: SOFAuthEvent|undefined) {
+    sessionStorage.removeItem('URL');
+    sessionStorage.removeItem('RESOURCES');
+    sessionStorage.removeItem('TAB');
+    sessionStorage.removeItem('LABEL');
+    sessionStorage.removeItem('PASSCODE');
+    sessionStorage.removeItem('EXPIRE');
   }
   
   function isSHCFile(object: any): object is SHCFile {
@@ -287,10 +289,17 @@
       <TabPane class="smart-tab" tabId="smart" style="padding-top:10px">
         <span class="smart-tab" slot="tab">SMART Patient Access</span>
         <FetchSoF
-          on:sofAuthEvent={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
-          on:updateResources={ async ({ detail }) => { handleNewResources(detail) } }
+          on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
+          on:sof-auth-fail={ async ({ detail }) => { revertPreAuth(detail) }}
+          on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
           on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }>
         </FetchSoF>
+      </TabPane>
+      <TabPane class="iis-tab" tabId="iis" style="padding-top:10px">
+        <span class="iis-tab" slot="tab">WA Immunization Registry</span>
+        <FetchIIS
+          on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }>
+        </FetchIIS>
       </TabPane>
     </TabContent>
   </AccordionItem>
