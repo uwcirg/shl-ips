@@ -6,6 +6,14 @@
         AccordionItem,
         Button,
         Col,
+        Dropdown,
+        DropdownToggle,
+        DropdownMenu,
+        DropdownItem,
+        FormGroup,
+        Label,
+        Input,
+        Icon,
         Row,
         Spinner } from 'sveltestrap';
     import { ResourceHelper, type IPSRetrieveEvent } from './types';
@@ -170,6 +178,13 @@
         ipsDispatch('ips-retrieved', { ips: content });
         submitting = false;
     }
+
+    let start = '';
+    let end = '';
+    let job = 'Bartender';
+    let industry = 'Alcoholic beverage drinking places';
+    let dpw = '3';
+    let hpd = '5';
 </script>
 
 <form on:submit|preventDefault={() => confirm()}>
@@ -184,6 +199,29 @@
                     </div>
                 {/each}
             {/if}
+        </AccordionItem>
+    </Accordion>
+    <br>
+    <Accordion>
+        <AccordionItem header="Add Occupational Information">
+            <FormGroup>
+                <Label>It may be helpful to include information about the work you do in your medical history:</Label>
+                <FormGroup>
+                    <Label>My job is</Label>
+                    <Input type="text" bind:value={job} />
+                </FormGroup>
+                <FormGroup>
+                    <Label>Which is part of the </Label>
+                    <Input type="text" bind:value={industry} />
+                    <Label>industry</Label>
+                </FormGroup>
+                <FormGroup>
+                    <Label>I started this job on</Label>
+                    <Input type="date" bind:value={start} />
+                    <Label>and stopped on</Label>
+                    <Input type="date" bind:value={end} />
+                </FormGroup>
+            </FormGroup>
         </AccordionItem>
     </Accordion>
     <br/>
