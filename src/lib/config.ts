@@ -9,23 +9,17 @@ export const SOF_HOSTS = [
   {
     id: "epic-himss",
     name: "Epic - HIMSS Demo",
-    url: "https://demo/MyChart107/authentication/oauth/start?redirect_uri=https://smart-health-links-ips.cirg.washington.edu/create&response_type=code&client_id=dddddddd-5541-445b-9d7e-000000000005",
+    // url: "https://demo/MyChart107/authentication/oauth/start?redirect_uri=https://smart-health-links-ips.cirg.washington.edu/create&response_type=code&client_id=dddddddd-5541-445b-9d7e-000000000005",
+    url: "https://ihe.epic.com:44399/Interconnect-FHIR/api/FHIR/R4",
     clientId: import.meta.env.VITE_EPIC_HIMSS_CLIENT_ID,
-    note: "hsoni1010 / Cures@2022"
+    note: "azzfhir / epic"
   },
   {
     id: "ecw-himss",
     name: "eClinicalWorks - HIMSS Demo",
     url: "https://fhirstagingsrv.eclinicalweb.com/fhir/r4/JCBJCD",
     clientId: import.meta.env.VITE_ECW_HIMSS_CLIENT_ID,
-    note: "azzfhir / epic"
-  },
-  {
-    id: "stc-himss",
-    name: "WA Immunization Registry - HIMSS Demo",
-    url: "https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4",
-    clientId: import.meta.env.VITE_STC_HIMSS_CLIENT_ID,
-    note: "user / pass"
+    note: "hsoni1010 / Cures@2022"
   },
   {
     id: "epic",
