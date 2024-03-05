@@ -11,7 +11,7 @@ export const SOF_HOSTS = [
     name: "Epic - HIMSS Demo",
     url: "https://ihe.epic.com/Interconnect-FHIR/api/FHIR/R4",
     clientId: import.meta.env.VITE_EPIC_HIMSS_CLIENT_ID,
-    note: "azzfhir / epic"
+    note: "zwei / epic"
   },
   {
     id: "ecw-himss",
