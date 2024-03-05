@@ -38,7 +38,6 @@
   import { page } from '$app/stores';
   import { getResourcesFromIPS } from './resourceUploader.js';
   import { goto } from '$app/navigation';
-  import FetchIis from './FetchIIS.svelte';
   
   let shlIdParam = $page.url.searchParams.get('shlid');
 
