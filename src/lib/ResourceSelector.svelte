@@ -131,7 +131,7 @@
                 return new ResourceHelper(resource);
             });
 
-            let newPatients = newResources.filter(rh => rh.resource.resourceType == "Patient");
+            let newPatients = newResources.filter(rh => rh.resource.resourceType === "Patient");
             addResources(newPatients, patients);
             patients = patients;
             if (!patientReference) {
@@ -141,9 +141,7 @@
                     throw Error("Missing valid patient resource");
                 }
             }
-            newResources = newResources.filter(rh => {
-                return rh.resource.resourceType != "Patient"
-            });
+            newResources = newResources.filter(rh => rh.resource.resourceType !== "Patient");
             addResources(newResources, resources);
             resources = resources;
             return;
@@ -203,7 +201,7 @@
     </Accordion>
     <br>
     <Accordion>
-        <AccordionItem header="Add Occupational Information">
+        <AccordionItem active header="Add Occupational Information">
             <FormGroup>
                 <Label>It may be helpful to include information about the work you do in your medical history:</Label>
                 <FormGroup>

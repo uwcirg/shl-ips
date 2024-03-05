@@ -16,6 +16,7 @@
 
   import type { ResourceRetrieveEvent } from './types';
   import { createEventDispatcher } from 'svelte';
+  import { API_BASE } from './config';
 
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
 
@@ -161,32 +162,39 @@
     return patient;
   }
 
+  async function fetchIIS(patient: any) {
+    return await fetch(`${API_BASE}/iis`, {
+      method: 'POST',
+      headers: { accept: 'application/json' },
+      body: JSON.stringify(patient)
+    }).then(function (response: any) {
+      if (!response.ok) {
+        // make the promise be rejected if we didn't get a 2xx response
+        throw new Error('Unable to fetch IIS immunization data', { cause: response });
+      } else {
+        return response;
+      }
+    });
+  }
+
   async function prepareIps() {
     fetchError = '';
     processing = true;
     try {
       let content;
       let hostname;
-      const contentResponse = await fetch(summaryUrlValidated!, {
-        method: 'POST',
-        headers: { accept: 'application/fhir+json' },
-        body: JSON.stringify(constructPatient())
-      }).then(function (response) {
-        if (!response.ok) {
-          // make the promise be rejected if we didn't get a 2xx response
-          throw new Error('Unable to fetch immunization data', { cause: response });
-        } else {
-          return response;
-        }
-      });
+      const contentResponse = await fetchIIS(constructPatient());
       content = await contentResponse.json();
-      console.log(content);
-      hostname = summaryUrlValidated?.hostname;
+      hostname = 'WA IIS';
       processing = false;
+      let resources = content.entry.map((e) => {
+        return e.resource;
+      })
       result = {
-        resources: content,
+        resources: resources,
         source: hostname
       };
+      console.log(resources);
       resourceDispatch('update-resources', result);
     } catch (e) {
       processing = false;
