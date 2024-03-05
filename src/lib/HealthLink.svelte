@@ -46,7 +46,7 @@
   let qrCode: Promise<string>;
   let showPassword = false;
   $: type = showPassword ? 'text' : 'password';
-  $: icon = showPassword ? 'eye-slash-fill' : 'eye-fill';
+  $: icon = showPassword ? 'eye-fill' : 'eye-slash-fill';
   $: {
     href = getUrl(shl);
   }

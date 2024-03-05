@@ -70,7 +70,7 @@
   let showPassword = false;
   let passcode = "";
   $: type = showPassword ? 'text' : 'password';
-  $: icon = showPassword ? 'eye-slash-fill' : 'eye-fill';
+  $: icon = showPassword ? 'eye-fill' : 'eye-slash-fill';
 
   onMount(() => {
     if (sessionStorage.getItem('URL')) {
@@ -245,7 +245,6 @@
     }, 1000);
   }
 </script>
-
 <Accordion>
   <AccordionItem
     active={resourcesToReview.length == 0}
@@ -344,7 +343,7 @@
       <Label>Expiration</Label>
       <Input type="radio" bind:group={expiration} value={60 * 60} label="1 hour" />
       <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 7} label="1 week" />
-      <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 7 * 365} label="1 year" />
+      <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 365} label="1 year" />
       <Input type="radio" bind:group={expiration} value={-1} label="Never" />
     </FormGroup>
   {/if}
