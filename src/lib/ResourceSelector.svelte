@@ -187,20 +187,6 @@
 
 <form on:submit|preventDefault={() => confirm()}>
     <Accordion>
-        <AccordionItem header="Customize IPS Content">
-            {#if resources != null}
-                <p><em>Selected resources from the list below will be included in your customized IPS</em></p>
-                {#each Object.keys(resources) as key}
-                    <div class="resource form-check">
-                        <input id={key} class="form-check-input" type="checkbox" bind:checked={resources[key].include} value={key}/>
-                        <label class="form-check-label" style="width:100%" for={key}><p style="overflow-wrap:break-word">{@html JSON.stringify(resources[key].original_resource)}</p></label>
-                    </div>
-                {/each}
-            {/if}
-        </AccordionItem>
-    </Accordion>
-    <br>
-    <Accordion>
         <AccordionItem active header="Add Occupational Information">
             <FormGroup>
                 <Label>It may be helpful to include information about the work you do in your medical history:</Label>
@@ -220,6 +206,20 @@
                     <Input type="date" bind:value={end} />
                 </FormGroup>
             </FormGroup>
+        </AccordionItem>
+    </Accordion>
+    <br>
+    <Accordion>
+        <AccordionItem header="Customize IPS Content">
+            {#if resources != null}
+                <p><em>Selected resources from the list below will be included in your customized IPS</em></p>
+                {#each Object.keys(resources) as key}
+                    <div class="resource form-check">
+                        <input id={key} class="form-check-input" type="checkbox" bind:checked={resources[key].include} value={key}/>
+                        <label class="form-check-label" style="width:100%" for={key}><p style="overflow-wrap:break-word">{@html JSON.stringify(resources[key].original_resource)}</p></label>
+                    </div>
+                {/each}
+            {/if}
         </AccordionItem>
     </Accordion>
     <br/>
