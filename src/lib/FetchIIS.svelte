@@ -79,13 +79,9 @@
   function constructPatient() {
     let patient = {
       resourceType: 'Patient',
-      id: 'child-example',
+      id: 'zhang-wei-himss-2024',
       meta: {
         profile: ['http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient']
-      },
-      text: {
-        status: 'generated',
-        div: ''
       },
       extension: [
         {
@@ -166,10 +162,10 @@
       birthDate: dob,
       address: [
         {
-          line: ['123 e fake st'],
-          city: 'phoenix',
-          state: 'AZ',
-          postalCode: '85004',
+          line: (address2 ? [address1, address2] : [address1]),
+          city: city,
+          state: state,
+          postalCode: zip,
           country: 'US'
         }
       ]
@@ -353,10 +349,6 @@
         </Row>
       </Col>
     </Row>
-    
-    
-    
-    
   </FormGroup>
 
   <Row>
