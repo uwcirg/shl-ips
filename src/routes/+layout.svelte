@@ -46,20 +46,44 @@
   function closeNav() {
     isOpen = false;
   }
-</script>
 
+  let locale = "English";
+  let locales = [
+    "Amharic - አማርኛ", "Arabic - العَرَبِيةُ", "Armenian - Հայերեն",
+    "Basque - euskara", "Burmese - မြန်မာ", "Catalan - català",
+    "Chinese (Simplified) - 简体中文", "Chinese (Traditional) - 繁體中文",
+    "Chuukese - Fosun Chuuk", "Dari - دری", "English", "Farsi - فارسی",
+    "French - Français", "Fijian - Vosa vakaviti", "German - Deutsch",
+    "Gujarati - ગુજરાતી", "Haitian Creole - Kreyòl ayisyen",
+    "Hebrew - עִברִית", "Hindi - हिन्दी", "Hmong - Hmoob",
+    "Italian - Italiano", "Japanese - 日本語", "Karen - ကညီၤ",
+    "Khmer (Cambodian) - ភាសាខ្មែរ", "Korean - 한국어", "Lao - ພາ​ສາ​ລາວ",
+    "Malayalam - മലയാളം", "Mam - Qyol Mam", "Marathi - मराठी",
+    "Marshallese - Kajin Ṃajeḷ", "Mixteco Bajo - Ñuu savi",
+    "Nepali - नेपाली", "Oromo - Oromiffa", "Pashto - پښتو",
+    "Portuguese - Português (Brasil)", "Punjabi - ਪੰਜਾਬੀ",
+    "Romanian - Română", "Russian - Русский", "Samoan - Faa-Samoa",
+    "Somali - Af Soomaali", "Spanish - Español", "Swahili - Kiswahili",
+    "Tamil - தமிழ்", "Tagalog - Tagalog", "Telugu - తెలుగు",
+    "Thai - ภาษาไทย", "Tigrinya - ትግርኛ", "Tongan - Lea fakaTonga",
+    "Turkish - Türkçe", "Ukrainian - Український", "Urdu - اُردُو",
+    "Vietnamese - Tiếng Việt"
+  ];
+</script>
 <Container class="main" fluid>
 <Styles />
 <Navbar color="light" light expand="md" style="border-bottom: 1px solid rgb(204, 204, 204);">
-  <NavbarBrand>
+  <NavbarBrand href="https://doh.wa.gov/">
+    <Row>
     <Col>
       <a href="https://doh.wa.gov/" rel="noreferrer" target="_blank"><Image alt="Washington State Department of Health Logo" width="240" src="/img/doh_logo_doh-black.png"/></a>
     </Col>
-    <Col style="vertical-align:middle">
+    <Col style="vertical-align:middle" class="d-none d-sm-block">
       Washington State
       <p style="margin: 0px; padding: 0px: line-height: 0;"></p>
       Department of Health
     </Col>
+  </Row>
   </NavbarBrand>
   <NavbarToggler on:click={() => (isOpen = !isOpen)} />
   <Collapse {isOpen} navbar expand="md" on:update={handleUpdate}>
@@ -94,9 +118,27 @@
           {/if}
         </DropdownMenu>
       </Dropdown>
+      <Dropdown nav inNavbar size="sm" direction="down">
+        <DropdownToggle color="primary" nav caret>
+          <Icon name="globe2"></Icon>
+          {locale}
+        </DropdownToggle>
+        <DropdownMenu end style="height: 500px; overflow:scroll">
+          {#each locales as l}
+            <DropdownItem
+              style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"
+              on:click={() => {
+                closeNav();
+                locale=l;
+              }}>{l}</DropdownItem
+            >
+          {/each}
+        </DropdownMenu>
+      </Dropdown>
     </Nav>
   </Collapse>
 </Navbar>
+<div on:click={closeNav} on:keypress={closeNav}>
 <Row style="padding:0px 12px">
   <Col style="padding:0; margin-bottom: 20px; border-bottom: 1px solid rgb(204, 204, 204);">
     <a href="\home"><Image alt="WA Verify Logo" width="200" src="/img/waverifypluslogo.png" style="align-self: center"></Image></a>
@@ -127,6 +169,7 @@
     </footer>
   </Col>
 </Row>
+</div>
 </Container>
 
 <style>
