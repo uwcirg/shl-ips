@@ -48,27 +48,27 @@
   }
 
   let locale = "English";
-  let locales = [
-    "Amharic - አማርኛ", "Arabic - العَرَبِيةُ", "Armenian - Հայերեն",
-    "Basque - euskara", "Burmese - မြန်မာ", "Catalan - català",
-    "Chinese (Simplified) - 简体中文", "Chinese (Traditional) - 繁體中文",
-    "Chuukese - Fosun Chuuk", "Dari - دری", "English", "Farsi - فارسی",
-    "French - Français", "Fijian - Vosa vakaviti", "German - Deutsch",
-    "Gujarati - ગુજરાતી", "Haitian Creole - Kreyòl ayisyen",
-    "Hebrew - עִברִית", "Hindi - हिन्दी", "Hmong - Hmoob",
-    "Italian - Italiano", "Japanese - 日本語", "Karen - ကညီၤ",
-    "Khmer (Cambodian) - ភាសាខ្មែរ", "Korean - 한국어", "Lao - ພາ​ສາ​ລາວ",
-    "Malayalam - മലയാളം", "Mam - Qyol Mam", "Marathi - मराठी",
-    "Marshallese - Kajin Ṃajeḷ", "Mixteco Bajo - Ñuu savi",
-    "Nepali - नेपाली", "Oromo - Oromiffa", "Pashto - پښتو",
-    "Portuguese - Português (Brasil)", "Punjabi - ਪੰਜਾਬੀ",
-    "Romanian - Română", "Russian - Русский", "Samoan - Faa-Samoa",
-    "Somali - Af Soomaali", "Spanish - Español", "Swahili - Kiswahili",
-    "Tamil - தமிழ்", "Tagalog - Tagalog", "Telugu - తెలుగు",
-    "Thai - ภาษาไทย", "Tigrinya - ትግርኛ", "Tongan - Lea fakaTonga",
-    "Turkish - Türkçe", "Ukrainian - Український", "Urdu - اُردُو",
-    "Vietnamese - Tiếng Việt"
-  ];
+  let locales = {
+    "Amharic": "አማርኛ", "Arabic": "العَرَبِيةُ", "Armenian": "Հայերեն",
+    "Basque": "euskara", "Burmese": "မြန်မာ", "Catalan": "català",
+    "Chinese (Simplified)": "简体中文", "Chinese (Traditional)": "繁體中文",
+    "Chuukese": "Fosun Chuuk", "Dari": "دری", "English": "English", "Farsi": "فارسی",
+    "French": "Français", "Fijian": "Vosa vakaviti", "German": "Deutsch",
+    "Gujarati": "ગુજરાતી", "Haitian Creole": "Kreyòl ayisyen",
+    "Hebrew": "עִברִית", "Hindi": "हिन्दी", "Hmong": "Hmoob",
+    "Italian": "Italiano", "Japanese": "日本語", "Karen": "ကညီၤ",
+    "Khmer (Cambodian)": "ភាសាខ្មែរ", "Korean": "한국어", "Lao": "ພາ​ສາ​ລາວ",
+    "Malayalam": "മലയാളം", "Mam": "Qyol Mam", "Marathi": "मराठी",
+    "Marshallese": "Kajin Ṃajeḷ", "Mixteco Bajo": "Ñuu savi",
+    "Nepali": "नेपाली", "Oromo": "Oromiffa", "Pashto": "پښتو",
+    "Portuguese": "Português", "Punjabi": "ਪੰਜਾਬੀ",
+    "Romanian": "Română", "Russian": "Русский", "Samoan": "Faa-Samoa",
+    "Somali": "Af Soomaali", "Spanish": "Español", "Swahili": "Kiswahili",
+    "Tamil": "தமிழ்", "Tagalog": "Tagalog", "Telugu": "తెలుగు",
+    "Thai": "ภาษาไทย", "Tigrinya": "ትግርኛ", "Tongan": "Lea fakaTonga",
+    "Turkish": "Türkçe", "Ukrainian": "Український", "Urdu": "اُردُو",
+    "Vietnamese": "Tiếng Việt"
+  };
 </script>
 <Container class="main" fluid>
 <Styles />
@@ -93,7 +93,7 @@
       </NavItem>
       <Dropdown nav inNavbar size="sm" direction="down">
         <DropdownToggle color="primary" nav caret>Actions</DropdownToggle>
-        <DropdownMenu end>
+        <DropdownMenu end style="height: 500px; overflow:scroll">
           <DropdownItem
             on:click={() => {
               closeNav();
@@ -124,13 +124,13 @@
           {locale}
         </DropdownToggle>
         <DropdownMenu end style="height: 500px; overflow:scroll">
-          {#each locales as l}
+          {#each Object.entries(locales) as [en, loc]}
             <DropdownItem
               style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"
               on:click={() => {
                 closeNav();
-                locale=l;
-              }}>{l}</DropdownItem
+                locale=loc;
+              }}>{`${en}${en !== loc ? " - "+loc : ""}`}</DropdownItem
             >
           {/each}
         </DropdownMenu>
