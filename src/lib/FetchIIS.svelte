@@ -38,8 +38,8 @@
   let phone = '(555) 555-5555';
   let gender:string = 'Male';
   let genders: Record<string, any> = {
-    "Male": 'M',
     "Female": 'F',
+    "Male": 'M',
     "Other": 'UN'
   };
   let states: Array<string> = [
@@ -218,132 +218,63 @@
 
 <form on:submit|preventDefault={() => prepareIps()}>
   <FormGroup>
-    <Label>Fetch immunizations from WA IIS</Label>
-    <Row cols={{ sm: 2, xs: 1 }}>
+    <Label>Enter your information to fetch immunizations from WA IIS</Label>
+    <p class="text-secondary"><em>WA Verify+ does not save this information</em></p>
+    <Row cols={{ md: 2, sm: 1 }}>
       <Col>
-        <FormGroup>
-          <Label>First Name</Label>
+        <Label>Name</Label>
+        <FormGroup floating label="First">
           <Input type="text" bind:value={first} />
         </FormGroup>
-      </Col>
-      <Col>
-        <FormGroup>
-          <Label>Last Name</Label>
+        <FormGroup floating label="Last">
           <Input type="text" bind:value={last} />
         </FormGroup>
-      </Col>
-    </Row>
-    <Row  cols={{ sm: 2, xs: 1 }}>
-      <Col md=3 sm=4>
-        <FormGroup>
-          <Label>Date of Birth</Label>
+        <Label>Demographics</Label>
+        <FormGroup floating label="Date of Birth">
           <Input type="date" bind:value={dob} placeholder={dob} style="width: 165px"/>
         </FormGroup>
-      </Col>
-      <Col md=3 sm=4>
-        <FormGroup>
-          <Label>Gender</Label>
-          <Dropdown isOpen={isGenderOpen} toggle={() => (isGenderOpen = !isGenderOpen)}>
-            <DropdownToggle tag="div" class="d-inline-block">
-              <div style="position:relative">
-                <Input type="text" bind:value={gender} style="width: 100px"/>
-                <Icon
-                  name={genderIcon}
-                  style="position: absolute;
-                cursor: pointer;
-                height: 25px;
-                width: 20px;
-                top: 6px;
-                right: 10px;
-                color: rgb(50, 50, 50);"
-                />
-              </div>
-            </DropdownToggle>
-            <DropdownMenu style="width:auto">
-              {#each Object.entries(genders) as [full, abb]}
-                <DropdownItem
-                  style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"
-                  on:click={() => gender=full}>{full}</DropdownItem
-                >
-              {/each}
-            </DropdownMenu>
-          </Dropdown>
+        <FormGroup floating label="Gender">
+          <!-- <Label>Gender</Label> -->
+          <Input type="select" bind:value={gender} style="width: 100px">
+            {#each Object.keys(genders) as full}
+              <option style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
+                {full}
+              </option>
+            {/each}
+          </Input>
         </FormGroup>
-      </Col>
-    </Row>
-    <Row>
-      <Col md=3 sm=4>
         <FormGroup>
           <Label>MRN</Label>
           <Input type="text" bind:value={mrn} style="width: 165px"/>
         </FormGroup>
-      </Col>
-    </Row>
-    <Row>
-      <Col md=3 sm=4>
-        <FormGroup>
-          <Label>Phone</Label>
+        <Label>Contact Information</Label>
+        <FormGroup floating label="Phone">
           <Input type="tel" bind:value={phone} style="width: 165px"/>
         </FormGroup>
-      </Col>
-    </Row>
-    <Row cols={{ md: 2, xs: 1 }}>
-      <Col>
-        <FormGroup>
-          <Label>Address Line 1</Label>
+        <FormGroup floating label="Address Line 1">
           <Input type="text" bind:value={address1} />
         </FormGroup>
-      </Col>
-      <Col>
-        <FormGroup>
-          <Label>Address Line 2</Label>
+        <FormGroup floating label="Address Line 2 (Optional)">
           <Input type="text" bind:value={address2} />
         </FormGroup>
-      </Col>
-    </Row>
-    <Row cols={{ xs:1, sm:2}}>
-      <Col xs="auto">
-        <FormGroup>
-          <Label>City</Label>
+        <FormGroup floating label="City">
           <Input type="text" bind:value={city} />
         </FormGroup>
-      </Col>
-      <Col>
         <Row>
           <Col xs="auto">
-            <FormGroup>
-              <Label>State</Label>
-              <Dropdown isOpen={isStateOpen} toggle={() => (isStateOpen = !isStateOpen)} style="width:80px">
-                <DropdownToggle tag="div" class="d-inline-block">
-                  <div style="position:relative">
-                    <Input type="text" bind:value={state} />
-                    <Icon
-                      name={stateIcon}
-                      style="position: absolute;
-                    cursor: pointer;
-                    height: 25px;
-                    width: 20px;
-                    top: 6px;
-                    right: 10px;
-                    color: rgb(50, 50, 50);"
-                    />
-                  </div>
-                </DropdownToggle>
-                <DropdownMenu style="width:auto; height:250px; overflow:scroll">
-                  {#each states as s}
-                    <DropdownItem
-                      style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"
-                      on:click={() => state=s}>{s}</DropdownItem
-                    >
-                  {/each}
-                </DropdownMenu>
-              </Dropdown>
+            <FormGroup floating label="State">
+              <Input type="select" bind:value={state} style="width: 80px">
+                {#each states as state}
+                  <option style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
+                    {state}
+                  </option>
+                {/each}
+              </Input>
             </FormGroup>
           </Col>
           <Col>
-            <FormGroup>
-              <Label>Zip Code</Label>
-              <Input type="text" bind:value={zip} style="width:100px"/>
+            <FormGroup floating label="Zip Code">
+              <Input type="text" bind:value={zip} style="width:90px"/>
             </FormGroup>
           </Col>
         </Row>
