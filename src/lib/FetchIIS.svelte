@@ -23,20 +23,35 @@
   let defaultUrl = 'https://35.160.125.146:8039/fhir/Patient';
   let processing = false;
   let fetchError = '';
-  let isOpen = false;
+  let isGenderOpen = false;
+  let isStateOpen = false;
 
   let mrn = '123456789';
   let first = 'Zhang';
   let last = 'Wei';
-  let dob = '02-28-1986';
-  let address = '1959 NE Pacific St Seattle WA 98195';
-  let phone = '';
+  let dob = '1986-02-28';
+  let address1 = '1959 NE Pacific St';
+  let address2 = '';
+  let city = 'Seattle';
+  let state = 'WA';
+  let zip = '98195';
+  let phone = '(555) 555-5555';
   let gender:string = 'Male';
   let genders: Record<string, any> = {
     "Male": 'M',
     "Female": 'F',
     "Other": 'UN'
   };
+  let states: Array<string> = [
+    'AL','AK','AZ','AR','CA','CO','CT',
+    'DC','DE','FL','GA','GU','HI','ID',
+    'IL','IN','IA','KS','KY','LA','ME',
+    'MD','MA','MI','MH','MN','MP','MS',
+    'MO','MT','NE','NV','NH','NJ','NM',
+    'NY','NC','ND','OH','OK','OR','PA',
+    'PR','RI','SC','SD','TN','TX','UT',
+    'VT','VA','VI','WA','WV','WI','WY'
+  ];
 
   let result: ResourceRetrieveEvent = {
     resources: undefined
@@ -46,7 +61,8 @@
   $: {
     setSummaryUrlValidated(defaultUrl);
   }
-  $: genderIcon = isOpen ? 'chevron-up' : 'chevron-down';
+  $: genderIcon = isGenderOpen ? 'chevron-up' : 'chevron-down';
+  $: stateIcon = isStateOpen ? 'chevron-up' : 'chevron-down';
 
   function setSummaryUrlValidated(url: string) {
     try {
@@ -207,60 +223,140 @@
 <form on:submit|preventDefault={() => prepareIps()}>
   <FormGroup>
     <Label>Fetch immunizations from WA IIS</Label>
-    <FormGroup>
-      <Label>First Name</Label>
-      <Input type="text" bind:value={first} />
-    </FormGroup>
-    <FormGroup>
-      <Label>Last Name</Label>
-      <Input type="text" bind:value={last} />
-    </FormGroup>
-    <FormGroup>
-      <Label>MRN</Label>
-      <Input type="text" bind:value={mrn} />
-    </FormGroup>
-    <FormGroup>
-      <Label>Date of Birth</Label>
-      <Input type="date" bind:value={dob} />
-    </FormGroup>
-    <FormGroup>
-      <Label>Phone</Label>
-      <Input type="phone" bind:value={phone} />
-    </FormGroup>
-    <FormGroup>
-      <Label>Address</Label>
-      <Input type="text" bind:value={address} />
-    </FormGroup>
-    <FormGroup>
-      <Label>Gender</Label>
-      <Dropdown {isOpen} toggle={() => (isOpen = !isOpen)}>
-        <DropdownToggle tag="div" class="d-inline-block">
-          <div style="position:relative">
-            <Input type="text" bind:value={gender} />
-            <Icon
-              name={genderIcon}
-              style="position: absolute;
-            cursor: pointer;
-            height: 25px;
-            width: 20px;
-            top: 6px;
-            right: 10px;
-            color: rgb(50, 50, 50);"
-            />
-          </div>
-        </DropdownToggle>
-        <DropdownMenu style="width:auto">
-          {#each Object.entries(genders) as [full, abb]}
-            <DropdownItem
-              style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"
-              on:click={() => {
-                setGender(full);
-              }}>{full}</DropdownItem
-            >
-          {/each}
-        </DropdownMenu>
-      </Dropdown>
-    </FormGroup>
+    <Row cols={{ sm: 2, xs: 1 }}>
+      <Col>
+        <FormGroup>
+          <Label>First Name</Label>
+          <Input type="text" bind:value={first} />
+        </FormGroup>
+      </Col>
+      <Col>
+        <FormGroup>
+          <Label>Last Name</Label>
+          <Input type="text" bind:value={last} />
+        </FormGroup>
+      </Col>
+    </Row>
+    <Row  cols={{ sm: 2, xs: 1 }}>
+      <Col md=3 sm=4>
+        <FormGroup>
+          <Label>Date of Birth</Label>
+          <Input type="date" bind:value={dob} placeholder={dob} style="width: 165px"/>
+        </FormGroup>
+      </Col>
+      <Col md=3 sm=4>
+        <FormGroup>
+          <Label>Gender</Label>
+          <Dropdown isOpen={isGenderOpen} toggle={() => (isGenderOpen = !isGenderOpen)}>
+            <DropdownToggle tag="div" class="d-inline-block">
+              <div style="position:relative">
+                <Input type="text" bind:value={gender} style="width: 100px"/>
+                <Icon
+                  name={genderIcon}
+                  style="position: absolute;
+                cursor: pointer;
+                height: 25px;
+                width: 20px;
+                top: 6px;
+                right: 10px;
+                color: rgb(50, 50, 50);"
+                />
+              </div>
+            </DropdownToggle>
+            <DropdownMenu style="width:auto">
+              {#each Object.entries(genders) as [full, abb]}
+                <DropdownItem
+                  style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"
+                  on:click={() => gender=full}>{full}</DropdownItem
+                >
+              {/each}
+            </DropdownMenu>
+          </Dropdown>
+        </FormGroup>
+      </Col>
+    </Row>
+    <Row>
+      <Col md=3 sm=4>
+        <FormGroup>
+          <Label>MRN</Label>
+          <Input type="text" bind:value={mrn} style="width: 165px"/>
+        </FormGroup>
+      </Col>
+    </Row>
+    <Row>
+      <Col md=3 sm=4>
+        <FormGroup>
+          <Label>Phone</Label>
+          <Input type="tel" bind:value={phone} style="width: 165px"/>
+        </FormGroup>
+      </Col>
+    </Row>
+    <Row cols={{ md: 2, xs: 1 }}>
+      <Col>
+        <FormGroup>
+          <Label>Address Line 1</Label>
+          <Input type="text" bind:value={address1} />
+        </FormGroup>
+      </Col>
+      <Col>
+        <FormGroup>
+          <Label>Address Line 2</Label>
+          <Input type="text" bind:value={address2} />
+        </FormGroup>
+      </Col>
+    </Row>
+    <Row cols={{ xs:1, sm:2}}>
+      <Col xs="auto">
+        <FormGroup>
+          <Label>City</Label>
+          <Input type="text" bind:value={city} />
+        </FormGroup>
+      </Col>
+      <Col>
+        <Row>
+          <Col xs="auto">
+            <FormGroup>
+              <Label>State</Label>
+              <Dropdown isOpen={isStateOpen} toggle={() => (isStateOpen = !isStateOpen)} style="width:80px">
+                <DropdownToggle tag="div" class="d-inline-block">
+                  <div style="position:relative">
+                    <Input type="text" bind:value={state} />
+                    <Icon
+                      name={stateIcon}
+                      style="position: absolute;
+                    cursor: pointer;
+                    height: 25px;
+                    width: 20px;
+                    top: 6px;
+                    right: 10px;
+                    color: rgb(50, 50, 50);"
+                    />
+                  </div>
+                </DropdownToggle>
+                <DropdownMenu style="width:auto; height:250px; overflow:scroll">
+                  {#each states as s}
+                    <DropdownItem
+                      style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"
+                      on:click={() => state=s}>{s}</DropdownItem
+                    >
+                  {/each}
+                </DropdownMenu>
+              </Dropdown>
+            </FormGroup>
+          </Col>
+          <Col>
+            <FormGroup>
+              <Label>Zip Code</Label>
+              <Input type="text" bind:value={zip} style="width:100px"/>
+            </FormGroup>
+          </Col>
+        </Row>
+      </Col>
+    </Row>
+    
+    
+    
+    
   </FormGroup>
 
   <Row>
