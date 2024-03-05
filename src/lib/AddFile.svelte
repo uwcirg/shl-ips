@@ -19,8 +19,7 @@
     TabContent,
     TabPane,
     Toast,
-    ToastBody,
-    ToastHeader } from 'sveltestrap';
+    ToastBody } from 'sveltestrap';
   import FetchUrl from './FetchUrl.svelte';
   import FetchFile from './FetchFile.svelte';
   import FetchSoF from './FetchSoF.svelte';
@@ -39,7 +38,7 @@
   import { page } from '$app/stores';
   import { getResourcesFromIPS } from './resourceUploader.js';
   import { goto } from '$app/navigation';
-    import FetchIis from './FetchIIS.svelte';
+  import FetchIis from './FetchIIS.svelte';
   
   let shlIdParam = $page.url.searchParams.get('shlid');
 

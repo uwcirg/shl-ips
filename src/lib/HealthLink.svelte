@@ -7,6 +7,7 @@
     CardBody,
     CardFooter,
     CardHeader,
+    CardImg,
     CardSubtitle,
     CardText,
     CardTitle,
@@ -103,8 +104,8 @@
       <CardHeader>
         <CardTitle>
           <Icon name={shl.passcode ? 'lock' : 'unlock'} />
-          {shl.label}</CardTitle
-        >
+          {shl.label}
+        </CardTitle>
       </CardHeader>
       <CardBody>
         {#if shl.exp}
@@ -112,39 +113,51 @@
             Expires: {new Date(shl.exp * 1000).toISOString().slice(0, 10)}
           </CardSubtitle>
         {/if}
-    
         <CardText>
           {#await qrCode then dataUrl}
-            <p class="logo">
-              <img class="qr" alt="QR Code for SHL" src={dataUrl} />
-              <img class="logo" alt="WA Verify+ Logo" src='/img/waverifypluslogo.png' />
-            </p>
+            <CardImg class="img-fluid" alt="QR Code for SHL" src={dataUrl} />
+            <CardImg
+              style="position: absolute;
+              background: #325c33;
+              width: 110px;
+              height: 27px;
+              left: calc(50% - 55px);
+              top: calc(50% - 1em);
+              border: 5px solid #325c33;
+              box-sizing: border-box;"
+              class="logo"
+              alt="WA Verify+ Logo"
+              src="/img/waverifypluslogo.png"
+            />
           {/await}
         </CardText>
       </CardBody>
       <CardFooter>
-        {#if canShare}
-          <Button
-            size="sm"
-            color="success"
-            on:click={async () => {
-              navigator.share({ url: await href, title: shl.label });
-            }}><Icon name="share" /> Share</Button
-          >
-        {/if}
-        <Button size="sm" color="success" on:click={copyShl} disabled={!!copyNotice}>
-          <Icon name="clipboard" />
-          {#if copyNotice}
-            {copyNotice}
-          {:else}
-            Copy Link
+        <Row class="justify-content-center">
+          {#if canShare}
+              <Button
+                size="sm"
+                color="success"
+                class="mx-1" style="width: fit-content"
+                on:click={async () => {
+                  navigator.share({ url: await href, title: shl.label });
+                }}><Icon name="share" /> Share</Button
+              >
           {/if}
-        </Button>
-        {#await href then href}
-          <Button size="sm" color="success" {href} target="_blank">
-            <Icon name="box-arrow-up-right" /> View IPS
-          </Button>
-        {/await}
+            <Button size="sm" color="success" class="mx-1" style="width: fit-content" on:click={copyShl} disabled={!!copyNotice}>
+              <Icon name="clipboard" />
+              {#if copyNotice}
+                {copyNotice}
+              {:else}
+                Copy Link
+              {/if}
+            </Button>
+          {#await href then href}
+              <Button size="sm" color="success" class="mx-1" style="width: fit-content" {href} target="_blank">
+                <Icon name="box-arrow-up-right" /> View IPS
+              </Button>
+          {/await}
+        </Row>
       </CardFooter>
     </Card>
   </Col>
