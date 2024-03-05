@@ -9,8 +9,7 @@ export const SOF_HOSTS = [
   {
     id: "epic-himss",
     name: "Epic - HIMSS Demo",
-    // url: "https://demo/MyChart107/authentication/oauth/start?redirect_uri=https://smart-health-links-ips.cirg.washington.edu/create&response_type=code&client_id=dddddddd-5541-445b-9d7e-000000000005",
-    url: "https://ihe.epic.com:44399/Interconnect-FHIR/api/FHIR/R4",
+    url: "https://ihe.epic.com/Interconnect-FHIR/api/FHIR/R4",
     clientId: import.meta.env.VITE_EPIC_HIMSS_CLIENT_ID,
     note: "azzfhir / epic"
   },
