@@ -93,7 +93,7 @@
       </NavItem>
       <Dropdown nav inNavbar size="sm" direction="down">
         <DropdownToggle color="primary" nav caret>Actions</DropdownToggle>
-        <DropdownMenu end style="height: 500px; overflow:scroll">
+        <DropdownMenu end style="max-height: 500px; overflow:scroll">
           <DropdownItem
             on:click={() => {
               closeNav();
