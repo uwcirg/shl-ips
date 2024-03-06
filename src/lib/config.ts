@@ -86,7 +86,7 @@ export const SOF_PATIENT_RESOURCES = [
 ];
 
 export const VIEWER_BASE = new URL(
-  (import.meta.env.VITE_VIEWER_BASE ?? `/ips${dev ? '/index.html' : ''}`)+'#',
+  (import.meta.env.VITE_VIEWER_BASE ? import.meta.env.VITE_VIEWER_BASE : `/ips${dev ? '/index.html' : ''}`)+'#',
   window.location.href
 ).toString();
 export const PATIENT_IPS = {
