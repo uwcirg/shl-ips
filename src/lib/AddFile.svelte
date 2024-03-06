@@ -64,10 +64,9 @@
   let resourcesToReview: any[] = [];
   let shcsToAdd: SHCFile[] = [];
   let singleIPS = true;
-  let odhData = {
-    currentJob: undefined,
-    pastJob: undefined,
-    combatPeriod: undefined
+  let odhData: {section: any|undefined; resources: any[]|undefined} = {
+    section: undefined,
+    resources: undefined
   };
 
   let label = 'SHL from ' + new Date().toISOString().slice(0, 10);
@@ -153,6 +152,10 @@
       // TODO: Add ODH data here
       ipsResult = details;
       if (ipsResult.ips) {
+        if (odhData && odhData.section && odhData.resources) {
+          ipsResult.ips.entry[0].resource.section.push(odhData.section);
+          ipsResult.ips.entry = ipsResult.ips.entry.concat(odhData.resources);
+        }
         shcsToAdd.unshift(await packageSHC(ipsResult.ips));
         submitSHL();
       }
@@ -310,7 +313,7 @@
 </Accordion>
 <br>
 {#if resourcesToReview.length > 0}
-  <ODHForm bind:currentJob={odhData.currentJob} bind:pastJob={odhData.pastJob} bind:combatPeriod={odhData.combatPeriod} />
+  <ODHForm bind:odhSection={odhData.section} bind:odhSectionResources={odhData.resources} />
   <br>
   <ResourceSelector
     bind:newResources={resourcesToReview}
