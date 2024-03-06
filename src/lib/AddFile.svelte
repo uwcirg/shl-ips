@@ -24,6 +24,7 @@
   import FetchFile from './FetchFile.svelte';
   import FetchSoF from './FetchSoF.svelte';
   import FetchIIS from './FetchIIS.svelte';
+  import ODHForm from './ODHForm.svelte';
   import ResourceSelector from './ResourceSelector.svelte';
   import { verify } from './shc-decoder.js';
 
@@ -46,7 +47,7 @@
   let fetchError = "";
   let currentTab: string | number;
   currentTab = 'url';
-  let addDataHeader = "Create IPS";
+  let addDataHeader = "Retrieve data from provider";
   let addDataOpen = true;
   let successMessage = false;
 
@@ -63,6 +64,11 @@
   let resourcesToReview: any[] = [];
   let shcsToAdd: SHCFile[] = [];
   let singleIPS = true;
+  let odhData = {
+    currentJob: undefined,
+    pastJob: undefined,
+    combatPeriod: undefined
+  };
 
   let label = 'SHL from ' + new Date().toISOString().slice(0, 10);
   let expiration: number | null = -1;
@@ -115,7 +121,7 @@
           if (dataAccordion) {
             dataAccordion.click();
           }
-          addDataHeader = resources ? "Add More Data" : "Create IPS";
+          addDataHeader = resources ? "Add data from another provider" : "Retrieve data from provider";
           showSuccessMessage();
         }
       } catch (e) {
@@ -144,6 +150,7 @@
   async function uploadRetrievedIPS(details: IPSRetrieveEvent) {
     try {
       submitting = true;
+      // TODO: Add ODH data here
       ipsResult = details;
       if (ipsResult.ips) {
         shcsToAdd.unshift(await packageSHC(ipsResult.ips));
@@ -269,21 +276,7 @@
     <TabContent on:tab={(e) => {
       currentTab = e.detail;
     }}>
-      <TabPane class="url-tab" tabId="url" style="padding-top:10px" active>
-        <span class="url-tab" slot="tab" >FHIR URL</span>
-        <FetchUrl
-          on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }
-          on:ips-retrieved={ async ({ detail }) => { stageRetrievedIPS(detail) } }>
-        </FetchUrl>
-      </TabPane>
-      <TabPane class="file-tab" tabId="file" style="padding-top:10px">
-        <span class="file-tab" slot="tab">File Upload</span>
-        <FetchFile
-          on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }
-          on:ips-retrieved={ async ({ detail }) => { stageRetrievedIPS(detail) } }>
-        </FetchFile>
-      </TabPane>
-      <TabPane class="smart-tab" tabId="smart" style="padding-top:10px">
+      <TabPane class="smart-tab" tabId="smart" style="padding-top:10px" active>
         <span class="smart-tab" slot="tab">SMART Patient Access</span>
         <FetchSoF
           on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
@@ -298,15 +291,35 @@
           on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }>
         </FetchIIS>
       </TabPane>
+      <TabPane class="url-tab" tabId="url" style="padding-top:10px">
+        <span class="url-tab" slot="tab" >FHIR URL</span>
+        <FetchUrl
+          on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }
+          on:ips-retrieved={ async ({ detail }) => { stageRetrievedIPS(detail) } }>
+        </FetchUrl>
+      </TabPane>
+      <TabPane class="file-tab" tabId="file" style="padding-top:10px">
+        <span class="file-tab" slot="tab">File Upload</span>
+        <FetchFile
+          on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }
+          on:ips-retrieved={ async ({ detail }) => { stageRetrievedIPS(detail) } }>
+        </FetchFile>
+      </TabPane>
     </TabContent>
   </AccordionItem>
 </Accordion>
-
+<br>
 {#if resourcesToReview.length > 0}
+  <ODHForm bind:currentJob={odhData.currentJob} bind:pastJob={odhData.pastJob} bind:combatPeriod={odhData.combatPeriod} />
+  <br>
+  <ResourceSelector
+    bind:newResources={resourcesToReview}
+    on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }
+  />
   {#if shlIdParam == null}
     <Row class="mt-4">
-      <Col class="mb-2">
-        <h2>Configure SHL</h2>
+      <Col xs="auto" class="mb-2">
+        <h2>Create a SMART Health Link</h2>
       </Col>
       <Col>
         <Toast class="me-1" autohide isOpen={successMessage} color="success">
@@ -349,7 +362,7 @@
   {/if}
   <span class="text-danger">{fetchError}</span>
   {#if resourcesToReview.length > 0}
-    {#if ipsResult.ips}
+    {#if false && ipsResult.ips}
       <Row class="align-items-center">
         <Col xs="auto">
           <Button
@@ -382,8 +395,5 @@
       </Row>
       <br/>
     {/if}
-    <ResourceSelector bind:newResources={resourcesToReview}
-      on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }>
-    </ResourceSelector>
   {/if}
 {/if}

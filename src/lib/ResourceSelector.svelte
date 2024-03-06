@@ -6,14 +6,6 @@
         AccordionItem,
         Button,
         Col,
-        Dropdown,
-        DropdownToggle,
-        DropdownMenu,
-        DropdownItem,
-        FormGroup,
-        Label,
-        Input,
-        Icon,
         Row,
         Spinner } from 'sveltestrap';
     import { ResourceHelper, type IPSRetrieveEvent } from './types';
@@ -176,41 +168,11 @@
         ipsDispatch('ips-retrieved', { ips: content });
         submitting = false;
     }
-
-    let start = '';
-    let end = '';
-    let job = 'Bartender';
-    let industry = 'Alcoholic beverage drinking places';
-    let dpw = '3';
-    let hpd = '5';
 </script>
 
 <form on:submit|preventDefault={() => confirm()}>
     <Accordion>
-        <AccordionItem active header="Add Occupational Information">
-            <FormGroup>
-                <Label>It may be helpful to include information about the work you do in your medical history:</Label>
-                <FormGroup>
-                    <Label>My job is</Label>
-                    <Input type="text" bind:value={job} />
-                </FormGroup>
-                <FormGroup>
-                    <Label>Which is part of the </Label>
-                    <Input type="text" bind:value={industry} />
-                    <Label>industry</Label>
-                </FormGroup>
-                <FormGroup>
-                    <Label>I started this job on</Label>
-                    <Input type="date" bind:value={start} />
-                    <Label>and stopped on</Label>
-                    <Input type="date" bind:value={end} />
-                </FormGroup>
-            </FormGroup>
-        </AccordionItem>
-    </Accordion>
-    <br>
-    <Accordion>
-        <AccordionItem header="Customize IPS Content">
+        <AccordionItem header="Directly edit health summary (IPS) content">
             {#if resources != null}
                 <p><em>Selected resources from the list below will be included in your customized IPS</em></p>
                 {#each Object.keys(resources) as key}
@@ -227,9 +189,9 @@
         <Col xs="auto">
         <Button color="primary" style="width:fit-content" disabled={submitting} type="submit">
             {#if !submitting}
-            Submit Custom IPS
+            Create New Link
             {:else}
-            Submitting IPS...
+            Creating Link...
             {/if}
         </Button>
         </Col>

@@ -62,6 +62,7 @@
       id: shl.id,
       managementToken: shl.managementToken,
       encryptionKey: shl.encryptionKey,
+      passcode: shl.passcode,
       files: []
     }
     return await shlClient.toLink(shlMin);
@@ -120,10 +121,9 @@
               style="position: absolute;
               background: #325c33;
               width: 110px;
-              height: 27px;
-              left: calc(50% - 55px);
+              left: calc(50% - 56px);
               top: calc(50% - 1em);
-              border: 5px solid #325c33;
+              border: 2px solid #ffffff;
               box-sizing: border-box;"
               class="logo"
               alt="WA Verify+ Logo"
@@ -137,14 +137,14 @@
           {#if canShare}
               <Button
                 size="sm"
-                color="success"
+                color="primary"
                 class="mx-1" style="width: fit-content"
                 on:click={async () => {
                   navigator.share({ url: await href, title: shl.label });
                 }}><Icon name="share" /> Share</Button
               >
           {/if}
-            <Button size="sm" color="success" class="mx-1" style="width: fit-content" on:click={copyShl} disabled={!!copyNotice}>
+            <Button size="sm" color="primary" class="mx-1" style="width: fit-content" on:click={copyShl} disabled={!!copyNotice}>
               <Icon name="clipboard" />
               {#if copyNotice}
                 {copyNotice}
@@ -153,7 +153,7 @@
               {/if}
             </Button>
           {#await href then href}
-              <Button size="sm" color="success" class="mx-1" style="width: fit-content" {href} target="_blank">
+              <Button size="sm" color="primary" class="mx-1" style="width: fit-content" {href} target="_blank">
                 <Icon name="box-arrow-up-right" /> View IPS
               </Button>
           {/await}
@@ -173,7 +173,7 @@
       />
       <Button
         size="sm"
-        color="secondary"
+        color="primary"
         disabled={(shl.label || '') === (shlControlled.label || '')}
         on:click={async () => {
           $shlStore = $shlStore.map((e) => {
@@ -210,7 +210,7 @@
       </div>
       <Button
         size="sm"
-        color="secondary"
+        color="primary"
         disabled={(shl.passcode || '') === (shlControlled.passcode || '')}
         on:click={async () => {
           await shlClient.resetShl({ ...shl, passcode: shlControlled.passcode });
@@ -274,7 +274,7 @@
 {/each}
 <Row>
   <Col>
-    <Button class="mb-3" color="success" on:click={addFile}><Icon name="file-earmark-plus" /> Add Record</Button>
+    <Button class="mb-3" color="primary" on:click={addFile}><Icon name="file-earmark-plus" /> Add Record</Button>
   </Col>
 </Row>
 
