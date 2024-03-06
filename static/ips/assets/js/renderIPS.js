@@ -1,4 +1,6 @@
 import config from "./config.js";
+var { pdfjsLib } = globalThis;
+pdfjsLib.GlobalWorkerOptions.workerSrc = '//mozilla.github.io/pdf.js/build/pdf.worker.mjs';
 
 export { prepareSHLContents };
 
@@ -94,7 +96,7 @@ function render(templateName, data, targetLocation) {
     entryCheck = data.entry.length
   }
   if (mode == "Entries" && templateName !== "Other") {
-    var jqxhr = $.get(new URL(`../templates/${templateName}.html`, import.meta.url).href, function () { })
+    return $.get(new URL(`../templates/${templateName}.html`, import.meta.url).href, function () { })
       .done(function (template) {
         console.log(data);
         var templateResult = Sqrl.Render(template, data);
@@ -112,10 +114,10 @@ function render(templateName, data, targetLocation) {
     var content = { titulo: data.title, div: "No text defined.", index: sectionCount };
     if (!content.titulo) content.titulo = data.resourceType;
     if (data.text) content.div = data.text.div;
-    var jqxhr = $.get(new URL(`../templates/Text.html`, import.meta.url).href, function () { })
+    return $.get(new URL(`../templates/Text.html`, import.meta.url).href, function () { })
       .done(function (template) {
         var templateResult = Sqrl.Render(template, content);
-        $("#" + targetLocation).html(templateResult);
+        $("#" + targetLocation).append(templateResult);
         $("#text-body1").removeClass('show');
       }).fail(function (e) {
         console.log("error", e);
@@ -163,6 +165,18 @@ function getEntry(ips, fullUrl) {
   }
   return result;
 };
+
+function loadBase64EncodedPDF(base64Data) {
+  let pdfData = atob(base64Data);
+  let uint8ArrayPdf = new Uint8Array(pdfData.length)
+  for (let i = 0; i < pdfData.length; i++) {
+    uint8ArrayPdf[i] = pdfData.charCodeAt(i)
+  }
+  let pdfjsframe = document.getElementById('ad-viewer');
+  pdfjsframe.addEventListener('load', function(e) {
+    e.currentTarget.contentWindow.PDFViewerApplication.open({data: uint8ArrayPdf});
+  });
+}
 
 function prepareSHLContents(contents) {
   if (!Array.isArray(contents)){
@@ -277,7 +291,7 @@ function update(ips, index) {
           section.medications = [];
           section.entry?.forEach(function (medication) {
             console.log(medication.reference);
-            // while variable name is Statement, this may be either MedicationStatement or MedicationRequest
+            // while variable name is "statement", these references may be either MedicationStatement or MedicationRequest resources
             let statement = getEntry(ips, medication.reference);
             let medicationReference;
             // Either MedicationRequest or MedicationStatement may have a reference to Medication 
@@ -326,12 +340,69 @@ function update(ips, index) {
           render("Observations", section, `Observations${index}`);
         } else if (section.code.coding[0].code == "42348-3") {
           console.log('Advance Directives Section');
-          section.ad = [];
+          section.ad = {
+            "consent": [],
+            "documentReference": [],
+            "other": []
+          };
           section.entry?.forEach(function (ad) {
             console.log(ad.reference);
-            section.ad.push(getEntry(ips, ad.reference));
+            entry = getEntry(ips, ad.reference);
+            if (entry.resourceType == "Consent") {
+              section.ad.consent.push(entry);
+            } else if (entry.resourceType == "DocumentReference") {
+              section.ad.documentReference.push(entry);
+            } else {
+              section.ad.other.push(entry);
+            }
           });
-          render("AdvanceDirectives", section, `AdvanceDirectives${index}`);
+          render("AdvanceDirectives", section, `AdvanceDirectives${index}`).then(function(res) {
+            if (section.ad.documentReference.length) {
+              section.ad.documentReference[0].content.forEach(element => {
+                if (element.attachment.contentType === "application/pdf") {
+                  if (element.attachment.data) {
+                    loadBase64EncodedPDF(element.attachment.data);
+                  }
+                }
+              });
+            }
+          });
+        } else if (section.code.coding[0].code == "11341-5") {
+          console.log('History of Occupation Section');
+          section.odh = {
+            "all": [],
+            "status": [],
+            "retirement": [],
+            "combat": [],
+            "usual": [],
+            "history": []
+          };
+          section.entry?.forEach(function (entry) {
+            console.log(entry.reference);
+            section.odh.all.push(getEntry(ips, entry.reference));
+          });
+          section.odh.all?.forEach(function (resource) {
+            switch (resource?.code?.coding?.[0]?.code) {
+              case "74165-2": // Employment Status
+                section.odh.status.push(resource);
+                break;
+              case "87510-4": // Retirement Date
+                section.odh.retirement.push(resource);
+                break;
+              case "87511-2": // Combat Zone Period
+                section.odh.combat.push(resource);
+                break;
+              case "21843-8": // Usual Work
+                section.odh.usual.push(resource);
+                break;
+              case "11341-5": // Past Or Present Job
+                section.odh.history.push(resource);
+                break;
+              default:
+                break;
+            }
+          })
+          render("HistoryOfOccupation", section, `HistoryOfOccupation${index}`);
         } else {
           render("Other", section, `Other${index}`);
           console.log(`Section with code: ${section.code.coding[0].code} not rendered since no template`);
