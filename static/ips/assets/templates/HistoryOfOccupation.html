@@ -13,10 +13,12 @@
                 <br>
                 {{each(options.odh.status)}}
                     {{@this.valueCodeableConcept.coding[0].display}}
+                    {{if(@this.effectivePeriod)}}
                     {{if(@this.effectivePeriod.end)}}
                         {{@this.effectivePeriod.start}} - {{@this.effectivePeriod.end}}
                     {{#else}}
                         since {{@this.effectivePeriod.start}}
+                    {{/if}}
                     {{/if}}
                 {{/each}}
             </li>

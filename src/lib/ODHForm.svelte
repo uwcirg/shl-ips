@@ -74,7 +74,7 @@
       fullUrl: "observation-odh-employment-status-sample"
     };
 
-    let pastJobTemplate = {
+    let jobTemplate = {
       resource: {
         resourceType: "Observation",
         id: "observation-odh-past-or-present-job-sample1",
@@ -211,24 +211,25 @@
     function updateCurrentJob() {
         if (working) {
             if (currentJob === undefined) {
-                if (startCurrent) {
-                    let period:any = { start: startCurrent};
-                    currentJob.resource.effectivePeriod = period;
-                }
-                if (jobCurrent) {
-                    currentJob.resource.valueCodeableConcept.coding[0] = {
-                        system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH",
-                        code: jobs[jobCurrent],
-                        display: jobCurrent
-                    };
-                }
-                if (industryCurrent) {
-                    currentJob.resource.component[0].valueCodeableConcept[0].coding[0] = {
-                        system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH",
-                        code: industries[industryCurrent],
-                        display: industryCurrent
-                    };
-                }
+                currentJob = JSON.parse(JSON.stringify(jobTemplate));
+            }
+            if (startCurrent) {
+                let period:any = { start: startCurrent};
+                currentJob.resource.effectivePeriod = period;
+            }
+            if (jobCurrent) {
+                currentJob.resource.valueCodeableConcept.coding[0] = {
+                    system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH",
+                    code: jobs[jobCurrent],
+                    display: jobCurrent
+                };
+            }
+            if (industryCurrent) {
+                currentJob.resource.component[0].valueCodeableConcept.coding[0] = {
+                    system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH",
+                    code: industries[industryCurrent],
+                    display: industryCurrent
+                };
             }
         } else {
             currentJob = undefined;
@@ -238,26 +239,27 @@
     function updatePastJob() {
         if (workingPast) {
             if (pastJob === undefined) {
-                if (startPast || endPast) {
-                    let period:any = {};
-                    if (startPast) { period.start = startPast }
-                    if (endPast) { period.end = endPast }
-                    pastJob.resource.effectivePeriod = period;
-                }
-                if (jobPast) {
-                    pastJob.resource.valueCodeableConcept.coding[0] = {
-                        system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH",
-                        code: jobs[jobPast],
-                        display: jobPast
-                    };
-                }
-                if (industryPast) {
-                    pastJob.resource.component[0].valueCodeableConcept[0].coding[0] = {
-                        system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH",
-                        code: industries[industryPast],
-                        display: industryPast
-                    };
-                }
+                pastJob = JSON.parse(JSON.stringify(jobTemplate));
+            }
+            if (startPast || endPast) {
+                let period:any = {};
+                if (startPast) { period.start = startPast }
+                if (endPast) { period.end = endPast }
+                pastJob.resource.effectivePeriod = period;
+            }
+            if (jobPast) {
+                pastJob.resource.valueCodeableConcept.coding[0] = {
+                    system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH",
+                    code: jobs[jobPast],
+                    display: jobPast
+                };
+            }
+            if (industryPast) {
+                pastJob.resource.component[0].valueCodeableConcept.coding[0] = {
+                    system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH",
+                    code: industries[industryPast],
+                    display: industryPast
+                };
             }
         } else {
             pastJob = undefined;
@@ -267,7 +269,7 @@
     function updateCombatPeriod() {
         if (combat) {
             if (combatPeriod === undefined) {
-                combatPeriod = combatPeriodTemplate;
+                combatPeriod = JSON.parse(JSON.stringify(combatPeriodTemplate));
             }
             if (startCombat || endCombat) {
                 let period:any = {};
@@ -282,7 +284,7 @@
 
     function updateEmploymentStatus() {
         if (employmentStatus === undefined) {
-            employmentStatus = employmentStatusTemplate;
+            employmentStatus = JSON.parse(JSON.stringify(employmentStatusTemplate));
         }
         let status = working ? "Employed" : "Unemployed";
         employmentStatus.resource.valueCodeableConcept.coding[0].code = status;
@@ -299,7 +301,7 @@
     function updateOdhSection() {
         if (employmentStatus || currentJob || pastJob || combatPeriod) {
             if (odhSection === undefined) {
-                odhSection = odhSectionTemplate;
+                odhSection = JSON.parse(JSON.stringify(odhSectionTemplate));
             }
             odhSectionResources = [employmentStatus, currentJob, pastJob, combatPeriod].filter((r) => r !== undefined);
             odhSection.entry = odhSectionResources.map((r) => {
