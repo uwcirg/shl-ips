@@ -30,54 +30,10 @@
         entry: []
     };
 
-    let employmentStatusTemplate = {
+    let currentJobTemplate = {
       resource: {
         resourceType: "Observation",
-        id: "observation-odh-employment-status-sample",
-        meta: {
-          versionId: "7",
-          lastUpdated: "2021-05-26T17:22:34.756+00:00",
-          source: "#H1Oz6Eja94PABzAs",
-          profile: [
-            "http://hl7.org/fhir/us/odh/StructureDefinition/odh-EmploymentStatus"
-          ]
-        },
-        extension: [
-          {
-            url: "http://hl7.org/fhir/StructureDefinition/NarrativeLink",
-            valueUri: "urn:uuid:126e7704-b9dc-4559-ad88-138ad7a3f233#HistoryOfOccupation-observation-odh-employment-status-sample"
-          }
-        ],
-        status: "final",
-        code: {
-          coding: [
-            {
-              system: "http://loinc.org",
-              code: "74165-2",
-              display: "History of employment status NIOSH"
-            }
-          ]
-        },
-        subject: {
-          reference: "Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299",
-        },
-        valueCodeableConcept: {
-          coding: [
-            {
-              system: "http://terminology.hl7.org/CodeSystem/v3-ObservationValue",
-              code: "Employed",
-              display: "Employed"
-            }
-          ]
-        }
-      },
-      fullUrl: "observation-odh-employment-status-sample"
-    };
-
-    let jobTemplate = {
-      resource: {
-        resourceType: "Observation",
-        id: "observation-odh-past-or-present-job-sample1",
+        id: "observation-odh-present-job-sample",
         meta: {
           versionId: "10",
           lastUpdated: "2021-05-27T09:19:44.894+00:00",
@@ -125,7 +81,105 @@
           }
         ]
       },
-      fullUrl: "observation-odh-past-or-present-job-sample1"
+      fullUrl: "observation-odh-present-job-sample"
+    }
+
+    let employmentStatusTemplate = {
+      resource: {
+        resourceType: "Observation",
+        id: "observation-odh-employment-status-sample",
+        meta: {
+          versionId: "7",
+          lastUpdated: "2021-05-26T17:22:34.756+00:00",
+          source: "#H1Oz6Eja94PABzAs",
+          profile: [
+            "http://hl7.org/fhir/us/odh/StructureDefinition/odh-EmploymentStatus"
+          ]
+        },
+        extension: [
+          {
+            url: "http://hl7.org/fhir/StructureDefinition/NarrativeLink",
+            valueUri: "urn:uuid:126e7704-b9dc-4559-ad88-138ad7a3f233#HistoryOfOccupation-observation-odh-employment-status-sample"
+          }
+        ],
+        status: "final",
+        code: {
+          coding: [
+            {
+              system: "http://loinc.org",
+              code: "74165-2",
+              display: "History of employment status NIOSH"
+            }
+          ]
+        },
+        subject: {
+          reference: "Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299",
+        },
+        valueCodeableConcept: {
+          coding: [
+            {
+              system: "http://terminology.hl7.org/CodeSystem/v3-ObservationValue",
+              code: "Employed",
+              display: "Employed"
+            }
+          ]
+        }
+      },
+      fullUrl: "observation-odh-employment-status-sample"
+    };
+
+    let pastJobTemplate = {
+      resource: {
+        resourceType: "Observation",
+        id: "observation-odh-past-job-sample",
+        meta: {
+          versionId: "10",
+          lastUpdated: "2021-05-27T09:19:44.894+00:00",
+          source: "#kx1P9fdzw85WYorA",
+          profile: [
+            "http://hl7.org/fhir/us/odh/StructureDefinition/odh-PastOrPresentJob"
+          ]
+        },
+        extension: [
+          {
+            url: "http://hl7.org/fhir/us/odh/StructureDefinition/odh-isCurrentJob-extension",
+            valueBoolean: false
+          }
+        ],
+        status: "final",
+        code: {
+          coding: [
+            {
+              system: "http://loinc.org",
+              code: "11341-5",
+              display: "History of Occupation"
+            }
+          ]
+        },
+        subject: {
+          reference: "Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299",
+        },
+        valueCodeableConcept: {
+          coding: []
+        },
+        component: [
+          {
+            code: {
+              coding: [
+                {
+                  system: "http://loinc.org",
+                  code: "86188-0",
+                  display: "History of Occupation Industry"
+                }
+              ]
+            },
+            valueCodeableConcept: {
+              coding: []
+            }
+          }
+        ]
+      },
+      fullUrl: "observation-odh-past-job-sample"
     }
 
     let combatPeriodTemplate = {
@@ -211,7 +265,7 @@
     function updateCurrentJob() {
         if (working) {
             if (currentJob === undefined) {
-                currentJob = JSON.parse(JSON.stringify(jobTemplate));
+                currentJob = JSON.parse(JSON.stringify(currentJobTemplate));
             }
             if (startCurrent) {
                 let period:any = { start: startCurrent};
@@ -239,7 +293,7 @@
     function updatePastJob() {
         if (workingPast) {
             if (pastJob === undefined) {
-                pastJob = JSON.parse(JSON.stringify(jobTemplate));
+                pastJob = JSON.parse(JSON.stringify(pastJobTemplate));
             }
             if (startPast || endPast) {
                 let period:any = {};
