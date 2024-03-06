@@ -4,6 +4,7 @@ import { INTERMEDIATE_FHIR_SERVER_BASE } from './config';
 const allowableResourceTypes = [
     //'Patient', this is loaded separately
     'Organization',
+    'Location',
     'Practitioner',
     'Device',
     'Medication',
