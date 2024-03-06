@@ -7,21 +7,176 @@
       Input,
       Label,
       Row } from 'sveltestrap';
+    
+    export let odhSection: any | undefined;
+    export let odhSectionResources: any[] | undefined;
 
-    export let currentJob;
-    export let pastJob;
-    export let combatPeriod;
+    let employmentStatus: any | undefined;
+    let currentJob: any | undefined;
+    let pastJob: any | undefined;
+    let combatPeriod: any | undefined;
+
+    let odhSectionTemplate = {
+        title: "History of Occupation",
+        code: {
+            coding: [
+            {
+                system: "http://loinc.org",
+                code: "11341-5",
+                display: "History of Occupation"
+            }
+            ]
+        },
+        entry: []
+    };
+
+    let employmentStatusTemplate = {
+      resource: {
+        resourceType: "Observation",
+        id: "observation-odh-employment-status-sample",
+        meta: {
+          versionId: "7",
+          lastUpdated: "2021-05-26T17:22:34.756+00:00",
+          source: "#H1Oz6Eja94PABzAs",
+          profile: [
+            "http://hl7.org/fhir/us/odh/StructureDefinition/odh-EmploymentStatus"
+          ]
+        },
+        extension: [
+          {
+            url: "http://hl7.org/fhir/StructureDefinition/NarrativeLink",
+            valueUri: "urn:uuid:126e7704-b9dc-4559-ad88-138ad7a3f233#HistoryOfOccupation-observation-odh-employment-status-sample"
+          }
+        ],
+        status: "final",
+        code: {
+          coding: [
+            {
+              system: "http://loinc.org",
+              code: "74165-2",
+              display: "History of employment status NIOSH"
+            }
+          ]
+        },
+        subject: {
+          reference: "Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299",
+        },
+        valueCodeableConcept: {
+          coding: [
+            {
+              system: "http://terminology.hl7.org/CodeSystem/v3-ObservationValue",
+              code: "Employed",
+              display: "Employed"
+            }
+          ]
+        }
+      },
+      fullUrl: "observation-odh-employment-status-sample"
+    };
+
+    let pastJobTemplate = {
+      resource: {
+        resourceType: "Observation",
+        id: "observation-odh-past-or-present-job-sample1",
+        meta: {
+          versionId: "10",
+          lastUpdated: "2021-05-27T09:19:44.894+00:00",
+          source: "#kx1P9fdzw85WYorA",
+          profile: [
+            "http://hl7.org/fhir/us/odh/StructureDefinition/odh-PastOrPresentJob"
+          ]
+        },
+        extension: [
+          {
+            url: "http://hl7.org/fhir/us/odh/StructureDefinition/odh-isCurrentJob-extension",
+            valueBoolean: false
+          }
+        ],
+        status: "final",
+        code: {
+          coding: [
+            {
+              system: "http://loinc.org",
+              code: "11341-5",
+              display: "History of Occupation"
+            }
+          ]
+        },
+        subject: {
+          reference: "Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299",
+        },
+        valueCodeableConcept: {
+          coding: []
+        },
+        component: [
+          {
+            code: {
+              coding: [
+                {
+                  system: "http://loinc.org",
+                  code: "86188-0",
+                  display: "History of Occupation Industry"
+                }
+              ]
+            },
+            valueCodeableConcept: {
+              coding: []
+            }
+          }
+        ]
+      },
+      fullUrl: "observation-odh-past-or-present-job-sample1"
+    }
+
+    let combatPeriodTemplate = {
+      resource: {
+        resourceType: "Observation",
+        id: "observation-odh-combat-zone-period-sample",
+        meta: {
+          versionId: "2",
+          lastUpdated: "2021-05-26T02:30:21.329+00:00",
+          source: "#RKwpT7ubUXgCKeEe",
+          profile: [
+            "http://hl7.org/fhir/us/odh/StructureDefinition/odh-CombatZonePeriod"
+          ]
+        },
+        extension: [
+          {
+            url: "http://hl7.org/fhir/StructureDefinition/NarrativeLink",
+            valueUri: "urn:uuid:126e7704-b9dc-4559-ad88-138ad7a3f233#HistoryOfOccupation-observation-odh-combat-zone-period-sample"
+          }
+        ],
+        status: "final",
+        code: {
+          coding: [
+            {
+              system: "http://loinc.org",
+              code: "87511-2",
+              display: "Combat zone AndOr hazardous duty work dates"
+            }
+          ]
+        },
+        subject: {
+          reference: "Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299",
+        },
+        valuePeriod: {
+          start: "2005-04-01",
+          end: "2006-03-31"
+        }
+      },
+      fullUrl: "observation-odh-combat-zone-period-sample"
+    };
   
     let working = true;
     let workingPast = true;
     let combat = false;
-    let jobs = {
-        "Bartender [Bartenders]": "2345",
+    let jobs: Record<string,string> = {
+        "Bartender [Bartender]": "2345",
         "Certified Nursing Assistant (CNA) [Nursing Assistants]": "31-1014.00.007136",
         "Medical Researcher [Medical Scientists, Except Epidemiologists]": "19-1042.00.026469",
         "Clothier [Retail Salespersons]": "41-2031.00.008618",
     };
-    let industries = {
+    let industries: Record<string,string> = {
         "Alcoholic beverage drinking places [Drinking Places (Alcoholic Beverages)": "722410.000378",
         "Home nursing services": "621610.008495",
         "Academies, college or university [Colleges, Universities, and Professional Schools]": "611310.000015",
@@ -38,45 +193,123 @@
     let endCombat = "";
 
     $: {
+        if (working || jobCurrent || industryCurrent || startCurrent) {
+            updateCurrentJob();
+            updateEmploymentStatus();
+        }
+
+        if (workingPast || jobPast || industryPast || startPast || endPast) {
+            updatePastJob();
+        }
+
+        if (combat || startCombat || endCombat) {
+            updateCombatPeriod();
+        }
+        updateOdhSection();
+    }
+
+    function updateCurrentJob() {
         if (working) {
-            currentJob = loadCurrentJob(jobCurrent, industryCurrent, startCurrent);
+            if (currentJob === undefined) {
+                if (startCurrent) {
+                    let period:any = { start: startCurrent};
+                    currentJob.resource.effectivePeriod = period;
+                }
+                if (jobCurrent) {
+                    currentJob.resource.valueCodeableConcept.coding[0] = {
+                        system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH",
+                        code: jobs[jobCurrent],
+                        display: jobCurrent
+                    };
+                }
+                if (industryCurrent) {
+                    currentJob.resource.component[0].valueCodeableConcept[0].coding[0] = {
+                        system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH",
+                        code: industries[industryCurrent],
+                        display: industryCurrent
+                    };
+                }
+            }
         } else {
             currentJob = undefined;
         }
+    }
 
+    function updatePastJob() {
         if (workingPast) {
-            pastJob = loadPastJob(jobPast, industryPast, startPast, endPast);
+            if (pastJob === undefined) {
+                if (startPast || endPast) {
+                    let period:any = {};
+                    if (startPast) { period.start = startPast }
+                    if (endPast) { period.end = endPast }
+                    pastJob.resource.effectivePeriod = period;
+                }
+                if (jobPast) {
+                    pastJob.resource.valueCodeableConcept.coding[0] = {
+                        system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH",
+                        code: jobs[jobPast],
+                        display: jobPast
+                    };
+                }
+                if (industryPast) {
+                    pastJob.resource.component[0].valueCodeableConcept[0].coding[0] = {
+                        system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH",
+                        code: industries[industryPast],
+                        display: industryPast
+                    };
+                }
+            }
         } else {
             pastJob = undefined;
         }
+    }
 
+    function updateCombatPeriod() {
         if (combat) {
-            combatPeriod = loadCombatPeriod(startCombat, endCombat);
+            if (combatPeriod === undefined) {
+                combatPeriod = combatPeriodTemplate;
+            }
+            if (startCombat || endCombat) {
+                let period:any = {};
+                if (startCombat) { period.start = startCombat }
+                if (endCombat) { period.end = endCombat }
+                combatPeriod.resource.valuePeriod = period;
+            }
         } else {
             combatPeriod = undefined;
         }
     }
 
-    function loadCurrentJob(job: string, industry: string, start: string) {
-        return {
-            job: job,
-            industry: industry,
-            start: start
+    function updateEmploymentStatus() {
+        if (employmentStatus === undefined) {
+            employmentStatus = employmentStatusTemplate;
         }
+        let status = working ? "Employed" : "Unemployed";
+        employmentStatus.resource.valueCodeableConcept.coding[0].code = status;
+        employmentStatus.resource.valueCodeableConcept.coding[0].display = status;
+        if (currentJob && startCurrent) {
+            employmentStatus.resource.effectivePeriod = {
+                start: startCurrent
+            };
+        } else {
+            delete employmentStatus.resource.effectivePeriod;
+        }
+    }
 
-    }
-    function loadPastJob(job: string, industry: string, start: string, end: string) {
-        return {
-            job: job,
-            industry: industry,
-            start: start,
-            end: end
-        }
-    }
-    function loadCombatPeriod(start: string, end: string) {
-        return {
-            start: start,
-            end: end
+    function updateOdhSection() {
+        if (employmentStatus || currentJob || pastJob || combatPeriod) {
+            if (odhSection === undefined) {
+                odhSection = odhSectionTemplate;
+            }
+            odhSectionResources = [employmentStatus, currentJob, pastJob, combatPeriod].filter((r) => r !== undefined);
+            odhSection.entry = odhSectionResources.map((r) => {
+                let uri = r.fullUrl;
+                return {
+                    reference: `Observation/${uri}`
+                };
+            });
+        } else {
+            odhSection = undefined;
         }
     }
 </script>
@@ -148,7 +381,7 @@
           <Col xs="auto">Which is part of the</Col>
           <Col xs="auto">
             <Input type="select" bind:value={industryPast} style="width: 100px">
-              {#each Object.keys(industries) as [industry, code]}
+              {#each Object.keys(industries) as industry}
                 <option style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
                   {industry}
                 </option>
