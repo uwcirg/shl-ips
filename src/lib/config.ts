@@ -49,7 +49,7 @@ export const SOF_PATIENT_RESOURCES = [
 ];
 
 export const RESOURCE_SCOPE = SOF_PATIENT_RESOURCES.map(resourceType => `patient/${resourceType}.read`).join(" ");
-const keycloakScope = `openid offline_access`;
+const keycloakScope = `openid`;
 const fullScope = `${keycloakScope} fhirUser ${RESOURCE_SCOPE}`;
 const SOF_REDIRECT_URI = '/share';
 
