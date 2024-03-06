@@ -94,8 +94,8 @@
         <Row class="mb-2">
           <Col xs="auto">My current job is</Col>
           <Col xs="auto">
-            <Input type="select" bind:value={jobCurrent} style="width: 100px">
-              {#each Object.keys(jobs) as [job, code]}
+            <Input type="select" bind:value={jobCurrent} style="width: 200px">
+              {#each Object.keys(jobs) as job}
                 <option style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
                   {job}
                 </option>
@@ -107,7 +107,7 @@
           <Col xs="auto">Which is part of the</Col>
           <Col xs="auto">
             <Input type="select" bind:value={industryCurrent} style="width: 100px">
-              {#each Object.keys(industries) as [industry, code]}
+              {#each Object.keys(industries) as industry}
                 <option style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
                   {industry}
                 </option>
@@ -136,7 +136,7 @@
           <Col xs="auto">My previous job is</Col>
           <Col xs="auto">
             <Input type="select" bind:value={jobPast} style="width: 100px">
-              {#each Object.keys(jobs) as [job, code]}
+              {#each Object.keys(jobs) as job}
                 <option style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
                   {job}
                 </option>
@@ -148,7 +148,7 @@
           <Col xs="auto">Which is part of the</Col>
           <Col xs="auto">
             <Input type="select" bind:value={industryPast} style="width: 100px">
-              {#each Object.keys(industries) as [industry, code]}
+              {#each Object.keys(industries) as industry}
                 <option style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
                   {industry}
                 </option>
