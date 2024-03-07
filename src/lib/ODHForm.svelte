@@ -372,8 +372,6 @@
     }
 </script>
 
-<h2>Add health-related occupational information</h2>
-<Label>It may be helpful to include information about the work you do in your medical history</Label>
 <Accordion stayOpen>
   <AccordionItem active header="Current work">
     <Row class="mx-1">
@@ -463,7 +461,7 @@
   </AccordionItem>
   <AccordionItem active header="Combat zone work">
     <Row class="mx-1">
-      <Input type="switch" bind:checked={combat} label={combat ? "I have worked in a combat zone" : "No combat zone work"}/>
+      <Input type="switch" bind:checked={combat} label={combat ? "I have worked in a combat zone" : "I have not worked in a combat zone"}/>
     </Row>
     {#if combat}
       <br>

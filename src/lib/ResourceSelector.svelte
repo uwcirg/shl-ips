@@ -11,37 +11,52 @@
     import { ResourceHelper, type IPSRetrieveEvent } from './types';
 
     export let newResources: Array<any> | undefined;
+    export let submitSelections: boolean;
 
     const ipsDispatch = createEventDispatcher<{ 'ips-retrieved': IPSRetrieveEvent }>();
     let resources:{ [key: string]: ResourceHelper } = {};
+    let resourcesByType:{ [key: string]: { [key: string]: ResourceHelper} } = {};
     let submitting = false;
     let reference: string;
     let patientReference: string;
     let patients: {[key: string]: ResourceHelper} = {};
+    let selectedPatient: string;
 
     // This function will be executed when the resource list is updated
     $: {
         if (newResources) {
             addNewResources(newResources);
         }
+        if (selectedPatient) {
+            updatePatient(patients[selectedPatient]);
+        }
+        if (submitSelections) {
+            confirm();
+        }
     };
 
-    function addResource(resource:ResourceHelper, resourceList:{[key:string]: ResourceHelper}) {
-        if (!(resource.tempId in resourceList)) {
-            resourceList[resource.tempId] = resource;
+    function addResource(resource:ResourceHelper, resourceHelperStorage:{[key:string]: ResourceHelper}) {
+        if (!(resource.tempId in resourceHelperStorage)) {
+            resourceHelperStorage[resource.tempId] = resource;
+            if (!(resource.resource.resourceType in resourcesByType)) {
+                resourcesByType[resource.resource.resourceType] = {}
+            }
+            resourcesByType[resource.resource.resourceType][resource.tempId] = resource;
         }
     }
 
-    function addResources(resources:ResourceHelper[] | undefined, resourceList:{[key:string]: ResourceHelper}) {
+    function addResources(resources:ResourceHelper[] | undefined, resourceHelperStorage:{[key:string]: ResourceHelper}) {
         if (resources != undefined) {
-            let allResources = Object.values(resourceList).concat(resources).sort(sortResources);
-            for (var key in resourceList){
-                if (resourceList.hasOwnProperty(key)){
-                    delete resourceList[key];
+            let allResources = Object.values(resourceHelperStorage).concat(resources).sort(sortResources);
+
+            // Refresh the RH storage object, deleting the current key/values and re-adding the full set.
+            for (var key in resourceHelperStorage){
+                if (resourceHelperStorage.hasOwnProperty(key)){
+                    delete resourceHelperStorage[key];
                 }
             }
             allResources.forEach(resource => {
-                addResource(resource, resourceList);
+                addResource(resource, resourceHelperStorage);
             });
         }
     }
@@ -53,6 +68,7 @@
         Object.keys(patients).forEach(key => {
             patients[key].include = (key == patient.tempId);
         });
+        selectedPatient = patient.tempId;
         patientReference = `Patient/${patient.resource.id}`;
     }
 
@@ -128,7 +144,7 @@
             patients = patients;
             if (!patientReference) {
                 if (newPatients.length > 0) {
-                    updatePatient(newPatients[0]);
+                    selectedPatient = newPatients[0].tempId;
                 } else {
                     throw Error("Missing valid patient resource");
                 }
@@ -170,36 +186,26 @@
     }
 </script>
 
-<form on:submit|preventDefault={() => confirm()}>
-    <Accordion>
-        <AccordionItem header="Directly edit health summary (IPS) content">
-            {#if resources != null}
-                <p><em>Selected resources from the list below will be included in your customized IPS</em></p>
-                {#each Object.keys(resources) as key}
-                    <div class="resource form-check">
-                        <input id={key} class="form-check-input" type="checkbox" bind:checked={resources[key].include} value={key}/>
-                        <label class="form-check-label" style="width:100%" for={key}><p style="overflow-wrap:break-word">{@html JSON.stringify(resources[key].original_resource)}</p></label>
-                    </div>
-                {/each}
-            {/if}
-        </AccordionItem>
-    </Accordion>
-    <br/>
-    <Row>
-        <Col xs="auto">
-        <Button color="primary" style="width:fit-content" disabled={submitting} type="submit">
-            {#if !submitting}
-            Create New Link
-            {:else}
-            Creating Link...
-            {/if}
-        </Button>
-        </Col>
-        {#if submitting}
-        <Col xs="auto">
-        <Spinner color="primary" type="border" size="md"/>
-        </Col>
+<Accordion>
+    {#each Object.keys(resourcesByType) as resourceType}
+        {#if resourceType !== "Patient" || Object.keys(patients).length > 1}
+            <AccordionItem header={resourceType === "Patient" ? "Select Patient" : `${resourceType}s`}>
+                {#if resourceType === "Patient"}
+                    {#each Object.keys(resourcesByType[resourceType]) as key}
+                        <div class="resource form-check">
+                            <input id={key} class="form-check-input" type="radio" bind:group={selectedPatient} value={key}/>
+                            <label class="form-check-label" style="width:100%" for={key}><p style="overflow-wrap:break-word">{@html JSON.stringify(resourcesByType[resourceType][key].original_resource)}</p></label>
+                        </div>
+                    {/each}
+                {:else}
+                    {#each Object.keys(resourcesByType[resourceType]) as key}
+                        <div class="resource form-check">
+                            <input id={key} class="form-check-input" type="checkbox" bind:checked={resourcesByType[resourceType][key].include} value={key}/>
+                            <label class="form-check-label" style="width:100%" for={key}><p style="overflow-wrap:break-word">{@html JSON.stringify(resourcesByType[resourceType][key].original_resource)}</p></label>
+                        </div>
+                    {/each}
+                {/if}
+            </AccordionItem>
         {/if}
-    </Row>
-    <br/>
-</form>
+    {/each}
+</Accordion>

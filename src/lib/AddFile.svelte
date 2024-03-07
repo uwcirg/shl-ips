@@ -149,7 +149,6 @@
   async function uploadRetrievedIPS(details: IPSRetrieveEvent) {
     try {
       submitting = true;
-      // TODO: Add ODH data here
       ipsResult = details;
       if (ipsResult.ips) {
         if (odhData && odhData.section && odhData.resources) {
@@ -254,27 +253,33 @@
       successMessage = false;
     }, 1000);
   }
+
+  function handleAddDataAccordion({ detail }) {
+    addDataOpen = detail;
+    const accordion = document.querySelector('div.add-data > div.accordion-collapse');
+    if (accordion) {
+      accordion.style.overflow = 'hidden';
+    } else {
+      setTimeout(function() {
+        const accordion = document.querySelector('div.add-data > div.accordion-collapse');
+        if (accordion) {
+          accordion.style.overflow = 'visible';
+        }
+      }, 500);
+    }
+    
+  }
+
+  function confirmContent() {
+    submitting = true;
+  }
 </script>
 <Accordion>
   <AccordionItem
     active={resourcesToReview.length == 0}
     header={addDataHeader}
     class="add-data"
-    on:toggle={({ detail }) => {
-      addDataOpen = detail;
-      const accordion = document.querySelector('div.add-data > div.accordion-collapse');
-      if (accordion) {
-        accordion.style.overflow = 'hidden';
-      } else {
-        setTimeout(function() {
-          const accordion = document.querySelector('div.add-data > div.accordion-collapse');
-          if (accordion) {
-            accordion.style.overflow = 'visible';
-          }
-        }, 300);
-      }
-      
-    }}
+    on:toggle={handleAddDataAccordion}
   >
     <TabContent on:tab={(e) => {
       currentTab = e.detail;
@@ -310,19 +315,28 @@
       </TabPane>
     </TabContent>
   </AccordionItem>
+  {#if resourcesToReview.length > 0}
+    <AccordionItem on:toggle={handleAddDataAccordion}>
+      <span slot="header">Add health-related occupational information</span>
+      <Label>It may be helpful to include information about the work you do in your medical summary</Label>
+      <ODHForm bind:odhSection={odhData.section} bind:odhSectionResources={odhData.resources} />
+    </AccordionItem>
+    <AccordionItem on:toggle={handleAddDataAccordion}>
+      <span slot="header">Directly edit your health summary content</span>
+      <Label>Select resources to include in your customized IPS</Label>
+      <ResourceSelector
+        bind:newResources={resourcesToReview}
+        bind:submitSelections={submitting}
+        on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }
+      />
+    </AccordionItem>
+  {/if}
 </Accordion>
-<br>
 {#if resourcesToReview.length > 0}
-  <ODHForm bind:odhSection={odhData.section} bind:odhSectionResources={odhData.resources} />
-  <br>
-  <ResourceSelector
-    bind:newResources={resourcesToReview}
-    on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }
-  />
   {#if shlIdParam == null}
     <Row class="mt-4">
       <Col xs="auto" class="mb-2">
-        <h2>Create a SMART Health Link</h2>
+        <h4>Create your SMART Health Link</h4>
       </Col>
       <Col>
         <Toast class="me-1" autohide isOpen={successMessage} color="success">
@@ -331,7 +345,7 @@
       </Col>
     </Row>
     <FormGroup>
-      <Label>New SHLink Label</Label>
+      <Label>Enter a name for the Link</Label>
       <Input type="text" bind:value={label} />
     </FormGroup>
     <FormGroup>
@@ -362,6 +376,25 @@
       <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 365} label="1 year" />
       <Input type="radio" bind:group={expiration} value={-1} label="Never" />
     </FormGroup>
+
+    <form on:submit|preventDefault={confirmContent}>
+      <Row>
+        <Col xs="auto">
+        <Button color="primary" style="width:fit-content" disabled={submitting} type="submit">
+            {#if !submitting}
+            Create New Link
+            {:else}
+            Creating Link...
+            {/if}
+        </Button>
+        </Col>
+        {#if submitting}
+        <Col xs="auto">
+        <Spinner color="primary" type="border" size="md"/>
+        </Col>
+        {/if}
+      </Row>
+  </form>
   {/if}
   <span class="text-danger">{fetchError}</span>
   {#if resourcesToReview.length > 0}
