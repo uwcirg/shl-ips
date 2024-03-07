@@ -11,10 +11,37 @@
     export let odhSection: any | undefined;
     export let odhSectionResources: any[] | undefined;
 
+    let canShare = navigator?.canShare?.({ url: 'https://example.com', title: 'Title' }); // True for Chrome
+
     let employmentStatus: any | undefined;
     let currentJob: any | undefined;
     let pastJob: any | undefined;
     let combatPeriod: any | undefined;
+
+    let working = true;
+    let workingPast = true;
+    let combat = false;
+    let jobs: Record<string,string> = {
+        "Bartender [Bartender]": "2345",
+        "Certified Nursing Assistant (CNA) [Nursing Assistants]": "31-1014.00.007136",
+        "Medical Researcher [Medical Scientists, Except Epidemiologists]": "19-1042.00.026469",
+        "Clothier [Retail Salespersons]": "41-2031.00.008618",
+    };
+    let industries: Record<string,string> = {
+        "Alcoholic beverage drinking places [Drinking Places (Alcoholic Beverages)": "722410.000378",
+        "Home nursing services": "621610.008495",
+        "Academies, college or university [Colleges, Universities, and Professional Schools]": "611310.000015",
+        "Clothing stores, family [Family Clothing Stores]": "6448140.003510",
+    };
+    let jobCurrent = "";
+    let industryCurrent = "";
+    let startCurrent = "";
+    let jobPast = "";
+    let industryPast = "";
+    let startPast = "";
+    let endPast = "";
+    let startCombat = "";
+    let endCombat = "";
 
     let odhSectionTemplate = {
         title: "History of Occupation",
@@ -220,31 +247,6 @@
       },
       fullUrl: "observation-odh-combat-zone-period-sample"
     };
-  
-    let working = true;
-    let workingPast = true;
-    let combat = false;
-    let jobs: Record<string,string> = {
-        "Bartender [Bartender]": "2345",
-        "Certified Nursing Assistant (CNA) [Nursing Assistants]": "31-1014.00.007136",
-        "Medical Researcher [Medical Scientists, Except Epidemiologists]": "19-1042.00.026469",
-        "Clothier [Retail Salespersons]": "41-2031.00.008618",
-    };
-    let industries: Record<string,string> = {
-        "Alcoholic beverage drinking places [Drinking Places (Alcoholic Beverages)": "722410.000378",
-        "Home nursing services": "621610.008495",
-        "Academies, college or university [Colleges, Universities, and Professional Schools]": "611310.000015",
-        "Clothing stores, family [Family Clothing Stores ]": "6448140.003510",
-    };
-    let jobCurrent = "";
-    let industryCurrent = "";
-    let startCurrent = "";
-    let jobPast = "";
-    let industryPast = "";
-    let startPast = "";
-    let endPast = "";
-    let startCombat = "";
-    let endCombat = "";
 
     $: {
         if (working || jobCurrent || industryCurrent || startCurrent) {
@@ -408,7 +410,7 @@
         <Row class="mb-2">
           <Col xs="auto">I started this job on</Col>
           <Col xs="auto">
-            <Input type="date" bind:value={startCurrent} />
+            <Input type={canShare ? "month" : "date"} bind:value={startCurrent} />
           </Col>
         </Row>
       </FormGroup>
@@ -449,11 +451,11 @@
         <Row class="mb-2">
           <Col xs="auto">I started this job on</Col>
           <Col xs="auto">
-            <Input type="date" bind:value={startPast} />
+            <Input type={canShare ? "month" : "date"} bind:value={startPast} />
           </Col>
           <Col xs="auto">and stopped on</Col>
           <Col xs="auto">
-            <Input type="date" bind:value={endPast} />
+            <Input type={canShare ? "month" : "date"} bind:value={endPast} />
           </Col>
         </Row>
       </FormGroup>
@@ -469,13 +471,13 @@
         <Row class="mb-2">
           <Col xs="auto">I began working in a combat zone on</Col>
           <Col xs="auto">
-            <Input type="date" bind:value={startCombat} />
+            <Input type={canShare ? "month" : "date"} bind:value={startCombat} />
           </Col>
         </Row>
         <Row class="mb-2">
           <Col xs="auto">and stopped on</Col>
           <Col xs="auto">
-            <Input type="date" bind:value={endCombat} />
+            <Input type={canShare ? "month" : "date"} bind:value={endCombat} />
           </Col>
         </Row>
       </FormGroup>
