@@ -1,4 +1,4 @@
-export type Bundle = unknown;
+export type Bundle = any;
 export interface SHLSubmitEvent {
   shcs: SHCFile[];
   label?: string;
