@@ -119,12 +119,12 @@
             <CardImg class="img-fluid" alt="QR Code for SHL" src={dataUrl} />
             <CardImg
               style="position: absolute;
-              background: #325c33;
-              width: 110px;
-              left: calc(50% - 56px);
+              background: #ffffff;
+              width: 114px;
+              left: calc(50% - 57px);
               top: calc(50% - 1em);
-              border: 2px solid #ffffff;
-              box-sizing: border-box;"
+              border: 0px solid #ffffff;
+              box-sizing: content-box;"
               class="logo"
               alt="WA Verify+ Logo"
               src="/img/waverifypluslogo.png"
@@ -235,7 +235,7 @@
   </Col>
 </Row>
 <Row>
-  <h2>SHL Content</h2>
+  <h2>Contents</h2>
 </Row>
 {#if shl.files.length == 0}
 <Row>
@@ -274,7 +274,7 @@
 {/each}
 <Row>
   <Col>
-    <Button class="mb-3" color="primary" on:click={addFile}><Icon name="file-earmark-plus" /> Add Record</Button>
+    <Button class="mb-3" color="primary" on:click={addFile}><Icon name="file-earmark-plus" /> Add {shl.files.length == 0 ? "an" : "another"} IPS</Button>
   </Col>
 </Row>
 
