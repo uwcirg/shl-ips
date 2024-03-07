@@ -1,5 +1,5 @@
 <script>
-  import { Card, CardBody } from 'sveltestrap';
+  import { Badge, Card, CardBody } from 'sveltestrap';
   export let resource; // Define a prop to pass the data to the component
 </script>
 
@@ -9,13 +9,13 @@
       {resource.code.text ?? ''}
       {#if resource.code.coding}
         {#each resource.code.coding as code}
-          <span class="badge badge-primary">{code.system ?? ''}</span>
-          {code.display ?? ''} <span class="badge badge-secondary">{code.code ?? ''}</span>
+          <Badge color="primary">{code.system ?? ''}</Badge>
+          {code.display ?? ''} <Badge color="secondary">{code.code ?? ''}</Badge>
           <br />
         {/each}
       {/if}
     {:else}
-      <span class="badge badge-secondary">Uncoded</span>
+      <Badge color="secondary">Uncoded</Badge>
     {/if}
     {#if resource.ingredient && resource.ingredient.resourceCodeableConcept}
       <table class="table table-bordered table-sm">

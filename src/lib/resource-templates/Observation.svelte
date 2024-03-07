@@ -1,11 +1,11 @@
 <script>
-  import { Card, CardBody, Col, Row } from 'sveltestrap';
+  import { Badge, Card, CardBody, Col, Row } from 'sveltestrap';
   export let resource; // Define a prop to pass the data to the component
 </script>
 
 <Card>
   <CardBody>
-    <Row>
+    <Row cols={{md:2, sm:1}}>
       <Col>
         Name:
         {#if resource.code && resource.code.coding}
@@ -23,7 +23,7 @@
         {/if}
       </Col>
     </Row>
-    <Row>
+    <Row cols={{md:2, sm:1}}>
       <Col>
         Value:
         {#if resource.valueCodeableConcept}

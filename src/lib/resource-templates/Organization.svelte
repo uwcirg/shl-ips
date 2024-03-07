@@ -1,5 +1,5 @@
 <script>
-  import { Card, CardBody } from 'sveltestrap';
+  import { Badge, Card, CardBody } from 'sveltestrap';
   export let resource; // Define a prop to pass the data to the component
 </script>
 
@@ -8,20 +8,23 @@
     {resource.name}
     <br />
     {#if resource.address}
-      {#if resource.address.line}
-        {#if resource.address.line.length > 0}
-          {#each resource.address.line as line}
+      {#if resource.address[0].line}
+        {#if resource.address[0].line.length > 0}
+          {#each resource.address[0].line as line}
             {line}<br />
           {/each}
         {:else}
-          {resource.address.line}
+          {resource.address[0].line}
         {/if}
       {/if}
-      {resource.address.city}{resource.address.state ? `, ${resource.address.state}` : ''}{resource
-        .address.country
-        ? `, ${resource.address.country}`
+      {resource.address[0].city
+      }{resource.address[0].state
+        ? `, ${resource.address[0].state}`
+        : ''
+      }{resource.address[0].country
+        ? `, ${resource.address[0].country}`
         : ''}
-      {resource.address.postalCode}
+      {resource.address[0].postalCode}
     {/if}
   </CardBody>
 </Card>

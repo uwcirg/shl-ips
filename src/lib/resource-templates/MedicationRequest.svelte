@@ -1,5 +1,5 @@
 <script>
-  import { Card, CardBody } from 'sveltestrap';
+  import { Badge, Card, CardBody } from 'sveltestrap';
   export let resource; // Define a prop to pass the data to the component
 </script>
 
@@ -8,17 +8,22 @@
     {#if resource.medicationCodeableConcept}
       {#if resource.medicationCodeableConcept.text}
         {resource.medicationCodeableConcept.text}
-      {:else}
-        <span class="badge badge-primary">{resource.medicationCodeableConcept.system ?? ''}</span>
+      {:else if resource.medicationCodeableConcept.system && resource.medicationCodeableConcept.code
+        || resource.medicationCodeableConcept.display}
+        <Badge color="primary">{resource.medicationCodeableConcept.system ?? ''}</Badge> {resource.medicationCodeableConcept.code ?? ''}
         {resource.medicationCodeableConcept.display ?? ''}
-        <span class="badge badge-secondary">{resource.medicationCodeableConcept.code ?? ''}</span>
+        <br>
       {/if}
     {/if}
-    {resource.intent ? `Intent: ${resource.intent}` : ''}
-    {resource.status ? `Status: ${resource.status}` : ''}
-    {resource.dispenseRequest?.validityPeriod
-      ? `Period: ${resource.dispenseRequest.validityPeriod}`
-      : ''}
+    <Badge color="primary">{resource.status ? `${resource.status}` : ''}</Badge>
+    <Badge color="secondary">{resource.intent ? resource.intent : ''}</Badge>
+    <br>
+    {#if resource.dispenseRequest?.validityPeriod}
+        Valid {resource.dispenseRequest?.validityPeriod.start}{resource.dispenseRequest?.validityPeriod.end
+        ? ` - ${resource.dispenseRequest?.validityPeriod.end}`
+        : ''}
+    {/if}
+    <br>
     {#if resource.dosageInstruction && resource.dosageInstruction[0].text}
       Dosage: {resource.dosageInstruction[0].text}
     {:else if resource.dosageInstruction && resource.dosageInstruction[0].doseAndRate}

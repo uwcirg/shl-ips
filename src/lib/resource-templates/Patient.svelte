@@ -1,5 +1,5 @@
 <script>
-  import { Card, CardBody, CardText } from 'sveltestrap';
+  import { Badge, Card, CardBody, CardText } from 'sveltestrap';
 
   export let resource;
 </script>

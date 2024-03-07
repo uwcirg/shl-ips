@@ -17,18 +17,21 @@
 
 <Card>
   <CardBody>
-    <Badge color={badgeColor(resource.criticality ?? '')}
-      >{resource.type ? `${resource.type} - ` : ''}{resource.category &&
-      resource.category.length > 0
-        ? `${resource.criticality[0]} - `
-        : ''} Criticality: {resource.criticality ?? 'unknown'}</Badge
-    >
+    <Badge color={badgeColor(resource.criticality ?? '')}>
+      {resource.type ? `${resource.type} - ` : ''}
+      {resource.category && resource.category.length > 0
+          ? `${resource.criticality[0]} - `
+          : ''} Criticality: {resource.criticality ?? 'unknown'}
+    </Badge>
     {#if resource.clinicalStatus || resource.verificationStatus}
-      <br />
-      Status: {resource.clinicalStatus?.coding[0].code ?? ''}{resource.clinicalStatus &&
-      resource.verificationStatus
-        ? ', '
-        : ''}{resource.verificationStatus?.coding[0].code ?? ''}
+      <Badge color="primary">
+        {resource.clinicalStatus?.coding[0].code ?? ''}
+        {resource.clinicalStatus &&
+        resource.verificationStatus
+          ? ', '
+          : ''}
+        {resource.verificationStatus?.coding[0].code ?? ''}
+      </Badge>
     {/if}
     {#if resource.code && resource.code.coding}
       <br />
