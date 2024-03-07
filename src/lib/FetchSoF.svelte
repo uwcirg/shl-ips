@@ -13,7 +13,7 @@
   import { authorize, getResourcesWithReferences } from './sofClient.js';
   import { createEventDispatcher, onMount } from 'svelte';
   
-  const authDispatch = createEventDispatcher<{'sofAuthEvent': SOFAuthEvent}>();
+  const authDispatch = createEventDispatcher<{'sof-auth-init': SOFAuthEvent; 'sof-auth-fail': SOFAuthEvent}>();
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
   let processing = false;
   let fetchError = "";
