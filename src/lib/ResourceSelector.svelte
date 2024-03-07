@@ -6,6 +6,7 @@
         AccordionItem,
         Button,
         Col,
+        Label,
         Row,
         Spinner } from 'sveltestrap';
     import { ResourceHelper, type IPSRetrieveEvent } from './types';
@@ -39,7 +40,7 @@
         if (!(resource.tempId in resourceHelperStorage)) {
             resourceHelperStorage[resource.tempId] = resource;
             if (!(resource.resource.resourceType in resourcesByType)) {
-                resourcesByType[resource.resource.resourceType] = {}
+                resourcesByType[resource.resource.resourceType] = {};
             }
             resourcesByType[resource.resource.resourceType][resource.tempId] = resource;
         }
@@ -185,27 +186,40 @@
         submitting = false;
     }
 </script>
-
-<Accordion>
-    {#each Object.keys(resourcesByType) as resourceType}
-        {#if resourceType !== "Patient" || Object.keys(patients).length > 1}
-            <AccordionItem header={resourceType === "Patient" ? "Select Patient" : `${resourceType}s`}>
-                {#if resourceType === "Patient"}
+<AccordionItem active class="edit-data">
+    <h5 slot="header" class="my-2">3. Directly edit your health summary content</h5>
+    <Label>Select which resources to include in your customized IPS</Label>
+    <Accordion>
+        {#each Object.keys(resourcesByType) as resourceType}
+            {#if resourceType !== "Patient" || Object.keys(patients).length > 1}
+                <AccordionItem header={resourceType === "Patient" ? "Select Patient" : `${resourceType}s`}>
                     {#each Object.keys(resourcesByType[resourceType]) as key}
                         <div class="resource form-check">
-                            <input id={key} class="form-check-input" type="radio" bind:group={selectedPatient} value={key}/>
+                            {#if resourceType === "Patient"}
+                                <input id={key} class="form-check-input" type="radio" bind:group={selectedPatient} value={key}/>
+                            {:else}
+                                <input id={key} class="form-check-input" type="checkbox" bind:checked={resourcesByType[resourceType][key].include} value={key}/>
+                            {/if}
                             <label class="form-check-label" style="width:100%" for={key}><p style="overflow-wrap:break-word">{@html JSON.stringify(resourcesByType[resourceType][key].original_resource)}</p></label>
                         </div>
                     {/each}
-                {:else}
-                    {#each Object.keys(resourcesByType[resourceType]) as key}
-                        <div class="resource form-check">
-                            <input id={key} class="form-check-input" type="checkbox" bind:checked={resourcesByType[resourceType][key].include} value={key}/>
-                            <label class="form-check-label" style="width:100%" for={key}><p style="overflow-wrap:break-word">{@html JSON.stringify(resourcesByType[resourceType][key].original_resource)}</p></label>
-                        </div>
-                    {/each}
-                {/if}
-            </AccordionItem>
-        {/if}
-    {/each}
-</Accordion>
+                    {#if resourceType === "Patient"}
+                        {#each Object.keys(resourcesByType[resourceType]) as key}
+                            <div class="resource form-check">
+                                <input id={key} class="form-check-input" type="radio" bind:group={selectedPatient} value={key}/>
+                                <label class="form-check-label" style="width:100%" for={key}><p style="overflow-wrap:break-word">{@html JSON.stringify(resourcesByType[resourceType][key].original_resource)}</p></label>
+                            </div>
+                        {/each}
+                    {:else}
+                        {#each Object.keys(resourcesByType[resourceType]) as key}
+                            <div class="resource form-check">
+                                <input id={key} class="form-check-input" type="checkbox" bind:checked={resourcesByType[resourceType][key].include} value={key}/>
+                                <label class="form-check-label" style="width:100%" for={key}><p style="overflow-wrap:break-word">{@html JSON.stringify(resourcesByType[resourceType][key].original_resource)}</p></label>
+                            </div>
+                        {/each}
+                    {/if}
+                </AccordionItem>
+            {/if}
+        {/each}
+    </Accordion>
+</AccordionItem>

@@ -47,7 +47,7 @@
   let fetchError = "";
   let currentTab: string | number;
   currentTab = 'url';
-  let addDataHeader = "Retrieve data from provider";
+  let addDataHeader = "Retrieve Your Health Data";
   let addDataOpen = true;
   let successMessage = false;
 
@@ -76,6 +76,7 @@
   let passcode = "";
   $: type = showPassword ? 'text' : 'password';
   $: icon = showPassword ? 'eye-fill' : 'eye-slash-fill';
+  $: addDataHeader = resourcesToReview.length == 0 ? "Retrieve Your Health Data" : "1. Add data from another provider";
 
   onMount(() => {
     if (sessionStorage.getItem('URL')) {
@@ -114,13 +115,17 @@
         if (resourceResult.resources) {
           // Trigger update in ResourceSelector
           resourcesToReview = resourceResult.resources;
+          // Make sure ResourceSelector is visible
+          const editAccordion = document.querySelector('div.edit-data > div.accordion-collapse');
+          if (!editAccordion) {
+            document.querySelector('div.edit-data > h2 > button').click();
+          }
           let resources = resourcesToReview.length > 0;
           // dispatch('toggle', { resources });
           const dataAccordion = document.querySelector('div.add-data > h2 > button');
           if (dataAccordion) {
             dataAccordion.click();
           }
-          addDataHeader = resources ? "Add data from another provider" : "Retrieve data from provider";
           showSuccessMessage();
         }
       } catch (e) {
@@ -274,13 +279,18 @@
     submitting = true;
   }
 </script>
-<Accordion>
+<Accordion stayOpen>
   <AccordionItem
     active={resourcesToReview.length == 0}
-    header={addDataHeader}
     class="add-data"
     on:toggle={handleAddDataAccordion}
   >
+    <h5 slot="header" class="my-2">{addDataHeader}</h5>
+    {#if resourcesToReview.length == 0}
+      <p><em>Select your provider below, then press "Fetch Data" to begin building your Health Summary.</em></p>
+    {:else}
+      <p><em>Select another provider below, then press "Fetch Data" to add more data to your Health Summary.</em></p>
+    {/if}
     <TabContent on:tab={(e) => {
       currentTab = e.detail;
     }}>
@@ -316,27 +326,23 @@
     </TabContent>
   </AccordionItem>
   {#if resourcesToReview.length > 0}
-    <AccordionItem on:toggle={handleAddDataAccordion}>
-      <span slot="header">Add health-related occupational information</span>
+    <AccordionItem active class="odh-data">
+      <h5 slot="header" class="my-2">2. Add health-related occupational information</h5>
       <Label>It may be helpful to include information about the work you do in your medical summary</Label>
       <ODHForm bind:odhSection={odhData.section} bind:odhSectionResources={odhData.resources} />
     </AccordionItem>
-    <AccordionItem on:toggle={handleAddDataAccordion}>
-      <span slot="header">Directly edit your health summary content</span>
-      <Label>Select resources to include in your customized IPS</Label>
-      <ResourceSelector
-        bind:newResources={resourcesToReview}
-        bind:submitSelections={submitting}
-        on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }
-      />
-    </AccordionItem>
+    <ResourceSelector
+      bind:newResources={resourcesToReview}
+      bind:submitSelections={submitting}
+      on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }
+    />
   {/if}
 </Accordion>
 {#if resourcesToReview.length > 0}
   {#if shlIdParam == null}
     <Row class="mt-4">
       <Col xs="auto" class="mb-2">
-        <h4>Create your SMART Health Link</h4>
+        <h5>Create your SMART Health Link</h5>
       </Col>
       <Col>
         <Toast class="me-1" autohide isOpen={successMessage} color="success">

@@ -76,7 +76,7 @@
   <NavbarBrand href="https://doh.wa.gov/">
     <Row>
       <Col>
-        <a href="https://doh.wa.gov/" rel="noreferrer" target="_blank"><Image alt="Washington State Department of Health Logo" width="240" src="/img/doh_logo_doh-black.png"/></a>
+        <Image alt="Washington State Department of Health Logo" width="240" src="/img/doh_logo_doh-black.png"/>
       </Col>
       <Col style="vertical-align:middle" class="d-none d-sm-block">
         <span style="font-size:medium">Washington State</span>
@@ -141,7 +141,7 @@
 <div on:click={closeNav} on:keypress={closeNav}>
 <Row style="padding:0px 12px">
   <Col style="padding:0; margin-bottom: 20px; border-bottom: 1px solid rgb(204, 204, 204);">
-    <a href="\home"><Image alt="WA Verify Logo" width="200" src="/img/waverifypluslogo.png" style="align-self: center"></Image></a>
+    <Image alt="WA Verify Logo" width="200" src="/img/waverifypluslogo.png" style="align-self: center" />
     <div style="vertical-align: middle; font-size: 18px; display: inline-block; padding-left: 17px; font-family: Verdana, sans-serif; color: rgb(34, 72, 156);">International Patient Summary</div>
   </Col>
 </Row>
