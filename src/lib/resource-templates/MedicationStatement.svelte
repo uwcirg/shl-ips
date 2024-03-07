@@ -5,9 +5,11 @@
 
 <Card>
   <CardBody>
-    {resource.resourceReference.display ?? ''}{resource.status ? ` (${resource.status})` : ""}
+    {resource.resourceReference.display ?? ''}{resource.status ? ` (${resource.status})` : ''}
     {#if resource.effectivePeriod}
-        {resource.effectivePeriod.start}{resource.effectivePeriod.end ? ` - ${resource.effectivePeriod.end}` : ""}
+      {resource.effectivePeriod.start}{resource.effectivePeriod.end
+        ? ` - ${resource.effectivePeriod.end}`
+        : ''}
     {/if}
     {#if resource.dosage && resource.dosage[0].route && resource.dosage[0].route.coding && resource.dosage[0].doseAndRate}
       <table class="table table-bordered table-sm">

@@ -229,24 +229,11 @@
                             {:else}
                                 <input id={key} class="form-check-input" type="checkbox" bind:checked={resourcesByType[resourceType][key].include} value={key}/>
                             {/if}
-                            <label class="form-check-label" style="width:100%" for={key}><p style="overflow-wrap:break-word">{@html JSON.stringify(resourcesByType[resourceType][key].original_resource)}</p></label>
+                            <label class="form-check-label" style="width:100%" for={key}>
+                                <svelte:component this={components[resourceType]} resource={resourcesByType[resourceType][key].original_resource} />
+                            </label>
                         </div>
                     {/each}
-                    {#if resourceType === "Patient"}
-                        {#each Object.keys(resourcesByType[resourceType]) as key}
-                            <div class="resource form-check">
-                                <input id={key} class="form-check-input" type="radio" bind:group={selectedPatient} value={key}/>
-                                <label class="form-check-label" style="width:100%" for={key}><p style="overflow-wrap:break-word">{@html JSON.stringify(resourcesByType[resourceType][key].original_resource)}</p></label>
-                            </div>
-                        {/each}
-                    {:else}
-                        {#each Object.keys(resourcesByType[resourceType]) as key}
-                            <div class="resource form-check">
-                                <input id={key} class="form-check-input" type="checkbox" bind:checked={resourcesByType[resourceType][key].include} value={key}/>
-                                <label class="form-check-label" style="width:100%" for={key}><p style="overflow-wrap:break-word">{@html JSON.stringify(resourcesByType[resourceType][key].original_resource)}</p></label>
-                            </div>
-                        {/each}
-                    {/if}
                 </AccordionItem>
             {/if}
         {/each}
