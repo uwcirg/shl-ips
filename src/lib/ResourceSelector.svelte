@@ -9,27 +9,35 @@
         Label,
         Row,
         Spinner } from 'sveltestrap';
-    import { ResourceHelper, type IPSRetrieveEvent } from './types';
     import AdvanceDirective from './resource-templates/AdvanceDirective.svelte';
+    import AllergyIntolerance from './resource-templates/AllergyIntolerance.svelte';
+    import Condition from './resource-templates/Condition.svelte';
+    import DiagnosticReport from './resource-templates/DiagnosticReport.svelte';
     import Immunization from './resource-templates/Immunization.svelte';
     import Medication from './resource-templates/Medication.svelte';
+    import MedicationRequest from './resource-templates/MedicationRequest.svelte';
+    import MedicationStatement from './resource-templates/MedicationStatement.svelte';
     import Observation from './resource-templates/Observation.svelte';
+    import Organization from './resource-templates/Organization.svelte';
     import Patient from './resource-templates/Patient.svelte';
     import Problem from './resource-templates/Problem.svelte';
     import Procedure from './resource-templates/Procedure.svelte';
-    import AllergyIntolerance from './resource-templates/AllergyIntolerance.svelte';
+    import { ResourceHelper, type IPSRetrieveEvent } from './types';
 
     export let newResources: Array<any> | undefined;
     export let submitSelections: boolean;
 
     const components = {
-        "AdvanceDirective": AdvanceDirective,
+        "DocumentReference": AdvanceDirective,
         "AllergyIntolerance": AllergyIntolerance,
+        "Condition": Condition,
+        "DiagnosticReport": DiagnosticReport,
         "Immunization": Immunization,
         "Medication": Medication,
-        "MedicationRequest": Medication,
-        "MedicationStatement": Medication,
+        "MedicationRequest": MedicationRequest,
+        "MedicationStatement": MedicationStatement,
         "Observation": Observation,
+        "Organization": Organization,
         "Patient": Patient,
         "Problem": Problem,
         "Procedure": Procedure,

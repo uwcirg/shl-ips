@@ -1,0 +1,38 @@
+<script>
+  import {
+  Card,
+  CardBody
+} from 'sveltestrap';
+  export let resource; // Define a prop to pass the data to the component
+
+  function badgeColor(severity) {
+    if (severity) {
+      if (severity == "Severe") {
+        return "badge-danger";
+      } else {
+        return "badge-primary";
+      }
+    } else {
+      return "badge-secondary";
+    }
+  }
+</script>
+  
+<Card>
+  <CardBody>
+    <span class={"badge " + badgeColor(resource.severity ?? "")}>Severity: {resource.severity ?? "unknown"}</span>
+    {#if resource.code && resource.code.coding && resource.code.coding[0]}
+      <span class="badge badge-primary">{resource.code.coding[0].system}</span>
+      <br>
+      {resource.code.coding[0].display} ({resource.code.coding[0].code})
+    {:else if resource.code && resource.code.text}
+      {resource.code.text}
+    {/if}
+    {resource.bodySite ? `Site: ${resource.bodySite}` : ""}
+    {resource.onsetDateTime ? `Since ${resource.onsetDateTime}` : ""}
+    {#if resource.clinicalStatus || resource.verificationStatus}
+      Status: {resource.clinicalStatus?.coding[0].code ?? ""}{resource.clinicalStatus && resource.verificationStatus ? ", " : ""}{resource.verificationStatus?.coding[0].code ?? ""}
+    {/if}
+  </CardBody>
+</Card>
+  
