@@ -75,15 +75,15 @@
 <Navbar color="light" light expand="md" style="border-bottom: 1px solid rgb(204, 204, 204);">
   <NavbarBrand href="https://doh.wa.gov/">
     <Row>
-    <Col>
-      <a href="https://doh.wa.gov/" rel="noreferrer" target="_blank"><Image alt="Washington State Department of Health Logo" width="240" src="/img/doh_logo_doh-black.png"/></a>
-    </Col>
-    <Col style="vertical-align:middle" class="d-none d-sm-block">
-      Washington State
-      <p style="margin: 0px; padding: 0px: line-height: 0;"></p>
-      Department of Health
-    </Col>
-  </Row>
+      <Col>
+        <a href="https://doh.wa.gov/" rel="noreferrer" target="_blank"><Image alt="Washington State Department of Health Logo" width="240" src="/img/doh_logo_doh-black.png"/></a>
+      </Col>
+      <Col style="vertical-align:middle" class="d-none d-sm-block">
+        <span style="font-size:medium">Washington State</span>
+        <p style="margin: 0px; padding: 0px: line-height: 0;"></p>
+        <span style="font-size:medium">Department of Health</span>
+      </Col>
+    </Row>
   </NavbarBrand>
   <NavbarToggler on:click={() => (isOpen = !isOpen)} />
   <Collapse {isOpen} navbar expand="md" on:update={handleUpdate}>
