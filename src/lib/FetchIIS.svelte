@@ -38,9 +38,9 @@
   let phone = '(555) 555-5555';
   let gender:string = 'Male';
   let genders: Record<string, any> = {
-    "Female": 'F',
-    "Male": 'M',
-    "Other": 'UN'
+    "Female": 'female',
+    "Male": 'male',
+    "Other": 'other'
   };
   let states: Array<string> = [
     'AL','AK','AZ','AR','CA','CO','CT',
@@ -223,21 +223,21 @@
     <Row cols={{ md: 2, sm: 1 }}>
       <Col>
         <Label>Name</Label>
-        <FormGroup floating label="First">
+        <FormGroup style="font-size:small" label="First">
           <Input type="text" bind:value={first} />
         </FormGroup>
-        <FormGroup floating label="Last">
+        <FormGroup style="font-size:small" label="Last">
           <Input type="text" bind:value={last} />
         </FormGroup>
         <Label>Demographics</Label>
-        <FormGroup floating label="Date of Birth">
+        <FormGroup style="font-size:small" label="Date of Birth">
           <Input type="date" bind:value={dob} placeholder={dob} style="width: 165px"/>
         </FormGroup>
-        <FormGroup floating label="Gender">
+        <FormGroup style="font-size:small" label="Gender">
           <!-- <Label>Gender</Label> -->
           <Input type="select" bind:value={gender} style="width: 100px">
             {#each Object.keys(genders) as full}
-              <option style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
+              <option value={full} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
                 {full}
               </option>
             {/each}
@@ -248,24 +248,25 @@
           <Input type="text" bind:value={mrn} style="width: 165px"/>
         </FormGroup>
         <Label>Contact Information</Label>
-        <FormGroup floating label="Phone">
+        <FormGroup style="font-size:small" label="Phone">
           <Input type="tel" bind:value={phone} style="width: 165px"/>
         </FormGroup>
-        <FormGroup floating label="Address Line 1">
+        <Label>Address</Label>
+        <FormGroup style="font-size:small" label="Address Line 1">
           <Input type="text" bind:value={address1} />
         </FormGroup>
-        <FormGroup floating label="Address Line 2 (Optional)">
+        <FormGroup style="font-size:small" label="Address Line 2 (Optional)">
           <Input type="text" bind:value={address2} />
         </FormGroup>
-        <FormGroup floating label="City">
+        <FormGroup style="font-size:small" label="City">
           <Input type="text" bind:value={city} />
         </FormGroup>
         <Row>
           <Col xs="auto">
-            <FormGroup floating label="State">
+            <FormGroup style="font-size:small" label="State">
               <Input type="select" bind:value={state} style="width: 80px">
                 {#each states as state}
-                  <option style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
+                  <option value={state} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
                     {state}
                   </option>
                 {/each}
@@ -273,7 +274,7 @@
             </FormGroup>
           </Col>
           <Col>
-            <FormGroup floating label="Zip Code">
+            <FormGroup style="font-size:small" label="Zip">
               <Input type="text" bind:value={zip} style="width:90px"/>
             </FormGroup>
           </Col>
