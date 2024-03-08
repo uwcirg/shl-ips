@@ -15,30 +15,28 @@
   }
 </script>
 
-<Card>
-  <CardBody>
-    <Badge color={badgeColor(resource.criticality ?? '')}>
-      {resource.type ? `${resource.type} - ` : ''}
-      {resource.category && resource.category.length > 0
-          ? `${resource.criticality[0]} - `
-          : ''} Criticality: {resource.criticality ?? 'unknown'}
-    </Badge>
-    {#if resource.clinicalStatus || resource.verificationStatus}
-      <Badge color="primary">
-        {resource.clinicalStatus?.coding[0].code ?? ''}
-        {resource.clinicalStatus &&
-        resource.verificationStatus
-          ? ', '
-          : ''}
-        {resource.verificationStatus?.coding[0].code ?? ''}
-      </Badge>
-    {/if}
-    {#if resource.code && resource.code.coding}
-      <br />
-      {resource.code?.coding[0].display ?? ''} ({resource.code?.coding[0].code})
-    {/if}
-    {#if resource.onsetDateTime}
-      Since {resource.onsetDateTime}
-    {/if}
-  </CardBody>
-</Card>
+{#if resource.clinicalStatus || resource.verificationStatus}
+  <Badge color="primary">
+    {resource.clinicalStatus?.coding[0].code ?? ''}
+    {resource.clinicalStatus &&
+      resource.verificationStatus
+        ? '/'
+        : ''}
+    {resource.verificationStatus?.coding[0].code ?? ''}
+  </Badge>
+{/if}
+<Badge color={badgeColor(resource.criticality ?? '')}>
+  {resource.type ? `${resource.type} - ` : ''}
+  criticality: {resource.criticality ?? 'unknown'}
+</Badge>
+{#if resource.code}
+  {#if resource.code.coding}  
+    <Badge color="primary">{resource.code.coding[0].system} : {resource.code?.coding[0].code}</Badge>
+    <br>
+    <strong>{resource.code.coding[0].display ?? ''}</strong>
+  {:else}
+    <strong>{resource.code.text ?? ""}</strong>
+  {/if}
+{/if}
+<br>
+{resource.onsetDateTime ? `Since ${resource.onsetDateTime.split("T")[0]}` : ''}

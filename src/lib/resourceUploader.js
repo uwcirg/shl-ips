@@ -8,7 +8,7 @@ const allowableResourceTypes = [
     'Practitioner',
     'Device',
     'Medication',
-    'PractitionerRole',
+    // 'PractitionerRole', Not relevant to IPS
     'Encounter',
     'DeviceUseStatement',
     'Media',

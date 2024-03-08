@@ -5,39 +5,34 @@
   function badgeColor(severity) {
     if (severity) {
       if (severity == 'Severe') {
-        return 'badge-danger';
+        return 'danger';
       } else {
-        return 'badge-primary';
+        return 'primary';
       }
     } else {
-      return 'badge-secondary';
+      return 'secondary';
     }
   }
 </script>
 
-<Card>
-  <CardBody>
-    <span class={'badge ' + badgeColor(resource.severity ?? '')}
-      >Severity: {resource.severity ?? 'unknown'}</span
-    >
-    {#if resource.code && resource.code.coding && resource.code.coding[0]}
-      <Badge color="primary">{resource.code.coding[0].system}</Badge>
-      <br />
-      {resource.code.coding[0].display} ({resource.code.coding[0].code})
-    {:else if resource.code && resource.code.text}
-      {resource.code.text}
-    {/if}
-    {resource.bodySite ? `Site: ${resource.bodySite}` : ''}
-    {resource.onsetDateTime ? `Since ${resource.onsetDateTime}` : ''}
-    {#if resource.clinicalStatus || resource.verificationStatus}
-      <Badge color="primary">
-        {resource.clinicalStatus?.coding[0].code ?? ''}
-        {resource.clinicalStatus &&
-          resource.verificationStatus
-            ? ', '
-            : ''}
-        {resource.verificationStatus?.coding[0].code ?? ''}
-      </Badge>
-    {/if}
-  </CardBody>
-</Card>
+{#if resource.clinicalStatus || resource.verificationStatus}
+  <Badge color="primary">
+    {resource.clinicalStatus?.coding[0].code ?? ''}
+    {resource.clinicalStatus &&
+      resource.verificationStatus
+        ? '/'
+        : ''}
+    {resource.verificationStatus?.coding[0].code ?? ''}
+  </Badge>
+{/if}
+<Badge color={badgeColor(resource.severity ?? '')}>severity: {resource.severity ?? 'unknown'}</Badge>
+{#if resource.code && resource.code.coding && resource.code.coding[0]}
+  <Badge color="primary">{resource.code.coding[0].system} : {resource.code.coding[0].code}</Badge>
+  <br />
+  <strong>{resource.code.coding[0].display}</strong>
+{:else if resource.code && resource.code.text}
+  <strong>{resource.code.text}</strong>
+{/if}
+{resource.bodySite ? `Site: ${resource.bodySite}` : ''}
+<br>
+{resource.onsetDateTime ? `Since ${resource.onsetDateTime.split("T")[0]}` : ''}
