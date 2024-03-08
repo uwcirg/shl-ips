@@ -47,7 +47,9 @@
   let fetchError = "";
   let currentTab: string | number;
   currentTab = 'url';
-  let addDataHeader = "Retrieve Your Health Data";
+  let emptyResourceListHeader = "Retrieve Your Health Data";
+  let fullResourceListHeader = "1. Add data from another provider"
+  let addDataHeader = emptyResourceListHeader;
   let addDataOpen = true;
   let successMessage = false;
 
@@ -68,15 +70,26 @@
     section: undefined,
     resources: undefined
   };
+  let patientName = "My";
+  let patient: any | undefined;
 
-  let label = 'SHL from ' + new Date().toISOString().slice(0, 10);
+  let label = 'Health Summary ' + new Date().toISOString().slice(0, 10);
   let expiration: number | null = -1;
   let type = 'password';
   let showPassword = false;
   let passcode = "";
   $: type = showPassword ? 'text' : 'password';
   $: icon = showPassword ? 'eye-fill' : 'eye-slash-fill';
-  $: addDataHeader = resourcesToReview.length == 0 ? "Retrieve Your Health Data" : "1. Add data from another provider";
+  $: addDataHeader = resourcesToReview.length == 0 ? emptyResourceListHeader : fullResourceListHeader;
+  $: {
+    if (patient) {
+      let patientName = patient.name[0]?.given[0];
+      if (patientName) {
+        console.log("Patient name: " + patientName);
+        label = (patientName !== undefined ? patientName.charAt(0).toUpperCase() + patientName.slice(1).toLowerCase() + "'s" : "My")+ " Health Summary from " + new Date().toISOString().slice(0, 10);
+      }
+    }
+  }
 
   onMount(() => {
     if (sessionStorage.getItem('URL')) {
@@ -93,10 +106,14 @@
     if (sessionStorage.getItem('RESOURCES')) {
       resourcesToReview = JSON.parse(sessionStorage.getItem('RESOURCES') ?? "") ?? resourcesToReview;
     }
+    if (sessionStorage.getItem('PATIENT')) {
+      patient = JSON.parse(sessionStorage.getItem('PATIENT') ?? "") ?? patient;
+    }
     if (sessionStorage.getItem('EXPIRE')) {
       expiration = JSON.parse(sessionStorage.getItem('EXPIRE') ?? "-1");
     }
     sessionStorage.removeItem('RESOURCES');
+    sessionStorage.removeItem('PATIENT');
     sessionStorage.removeItem('TAB');
     sessionStorage.removeItem('LABEL');
     sessionStorage.removeItem('PASSCODE');
@@ -113,19 +130,9 @@
       try {
         resourceResult = details;
         if (resourceResult.resources) {
+          handleAddDataAccordion({ event: true });
           // Trigger update in ResourceSelector
           resourcesToReview = resourceResult.resources;
-          // Make sure ResourceSelector is visible
-          const editAccordion = document.querySelector('div.edit-data > div.accordion-collapse');
-          if (!editAccordion) {
-            document.querySelector('div.edit-data > h2 > button').click();
-          }
-          let resources = resourcesToReview.length > 0;
-          // dispatch('toggle', { resources });
-          const dataAccordion = document.querySelector('div.add-data > h2 > button');
-          if (dataAccordion) {
-            dataAccordion.click();
-          }
           showSuccessMessage();
         }
       } catch (e) {
@@ -191,6 +198,7 @@
   async function preAuthRedirectHandler(details: SOFAuthEvent|undefined) {
     sessionStorage.setItem('URL', window.location.href);
     sessionStorage.setItem('RESOURCES', JSON.stringify(resourcesToReview ?? ""));
+    sessionStorage.setItem('PATIENT', JSON.stringify(patient ?? ""));
     sessionStorage.setItem('TAB', String(currentTab ?? ""));
     sessionStorage.setItem('LABEL', label ?? "");
     sessionStorage.setItem('PASSCODE', passcode ?? "");
@@ -200,6 +208,7 @@
   async function revertPreAuth(details: SOFAuthEvent|undefined) {
     sessionStorage.removeItem('URL');
     sessionStorage.removeItem('RESOURCES');
+    sessionStorage.removeItem('PATIENT');
     sessionStorage.removeItem('TAB');
     sessionStorage.removeItem('LABEL');
     sessionStorage.removeItem('PASSCODE');
@@ -287,9 +296,9 @@
   >
     <h5 slot="header" class="my-2">{addDataHeader}</h5>
     {#if resourcesToReview.length == 0}
-      <p><em>Select your provider below, then press "Fetch Data" to begin building your Health Summary.</em></p>
+      <p>Select your provider below, then press "Fetch Data" to begin building your Health Summary.</p>
     {:else}
-      <p><em>Select another provider below, then press "Fetch Data" to add more data to your Health Summary.</em></p>
+      <p>Select another provider below, then press "Fetch Data" to add more data to your Health Summary.</p>
     {/if}
     <TabContent on:tab={(e) => {
       currentTab = e.detail;
@@ -333,6 +342,7 @@
     </AccordionItem>
     <ResourceSelector
       bind:newResources={resourcesToReview}
+      bind:patient={patient}
       bind:submitSelections={submitting}
       on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }
     />
@@ -341,66 +351,65 @@
 {#if resourcesToReview.length > 0}
   {#if shlIdParam == null}
     <Row class="mt-4">
-      <Col xs="auto" class="mb-2">
-        <h5>Create your SMART Health Link</h5>
-      </Col>
-      <Col>
-        <Toast class="me-1" autohide isOpen={successMessage} color="success">
-          <ToastBody>Success</ToastBody>
-        </Toast>
-      </Col>
+      <h5>4. Save and create your SMART Health Link</h5>
     </Row>
-    <FormGroup>
-      <Label>Enter a name for the Link</Label>
-      <Input type="text" bind:value={label} />
-    </FormGroup>
-    <FormGroup>
-      <Label for="passcode">Protect with Passcode (optional)</Label>
-      <div style="position:relative">
-        <Input
-          maxlength={40}
-          name="passcode"
-          type={type}
-          bind:value={passcode}
-          placeholder="Assign Passcode"
-        />
-        <Icon name={icon} 
-          style="position: absolute;
-          cursor: pointer;
-          height: 25px;
-          width: 20px;
-          top: 6px;
-          right: 10px;
-          color: rgb(50, 50, 50);"
-          onclick={() => showPassword = !showPassword}/>
-      </div>
-    </FormGroup>
-    <FormGroup>
-      <Label>Expiration</Label>
-      <Input type="radio" bind:group={expiration} value={60 * 60} label="1 hour" />
-      <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 7} label="1 week" />
-      <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 365} label="1 year" />
-      <Input type="radio" bind:group={expiration} value={-1} label="Never" />
-    </FormGroup>
-
-    <form on:submit|preventDefault={confirmContent}>
-      <Row>
-        <Col xs="auto">
-        <Button color="primary" style="width:fit-content" disabled={submitting} type="submit">
-            {#if !submitting}
-            Create New Link
-            {:else}
-            Creating Link...
-            {/if}
-        </Button>
-        </Col>
-        {#if submitting}
-        <Col xs="auto">
-        <Spinner color="primary" type="border" size="md"/>
-        </Col>
-        {/if}
-      </Row>
-  </form>
+    <Row class="mx-2">
+      <Label>Save your summary and generate a secure link to it that you can share.</Label>
+    </Row>
+    <Row class="mx-2">
+      <FormGroup>
+        <Label>Enter a name for the Summary:</Label>
+        <Input type="text" bind:value={label} />
+      </FormGroup>
+      <FormGroup>
+        <Label for="passcode">Protect with Passcode (optional):</Label>
+        <div style="position:relative">
+          <Input
+            maxlength={40}
+            name="passcode"
+            type={type}
+            bind:value={passcode}
+            placeholder="Assign Passcode"
+          />
+          <Icon name={icon} 
+            style="position: absolute;
+            cursor: pointer;
+            height: 25px;
+            width: 20px;
+            top: 6px;
+            right: 10px;
+            color: rgb(50, 50, 50);"
+            onclick={() => showPassword = !showPassword}/>
+        </div>
+      </FormGroup>
+      <FormGroup>
+        <Label>Expiration</Label>
+        <Input type="radio" bind:group={expiration} value={60 * 60} label="1 hour" />
+        <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 7} label="1 week" />
+        <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 365} label="1 year" />
+        <Input type="radio" bind:group={expiration} value={-1} label="Never" />
+      </FormGroup>
+  
+      <form on:submit|preventDefault={confirmContent}>
+        <Row>
+          <Col xs="auto">
+          <Button color="primary" style="width:fit-content" disabled={submitting} type="submit">
+              {#if !submitting}
+              Create Summary Link
+              {:else}
+              Creating Link...
+              {/if}
+          </Button>
+          </Col>
+          {#if submitting}
+          <Col xs="auto">
+          <Spinner color="primary" type="border" size="md"/>
+          </Col>
+          {/if}
+        </Row>
+      </form>
+    </Row>
+    
   {/if}
   <span class="text-danger">{fetchError}</span>
   {#if resourcesToReview.length > 0}

@@ -33,15 +33,15 @@
         "Academies, college or university [Colleges, Universities, and Professional Schools]": "611310.000015",
         "Clothing stores, family [Family Clothing Stores]": "6448140.003510",
     };
-    let jobCurrent = "";
-    let industryCurrent = "";
-    let startCurrent = "";
-    let jobPast = "";
-    let industryPast = "";
-    let startPast = "";
-    let endPast = "";
-    let startCombat = "";
-    let endCombat = "";
+    let jobCurrent = "Medical Researcher [Medical Scientists, Except Epidemiologists]";
+    let industryCurrent = "Academies, college or university [Colleges, Universities, and Professional Schools]";
+    let startCurrent = canShare ? "2021-09" : "2021-09-07";
+    let jobPast = "Certified Nursing Assistant (CNA) [Nursing Assistants]";
+    let industryPast = "Home nursing services";
+    let startPast = canShare ? "2016-05" : "2016-05-05";
+    let endPast = canShare ? "2020-04" : "2020-04-15";
+    let startCombat = canShare ? "2016-08" : "2016-08-01";
+    let endCombat = canShare ? "2017-01" : "2017-01-01";
 
     let odhSectionTemplate = {
         title: "History of Occupation",
@@ -383,9 +383,9 @@
         <Row class="mb-2">
           <Col xs="auto">My current job is</Col>
           <Col xs="auto">
-            <Input type="select" bind:value={jobCurrent} style="width: 200px">
+            <Input type="select" bind:value={jobCurrent} style="max-width: 300px">
               {#each Object.keys(jobs) as job}
-                <option style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
+                <option value={job} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
                   {job}
                 </option>
               {/each}
@@ -395,9 +395,9 @@
         <Row class="mb-2">
           <Col xs="auto">Which is part of the</Col>
           <Col xs="auto">
-            <Input type="select" bind:value={industryCurrent} style="width: 100px">
+            <Input type="select" bind:value={industryCurrent} style="max-width: 300px">
               {#each Object.keys(industries) as industry}
-                <option style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
+                <option value={industry} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
                   {industry}
                 </option>
               {/each}
@@ -406,7 +406,7 @@
           <Col xs="auto">industry.</Col>
         </Row>
         <Row class="mb-2">
-          <Col xs="auto">I started this job on</Col>
+          <Col xs="auto">I started this job</Col>
           <Col xs="auto">
             <Input type={canShare ? "month" : "date"} bind:value={startCurrent} />
           </Col>
@@ -424,9 +424,9 @@
         <Row class="mb-2">
           <Col xs="auto">My previous job is</Col>
           <Col xs="auto">
-            <Input type="select" bind:value={jobPast} style="width: 100px">
+            <Input type="select" bind:value={jobPast} style="max-width: 300px">
               {#each Object.keys(jobs) as job}
-                <option style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
+                <option value={job} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
                   {job}
                 </option>
               {/each}
@@ -436,9 +436,9 @@
         <Row class="mb-2">
           <Col xs="auto">Which is part of the</Col>
           <Col xs="auto">
-            <Input type="select" bind:value={industryPast} style="width: 100px">
+            <Input type="select" bind:value={industryPast} style="max-width: 300px">
               {#each Object.keys(industries) as industry}
-                <option style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
+                <option value={industry} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
                   {industry}
                 </option>
               {/each}
@@ -447,11 +447,11 @@
           <Col xs="auto">industry.</Col>
         </Row>
         <Row class="mb-2">
-          <Col xs="auto">I started this job on</Col>
+          <Col xs="auto">I started this job</Col>
           <Col xs="auto">
             <Input type={canShare ? "month" : "date"} bind:value={startPast} />
           </Col>
-          <Col xs="auto">and stopped on</Col>
+          <Col xs="auto">and stopped</Col>
           <Col xs="auto">
             <Input type={canShare ? "month" : "date"} bind:value={endPast} />
           </Col>
@@ -467,13 +467,13 @@
       <br>
       <FormGroup>
         <Row class="mb-2">
-          <Col xs="auto">I began working in a combat zone on</Col>
+          <Col xs="auto">I started working in a combat zone</Col>
           <Col xs="auto">
             <Input type={canShare ? "month" : "date"} bind:value={startCombat} />
           </Col>
         </Row>
         <Row class="mb-2">
-          <Col xs="auto">and stopped on</Col>
+          <Col xs="auto">and stopped</Col>
           <Col xs="auto">
             <Input type={canShare ? "month" : "date"} bind:value={endCombat} />
           </Col>
