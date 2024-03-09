@@ -60,6 +60,7 @@
     let patientReference: string;
     let patients: {[key: string]: ResourceHelper} = {};
     let selectedPatient: string;
+    let patientBadgeColor: string = "danger";
 
     // This function will be executed when the resource list is updated
     $: {
@@ -189,6 +190,7 @@
 
             let newPatients = newResources.filter(rh => rh.resource.resourceType === "Patient");
             addResources(newPatients, patients);
+            updateBadge('Patient', "danger");
             patients = patients;
             if (!patientReference) {
                 if (newPatients.length > 0) {
@@ -233,6 +235,17 @@
         ipsDispatch('ips-retrieved', { ips: content });
         submitting = false;
     }
+    function updateBadge(type, color="") {
+        if (type === "Patient") {
+            let badgeColor;
+            if (color) {
+                badgeColor = color;
+            } else if (patientBadgeColor === "danger") {
+                badgeColor = "secondary";
+            }
+            patientBadgeColor = badgeColor ?? patientBadgeColor;
+        }
+    }
 </script>
 <AccordionItem active class="edit-data">
     <h5 slot="header" class="my-2">3. Directly edit your health summary content</h5>
@@ -240,10 +253,10 @@
     <Accordion>
         {#each Object.keys(resourcesByType) as resourceType}
             {#if resourceType !== "Patient" || Object.keys(patients).length > 1}
-                <AccordionItem>
+                <AccordionItem on:toggle={updateBadge(resourceType)}>
                     <span slot="header">
                         {#if resourceType === "Patient"}
-                            Select Patient Information <Badge color="secondary">{Object.values(patients).length}</Badge>
+                            Patients <Badge color={patientBadgeColor}>{Object.values(patients).length}</Badge>
                         {:else}
                             {`${resourceType}s`}
                             <Badge
@@ -267,7 +280,7 @@
                     <FormGroup>
                         {#each Object.keys(resourcesByType[resourceType]) as key}
                             <Label data={resourcesByType[resourceType][key]?.tempId} style="width: 100%">
-                                <Card>
+                                <Card style="width: 100%">
                                     <CardHeader>
                                         <span style="font-size:small">{resourceType}</span>
                                     </CardHeader>

@@ -8,25 +8,24 @@
 {/if}
 {#if resource.medicationCodeableConcept}
   {#if resource.medicationCodeableConcept.coding}  
-    <Badge color="primary">{resource.medicationCodeableConcept.coding[0].system}</Badge>
-    <Badge color="secondary">{resource.medicationCodeableConcept?.coding[0].code}</Badge>
+    <Badge color="primary">{resource.medicationCodeableConcept.coding[0].system} : {resource.medicationCodeableConcept?.coding[0].code}</Badge>
     <br>
     {#if resource.medicationCodeableConcept.coding[0].display}
-    <strong>{resource.medicationCodeableConcept.coding[0].display}</strong>
+      <strong>{resource.medicationCodeableConcept.coding[0].display}</strong><br>
     {:else if resource.medicationCodeableConcept.text}
-      <strong>{resource.medicationCodeableConcept.text}</strong>
+      <strong>{resource.medicationCodeableConcept.text}</strong><br>
     {/if}
   {:else if resource.medicationCodeableConcept.text}
-    <strong>{resource.medicationCodeableConcept.text}</strong>
+    <strong>{resource.medicationCodeableConcept.text}</strong><br>
   {/if}
 {/if}
-{resource.resourceReference?.display ?? ''}
+{#if resource.resourceReference && resource.resourceReference.display}
+  {resource.resourceReference.display}<br>
+{/if}
 {#if resource.effectivePeriod}
-  {resource.effectivePeriod.start}{resource.effectivePeriod.end
-    ? ` - ${resource.effectivePeriod.end}`
-    : ''}
+  Effective period: {resource.effectivePeriod.start.split("T")[0]} - {resource.effectivePeriod.end.split("T")[0] ?? "*"}
 {:else if resource.effectiveDateTime}
-  {resource.effectiveDateTime ? `Date: ${resource.effectiveDateTime.split("T")[0]}` : ''}
+  {resource.effectiveDateTime ? `Effective date: ${resource.effectiveDateTime.split("T")[0]}` : ''}
 {/if}
 {#if resource.dosage && resource.dosage[0].route && resource.dosage[0].route.coding && resource.dosage[0].doseAndRate}
   <table class="table table-bordered table-sm">

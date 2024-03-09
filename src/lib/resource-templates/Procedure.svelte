@@ -3,11 +3,17 @@
   export let resource; // Define a prop to pass the data to the component
 </script>
 
-{#if resource.code && resource.code.coding && resource.code.coding[0]}
-  <Badge color="primary">{resource.code.coding[0].system} : {resource.code.coding[0].code}</Badge>
-  <br />
-  {resource.code.coding[0].display}
-{:else if resource.code && resource.code.text}
-  {resource.code.text}
+{#if resource.code}
+  {#if resource.code.coding}
+    <Badge color="primary">{resource.code.coding[0].system} : {resource.code.coding[0].code}</Badge>
+    <br />
+    {#if resource.code.coding[0].display}
+      <strong>{resource.code.coding[0].display}</strong><br>
+    {:else if resource.code.text}
+      <strong>{resource.code.text}</strong><br>
+    {/if}
+  {:else if resource.code.text}
+    <strong>{resource.code.text}</strong><br>
+  {/if}
 {/if}
 {resource.onsetDateTime ? `Date: ${resource.onsetDateTime.split("T")[0]}` : ''}

@@ -4,16 +4,17 @@
 </script>
 
 {#if resource.code}
-  {resource.code.text ?? ''}<br>
   {#if resource.code.coding}
-    {#each resource.code.coding as code}
-      <Badge color="primary">{code.system ?? ''}</Badge>
-      {code.display ?? ''} <Badge color="secondary">{code.code ?? ''}</Badge>
-    {/each}
+    <Badge color="primary">{resource.code.coding[0].system} : {resource.code.coding[0].code}</Badge>
+    <br />
+    {#if resource.code.coding[0].display}
+      <strong>{resource.code.coding[0].display}</strong><br>
+    {:else if resource.code.text}
+      <strong>{resource.code.text}</strong><br>
+    {/if}
+  {:else if resource.code.text}
+    <strong>{resource.code.text}</strong><br>
   {/if}
-  <br>
-{:else}
-  <Badge color="secondary">Uncoded</Badge>
 {/if}
 {#if resource.ingredient && resource.ingredient.resourceCodeableConcept}
   <table class="table table-bordered table-sm">

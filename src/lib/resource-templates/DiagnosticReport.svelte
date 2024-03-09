@@ -3,18 +3,18 @@
   export let resource; // Define a prop to pass the data to the component
 </script>
 
-{#if resource.code && resource.code.coding}
+{#if resource.code}
+  {#if resource.code.coding}
     <Badge color="primary">{resource.code.coding[0].system} : {resource.code.coding[0].code}</Badge>
     <br />
     {#if resource.code.coding[0].display}
-        <strong>{resource.code.coding[0].display}</strong>
-    {:else if resource.code && resource.code.text}
-        <strong>{resource.code.text}</strong>
+      <strong>{resource.code.coding[0].display}</strong><br>
+    {:else if resource.code.text}
+      <strong>{resource.code.text}</strong><br>
     {/if}
-    <br>
-{:else if resource.code && resource.code.text}
-    <strong>{resource.code.text}</strong>
-    <br>
+  {:else if resource.code.text}
+    <strong>{resource.code.text}</strong><br>
+  {/if}
 {/if}
 {#if resource.effectivePeriod}
     Effective {resource.effectivePeriod.start}{resource.effectivePeriod.end
@@ -30,9 +30,11 @@
         <tr><th colspan="5">Result(s)</th></tr>
         </thead>
         {#each resource.result as result}
-        <tr>
-            <td>{result.display}</td>
-        </tr>
+            {#if result.display}
+            <tr>
+                <td>{result.display}</td>
+            </tr>
+            {/if}
         {/each}
     </table>
 {/if}

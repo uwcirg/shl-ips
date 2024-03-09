@@ -6,23 +6,20 @@
   {#if resource.vaccineCode.coding}
     <Badge color="primary">{resource.vaccineCode.coding[0].system} : {resource.vaccineCode.coding[0].code}</Badge>
     <br />
-    <strong>
-      {#if resource.vaccineCode.coding[0].display}
-        {resource.vaccineCode.coding[0].display}
-      {:else if resource.vaccineCode.text}
-        {resource.vaccineCode.text}
-      {/if}
-    </strong>
+    {#if resource.vaccineCode.coding[0].display}
+      <strong>{resource.vaccineCode.coding[0].display}</strong><br>
+    {:else if resource.vaccineCode.text}
+      <strong>{resource.vaccineCode.text}</strong><br>
+    {/if}
   {:else if resource.vaccineCode.text}
-    <strong>{resource.vaccineCode.text}</strong>
+    <strong>{resource.vaccineCode.text}</strong><br>
   {/if}
-  <br />
 {/if}
-Date:
+
 {#if resource.occurrenceDateTime}
-  {resource.occurrenceDateTime.split("T")[0]}
+  Date: {resource.occurrenceDateTime.split("T")[0]}
 {:else if resource.occurrenceString}
-  {resource.occurrenceString}
+  Date: {resource.occurrenceString}
 {:else if resource.date}
-  {resource.date}
+  Date: {resource.date}
 {/if}
