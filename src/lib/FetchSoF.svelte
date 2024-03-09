@@ -92,10 +92,12 @@
   <FormGroup>
       <Label>Fetch US Core data via SMART authorization</Label>
     {#each SOF_HOSTS as host}
-      <Input type="radio" bind:group={sofHostSelection} value={host.id} label={host.name} style="border-top: 1px; border-color: black"/>
-      {#if host.note}
-        <p class="text-secondary" style="margin-left:25px">{@html host.note}</p>
-      {/if}
+      <Row class="mx-2" style={host.id === "epic" ? "padding-top: 13px; border-top: 1px solid rgb(204, 204, 204);" : ""}>
+        <Input type="radio" bind:group={sofHostSelection} value={host.id} label={host.name} />
+        {#if host.note}
+          <p class="text-secondary" style="margin-left:25px">{@html host.note}</p>
+        {/if}
+      </Row>
     {/each}
   </FormGroup>
 
