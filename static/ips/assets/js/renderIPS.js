@@ -277,7 +277,9 @@ function update(ips, index) {
       }
       let alertMissingComposition = false;
       composition.section.forEach(function (section) {
-        if (!section || !section.code || !section.code.coding || !section.code.coding[0]) {
+        if (!section.entry) {
+          return; // Don't display empty sections
+        } else if (!section || !section.code || !section.code.coding || !section.code.coding[0]) {
           alertMissingComposition = true;
           console.log('Section is missing coding information');
         } else if (section.code.coding[0].code == "11450-4") {
