@@ -7,11 +7,15 @@
   </header>
   <div class="card-body collapse show" id="immunizations-body">
     <ul class="list-group">
-      {{each(options.immunizations)}}
+      {{each (options.immunizations)}}
       <li class="list-group-item">
-        <span><b>{{@this.occurrenceDateTime}}</b></span><br />
+        {{if (@this.date)}}
+          <span><b>{{@this.date}}</b></span><br />
+        {{#elif (@this.occurrenceDateTime)}}
+          <span><b>{{@this.occurrenceDateTime}}</b></span><br />
+        {{/if}}
         <span>
-          {{if(@this.vaccineCode.coding[0].display)}}
+          {{if (@this.vaccineCode.coding[0].display)}}
             {{@this.vaccineCode.coding[0].display}}
           {{#else}}
             {{@this.vaccineCode.text}}

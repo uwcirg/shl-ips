@@ -1,17 +1,17 @@
 <script>
-  import { Badge, Card, CardBody } from 'sveltestrap';
+  import { Badge} from 'sveltestrap';
   export let resource; // Define a prop to pass the data to the component
 </script>
 
 {#if resource.code}
-  {resource.code.text ?? ''}
+  {resource.code.text ?? ''}<br>
   {#if resource.code.coding}
     {#each resource.code.coding as code}
       <Badge color="primary">{code.system ?? ''}</Badge>
       {code.display ?? ''} <Badge color="secondary">{code.code ?? ''}</Badge>
-      <br />
     {/each}
   {/if}
+  <br>
 {:else}
   <Badge color="secondary">Uncoded</Badge>
 {/if}

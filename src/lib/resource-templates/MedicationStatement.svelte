@@ -1,5 +1,5 @@
 <script>
-  import { Badge, Card, CardBody } from 'sveltestrap';
+  import { Badge } from 'sveltestrap';
   export let resource; // Define a prop to pass the data to the component
 </script>
 {#if resource.status}
@@ -11,7 +11,11 @@
     <Badge color="primary">{resource.medicationCodeableConcept.coding[0].system}</Badge>
     <Badge color="secondary">{resource.medicationCodeableConcept?.coding[0].code}</Badge>
     <br>
-    <strong>{resource.medicationCodeableConcept.coding[0].display ?? ''}</strong>
+    {#if resource.medicationCodeableConcept.coding[0].display}
+    <strong>{resource.medicationCodeableConcept.coding[0].display}</strong>
+    {:else if resource.medicationCodeableConcept.text}
+      <strong>{resource.medicationCodeableConcept.text}</strong>
+    {/if}
   {:else if resource.medicationCodeableConcept.text}
     <strong>{resource.medicationCodeableConcept.text}</strong>
   {/if}

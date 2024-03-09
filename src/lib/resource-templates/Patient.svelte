@@ -1,14 +1,28 @@
 <script>
-  import { Badge, Card, CardBody, CardText } from 'sveltestrap';
+  import { Badge } from 'sveltestrap';
   export let resource;
 </script>
 
-<strong>
-  {resource.name[0].given.join(' ')}
-  {resource.name[0].family}
-</strong>
-<br>
-Gender: {resource.gender}
+{#if resource.name}
+    <strong>
+        {#if resource.name[0]}
+            {resource.name[0].prefix ?? ""}
+            {resource.name[0].given ? resource.name[0].given.join(' ') : ""}
+            {resource.name[0].family ?? ""}
+        {:else}
+            {resource.name.prefix ?? ""}
+            {resource.name.given ? resource.name.given.join(' ') : ""}
+            {resource.name.family ?? ""}
+        {/if}
+    </strong>
+    <br>
+{/if}
+{#if resource.birthDate}
+    Birth Date: {resource.birthDate}<br>
+{/if}
+{#if resource.gender}
+    Gender: {resource.gender ?? ""}<br>
+{/if}
 {#if resource.telecom}
   <table class="table table-bordered table-sm">
       <thead>
@@ -16,9 +30,9 @@ Gender: {resource.gender}
       </thead>
       {#each resource.telecom as telecom}
           <tr>
-              <td>{telecom.system}</td>
-              <td>{telecom.use}</td>
-              <td>{telecom.value}</td>
+              <td>{telecom.system ?? ""}</td>
+              <td>{telecom.use ?? ""}</td>
+              <td>{telecom.value ?? ""}</td>
           </tr>
       {/each}
   </table>
@@ -27,23 +41,26 @@ Gender: {resource.gender}
   <table class="table table-bordered table-sm">
       <thead>
           <tr>
+          <th scope="col">Use</th>
           <th scope="col">Address</th>
           </tr>
+          <tr></tr>
       </thead>
       {#each resource.address as address}
           <tr>
+          <td>{address.use ?? ""}</td>
           <td>
               {#each address.line as line}
                   {line}<br />
               {/each}
-              {address.city}{
+              {address.city ?? "[Unknown City]"}{
                   address.state
                       ? `, ${address.state}`
                       : ''
               }{address.country
                   ? `, ${address.country}`
                   : ''}
-              {address.postalCode}
+              {address.postalCode ?? ""}
           </td>
           </tr>
       {/each}
@@ -51,57 +68,75 @@ Gender: {resource.gender}
 {/if}
 {#if resource.contact}
   {#each resource.contact as contact}
-  <strong>Emergency Contact:
+    <strong>Emergency Contact:</strong><br>
+    {#if contact.relationship}
+        {#each contact.relationship as relationship}
+            {#if relationship.coding && relationship.coding[0].display}
+                <Badge color="secondary">{relationship.coding[0].display}</Badge>
+            {/if}
+        {/each}
+        <br>
+    {/if}
     {#if contact.name}
-      {contact.name.given[0]}
-      {contact.name.family}
-    {/if}</strong>
-    <br>
+        <strong>
+            {#if contact.name[0]}
+                {contact.name[0].prefix ?? ""}
+                {contact.name[0].given ? contact.name[0].given.join(' ') : ""}
+                {contact.name[0].family ?? ""}
+            {:else}
+                {contact.name.prefix ?? ""}
+                {contact.name.given ? contact.name.given.join(' ') : ""}
+                {contact.name.family ?? ""}
+            {/if}
+        </strong>
+        <br>
+    {/if}
     {#if contact.birthDate}
       Birth Date: {contact.birthDate}<br>
-      {/if}
-      {#if contact.gender}
+    {/if}
+    {#if contact.gender}
       Gender: {contact.gender ?? ""}<br>
-      {/if}
-      {#if contact.telecom}
+    {/if}
+    {#if contact.telecom}
           <table class="table table-bordered table-sm">
               <thead>
-                  <tr><th colspan="2">Telecom</th></tr>
-                  <tr>
-                      <th scope="col">Type</th>
-                      <th scope="col">Use</th>
-                      <th scope="col">Value</th>
-                  </tr>
+                  <tr><th colspan="3">Contact Information</th></tr>
               </thead>
               {#each contact.telecom as telecom}
                   <tr>
-                      <td>{telecom.system}</td>
-                      <td>{telecom.use}</td>
-                      <td>{telecom.value}</td>
+                      <td>{telecom.system ?? ""}</td>
+                      <td>{telecom.use ?? ""}</td>
+                      <td>{telecom.value ?? ""}</td>
                   </tr>
               {/each}
           </table>
-      {/if}
-      {#if contact.address}
-          <table class="table table-bordered table-sm">
-              <thead>
-                  <tr>
-                      <th scope="col">Address</th>
-                  </tr>
-              </thead>
-              <tr>
+    {/if}
+    {#if contact.address}
+        <table class="table table-bordered table-sm">
+            <thead>
+                <tr>
+                <th scope="col">Use</th>
+                <th scope="col">Address</th>
+                </tr>
+                <tr></tr>
+            </thead>
+            <tr>
+                <td>{contact.address.use ?? ""}</td>
                 <td>
                     {#each contact.address.line as line}
-                    {line}<br />
+                        {line}<br />
                     {/each}
-                    {contact.address.city}{contact.address.state ? `, ${contact.address.state}` : ''}{contact.address
-                    .country
-                    ? `, ${contact.address.country}`
-                    : ''}
-                    {contact.address.postalCode}
+                    {contact.address.city ?? "[Unknown City]"}{
+                        contact.address.state
+                            ? `, ${contact.address.state}`
+                            : ''
+                    }{contact.address.country
+                        ? `, ${contact.address.country}`
+                        : ''}
+                    {contact.address.postalCode ?? ""}
                 </td>
-            </tr>
-          </table>
-      {/if}
+                </tr>
+        </table>
+    {/if}
   {/each}
 {/if}

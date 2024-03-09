@@ -1,8 +1,8 @@
-<script lang="ts">
-  import { Badge, Card, CardBody } from 'sveltestrap';
-  export let resource: any; // Define a prop to pass the data to the component
+<script>
+  import { Badge } from 'sveltestrap';
+  export let resource; // Define a prop to pass the data to the component
 
-  function badgeColor(criticality: string | undefined) {
+  function badgeColor(criticality) {
     if (criticality) {
       if (criticality == 'high') {
         return 'danger';
@@ -33,10 +33,17 @@
   {#if resource.code.coding}  
     <Badge color="primary">{resource.code.coding[0].system} : {resource.code?.coding[0].code}</Badge>
     <br>
-    <strong>{resource.code.coding[0].display ?? ''}</strong>
-  {:else}
-    <strong>{resource.code.text ?? ""}</strong>
+    <strong>
+      {#if resource.code.coding[0].display}
+        {resource.code.coding[0].display}
+      {:else}
+        {resource.code.text ?? ""}
+      {/if}
+    </strong>
+    <br>
+  {:else if resource.code.text}
+    <strong>{resource.code.text}</strong>
+    <br>
   {/if}
 {/if}
-<br>
 {resource.onsetDateTime ? `Since ${resource.onsetDateTime.split("T")[0]}` : ''}

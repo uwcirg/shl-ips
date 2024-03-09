@@ -1,5 +1,5 @@
 <script>
-  import { Badge, Card, CardBody } from 'sveltestrap';
+  import { Badge } from 'sveltestrap';
   export let resource; // Define a prop to pass the data to the component
 </script>
 
@@ -7,17 +7,19 @@
 <Badge color={resource.status === "stopped" ? "secondary" : "primary"}>{resource.status ? `${resource.status}` : ''}</Badge>
 <br>
 {#if resource.medicationCodeableConcept}
-    {#if resource.medicationCodeableConcept.system
-        && resource.medicationCodeableConcept.code
-        || resource.medicationCodeableConcept.display
-    }
+    {#if resource.medicationCodeableConcept.system && resource.medicationCodeableConcept.code}
         <Badge color="primary">{resource.medicationCodeableConcept.system ?? ''} : {resource.medicationCodeableConcept.code ?? ''}</Badge>
         <br>
-        <strong>{resource.medicationCodeableConcept.display ?? ''}</strong>
-        <br>
+    {/if}
+    {#if resource.medicationCodeableConcept.display}
+        <strong>{resource.medicationCodeableConcept.display}</strong>
     {:else if resource.medicationCodeableConcept.text}
         <strong>{resource.medicationCodeableConcept.text}</strong>
     {/if}
+    <br>
+{:else if resource.medicationCodeableConcept.text}
+    <strong>{resource.medicationCodeableConcept.text}</strong>
+    <br>
 {/if}
 {#if resource.dispenseRequest?.validityPeriod}
     Valid from {resource.dispenseRequest?.validityPeriod.start}{resource.dispenseRequest?.validityPeriod.end
