@@ -137,7 +137,7 @@
                   navigator.share({
                     files: [file],
                     url: await href,
-                    text: `${(shl.label || "WA Verify+ Summary Link")}:\n`
+                    // text: `${(shl.label || "WA Verify+ Summary Link")}:\n`
                   });
                 } else {
                   navigator.share({ url: await href, title: shl.label });
