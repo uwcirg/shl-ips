@@ -22,7 +22,7 @@
     ModalFooter,
     Row
   } from 'sveltestrap';
-
+  import mergeImages from 'merge-images';
   import { goto } from '$app/navigation';
   import type { Writable } from 'svelte/store';
   import type { SHLAdminParams, SHLClient } from './managementClient';
@@ -52,7 +52,9 @@
   }
 
   $: {
-    qrCode = href.then((r) => QRCode.toDataURL(r, { errorCorrectionLevel: 'M' }));
+    qrCode = href
+      .then((r) => QRCode.toDataURL(r, { errorCorrectionLevel: 'M' }))
+      .then(qrCode => mergeImages([qrCode, '/img/qrcode-logo.png']));
   }
 
   let canShare = navigator?.canShare?.({ url: 'https://example.com', title: 'Title' });
@@ -99,7 +101,7 @@
     $shlStore[$shlStore.findIndex(obj => obj.id === shl.id)] = shl;
   }
 </script>
-<Row cols={{ md: 2, sm: 1 }}>
+<Row cols={{ md: 2, xs: 1 }}>
   <Col>
     <Card class="mb-3" color="light">
       <CardHeader>
@@ -117,32 +119,34 @@
         <CardText>
           {#await qrCode then dataUrl}
             <CardImg class="img-fluid" alt="QR Code for SHL" src={dataUrl} />
-            <CardImg
-              style="position: absolute;
-              background: #ffffff;
-              width: 114px;
-              left: calc(50% - 57px);
-              top: calc(50% - 1em);
-              border: 0px solid #ffffff;
-              box-sizing: content-box;"
-              class="logo"
-              alt="WA Verify+ Logo"
-              src="/img/waverifypluslogo.png"
-            />
           {/await}
         </CardText>
       </CardBody>
       <CardFooter>
         <Row class="justify-content-center">
           {#if canShare}
-              <Button
-                size="sm"
-                color="primary"
-                class="mx-1" style="width: fit-content"
-                on:click={async () => {
+          {#await qrCode then dataUrl}
+            <Button
+              size="sm"
+              color="primary"
+              class="mx-1" style="width: fit-content"
+              on:click={async () => {
+                const blob = await (await fetch(dataUrl)).blob();
+                const file = new File([blob], 'wa-verify-plus-qrcode.png', { type: blob.type });
+                if (navigator.canShare({ files: [file]})) {
+                  navigator.share({
+                    files: [file],
+                    url: await href,
+                    title: shl.label || "WA Verify+ Summary",
+                    text: 'Your shareable WA Verify+ Health Summary QR code'
+                  });
+                } else {
                   navigator.share({ url: await href, title: shl.label });
-                }}><Icon name="share" /> Share</Button
-              >
+                }
+              }}>
+                <Icon name="share" /> Share
+              </Button>
+          {/await}
           {/if}
             <Button size="sm" color="primary" class="mx-1" style="width: fit-content" on:click={copyShl} disabled={!!copyNotice}>
               <Icon name="clipboard" />
@@ -220,7 +224,7 @@
         }}><Icon name="lock" /> Update Passcode</Button>
     </FormGroup>
     <FormGroup class="shlbutton">
-      <Button size="sm" on:click={toggle} color="danger">Delete SMART Health Link</Button>
+      <Button size="sm" on:click={toggle} color="danger"><Icon name="trash3" /> Delete SMART Health Link</Button>
       <Modal isOpen={open} backdrop="static" {toggle}>
         <ModalHeader {toggle}>Delete SMART Health Link</ModalHeader>
         <ModalBody>
@@ -259,7 +263,7 @@
               <Button size="sm" color="danger" style="width: fit-content" on:click={(e) => {
                 deleteFile(file.contentEncrypted);
               }}>
-                <Icon name="trash" /> Delete
+                <Icon name="trash3" />
               </Button>
             </Row>
           </Col>
