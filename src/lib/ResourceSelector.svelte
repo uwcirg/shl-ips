@@ -5,7 +5,6 @@
         Accordion,
         AccordionItem,
         Badge,
-        Button,
         Card,
         CardBody,
         CardHeader,
@@ -13,8 +12,7 @@
         FormGroup,
         Input,
         Label,
-        Row,
-        Spinner } from 'sveltestrap';
+        Row } from 'sveltestrap';
     import AdvanceDirective from './resource-templates/AdvanceDirective.svelte';
     import AllergyIntolerance from './resource-templates/AllergyIntolerance.svelte';
     import Condition from './resource-templates/Condition.svelte';
@@ -33,11 +31,10 @@
     import { ResourceHelper, type IPSRetrieveEvent } from './types';
 
     export let newResources: Array<any> | undefined;
-    // export let allResources: Array<any> | undefined;
     export let submitSelections: boolean;
     export let patient: any | undefined;
 
-    const components = {
+    const components: Record<string, any> = {
         "DocumentReference": AdvanceDirective,
         "AllergyIntolerance": AllergyIntolerance,
         "Condition": Condition,
