@@ -54,7 +54,7 @@
   $: {
     qrCode = href
       .then((r) => QRCode.toDataURL(r, { errorCorrectionLevel: 'M' }))
-      .then(qrCode => mergeImages([qrCode, '/img/qrcode-logo.png']));
+      .then(qrCode => mergeImages([qrCode, {src: '/img/qrcode-logo.png', x:0, y:4}]));
   }
 
   let canShare = navigator?.canShare?.({ url: 'https://example.com', title: 'Title' });
@@ -137,8 +137,7 @@
                   navigator.share({
                     files: [file],
                     url: await href,
-                    title: shl.label || "WA Verify+ Summary",
-                    text: 'Your shareable WA Verify+ Health Summary QR code'
+                    text: `${(shl.label || "WA Verify+ Summary Link")}:\n`
                   });
                 } else {
                   navigator.share({ url: await href, title: shl.label });
