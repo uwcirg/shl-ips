@@ -11,6 +11,7 @@
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
 
   let shl: SHLAdminParams | undefined;
+  let patientName = "";
   $: {
     let shlIdParam = $page.url.searchParams.get('shlid');
     if (shlIdParam) {
@@ -23,7 +24,7 @@
 
   async function addFiles(shl:SHLAdminParams, fileList:SHCFile[]) {
     for (let i=0; i < fileList.length; i++) {
-      shl = await shlClient.addFile(shl, fileList[i], 'application/smart-health-card');
+      shl = await shlClient.addFile(shl, fileList[i], patientName);
     }
     return shl;
   }
@@ -44,6 +45,7 @@
 
 <AddFile
   on:shl-submitted={async ({ detail }) => {
+    patientName = detail.patientName;
     if (shl) {
       shl = await addFiles(shl, detail.shcs);
       $shlStore[$shlStore.findIndex(obj => obj.id === shl?.id)] = shl;

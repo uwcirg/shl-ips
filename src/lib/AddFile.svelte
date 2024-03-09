@@ -83,11 +83,11 @@
   $: addDataHeader = resourcesToReview.length == 0 ? emptyResourceListHeader : fullResourceListHeader;
   $: {
     if (patient) {
-      let patientName = patient.name[0]?.given[0];
-      if (patientName) {
-        console.log("Patient name: " + patientName);
-        label = (patientName !== undefined ? patientName.charAt(0).toUpperCase() + patientName.slice(1).toLowerCase() + "'s" : "My")+ " Health Summary from " + new Date().toISOString().slice(0, 10);
-      }
+      patientName = patient.name[0]?.given[0];
+    }
+    if (patientName) {
+      console.log("Patient name: " + patientName);
+      label = (patientName !== undefined ? patientName.charAt(0).toUpperCase() + patientName.slice(1).toLowerCase() + "'s" : "My")+ " Summary Link " + new Date().toISOString().slice(0, 10);
     }
   }
 
@@ -234,7 +234,8 @@
       shcs: shcsToAdd,
       label,
       passcode: passcode ?? undefined,
-      exp: expiration && expiration > 0 ? new Date().getTime() / 1000 + expiration : undefined
+      exp: expiration && expiration > 0 ? new Date().getTime() / 1000 + expiration : undefined,
+      patientName: patientName
     });
   }
 

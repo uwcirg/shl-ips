@@ -5,6 +5,7 @@ export interface SHLSubmitEvent {
   // content: Bundle;
   passcode?: string;
   exp?: number;
+  patientName?: string;
 }
 
 export interface ResourceRetrieveEvent {

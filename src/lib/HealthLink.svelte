@@ -236,6 +236,7 @@
 </Row>
 <Row>
   <h2>Contents</h2>
+  <Label>Add or remove summaries shared by this link.</Label>
 </Row>
 {#if shl.files.length == 0}
 <Row>
@@ -247,34 +248,37 @@
   <Col>
     <Card class="mb-3" color="light">
       <CardHeader>
-        <CardTitle>
-          IPS 
-          {#if file.date}
-            {file.date}
-          {/if}
-        </CardTitle>
+        <Row class="align-items-center">
+          <Col xs=6 class="align-items-center">
+            {#if file.date}
+              <strong><Icon name="calendar"></Icon> {file.date}</strong>
+            {/if}
+          </Col>
+          <Col xs=6>
+            <Row class="justify-content-end">
+              <Button size="sm" color="danger" style="width: fit-content" on:click={(e) => {
+                deleteFile(file.contentEncrypted);
+              }}>
+                <Icon name="trash" /> Delete
+              </Button>
+            </Row>
+          </Col>
+        </Row>
       </CardHeader>
       <CardBody>
         {#if file.contentType}
         <CardText color="light" style="overflow: hidden; text-overflow: ellipsis">
-          <Icon name="file-earmark-text" /> {file.contentType}
+          <Icon name="file-earmark-text" /> {file.label ?? file.contentType}
         </CardText>
         {/if}
       </CardBody>
-      <CardFooter>
-        <Button size="sm" color="danger" on:click={(e) => {
-          deleteFile(file.contentEncrypted);
-        }}>
-          <Icon name="trash" /> Delete
-        </Button>
-      </CardFooter>
     </Card>
   </Col>
 </Row>
 {/each}
 <Row>
   <Col>
-    <Button class="mb-3" color="primary" on:click={addFile}><Icon name="file-earmark-plus" /> Add {shl.files.length == 0 ? "an" : "another"} IPS</Button>
+    <Button class="mb-3" color="primary" on:click={addFile}><Icon name="file-earmark-plus" /> Add {shl.files.length == 0 ? "an" : "another"} Summary</Button>
   </Col>
 </Row>
 

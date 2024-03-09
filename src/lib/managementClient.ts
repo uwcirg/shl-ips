@@ -12,6 +12,7 @@ export interface SHLAdminParams {
     contentEncrypted: string;
     contentType: string;
     date?: string;
+    label?: string;
   }[];
   passcode?: string;
   exp?: number;
@@ -79,7 +80,8 @@ export class SHLClient {
   async addFile(
     shl: SHLAdminParams,
     content: unknown,
-    contentType: string
+    patientName: string = "",
+    contentType: string = "application/smart-health-card"
   ): Promise<SHLAdminParams> {
     let contentEncrypted = await new jose.CompactEncrypt(
       new TextEncoder().encode(JSON.stringify(content))
@@ -91,7 +93,8 @@ export class SHLClient {
       .encrypt(jose.base64url.decode(shl.encryptionKey));
 
     let date = new Date().toISOString().slice(0, 10);
-    new TextEncoder().encode(contentEncrypted), shl.files.push({ contentEncrypted, contentType, date });
+    let label = (patientName ? patientName.charAt(0).toUpperCase() + patientName.slice(1).toLowerCase() + "'s" : "My")+ " Summary";
+    new TextEncoder().encode(contentEncrypted), shl.files.push({ contentEncrypted, contentType, date, label });
     const add = await fetch(`${API_BASE}/shl/${shl.id}/file`, {
       method: 'POST',
       headers: {
