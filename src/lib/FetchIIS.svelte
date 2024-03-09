@@ -223,17 +223,17 @@
     <Row cols={{ md: 2, sm: 1 }}>
       <Col>
         <Label>Name</Label>
-        <FormGroup style="font-size:small" label="First">
+        <FormGroup style="font-size:small" class="text-secondary" label="First">
           <Input type="text" bind:value={first} />
         </FormGroup>
-        <FormGroup style="font-size:small" label="Last">
+        <FormGroup style="font-size:small" class="text-secondary" label="Last">
           <Input type="text" bind:value={last} />
         </FormGroup>
         <Label>Demographics</Label>
-        <FormGroup style="font-size:small" label="Date of Birth">
+        <FormGroup style="font-size:small" class="text-secondary" label="Date of Birth">
           <Input type="date" bind:value={dob} placeholder={dob} style="width: 165px"/>
         </FormGroup>
-        <FormGroup style="font-size:small" label="Gender">
+        <FormGroup style="font-size:small" class="text-secondary" label="Gender">
           <!-- <Label>Gender</Label> -->
           <Input type="select" bind:value={gender} style="width: 100px">
             {#each Object.keys(genders) as full}
@@ -248,22 +248,22 @@
           <Input type="text" bind:value={mrn} style="width: 165px"/>
         </FormGroup>
         <Label>Contact Information</Label>
-        <FormGroup style="font-size:small" label="Phone">
+        <FormGroup style="font-size:small" class="text-secondary" label="Phone">
           <Input type="tel" bind:value={phone} style="width: 165px"/>
         </FormGroup>
         <Label>Address</Label>
-        <FormGroup style="font-size:small" label="Address Line 1">
+        <FormGroup style="font-size:small" class="text-secondary" label="Address Line 1">
           <Input type="text" bind:value={address1} />
         </FormGroup>
-        <FormGroup style="font-size:small" label="Address Line 2 (Optional)">
+        <FormGroup style="font-size:small" class="text-secondary" label="Address Line 2 (Optional)">
           <Input type="text" bind:value={address2} />
         </FormGroup>
-        <FormGroup style="font-size:small" label="City">
+        <FormGroup style="font-size:small" class="text-secondary" label="City">
           <Input type="text" bind:value={city} />
         </FormGroup>
         <Row>
           <Col xs="auto">
-            <FormGroup style="font-size:small" label="State">
+            <FormGroup style="font-size:small" class="text-secondary" label="State">
               <Input type="select" bind:value={state} style="width: 80px">
                 {#each states as state}
                   <option value={state} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
@@ -274,7 +274,7 @@
             </FormGroup>
           </Col>
           <Col>
-            <FormGroup style="font-size:small" label="Zip">
+            <FormGroup style="font-size:small" class="text-secondary" label="Zip">
               <Input type="text" bind:value={zip} style="width:90px"/>
             </FormGroup>
           </Col>
