@@ -244,7 +244,7 @@
 </Row>
 {#if shl.files.length == 0}
 <Row>
-  <p><em>No records found</em></p>
+  <p><em>No Summaries found</em></p>
 </Row>
 {/if}
 {#each shl.files as file (file.contentEncrypted)}
@@ -282,7 +282,7 @@
 {/each}
 <Row>
   <Col>
-    <Button class="mb-3" color="primary" on:click={addFile}><Icon name="file-earmark-plus" /> Add {shl.files.length == 0 ? "an" : "another"} Summary</Button>
+    <Button class="mb-3" color="primary" on:click={addFile}><Icon name="file-earmark-plus" /> Add {shl.files.length == 0 ? "a" : "another"} Summary</Button>
   </Col>
 </Row>
 
