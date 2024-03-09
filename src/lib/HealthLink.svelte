@@ -158,7 +158,7 @@
             </Button>
           {#await href then href}
               <Button size="sm" color="primary" class="mx-1" style="width: fit-content" {href} target="_blank">
-                <Icon name="box-arrow-up-right" /> View IPS
+                <Icon name="box-arrow-up-right" /> Open
               </Button>
           {/await}
         </Row>
