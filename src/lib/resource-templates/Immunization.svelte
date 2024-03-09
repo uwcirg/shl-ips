@@ -21,6 +21,8 @@
 Date:
 {#if resource.occurrenceDateTime}
   {resource.occurrenceDateTime.split("T")[0]}
+{:else if resource.occurrenceString}
+  {resource.occurrenceString}
 {:else if resource.date}
   {resource.date}
 {/if}

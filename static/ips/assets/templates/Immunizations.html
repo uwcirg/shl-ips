@@ -9,22 +9,22 @@
     <ul class="list-group">
       {{each (options.immunizations)}}
       <li class="list-group-item">
-        {{if (@this.date)}}
-          <span><b>{{@this.date}}</b></span><br />
-        {{#elif (@this.occurrenceDateTime)}}
-          <span><b>{{@this.occurrenceDateTime}}</b></span><br />
-        {{/if}}
-        <span>
+        <span class="badge badge-primary">{{@this.vaccineCode.coding[0].system}} : {{@this.vaccineCode.coding[0].code}}</span>
+        <br>
+        <strong>
           {{if (@this.vaccineCode.coding[0].display)}}
             {{@this.vaccineCode.coding[0].display}}
           {{#else}}
             {{@this.vaccineCode.text}}
           {{/if}}
-        </span>
+        </strong>
         <br>
-        <span class="badge badge-primary">{{@this.vaccineCode.coding[0].system}}</span>
-        {{@this.vaccineCode.coding[0].code}}
-        <br>
+        Date: 
+        {{if (@this.occurrenceDateTime)}}
+          <span>{{@this.occurrenceDateTime}}</span><br />
+        {{#elif (@this.occurrenceString)}}
+          <span>{{@this.occurrenceString}}</span><br />
+        {{/if}}
       </li>
       {{/each}}
     </ul>
