@@ -183,7 +183,7 @@ function prepareSHLContents(contents) {
     contents = [contents];
   }
   shlContents = contents.reverse();
-  var jqxhr = $.get(new URL(`../templates/IPS.html`, import.meta.url).href, function () { })
+  var jqxh = $.get(new URL(`../templates/IPS.html`, import.meta.url).href, function () { })
     .done(function (template) {
       shlContents.forEach((e, i) => {
         let data = { index: i };
@@ -253,14 +253,27 @@ function update(ips, index) {
       } else {
         console.log('no subject reference');
       }
-      if (index !== "Demo" && composition.date) {
-        $(`#tab${index}`).text(`IPS ${composition.date.split('T')[0]}`);
-      }
       render("Composition", composition, `Composition${index}`);
       console.log('Patient Card');
       if (patient) {
         console.log(patient)
         render("Patient", patient, `Patient${index}`);
+      }
+      if (index !== "Demo") {
+        let tabName = "";
+        if (composition.date) {
+          tabName = `Summary (${composition.date.split('T')[0]})`;
+        }
+        if (patient && patient.name) {
+          if (Array.isArray(patient.name) && patient.name.length > 0) {
+            if (Array.isArray(patient.name[0].given) && patient.name[0].given[0]) {
+              tabName = `${patient.name[0].given[0]}'s ${tabName}`;
+            }
+          }
+        }
+        if (tabName) {
+          $(`#tab${index}`).text(tabName);
+        }
       }
       let alertMissingComposition = false;
       composition.section.forEach(function (section) {
