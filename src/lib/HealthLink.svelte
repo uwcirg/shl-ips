@@ -137,7 +137,7 @@
                   navigator.share({
                     files: [file],
                     url: await href,
-                    text: `Here's my WA Verify+ Health Summary:\n\n${(shl.label ? `${shl.label}\n\n` : "")}`
+                    text: `${(shl.label ? `${shl.label}\n\n` : "")}Here's my WA Verify+ Health Summary:\n\n`
                   });
                 } else {
                   navigator.share({ url: await href, title: shl.label });
