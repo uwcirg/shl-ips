@@ -230,8 +230,8 @@
           "{shl.label}" will be permanently deleted. Continue?
         </ModalBody>
         <ModalFooter>
-          <Button color="danger"  on:click={deleteShl}><Icon name="trash" /> Delete SHL</Button>
           <Button color="secondary" on:click={toggle}>Cancel</Button>
+          <Button color="danger"  on:click={deleteShl}><Icon name="trash3" /> Yes, Delete SHL</Button>
         </ModalFooter>
       </Modal>
     </FormGroup>
