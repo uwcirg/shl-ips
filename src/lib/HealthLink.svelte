@@ -136,8 +136,8 @@
                 if (navigator.canShare({ files: [file]})) {
                   navigator.share({
                     files: [file],
-                    // url: await href,
-                    text: `${(shl.label || "WA Verify+ Summary Link")}:\n`+ (await href)
+                    url: await href,
+                    text: `Here's my WA Verify+ Health Summary:\n\n${(shl.label ? `${shl.label}\n\n` : "")}`
                   });
                 } else {
                   navigator.share({ url: await href, title: shl.label });
@@ -238,7 +238,7 @@
   </Col>
 </Row>
 <Row>
-  <h2>Contents</h2>
+  <h3>Contents</h3>
   <Label>Add or remove summaries shared by this link.</Label>
 </Row>
 {#if shl.files.length == 0}
