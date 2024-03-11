@@ -17,6 +17,7 @@ let client;
 function authorize(inputFhirUrl, clientId) {
     config.iss = inputFhirUrl;
     config.clientId = clientId ?? "no clientId configured";
+    config.pkceMode = "ifSupported";
     return FHIR.oauth2.authorize(config);
 };
 
