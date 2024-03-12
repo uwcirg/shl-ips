@@ -1,5 +1,5 @@
 <script>
-  import { Badge, Card, CardBody, Col, Row } from 'sveltestrap';
+  import { Badge } from 'sveltestrap';
   export let resource; // Define a prop to pass the data to the component
 </script>
 

@@ -2,6 +2,7 @@
     import {
       Accordion,
       AccordionItem,
+      Button,
       Col,
       FormGroup,
       Input,
@@ -23,6 +24,12 @@
     let workingPast = true;
     let retired = false;
     let combat = false;
+    let status = "Employed";
+    let statuses: Record<string, string> = {
+      "Employed": "Employed",
+      "Unemployed": "Unemployed",
+      "Not in labor force": "NotInLaborForce"
+    }
     let jobs: Record<string,string> = {
         "Bartender [Bartender]": "2345",
         "Certified Nursing Assistant (CNA) [Nursing Assistants]": "31-1014.00.007136",
@@ -284,9 +291,11 @@
     $: {
         if (working || jobCurrent || industryCurrent || startCurrent) {
             updateCurrentJob();
-            updateEmploymentStatus();
         }
-
+        if (status) {
+          updateEmploymentStatus();
+          working = (status === "Employed");
+        }
         if (workingPast || jobPast || industryPast || startPast || endPast) {
             updatePastJob();
         }
@@ -298,7 +307,6 @@
         if (combat || startCombat || endCombat) {
             updateCombatPeriod();
         }
-        updateOdhSection();
     }
 
     function updateCurrentJob() {
@@ -392,8 +400,7 @@
         if (employmentStatus === undefined) {
             employmentStatus = JSON.parse(JSON.stringify(employmentStatusTemplate));
         }
-        let status = working ? "Employed" : "Unemployed";
-        employmentStatus.resource.valueCodeableConcept.coding[0].code = status;
+        employmentStatus.resource.valueCodeableConcept.coding[0].code = statuses[status];
         employmentStatus.resource.valueCodeableConcept.coding[0].display = status;
         if (currentJob && startCurrent) {
             employmentStatus.resource.effectivePeriod = {
@@ -404,8 +411,16 @@
         }
     }
 
+    let buttonText = "Add occupation to summary";
+    let buttonDisabled = false;
     function updateOdhSection() {
-        if (employmentStatus || currentJob || pastJob || combatPeriod) {
+        buttonText = "Added!";
+        buttonDisabled = true;
+        setTimeout(() => {
+          buttonText = odhSection ? "Update occupation" : "Add occupation to Summary";
+          buttonDisabled = false;
+        }, 1000);
+        if (employmentStatus || currentJob || pastJob || retirementDate || combatPeriod) {
             if (odhSection === undefined) {
                 odhSection = JSON.parse(JSON.stringify(odhSectionTemplate));
             }
@@ -419,13 +434,23 @@
         } else {
             odhSection = undefined;
         }
+        console.log(odhSectionResources);
     }
 </script>
 
 <Accordion stayOpen>
   <AccordionItem active header="Current work">
-    <Row class="mx-1">
-      <Input type="switch" bind:checked={working} label={working ? "I have a job" : "I do not have a job"} />
+    <Row>
+      <Col xs="auto">I am currently</Col>
+      <Col xs="auto">
+        <Input type="select" bind:value={status} style="max-width: 300px">
+          {#each Object.keys(statuses) as stat}
+            <option value={stat} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
+              {stat}
+            </option>
+          {/each}
+        </Input>
+      </Col>
     </Row>
     {#if working}
       <br>
@@ -546,4 +571,8 @@
     {/if}
   </AccordionItem>
 </Accordion>
+<br>
+<Button color="primary" on:click={updateOdhSection} disabled={buttonDisabled}>
+  {buttonText}
+</Button>
   
