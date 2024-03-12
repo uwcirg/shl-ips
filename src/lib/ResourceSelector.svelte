@@ -30,7 +30,6 @@
     import Procedure from './resource-templates/Procedure.svelte';
     import { ResourceHelper, type IPSRetrieveEvent } from './types';
     import OccupationalDataForHealth from './resource-templates/OccupationalDataForHealth.svelte';
-    import { handle_promise } from 'svelte/internal';
 
     export let newResources: Array<any> | undefined;
     export let submitSelections: boolean;
