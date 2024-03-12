@@ -349,7 +349,7 @@
     </TabContent>
   </AccordionItem>
   {#if resourcesToReview.length > 0}
-    <AccordionItem class="odh-data">
+    <AccordionItem active class="odh-data">
       <h5 slot="header" class="my-2">2. Add health-related occupational information</h5>
       <Label>It may be helpful to include information about the work you do in your medical summary</Label>
       <ODHForm bind:odhSection={odhData.section} bind:odhSectionResources={odhData.resources} />
