@@ -29,13 +29,14 @@
   import { verify } from './shc-decoder.js';
 
   import issuerKeys from './issuer.private.jwks.json';
-  import type { SHCFile,
-    Bundle,
-    SHCRetrieveEvent,
-    ResourceRetrieveEvent,
-    IPSRetrieveEvent,
-    SHLSubmitEvent, 
-    SOFAuthEvent} from './types';
+  import { type SHCFile,
+    type Bundle,
+    type SHCRetrieveEvent,
+    type ResourceRetrieveEvent,
+    type IPSRetrieveEvent,
+    type SHLSubmitEvent, 
+    type SOFAuthEvent,
+    ResourceHelper} from './types';
   import { page } from '$app/stores';
   import { getResourcesFromIPS } from './resourceUploader.js';
   import { goto } from '$app/navigation';
@@ -70,6 +71,7 @@
     section: undefined,
     resources: undefined
   };
+  let resourcesToInject: Record<string, {section: any|undefined; resources: {[key: string]: ResourceHelper}}> = {};
   let patientName = "My";
   let patient: any | undefined;
 
@@ -88,6 +90,21 @@
     if (patientName) {
       console.log("Patient name: " + patientName);
       label = (patientName !== undefined ? patientName.charAt(0).toUpperCase() + patientName.slice(1).toLowerCase() + "'s" : "My")+ " Summary Link " + new Date().toISOString().slice(0, 10);
+    }
+  }
+  $: {
+    if (odhData.resources || odhData.section) {
+      let odhInjection: {section: any|undefined; resources: {[key: string]: ResourceHelper}}  = {
+        section: odhData.section,
+        resources: {}
+      }
+      odhData.resources?.forEach((r) => {
+        let rh = new ResourceHelper(r.resource);
+        odhInjection.resources[rh.tempId] = rh;
+      });
+      resourcesToInject["Occupational Data for Health"] = odhInjection;
+    } else {
+      delete resourcesToInject["Occupational Data for Health"];
     }
   }
 
@@ -163,10 +180,6 @@
       submitting = true;
       ipsResult = details;
       if (ipsResult.ips) {
-        if (odhData && odhData.section && odhData.resources) {
-          ipsResult.ips.entry[0].resource.section.push(odhData.section);
-          ipsResult.ips.entry = ipsResult.ips.entry.concat(odhData.resources);
-        }
         shcsToAdd.unshift(await packageSHC(ipsResult.ips));
         submitSHL();
       }
@@ -336,7 +349,7 @@
     </TabContent>
   </AccordionItem>
   {#if resourcesToReview.length > 0}
-    <AccordionItem active class="odh-data">
+    <AccordionItem class="odh-data">
       <h5 slot="header" class="my-2">2. Add health-related occupational information</h5>
       <Label>It may be helpful to include information about the work you do in your medical summary</Label>
       <ODHForm bind:odhSection={odhData.section} bind:odhSectionResources={odhData.resources} />
@@ -345,6 +358,7 @@
       bind:newResources={resourcesToReview}
       bind:patient={patient}
       bind:submitSelections={submitting}
+      bind:injectedResources={resourcesToInject}
       on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }
     />
   {/if}

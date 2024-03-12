@@ -29,10 +29,13 @@
     import Problem from './resource-templates/Problem.svelte';
     import Procedure from './resource-templates/Procedure.svelte';
     import { ResourceHelper, type IPSRetrieveEvent } from './types';
+    import OccupationalDataForHealth from './resource-templates/OccupationalDataForHealth.svelte';
+    import { handle_promise } from 'svelte/internal';
 
     export let newResources: Array<any> | undefined;
     export let submitSelections: boolean;
     export let patient: any | undefined;
+    export let injectedResources: Record<string, {section: any|undefined; resources: { [key: string]: ResourceHelper }}>;
 
     const components: Record<string, any> = {
         "DocumentReference": AdvanceDirective,
@@ -50,6 +53,7 @@
         "Practitioner": Practitioner,
         "Problem": Problem,
         "Procedure": Procedure,
+        "Occupational Data for Health": OccupationalDataForHealth
     };
 
     const ipsDispatch = createEventDispatcher<{ 'ips-retrieved': IPSRetrieveEvent }>();
@@ -220,7 +224,7 @@
         let preparedResources = prepareResources(getSelectedResources());
         reference = await uploadResources(preparedResources);
 
-        let content;
+        let content:any;
         const contentResponse = await fetch(reference!, {
             headers: { accept: 'application/fhir+json' }
         }).then(function(response) {
@@ -232,10 +236,31 @@
             }
         });
         content = await contentResponse.json();
+        if (content && injectedResources) {
+            Object.keys(injectedResources).forEach((section) => {
+                if (injectedResources[section].section) {
+                    injectedResources[section].section.entry = [];
+                    let rkeys = Object.keys(injectedResources[section].resources);
+                    for (let i=0; i < rkeys.length; i++) {
+                        if (injectedResources[section].resources[rkeys[i]].include) {
+                            let entry = {
+                                resource: injectedResources[section].resources[rkeys[i]].resource,
+                                fullUrl: injectedResources[section].resources[rkeys[i]].resource.id
+                            }
+                            content.entry.push(entry);
+                            injectedResources[section].section.entry.push({
+                                reference: `${injectedResources[section].resources[rkeys[i]].resource.resourceType}/${entry.fullUrl}`
+                            });
+                        }
+                    }
+                    content.entry[0].resource.section.push(injectedResources[section].section);
+                }
+            })
+        }
         ipsDispatch('ips-retrieved', { ips: content });
         submitting = false;
     }
-    function updateBadge(type, color="") {
+    function updateBadge(type: string, color="") {
         if (type === "Patient") {
             let badgeColor;
             if (color) {
@@ -279,7 +304,7 @@
                     </span>
                     <FormGroup>
                         {#each Object.keys(resourcesByType[resourceType]) as key}
-                            <Label data={resourcesByType[resourceType][key]?.tempId} style="width: 100%">
+                            <Label style="width: 100%">
                                 <Card style="width: 100%">
                                     <CardHeader>
                                         <span style="font-size:small">{resourceType}</span>
@@ -311,5 +336,62 @@
                 </AccordionItem>
             {/if}
         {/each}
+    {#if injectedResources}
+        {#each Object.keys(injectedResources) as section}
+                <AccordionItem on:toggle={updateBadge(section)}>
+                    <span slot="header">
+                            {section}
+                            <Badge
+                                class="mx-1"
+                                color={
+                                    Object.values(injectedResources[section].resources)
+                                        .filter(resource => resource.include).length
+                                        == Object.keys(injectedResources[section].resources).length
+                                        ? "primary"
+                                        : Object.values(injectedResources[section].resources)
+                                            .filter(resource => resource.include).length
+                                            > 0
+                                            ? "info"
+                                            : "secondary"
+                                }>
+                                {Object.values(injectedResources[section].resources).filter(resource => resource.include).length}
+                            </Badge>
+                    </span>
+                    <FormGroup>
+                        {#if injectedResources[section].resources}
+                            {#each Object.keys(injectedResources[section].resources) as key}
+                                <Label style="width: 100%">
+                                    <Card style="width: 100%">
+                                        <CardHeader>
+                                            <span style="font-size:small">{section}</span>
+                                        </CardHeader>
+                                        <CardBody style="overflow:hidden">
+                                            <Row class="flex-nowrap">
+                                                <Col xs=auto style="vertical-align:baseline">
+                                                    <Input
+                                                        id={key}
+                                                        type="checkbox" bind:checked={injectedResources[section].resources[key].include}
+                                                        value={key}
+                                                        />
+                                                </Col>
+                                                <Col>
+                                                    {#if section in components}
+                                                        <svelte:component this={components[section]} resource={injectedResources[section].resources[key].resource} />
+                                                    {:else if injectedResources[section].resources[key].resource.text?.div}
+                                                        {@html injectedResources[section].resources[key].resource.text?.div}
+                                                    {:else}
+                                                        {injectedResources[section].resources[key].tempId}
+                                                    {/if}
+                                                </Col>
+                                            </Row>
+                                        </CardBody>
+                                    </Card>
+                                </Label>
+                            {/each}
+                        {/if}
+                    </FormGroup>
+                </AccordionItem>
+        {/each}
+    {/if}
     </Accordion>
 </AccordionItem>
