@@ -16,10 +16,12 @@
     let employmentStatus: any | undefined;
     let currentJob: any | undefined;
     let pastJob: any | undefined;
+    let retirementDate: any | undefined;
     let combatPeriod: any | undefined;
 
     let working = true;
     let workingPast = true;
+    let retired = false;
     let combat = false;
     let jobs: Record<string,string> = {
         "Bartender [Bartender]": "2345",
@@ -40,6 +42,7 @@
     let industryPast = "Home nursing services";
     let startPast = canShare ? "2016-05" : "2016-05-05";
     let endPast = canShare ? "2020-04" : "2020-04-15";
+    let startRetirement = canShare ? "2024-03" : "2024-03-01";
     let startCombat = canShare ? "2016-08" : "2016-08-01";
     let endCombat = canShare ? "2017-01" : "2017-01-01";
 
@@ -209,6 +212,36 @@
       fullUrl: "observation-odh-past-job-sample"
     }
 
+    let retirementDateTemplate = {
+      resource: {
+        resourceType : "Observation",
+        id : "observation-odh-retirement-date-sample",
+        meta : {
+          versionId : "1",
+          lastUpdated : "2021-05-26T02:20:50.364+00:00",
+          source : "#xIztR2ILtakKFMdW",
+          profile : [
+            "http://hl7.org/fhir/us/odh/StructureDefinition/odh-RetirementDate"
+          ]
+        },
+        status : "final",
+        code : {
+          coding : [
+            {
+              system : "http://loinc.org",
+              code : "87510-4",
+              display : "Date of Retirement"
+            }
+          ]
+        },
+        subject: {
+          reference: "Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299",
+        },
+        valueDateTime : "2021-05-30"
+      },
+      fullUrl: "observation-odh-retirement-date-sample"
+    };
+
     let combatPeriodTemplate = {
       resource: {
         resourceType: "Observation",
@@ -256,6 +289,10 @@
 
         if (workingPast || jobPast || industryPast || startPast || endPast) {
             updatePastJob();
+        }
+
+        if (retired || startRetirement) {
+          updateRetirementDate();
         }
 
         if (combat || startCombat || endCombat) {
@@ -322,6 +359,19 @@
         }
     }
 
+    function updateRetirementDate() {
+        if (retired) {
+            if (retirementDate === undefined) {
+                retirementDate = JSON.parse(JSON.stringify(retirementDateTemplate));
+            }
+            if (startRetirement) {
+                retirementDate.resource.valueDateTime = startRetirement;
+            }
+        } else {
+            retirementDate = undefined;
+        }
+    }
+
     function updateCombatPeriod() {
         if (combat) {
             if (combatPeriod === undefined) {
@@ -359,7 +409,7 @@
             if (odhSection === undefined) {
                 odhSection = JSON.parse(JSON.stringify(odhSectionTemplate));
             }
-            odhSectionResources = [employmentStatus, currentJob, pastJob, combatPeriod].filter((r) => r !== undefined);
+            odhSectionResources = [employmentStatus, currentJob, pastJob, retirementDate, combatPeriod].filter((r) => r !== undefined);
             odhSection.entry = odhSectionResources.map((r) => {
                 let uri = r.fullUrl;
                 return {
@@ -381,7 +431,7 @@
       <br>
       <FormGroup>
         <Row class="mb-2">
-          <Col xs="auto">My current job is</Col>
+          <Col xs="auto">I work as a(n)</Col>
           <Col xs="auto">
             <Input type="select" bind:value={jobCurrent} style="max-width: 300px">
               {#each Object.keys(jobs) as job}
@@ -393,7 +443,7 @@
           </Col>
         </Row>
         <Row class="mb-2">
-          <Col xs="auto">Which is part of the</Col>
+          <Col xs="auto">My company's primary business activity is</Col>
           <Col xs="auto">
             <Input type="select" bind:value={industryCurrent} style="max-width: 300px">
               {#each Object.keys(industries) as industry}
@@ -403,7 +453,6 @@
               {/each}
             </Input>
           </Col>
-          <Col xs="auto">industry.</Col>
         </Row>
         <Row class="mb-2">
           <Col xs="auto">I started this job</Col>
@@ -422,7 +471,7 @@
       <br>
       <FormGroup>
         <Row class="mb-2">
-          <Col xs="auto">My previous job is</Col>
+          <Col xs="auto">I used to work as a(n)</Col>
           <Col xs="auto">
             <Input type="select" bind:value={jobPast} style="max-width: 300px">
               {#each Object.keys(jobs) as job}
@@ -434,7 +483,7 @@
           </Col>
         </Row>
         <Row class="mb-2">
-          <Col xs="auto">Which is part of the</Col>
+          <Col xs="auto">My company's primary business activity was</Col>
           <Col xs="auto">
             <Input type="select" bind:value={industryPast} style="max-width: 300px">
               {#each Object.keys(industries) as industry}
@@ -444,7 +493,6 @@
               {/each}
             </Input>
           </Col>
-          <Col xs="auto">industry.</Col>
         </Row>
         <Row class="mb-2">
           <Col xs="auto">I started this job</Col>
@@ -454,6 +502,22 @@
           <Col xs="auto">and stopped</Col>
           <Col xs="auto">
             <Input type={canShare ? "month" : "date"} bind:value={endPast} />
+          </Col>
+        </Row>
+      </FormGroup>
+    {/if}
+  </AccordionItem>
+  <AccordionItem active header="Retirement date">
+    <Row class="mx-1">
+      <Input type="switch" bind:checked={retired} label={retired ? "I am retired" : "I am not retired"}/>
+    </Row>
+    {#if retired}
+      <br>
+      <FormGroup>
+        <Row class="mb-2">
+          <Col xs="auto">I retired {canShare ? "in" : "on"}</Col>
+          <Col xs="auto">
+            <Input type={canShare ? "month" : "date"} bind:value={startRetirement} />
           </Col>
         </Row>
       </FormGroup>
