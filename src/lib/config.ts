@@ -18,7 +18,7 @@ export const SOF_HOSTS = [
     name: "eClinicalWorks - HIMSS Demo",
     url: "https://fhirstagingsrv.eclinicalweb.com/fhir/r4/JCBJCD",
     clientId: import.meta.env.VITE_ECW_HIMSS_CLIENT_ID,
-    note: "hsoni1010 / Cures@2022"
+    note: "zhangwei1986 / Cures@2022"
   },
   {
     id: "epic",
