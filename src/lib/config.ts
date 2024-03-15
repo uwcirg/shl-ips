@@ -6,20 +6,20 @@ export const API_BASE = import.meta.env.VITE_API_BASE;
 export const INTERMEDIATE_FHIR_SERVER_BASE = import.meta.env.VITE_INTERMEDIATE_FHIR_SERVER_BASE;
 
 export const SOF_HOSTS = [
-  {
-    id: "epic-himss",
-    name: "Epic - HIMSS Demo",
-    url: "https://ihe.epic.com/Interconnect-FHIR/api/FHIR/R4",
-    clientId: import.meta.env.VITE_EPIC_HIMSS_CLIENT_ID,
-    note: "zwei / epic"
-  },
-  {
-    id: "ecw-himss",
-    name: "eClinicalWorks - HIMSS Demo",
-    url: "https://fhirstagingsrv.eclinicalweb.com/fhir/r4/JCBJCD",
-    clientId: import.meta.env.VITE_ECW_HIMSS_CLIENT_ID,
-    note: "hsoni1010 / Cures@2022"
-  },
+  // {
+  //   id: "epic-himss",
+  //   name: "Epic - HIMSS Demo",
+  //   url: "https://ihe.epic.com/Interconnect-FHIR/api/FHIR/R4",
+  //   clientId: import.meta.env.VITE_EPIC_HIMSS_CLIENT_ID,
+  //   note: "zwei / epic"
+  // },
+  // {
+  //   id: "ecw-himss",
+  //   name: "eClinicalWorks - HIMSS Demo",
+  //   url: "https://fhirstagingsrv.eclinicalweb.com/fhir/r4/JCBJCD",
+  //   clientId: import.meta.env.VITE_ECW_HIMSS_CLIENT_ID,
+  //   note: "zhangwei / Cures@2022"
+  // },
   {
     id: "epic",
     name: "Epic Demo",

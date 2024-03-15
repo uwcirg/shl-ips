@@ -17,9 +17,7 @@
     Row,
     Spinner,
     TabContent,
-    TabPane,
-    Toast,
-    ToastBody } from 'sveltestrap';
+    TabPane } from 'sveltestrap';
   import FetchUrl from './FetchUrl.svelte';
   import FetchFile from './FetchFile.svelte';
   import FetchSoF from './FetchSoF.svelte';
