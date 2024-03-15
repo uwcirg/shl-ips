@@ -43,6 +43,10 @@
 <h2>Add Record to "{shl.label}"</h2>
 {/if}
 
+<svelte:head>
+    <title>Create IPS - WA Verify+</title> 
+</svelte:head>
+
 <AddFile
   on:shl-submitted={async ({ detail }) => {
     patientName = detail.patientName;

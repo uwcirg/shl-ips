@@ -11,6 +11,11 @@
   }
 </script>
 
+<svelte:head>
+    <title>{shl?.label ?? "My Link"} - WA Verify+</title> 
+</svelte:head>
+
+
 {#if shl}
   <HealthLink {shl} />
 {:else}
