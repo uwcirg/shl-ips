@@ -8,6 +8,10 @@
   } from 'sveltestrap';
 </script>
 <Styles />
+<svelte:head>
+    <title>Home - WA Verify+</title> 
+</svelte:head>
+
 <div style="padding-left: 17px">
   <span style="font-size: 16px; font-weight: 200; font-family: Verdana, sans-serif; margin: 50px 0px;">
     <p class="text-danger">Demonstration/Test System - do not enter protected health information</p>

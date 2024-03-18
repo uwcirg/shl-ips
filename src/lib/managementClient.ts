@@ -77,6 +77,48 @@ export class SHLClient {
     return true;
   }
 
+  async isActive(id: string): Promise<boolean> {
+    const res = await fetch(`${API_BASE}/shl/${id}/active`, {
+      method: 'GET'
+    });
+    let content;
+    const contentLength = res.headers.get('Content-Length');
+    if (contentLength && parseInt(contentLength) > 0) {
+      const contentType = res.headers.get('Content-Type');
+  
+      // Check if the content type indicates JSON
+      if (contentType && contentType.includes('application/json')) {
+        content = await res.json();
+      } else {
+        content = await res.text();
+      }
+    }
+    if (res.ok && content !==undefined) {
+      return content;
+    }
+    if (!res.ok) {
+      if (res.status === 404) {
+        if (content !== undefined && "message" in content && content.message === "Deleted") {
+          throw Error(content.message);
+        }
+        return false;
+      } else {
+        return false;
+      }
+    }
+  }
+
+  async reactivate(shl: SHLAdminParams): Promise<boolean> {
+    const req = await fetch(`${API_BASE}/shl/${shl.id}/reactivate`, {
+      method: 'PUT',
+      headers: {
+        authorization: `Bearer ${shl.managementToken}`
+      }
+    });
+    const res = await req.json();
+    return res;
+  }
+
   async addFile(
     shl: SHLAdminParams,
     content: unknown,

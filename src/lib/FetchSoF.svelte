@@ -92,7 +92,7 @@
   <FormGroup>
       <Label>Fetch US Core data via SMART authorization</Label>
     {#each SOF_HOSTS as host}
-      <Row class="mx-2" style={host.id === "epic" ? "padding-top: 13px; border-top: 1px solid rgb(204, 204, 204);" : ""}>
+      <Row class="mx-2">
         <Input type="radio" bind:group={sofHostSelection} value={host.id} label={host.name} />
         {#if host.note}
           <p class="text-secondary" style="margin-left:25px">{@html host.note}</p>
@@ -112,7 +112,7 @@
     </Button>
     </Col>
   {#if processing}
-    <Col xs="auto">
+    <Col xs="auto" class="d-flex align-items-center px-0">
       <Spinner color="primary" type="border" size="md"/>
     </Col>
   {/if}

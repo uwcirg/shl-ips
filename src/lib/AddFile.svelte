@@ -17,9 +17,7 @@
     Row,
     Spinner,
     TabContent,
-    TabPane,
-    Toast,
-    ToastBody } from 'sveltestrap';
+    TabPane } from 'sveltestrap';
   import FetchUrl from './FetchUrl.svelte';
   import FetchFile from './FetchFile.svelte';
   import FetchSoF from './FetchSoF.svelte';
@@ -40,6 +38,8 @@
   import { page } from '$app/stores';
   import { getResourcesFromIPS } from './resourceUploader.js';
   import { goto } from '$app/navigation';
+
+  export let status = "";
   
   let shlIdParam = $page.url.searchParams.get('shlid');
 
@@ -298,6 +298,10 @@
     
   }
 
+  function updateStatus(newStatus: string) {
+    status = newStatus;
+  }
+
   function confirmContent() {
     submitting = true;
   }
@@ -360,6 +364,7 @@
       bind:submitSelections={submitting}
       bind:injectedResources={resourcesToInject}
       on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }
+      on:status-update={ ({ detail }) => { updateStatus(detail) } }
     />
   {/if}
 </Accordion>
@@ -417,14 +422,46 @@
           </Button>
           </Col>
           {#if submitting}
-          <Col xs="auto">
-          <Spinner color="primary" type="border" size="md"/>
+          <Col xs="auto" class="d-flex align-items-center px-0">
+            <Spinner color="primary" type="border" size="md"/>
+          </Col>
+          <Col xs="auto" class="d-flex align-items-center">
+            <span class="text-secondary">{status}</span>
           </Col>
           {/if}
         </Row>
       </form>
     </Row>
-    
+  {:else}
+  <Row class="mt-4">
+    <h5>4. Add this summary to your SMART Health Link</h5>
+  </Row>
+  <Row class="mx-2">
+    <Label>It will be shared alongside any other contents of the link.</Label>
+  </Row>
+  <Row class="mx-2">
+    <form on:submit|preventDefault={confirmContent}>
+      <Row>
+        <Col xs="auto">
+        <Button color="primary" style="width:fit-content" disabled={submitting} type="submit">
+            {#if !submitting}
+            Add Summary
+            {:else}
+            Adding...
+            {/if}
+        </Button>
+        </Col>
+        {#if submitting}
+        <Col xs="auto" class="d-flex align-items-center px-0">
+          <Spinner color="primary" type="border" size="md"/>
+        </Col>
+        <Col xs="auto" class="d-flex align-items-center">
+          <span class="text-secondary">{status}</span>
+        </Col>
+        {/if}
+      </Row>
+    </form>
+  </Row>
   {/if}
   <span class="text-danger">{fetchError}</span>
   {#if resourcesToReview.length > 0}
@@ -445,7 +482,7 @@
           </Button>
         </Col>
         {#if submitting}
-        <Col xs="auto">
+        <Col xs="auto" class="d-flex align-items-center px-0">
           <Spinner color="primary" type="border" size="md"/>
         </Col>
         {/if}
