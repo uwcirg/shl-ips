@@ -1,7 +1,8 @@
 <script lang="ts">
   import QRCode from 'qrcode';
-  import { getContext } from 'svelte';
+  import { getContext, onMount } from 'svelte';
   import {
+    Alert,
     Button,
     Card,
     CardBody,
@@ -59,6 +60,19 @@
 
   let canShare = navigator?.canShare?.({ url: 'https://example.com', title: 'Title' });
 
+  let linkIsActive: boolean;
+  let showActive: boolean;
+  let linkNotFound: boolean = false;
+
+  onMount(async () => {
+    try {
+      linkIsActive = await shlClient.isActive(shl.id);
+    } catch (e) {
+      console.error(e);
+      linkNotFound = true;
+    }
+  });
+
   async function getUrl(shl: SHLAdminParams) {
     let shlMin = {
       id: shl.id,
@@ -101,6 +115,15 @@
     $shlStore[$shlStore.findIndex(obj => obj.id === shl.id)] = shl;
   }
 </script>
+{#if linkNotFound}
+<Alert color="danger" dismissible fade={false}>
+  <Col class="d-flex justify-content-between">
+    <Col class="d-flex align-items-center">
+      <Icon name="exclamation-octagon-fill" />&nbsp;This link no longer exists.
+    </Col>
+  </Col>
+</Alert>
+{/if}
 <Row cols={{ md: 2, xs: 1 }}>
   <Col>
     <Card class="mb-3" color="light">
@@ -166,6 +189,36 @@
   </Col>
   <Col>
     <FormGroup class="label shlbutton">
+      {#await linkIsActive then active}
+        <Alert isOpen={active === false} color="danger" fade={false}>
+          <Col class="d-flex justify-content-between">
+            <Col class="d-flex align-items-center">
+              <Icon name="exclamation-octagon-fill" />&nbsp;Inactive link
+            </Col>
+            <Button
+            size="sm" 
+            color="danger" 
+            style="width: fit-content"
+            on:click={async () => {
+              await shlClient.reactivate(shl).then(async () => {
+                linkIsActive = await shlClient.isActive(shl.id);
+                showActive = linkIsActive;
+                setTimeout(() => {
+                  showActive = false;
+                }, 2000)
+              });
+            }}>
+              <Icon name="arrow-counterclockwise"/>
+              Reactivate
+            </Button>
+          </Col>
+        </Alert>
+      {/await}
+      {#if showActive}
+      <Alert color="success">
+        <Icon name="check-circle-fill" />&nbsp;Active
+      </Alert>
+      {/if}
       <Label for="label">Label for SMART Health Link</Label>
       <Input
         name="label"

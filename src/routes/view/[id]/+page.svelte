@@ -19,5 +19,5 @@
 {#if shl}
   <HealthLink {shl} />
 {:else}
-  SHLink {$page.params.id} Not Found
+  SHLink {$page.params.id} not found.
 {/if}
