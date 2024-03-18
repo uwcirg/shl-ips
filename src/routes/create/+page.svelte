@@ -11,6 +11,8 @@
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
 
   let shl: SHLAdminParams | undefined;
+  let shlStatus = "";
+  let patientName = "";
   $: {
     let shlIdParam = $page.url.searchParams.get('shlid');
     if (shlIdParam) {
@@ -23,13 +25,15 @@
 
   async function addFiles(shl:SHLAdminParams, fileList:SHCFile[]) {
     for (let i=0; i < fileList.length; i++) {
-      shl = await shlClient.addFile(shl, fileList[i], 'application/smart-health-card');
+      shl = await shlClient.addFile(shl, fileList[i], patientName);
     }
     return shl;
   }
 
   async function newShlFromShc(details: SHLSubmitEvent): Promise<SHLAdminParams> {
+    shlStatus = "Creating SHL";
     let shlCreated = await shlClient.createShl({exp: details.exp, passcode: details.passcode });
+    shlStatus = "Adding IPS";
     shlCreated = await addFiles(shlCreated, details.shcs);
     shlCreated.label = details.label;
     shlCreated.passcode = details.passcode;
@@ -39,11 +43,18 @@
 </script>
 
 {#if shl}
-<h2>Add Record to "{shl.label}"</h2>
+<h4>Add another summary to "{shl.label}"</h4>
+<br>
 {/if}
 
+<svelte:head>
+    <title>Create IPS - WA Verify+</title> 
+</svelte:head>
+
 <AddFile
+  status={shlStatus}
   on:shl-submitted={async ({ detail }) => {
+    patientName = detail.patientName;
     if (shl) {
       shl = await addFiles(shl, detail.shcs);
       $shlStore[$shlStore.findIndex(obj => obj.id === shl?.id)] = shl;

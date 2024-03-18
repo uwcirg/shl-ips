@@ -136,7 +136,7 @@
     </Button>
   </Col>
   {#if processing}
-  <Col xs="auto">
+  <Col xs="auto" class="d-flex align-items-center px-0">
     <Spinner color="primary" type="border" size="md"/>
   </Col>
   {/if}

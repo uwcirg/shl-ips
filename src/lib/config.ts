@@ -6,9 +6,23 @@ export const API_BASE = import.meta.env.VITE_API_BASE;
 export const INTERMEDIATE_FHIR_SERVER_BASE = import.meta.env.VITE_INTERMEDIATE_FHIR_SERVER_BASE;
 
 export const SOF_HOSTS = [
+  // {
+  //   id: "epic-himss",
+  //   name: "Epic - HIMSS Demo",
+  //   url: "https://ihe.epic.com/Interconnect-FHIR/api/FHIR/R4",
+  //   clientId: import.meta.env.VITE_EPIC_HIMSS_CLIENT_ID,
+  //   note: "zwei / epic"
+  // },
+  // {
+  //   id: "ecw-himss",
+  //   name: "eClinicalWorks - HIMSS Demo",
+  //   url: "https://fhirstagingsrv.eclinicalweb.com/fhir/r4/JCBJCD",
+  //   clientId: import.meta.env.VITE_ECW_HIMSS_CLIENT_ID,
+  //   note: "zhangwei / Cures@2022"
+  // },
   {
     id: "epic",
-    name: "EPIC Demo",
+    name: "Epic Demo",
     url: "https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4",
     clientId: import.meta.env.VITE_EPIC_CLIENT_ID,
     note: "<a href='https://fhir.epic.com/Documentation?docId=testpatients' target='_blank' rel='noreferrer'>Test patient credentials <Icon name='box-arrow-up-right' /></a>"
@@ -72,14 +86,15 @@ export const SOF_PATIENT_RESOURCES = [
 ];
 
 export const VIEWER_BASE = new URL(
-  (import.meta.env.VITE_VIEWER_BASE ?? `/ips${dev ? '/index.html' : ''}`)+'#',
+  (import.meta.env.VITE_VIEWER_BASE ? import.meta.env.VITE_VIEWER_BASE : `/ips${dev ? '/index.html' : ''}`)+'#',
   window.location.href
 ).toString();
 export const PATIENT_IPS = {
-  'Dave deBronkart': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/11013/$summary'
+  'Dave deBronkart': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/16501/$summary'
 }
 export const EXAMPLE_IPS = {
   'Maria SEATTLE Gravitate': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/14599/$summary',
+  'Martha Mum': 'https://hl7-ips-server.hl7.org/fhir/Patient/15/$summary',
   'Peter Keith Jones': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/11013/$summary',
   'Angela Roster': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/10965/$summary',
   'Horace Skelly': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/11142/$summary',

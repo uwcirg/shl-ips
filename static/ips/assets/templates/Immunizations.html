@@ -1,26 +1,28 @@
 <div class="card">
-  <header class="card-header">
-    <a href="#" data-toggle="collapse" data-target="#immunizations-body" aria-expanded="true" class="">
-      <i class="icon-action fa fa-chevron-down"></i>
-    </a>
-    <span class="title"><b>Immunizations</b></span>
-  </header>
+  <a href="#" data-toggle="collapse" data-target="#immunizations-body" aria-expanded="true" class="section-header">
+    <header class="card-header">
+        <i class="icon-action fa fa-chevron-down"></i>
+        <span class="title"><b>Immunizations</b></span>
+    </header>
+  </a>
   <div class="card-body collapse show" id="immunizations-body">
     <ul class="list-group">
-      {{each(options.immunizations)}}
+      {{each (options.immunizations)}}
       <li class="list-group-item">
-        <span><b>{{@this.occurrenceDateTime}}</b></span><br />
-        <span>
-          {{if(@this.vaccineCode.coding[0].display)}}
+        <span class="badge badge-primary">{{@this.vaccineCode.coding[0].system}} : {{@this.vaccineCode.coding[0].code}}</span>
+        <br>
+        <strong>
+          {{if (@this.vaccineCode.coding[0].display)}}
             {{@this.vaccineCode.coding[0].display}}
           {{#else}}
             {{@this.vaccineCode.text}}
           {{/if}}
-        </span>
+        </strong>
         <br>
-        <span class="badge badge-primary">{{@this.vaccineCode.coding[0].system}}</span>
-        {{@this.vaccineCode.coding[0].code}}
-        <br>
+        Date: 
+        {{if (@this.occurrenceDateTime)}}
+          <span>{{@this.occurrenceDateTime}}</span><br />
+        {{/if}}
       </li>
       {{/each}}
     </ul>

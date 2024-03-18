@@ -1,10 +1,11 @@
-export type Bundle = unknown;
+export type Bundle = any;
 export interface SHLSubmitEvent {
   shcs: SHCFile[];
   label?: string;
   // content: Bundle;
   passcode?: string;
   exp?: number;
+  patientName?: string;
 }
 
 export interface ResourceRetrieveEvent {

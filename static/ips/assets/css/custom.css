@@ -74,6 +74,11 @@
   animation: animloader 1s linear infinite;
 }
 
+.section-header, .section-header:hover {
+  text-decoration: none;
+  color: black;
+}
+
 @keyframes animloader {
   0% {
     background-position: 0% 0, 0 0, 70px 5px, 70px 38px, 0px 66px;

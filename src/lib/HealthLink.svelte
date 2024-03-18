@@ -1,12 +1,14 @@
 <script lang="ts">
   import QRCode from 'qrcode';
-  import { getContext } from 'svelte';
+  import { getContext, onMount } from 'svelte';
   import {
+    Alert,
     Button,
     Card,
     CardBody,
     CardFooter,
     CardHeader,
+    CardImg,
     CardSubtitle,
     CardText,
     CardTitle,
@@ -21,7 +23,7 @@
     ModalFooter,
     Row
   } from 'sveltestrap';
-
+  import mergeImages from 'merge-images';
   import { goto } from '$app/navigation';
   import type { Writable } from 'svelte/store';
   import type { SHLAdminParams, SHLClient } from './managementClient';
@@ -45,22 +47,38 @@
   let qrCode: Promise<string>;
   let showPassword = false;
   $: type = showPassword ? 'text' : 'password';
-  $: icon = showPassword ? 'eye-slash-fill' : 'eye-fill';
+  $: icon = showPassword ? 'eye-fill' : 'eye-slash-fill';
   $: {
     href = getUrl(shl);
   }
 
   $: {
-    qrCode = href.then((r) => QRCode.toDataURL(r, { errorCorrectionLevel: 'M' }));
+    qrCode = href
+      .then((r) => QRCode.toDataURL(r, { errorCorrectionLevel: 'M' }))
+      .then(qrCode => mergeImages([qrCode, {src: '/img/qrcode-logo.png', x:0, y:4}]));
   }
 
   let canShare = navigator?.canShare?.({ url: 'https://example.com', title: 'Title' });
+
+  let linkIsActive: boolean;
+  let showActive: boolean;
+  let linkNotFound: boolean = false;
+
+  onMount(async () => {
+    try {
+      linkIsActive = await shlClient.isActive(shl.id);
+    } catch (e) {
+      console.error(e);
+      linkNotFound = true;
+    }
+  });
 
   async function getUrl(shl: SHLAdminParams) {
     let shlMin = {
       id: shl.id,
       managementToken: shl.managementToken,
       encryptionKey: shl.encryptionKey,
+      passcode: shl.passcode,
       files: []
     }
     return await shlClient.toLink(shlMin);
@@ -97,14 +115,23 @@
     $shlStore[$shlStore.findIndex(obj => obj.id === shl.id)] = shl;
   }
 </script>
-<Row cols={{ md: 2, sm: 1 }}>
+{#if linkNotFound}
+<Alert color="danger" dismissible fade={false}>
+  <Col class="d-flex justify-content-between">
+    <Col class="d-flex align-items-center">
+      <Icon name="exclamation-octagon-fill" />&nbsp;This link no longer exists.
+    </Col>
+  </Col>
+</Alert>
+{/if}
+<Row cols={{ md: 2, xs: 1 }}>
   <Col>
     <Card class="mb-3" color="light">
       <CardHeader>
         <CardTitle>
           <Icon name={shl.passcode ? 'lock' : 'unlock'} />
-          {shl.label}</CardTitle
-        >
+          {shl.label}
+        </CardTitle>
       </CardHeader>
       <CardBody>
         {#if shl.exp}
@@ -112,44 +139,86 @@
             Expires: {new Date(shl.exp * 1000).toISOString().slice(0, 10)}
           </CardSubtitle>
         {/if}
-    
         <CardText>
           {#await qrCode then dataUrl}
-            <p class="logo">
-              <img class="qr" alt="QR Code for SHL" src={dataUrl} />
-              <img class="logo" alt="WA Verify+ Logo" src='/img/waverifypluslogo.png' />
-            </p>
+            <CardImg class="img-fluid" alt="QR Code for SHL" src={dataUrl} />
           {/await}
         </CardText>
       </CardBody>
       <CardFooter>
-        {#if canShare}
-          <Button
-            size="sm"
-            color="success"
-            on:click={async () => {
-              navigator.share({ url: await href, title: shl.label });
-            }}><Icon name="share" /> Share</Button
-          >
-        {/if}
-        <Button size="sm" color="success" on:click={copyShl} disabled={!!copyNotice}>
-          <Icon name="clipboard" />
-          {#if copyNotice}
-            {copyNotice}
-          {:else}
-            Copy Link
+        <Row class="justify-content-center">
+          {#if canShare}
+          {#await qrCode then dataUrl}
+            <Button
+              size="sm"
+              color="primary"
+              class="mx-1" style="width: fit-content"
+              on:click={async () => {
+                const blob = await (await fetch(dataUrl)).blob();
+                const file = new File([blob], 'wa-verify-plus-qrcode.png', { type: blob.type });
+                if (navigator.canShare({ files: [file]})) {
+                  navigator.share({
+                    files: [file],
+                    url: await href,
+                    text: `${(shl.label ? `${shl.label}\n\n` : "")}Here's my WA Verify+ Health Summary:\n\n`
+                  });
+                } else {
+                  navigator.share({ url: await href, title: shl.label });
+                }
+              }}>
+                <Icon name="share" /> Share
+              </Button>
+          {/await}
           {/if}
-        </Button>
-        {#await href then href}
-          <Button size="sm" color="success" {href} target="_blank">
-            <Icon name="box-arrow-up-right" /> View IPS
-          </Button>
-        {/await}
+            <Button size="sm" color="primary" class="mx-1" style="width: fit-content" on:click={copyShl} disabled={!!copyNotice}>
+              <Icon name="clipboard" />
+              {#if copyNotice}
+                {copyNotice}
+              {:else}
+                Copy Link
+              {/if}
+            </Button>
+          {#await href then href}
+              <Button size="sm" color="primary" class="mx-1" style="width: fit-content" {href} target="_blank">
+                <Icon name="box-arrow-up-right" /> Open
+              </Button>
+          {/await}
+        </Row>
       </CardFooter>
     </Card>
   </Col>
   <Col>
     <FormGroup class="label shlbutton">
+      {#await linkIsActive then active}
+        <Alert isOpen={active === false} color="danger" fade={false}>
+          <Col class="d-flex justify-content-between">
+            <Col class="d-flex align-items-center">
+              <Icon name="exclamation-octagon-fill" />&nbsp;Inactive link
+            </Col>
+            <Button
+            size="sm" 
+            color="danger" 
+            style="width: fit-content"
+            on:click={async () => {
+              await shlClient.reactivate(shl).then(async () => {
+                linkIsActive = await shlClient.isActive(shl.id);
+                showActive = linkIsActive;
+                setTimeout(() => {
+                  showActive = false;
+                }, 2000)
+              });
+            }}>
+              <Icon name="arrow-counterclockwise"/>
+              Reactivate
+            </Button>
+          </Col>
+        </Alert>
+      {/await}
+      {#if showActive}
+      <Alert color="success">
+        <Icon name="check-circle-fill" />&nbsp;Active
+      </Alert>
+      {/if}
       <Label for="label">Label for SMART Health Link</Label>
       <Input
         name="label"
@@ -160,7 +229,7 @@
       />
       <Button
         size="sm"
-        color="secondary"
+        color="primary"
         disabled={(shl.label || '') === (shlControlled.label || '')}
         on:click={async () => {
           $shlStore = $shlStore.map((e) => {
@@ -197,7 +266,7 @@
       </div>
       <Button
         size="sm"
-        color="secondary"
+        color="primary"
         disabled={(shl.passcode || '') === (shlControlled.passcode || '')}
         on:click={async () => {
           await shlClient.resetShl({ ...shl, passcode: shlControlled.passcode });
@@ -207,26 +276,27 @@
         }}><Icon name="lock" /> Update Passcode</Button>
     </FormGroup>
     <FormGroup class="shlbutton">
-      <Button size="sm" on:click={toggle} color="danger">Delete SMART Health Link</Button>
+      <Button size="sm" on:click={toggle} color="danger"><Icon name="trash3" /> Delete SMART Health Link</Button>
       <Modal isOpen={open} backdrop="static" {toggle}>
         <ModalHeader {toggle}>Delete SMART Health Link</ModalHeader>
         <ModalBody>
           "{shl.label}" will be permanently deleted. Continue?
         </ModalBody>
         <ModalFooter>
-          <Button color="danger"  on:click={deleteShl}><Icon name="trash" /> Delete SHL</Button>
           <Button color="secondary" on:click={toggle}>Cancel</Button>
+          <Button color="danger"  on:click={deleteShl}><Icon name="trash3" /> Yes, Delete SHL</Button>
         </ModalFooter>
       </Modal>
     </FormGroup>
   </Col>
 </Row>
 <Row>
-  <h2>SHL Content</h2>
+  <h3>Contents</h3>
+  <Label>Add or remove summaries shared by this link.</Label>
 </Row>
 {#if shl.files.length == 0}
 <Row>
-  <p><em>No records found</em></p>
+  <p><em>No Summaries found</em></p>
 </Row>
 {/if}
 {#each shl.files as file (file.contentEncrypted)}
@@ -234,34 +304,37 @@
   <Col>
     <Card class="mb-3" color="light">
       <CardHeader>
-        <CardTitle>
-          IPS 
-          {#if file.date}
-            {file.date}
-          {/if}
-        </CardTitle>
+        <Row class="align-items-center">
+          <Col xs=6 class="align-items-center">
+            {#if file.date}
+              <strong><Icon name="calendar"></Icon> {file.date}</strong>
+            {/if}
+          </Col>
+          <Col xs=6>
+            <Row class="justify-content-end">
+              <Button size="sm" color="danger" style="width: fit-content" on:click={(e) => {
+                deleteFile(file.contentEncrypted);
+              }}>
+                <Icon name="trash3" />
+              </Button>
+            </Row>
+          </Col>
+        </Row>
       </CardHeader>
       <CardBody>
         {#if file.contentType}
         <CardText color="light" style="overflow: hidden; text-overflow: ellipsis">
-          <Icon name="file-earmark-text" /> {file.contentType}
+          <Icon name="file-earmark-text" /> {file.label ?? file.contentType}
         </CardText>
         {/if}
       </CardBody>
-      <CardFooter>
-        <Button size="sm" color="danger" on:click={(e) => {
-          deleteFile(file.contentEncrypted);
-        }}>
-          <Icon name="trash" /> Delete
-        </Button>
-      </CardFooter>
     </Card>
   </Col>
 </Row>
 {/each}
 <Row>
   <Col>
-    <Button class="mb-3" color="success" on:click={addFile}><Icon name="file-earmark-plus" /> Add Record</Button>
+    <Button class="mb-3" color="primary" on:click={addFile}><Icon name="file-earmark-plus" /> Add {shl.files.length == 0 ? "a" : "another"} Summary</Button>
   </Col>
 </Row>
 

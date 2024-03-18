@@ -1,15 +1,17 @@
 <div class="card">
-    <header class="card-header">
-        <a href="#" data-toggle="collapse" data-target="#patient-body" aria-expanded="true" class="">
+    <a href="#" data-toggle="collapse" data-target="#patient-body" aria-expanded="true" class="section-header">
+        <header class="card-header">
             <i class="icon-action fa fa-chevron-down"></i>
-        </a>
-        <span class="title"><b>Patient</b></span>
-    </header>
+            <span class="title"><b>Patient</b></span>
+        </header>
+    </a>
     <div class="card-body collapse show" id="patient-body">
         <p class="card-text">
-            Name: {{name[0].given}}, {{name[0].family}}
+            Name: {{name[0].given}} {{name[0].family}}
             <br>
             Birth Date: {{birthDate}}
+            <br>
+            Gender: {{gender}}
         </p>
     </div>
 </div>

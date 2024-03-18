@@ -13,8 +13,8 @@
   import { authorize, getResourcesWithReferences } from './sofClient.js';
   import { createEventDispatcher, onMount } from 'svelte';
   
-  const authDispatch = createEventDispatcher<{'sofAuthEvent': SOFAuthEvent}>();
-  const resourceDispatch = createEventDispatcher<{'updateResources': ResourceRetrieveEvent}>();
+  const authDispatch = createEventDispatcher<{'sof-auth-init': SOFAuthEvent; 'sof-auth-fail': SOFAuthEvent}>();
+  const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
   let processing = false;
   let fetchError = "";
   let result: ResourceRetrieveEvent = {
@@ -34,8 +34,12 @@
     fetchError = "";
     try {
       if (sofHost) {
-        authDispatch('sofAuthEvent')
-        authorize(sofHost.url, sofHost.clientId);
+        try {
+          authorize(sofHost.url, sofHost.clientId);
+          authDispatch('sof-auth-init');
+        } catch (e) {
+          authDispatch('sof-auth-fail')
+        }
       }
     } catch (e) {
       console.log('Failed', e);
@@ -71,20 +75,29 @@
 
   async function fetchData() {
     processing = true;
-    let resources = await getResourcesWithReferences(1);
-    result.resources = resources;
-    console.log(resources)
-    processing = false;
-    return resourceDispatch('updateResources', result);
+    try {
+      let resources = await getResourcesWithReferences(1);
+      result.resources = resources;
+      console.log(resources)
+      processing = false;
+      return resourceDispatch('update-resources', result);
+    } catch (e) {
+      processing = false;
+      endSession();
+    }
   }
 
 </script>
 <form on:submit|preventDefault={() => prepareIps()}>
   <FormGroup>
-      <Label>Fetch via SMART authorization</Label>
+      <Label>Fetch US Core data via SMART authorization</Label>
     {#each SOF_HOSTS as host}
-      <Input type="radio" bind:group={sofHostSelection} value={host.id} label={host.name}/>
-      <p class="text-secondary" style="margin-left:25px">{@html host.note}</p>
+      <Row class="mx-2">
+        <Input type="radio" bind:group={sofHostSelection} value={host.id} label={host.name} />
+        {#if host.note}
+          <p class="text-secondary" style="margin-left:25px">{@html host.note}</p>
+        {/if}
+      </Row>
     {/each}
   </FormGroup>
 
@@ -99,7 +112,7 @@
     </Button>
     </Col>
   {#if processing}
-    <Col xs="auto">
+    <Col xs="auto" class="d-flex align-items-center px-0">
       <Spinner color="primary" type="border" size="md"/>
     </Col>
   {/if}

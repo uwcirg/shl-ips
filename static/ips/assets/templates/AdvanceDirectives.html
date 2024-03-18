@@ -1,14 +1,14 @@
 <div class="card">
-    <header class="card-header">
-        <a href="#" data-toggle="collapse" data-target="#advanceDirectives-body" aria-expanded="true" class="">
+    <a href="#" data-toggle="collapse" data-target="#advanceDirectives-body" aria-expanded="true" class="section-header">
+        <header class="card-header">
             <i class="icon-action fa fa-chevron-down"></i>
-        </a>
-        <span class="title"><b>Advance Directives</b></span>
-    </header>
+            <span class="title"><b>Advance Directives</b></span>
+        </header>
+    </a>
     <div class="card-body collapse show" id="advanceDirectives-body">
         <ul class="list-group">
-            {{each(options.ad)}}
-            <li>
+            {{each(options.ad.consent)}}
+              <li>
                 Type: {{@this.resourceType}}
                 <br/>
                 Text: 
@@ -30,7 +30,15 @@
                 {{if (@this.description && @this.description.text)}}
                   {{@this.description.text}}
                 {{/if}}
-            </li>
+              </li>
+            {{/each}}
+            {{each(options.ad.documentReference)}}
+              {{each(@this.content)}}
+                {{if(@this.attachment.contentType === "application/pdf")}}
+                    <iframe id="ad-viewer" src="/ips/assets/js/pdf-js/web/viewer.html" style="position: relative;   top: 0;  bottom: 0; left: 0;   width: 100%;   height: 700px;  border: 0"></iframe>
+                {{/if}}
+              {{/each}}
+              
             {{/each}}
         </ul>
     </div>
