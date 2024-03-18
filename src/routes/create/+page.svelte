@@ -11,6 +11,7 @@
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
 
   let shl: SHLAdminParams | undefined;
+  let shlStatus = "";
   let patientName = "";
   $: {
     let shlIdParam = $page.url.searchParams.get('shlid');
@@ -30,7 +31,9 @@
   }
 
   async function newShlFromShc(details: SHLSubmitEvent): Promise<SHLAdminParams> {
+    shlStatus = "Creating SHL";
     let shlCreated = await shlClient.createShl({exp: details.exp, passcode: details.passcode });
+    shlStatus = "Adding IPS";
     shlCreated = await addFiles(shlCreated, details.shcs);
     shlCreated.label = details.label;
     shlCreated.passcode = details.passcode;
@@ -40,7 +43,8 @@
 </script>
 
 {#if shl}
-<h2>Add Record to "{shl.label}"</h2>
+<h4>Add another summary to "{shl.label}"</h4>
+<br>
 {/if}
 
 <svelte:head>
@@ -48,6 +52,7 @@
 </svelte:head>
 
 <AddFile
+  status={shlStatus}
   on:shl-submitted={async ({ detail }) => {
     patientName = detail.patientName;
     if (shl) {

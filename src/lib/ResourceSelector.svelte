@@ -56,6 +56,7 @@
     };
 
     const ipsDispatch = createEventDispatcher<{ 'ips-retrieved': IPSRetrieveEvent }>();
+    const statusDispatch = createEventDispatcher<{ 'status-update': string }>();
     let resources:{ [key: string]: ResourceHelper } = {};
     let resourcesByType:{ [key: string]: { [key: string]: ResourceHelper} } = {};
     let submitting = false;
@@ -220,10 +221,13 @@
 
     async function confirm() {
         submitting = true;
+        statusDispatch("status-update", "Preparing");
         let preparedResources = prepareResources(getSelectedResources());
+        statusDispatch("status-update", "Adding data");
         reference = await uploadResources(preparedResources);
 
         let content:any;
+        statusDispatch("status-update", "Building IPS");
         const contentResponse = await fetch(reference!, {
             headers: { accept: 'application/fhir+json' }
         }).then(function(response) {
