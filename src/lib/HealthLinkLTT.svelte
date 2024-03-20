@@ -136,7 +136,7 @@
         reads the code and navigates to a page showing your Choices Summary.
       </li>
     </ol>
-    <Row class="justify-content-center mx-4" cols={{ xs: 1, md: 2 }}>
+    <Row class="justify-content-center mx-4">
       <Col>
         <Row class="justify-content-center">
           <Card class="mb-2 p-0" color="light">
