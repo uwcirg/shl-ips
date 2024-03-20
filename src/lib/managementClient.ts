@@ -2,7 +2,7 @@ import { randomStringWithEntropy, base64url } from './util';
 import { API_BASE, VIEWER_BASE } from './config';
 import * as jose from 'jose';
 
-type ConfigForServer = Pick<SHLAdminParams, 'passcode' | 'exp' | 'userId'>;
+type ConfigForServer = Pick<SHLAdminParams, 'passcode' | 'exp' | 'userId' | 'sessionId'>;
 
 export interface SHLAdminParams {
   id: string;
@@ -15,6 +15,7 @@ export interface SHLAdminParams {
     contentType: string;
     date?: string;
   }[];
+  created?: number;
   passcode?: string;
   exp?: number;
   label?: string;
