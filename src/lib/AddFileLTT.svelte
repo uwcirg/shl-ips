@@ -37,63 +37,92 @@
     let label = `Let’s Talk Tech Choices Report (${new Date().toLocaleDateString('en-US', {day: 'numeric', month: 'long', year: 'numeric'})})`;
     let passcode = "";
 
+    let checkedShl = false;
+    let fetchedResources = false;
+
+    let patientId: string;
+    let sessionId: string;
+
     $: {
+      if (checkedShl && fetchedResources) {
+        render();
+      }
+    }
+
+    async function render() {
       // True when FetchSoF and RetrieveSHL resolve. Creates a new SHL if no SHL was retrieved.
       if (resourcesToReview.length > 0 && ($shlStore !== undefined || createSHL)) {
-        let patient: any[] = resourcesToReview.filter((r) => r.resourceType === "Patient");
+        let patient: any = resourcesToReview.filter((r) => r.resourceType === "Patient")[0];
         // TODO: Get summary DocumentReferences from resourcesToReview
-        let summaryDocRefs: any[] = resourcesToReview.filter((r) => r.resourceType === "DocumentReference" && r.type.coding[0].code === "81334-5");
+        let summaryDocRefs: any[] = resourcesToReview.filter((r) => r.resourceType === "DocumentReference" && !(r.type?.coding[0]?.code === "34108-1"));
         // Compare sessionIDs in most recent DocRef with sessionID in most recent SHL
-        let mostRecentDocRef = summaryDocRefs.sort((a, b) => a.meta.lastUpdated - b.meta.lastUpdated)[0];
+        let mostRecentDocRef = summaryDocRefs.sort((a, b) => b.date - a.date)[0];
+        // TODO: Get shl DocumentReferences from resourcesToReview
+        let shlDocRefs: any[] = resourcesToReview.filter((r) => r.resourceType === "DocumentReference" && r.type?.coding[0]?.code === "34108-1");
+
+        patientId = sofClient.getPatientID();
+        sessionId = mostRecentDocRef.id;
 
         if (createSHL) {
           console.log("Creating new SHL");
           createSHL = false;
-          if (mostRecentDocRef) {
-            let ips = createIpsPayload(patient, mostRecentDocRef);
-            packageShc(ips).then((shc) => {
-              return submitShl([shc]);
-            }).then((shl) => {
-              $shlStore = shl;
-              console.log($shlStore);
-              shlReadyDispatch('shl-ready', true);
-            });
-          } else {
-            throw Error("Unable to create SHL: no summary found for patient");
-          }
+          newShl(patient, mostRecentDocRef);
         } else {
-          // TODO: Get shl DocumentReferences from resourcesToReview
-          let shlDocRefs: any[] = resourcesToReview.filter((r) => r.resourceType === "DocumentReference" && r.type.coding[0].code === "34108-1");
-
-          // Look for id of shlStore in shls from HAPI
-          for(let i=0; i < shlDocRefs.length; i++) {
-            // Decode docref data
-            let data = atob(shlDocRefs[i].content[0].attachment.data);
-            let shl = JSON.parse(data);
-            if (shl.id == $shlStore.id || true) {
-              $shlStore.sessionId = shl.sessionId;
-              $shlStore.encryptionKey = shl.key;
-              // $shlStore.managementToken = shl.managementToken;
-              break;
-            }
-          }
-
-          console.log("Successfully retrieved SHL and Resources");
-          if ($shlStore.sessionId == mostRecentDocRef.sessionId || true) {
-            // The current SHL is most recent, so use it
-            shlReadyDispatch('shl-ready', true);
-          } else if (mostRecentDocRef) {
-            let ips = createIpsPayload(patient, mostRecentDocRef);
-            packageShc(ips).then((shc) => {
-              return submitShl([shc]);
-            }).then((shl) => {
-              $shlStore = shl;
-              shlReadyDispatch('shl-ready', true);
-            });
-          } else {
-            throw Error("No summary found for patient")
-          }
+          getCurrentShl(patient, mostRecentDocRef, shlDocRefs);
         }
+      }
+    }
+
+    async function newShl(patient: any, mostRecentDocRef: any) {
+      if (mostRecentDocRef) {
+        let ips = createIpsPayload(patient, mostRecentDocRef);
+        let shc = await packageShc(ips);
+        let shl = await submitShl([shc]);
+        let reportDate = new Date(mostRecentDocRef.date)
+          .toLocaleDateString('en-US', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+          });
+        let reportLabel = `Let's Talk Tech Choices Report (${reportDate})`;
+        let result = await sofClient.postShl(shl, mostRecentDocRef, reportLabel);
+        $shlStore = shl;
+        console.log($shlStore);
+        shlReadyDispatch('shl-ready', true);
+      } else {
+        throw Error("Unable to create SHL: no summary found for patient");
+      }
+    }
+
+    async function getCurrentShl(patient: any, mostRecentDocRef: any, shlDocRefs: any[]) {
+      // Look for id of shlStore in shls from HAPI
+      let found = false;
+      for(let i=0; i < shlDocRefs.length; i++) {
+        let docRef = shlDocRefs[i];
+        let relatedSessionDocRefId = docRef.context?.related[0].reference.split('/')[1];
+        if (relatedSessionDocRefId == $shlStore.sessionId) {
+          // Decode docref data
+          let data = atob(shlDocRefs[i].content[0].attachment.data);
+          let shlData = JSON.parse(data);
+          
+          $shlStore.encryptionKey = shlData.encryptionKey;
+          $shlStore.managementToken = shlData.managementToken;
+          $shlStore.label = shlData.label;
+          
+          found = true;
+          break;
+        }
+      }
+
+      console.log("Successfully retrieved SHL and Resources");
+      if (found) {
+        // The current SHL is most recent, so use it
+        shlReadyDispatch('shl-ready', true);
+      } else if (mostRecentDocRef) {
+        console.log(`Couldn't find FHIR record for SHL ${$shlStore.id} and session ${$shlStore.sessionId}, creating new SHL`);
+        newShl(patient, mostRecentDocRef);
+      } else {
+        throw Error("No summary found for patient")
       }
     }
 
@@ -103,6 +132,7 @@
         if (resourceResult.resources) {
           // Trigger update in ResourceSelector
           resourcesToReview = resourceResult.resources;
+          fetchedResources = true;
         }
       } catch (e) {
         console.log('Failed', e);
@@ -119,6 +149,7 @@
         } else {
           createSHL = true;
         }
+        checkedShl = true;
       } catch (e) {
         console.log('Failed', e);
         fetchError = "Error preparing IPS";
@@ -216,7 +247,8 @@
       let shlCreated = await shlClient.createShl({
         exp: details.exp,
         passcode: details.passcode,
-        userId: sofClient.getPatientID()
+        userId: patientId,
+        sessionId: sessionId
       });
       shlCreated = await addFiles(shlCreated, details.shcs);
       shlCreated.label = details.label;

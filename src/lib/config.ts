@@ -1,9 +1,11 @@
 // import {PUBLIC_BASE_URL} from '$env/static/public';
 import { dev } from '$app/environment';
 
-export const API_BASE = import.meta.env.VITE_API_BASE ?? "https://shl-server.inform.dev.cirg.uw.edu/api";
+export const API_BASE = import.meta.env.VITE_API_BASE;
 
 export const INTERMEDIATE_FHIR_SERVER_BASE = import.meta.env.VITE_INTERMEDIATE_FHIR_SERVER_BASE;
+
+export const FHIR_R4_EXTERNAL_ID_SYSTEM = import.meta.env.VITE_FHIR_R4_EXTERNAL_ID_SYSTEM;
 
 export const SOF_RESOURCES = [
   'Patient',
@@ -49,7 +51,7 @@ export const SOF_PATIENT_RESOURCES = [
 ];
 
 export const RESOURCE_SCOPE = SOF_PATIENT_RESOURCES.map(resourceType => `patient/${resourceType}.read`).join(" ");
-const keycloakScope = `openid`;
+const keycloakScope = `openid online_access`;
 const fullScope = `${keycloakScope} fhirUser ${RESOURCE_SCOPE}`;
 const SOF_REDIRECT_URI = '/share';
 
@@ -75,7 +77,7 @@ export const SOF_HOSTS = [
 ];
 
 export const VIEWER_BASE = new URL(
-  (import.meta.env.VITE_VIEWER_BASE ?? `/ips${dev ? '/index.html' : ''}`)+'#',
+  (import.meta.env.VITE_VIEWER_BASE ? import.meta.env.VITE_VIEWER_BASE : `/ips${dev ? '/index.html' : ''}`)+'#',
   window.location.href
 ).toString();
 export const PATIENT_IPS = {

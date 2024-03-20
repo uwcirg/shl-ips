@@ -1,8 +1,7 @@
 import FHIR from 'fhirclient';
-import * as crypto from 'crypto';
 import Handlebars from 'handlebars';
-import { SOF_PATIENT_RESOURCES, SOF_RESOURCES } from './config.ts';
-// import shlDocumentReference from './resourceTemplates.js';
+import { SOF_PATIENT_RESOURCES, SOF_RESOURCES, FHIR_R4_EXTERNAL_ID_SYSTEM } from './config.ts';
+import shlDocumentReference from './resourceTemplates.js';
 
 const patientResourceScope = SOF_PATIENT_RESOURCES.map(resourceType => `patient/${resourceType}.read`);
 const resourceScope = patientResourceScope.join(" ");
@@ -10,6 +9,7 @@ const resourceScope = patientResourceScope.join(" ");
 export class SOFClient {
     client;
     configuration;
+    patientId;
 
     constructor(configuration) {
         this.configuration = configuration;
@@ -22,6 +22,20 @@ export class SOFClient {
         } catch (error) {
             console.error('Error initializing FHIR client:', error);
         }
+    }
+
+    getKeyCloakUserID() {
+        let stateToken = this.client.getState("tokenResponse.access_token");
+        if (stateToken) {
+            // let state = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+            let part = stateToken.split('.')[1];
+            let decoded = window.atob(part);
+            let state = JSON.parse(decoded);
+            // let state = JSON.parse(window.btoa(stateToken.split('.')[1]));
+            let keycloakUserId = state?.sub;
+            this.patientId = keycloakUserId;
+        }
+        return this.patientId;
     }
 
     authorize(inputFhirUrl, clientId) {
@@ -55,7 +69,7 @@ export class SOFClient {
 
     async requestResources(resourceType) {
         let self = this;
-        let endpoint = (resourceType == 'Patient' ? 'Patient' : `${resourceType}`);//?patient=`) + client.getPatientId();
+        let endpoint = (resourceType == 'Patient' ? 'Patient?identifier=' : `${resourceType}?subject.identifier=`) + this.getPatientID();
         return this.client.request(endpoint, { flat: true }).then((result) => {
             let resourcesToPass = [];
             if (Array.isArray(result)) {
@@ -81,9 +95,9 @@ export class SOFClient {
         }
 
         // Check that we can write to the server
-        if (!(SOF_PATIENT_RESOURCES.find('Binary') && SOF_PATIENT_RESOURCES.find('DocumentReference'))) {
-            throw Error('Unable to access resources required to save SHL.');
-        }
+        // if (!(SOF_PATIENT_RESOURCES.find('Binary') && SOF_PATIENT_RESOURCES.find('DocumentReference'))) {
+        //     throw Error('Unable to access resources required to save SHL.');
+        // }
 
         /* This SHL metadata DocumentReference:
         * links the SHL to the session
@@ -92,26 +106,59 @@ export class SOFClient {
         */
         const shlData = {
             id: shl.id,
-            created: shl.created,
-            patientId: shl.patientId,
-            sessionId: shl.sessionId,
+            label: label,
+            patientId: shl.userId,
+            sessionId: docRef.id,//shl.sessionId,
             managementToken: shl.managementToken,
-            key: shl.key
+            encryptionKey: shl.encryptionKey
         };
-        const shlPayload = btoa(shlData);
-        const shlPayloadHash = crypto.createHash('sha1').update(shlPayload).digest().toString('base64');
+        const shlPayload = btoa(JSON.stringify(shlData));
         let shlDocRefInputs = {
             date: new Date().toISOString(),
-            patientId: shl.patientId,
-            documentReferenceId: docRef,
+            patientId: shl.userId,
+            documentReferenceId: docRef.id,
             data: shlPayload,
-            hash: shlPayloadHash,
             label: label,
             created: shl.created
-        }
-        const shlDocRefTemplate = Handlebars.compile(shlDocumentReference);
-        let docRefResource = shlDocRefTemplate(shlDocRefInputs);
-        let docRefResult = this.client.create(docRefResource);
+        };
+
+        let shlDocRefTemplate = {
+            "resourceType": "DocumentReference",
+            "status": "current",
+            "type": {
+                "coding": [
+                    {
+                        "system": "http://loinc.org",
+                        "code": "34108-1",
+                        "display": "SMART Health Link Metadata"
+                    }
+                ]
+            },
+            "subject": {
+                "reference": `Patient/${shl.userId}`
+            },
+            "date": shlDocRefInputs.date,
+            "description": "SMART Health Link Metadata",
+            "content": [
+                {
+                    "attachment": {
+                        "contentType": "application/json",
+                        "language": "en-US",
+                        "data": shlPayload,
+                        "title": label,
+                    }
+                }
+            ],
+            "context": {
+                "related": [
+                    {
+                        "reference": `DocumentReference/${docRef.id}`
+                    }
+                ]
+            }
+        };
+        let docRefResult = await this.client.create(shlDocRefTemplate);
+        return shlData;
     }
 
     getClient() {
@@ -119,18 +166,17 @@ export class SOFClient {
     }
 
     getPatientID() {
-        return "ltt-test-patient";
-        return this.client.getPatientId();
+        return this.patientId ?? this.getKeyCloakUserID();
     }
 
     async getResources() {
         const self = this;
         let pid = this.getPatientID();
         // TODO SOF: Bring back in once SMART Auth is set up?
-        // if (!pid) {
-        //     console.error("No patient ID found");
-        //     return undefined;
-        // }
+        if (!pid) {
+            console.error("No patient ID found");
+            return [];
+        }
         // Establish resource display methods
         let resources = (await Promise.allSettled(SOF_PATIENT_RESOURCES.map((resourceType) => {
             return self.requestResources(resourceType);
