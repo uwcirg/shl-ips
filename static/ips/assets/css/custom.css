@@ -1,5 +1,32 @@
+:root {
+  --body-bg-color: #f7f3f3;
+  --primary-color: #325c33;
+}
+
+#header {
+  position: fixed;
+  z-index: 10000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  background-color: var(--primary-color);
+  color: #fff;
+  line-height: 3em;
+  box-shadow: 0 0 0.15em 0 rgba(0, 0, 0, 0.1);
+  margin-bottom: 1em;
+  display: flex;
+  align-items: center;
+  height: 4em;
+}
+
+#header img {
+  height: 2em;
+  padding-left: 1em;
+}
+
 .card {
 	margin-bottom: 20px;
+  background-color: var(--body-bg-color);
 }
 
 .icon-action {
