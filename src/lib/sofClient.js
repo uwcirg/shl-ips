@@ -1,7 +1,5 @@
 import FHIR from 'fhirclient';
-import Handlebars from 'handlebars';
 import { SOF_PATIENT_RESOURCES, SOF_RESOURCES, FHIR_R4_EXTERNAL_ID_SYSTEM } from './config.ts';
-import shlDocumentReference from './resourceTemplates.js';
 
 const patientResourceScope = SOF_PATIENT_RESOURCES.map(resourceType => `patient/${resourceType}.read`);
 const resourceScope = patientResourceScope.join(" ");
