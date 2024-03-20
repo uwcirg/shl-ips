@@ -51,27 +51,27 @@
 <Navbar class="navbar d-none d-sm-block" expand="sm" style="background: #325c33; border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 10px">
   <Nav navbar pills>
     <NavItem>
-      <NavLink active style="background-color:white" class="text-black" href="https://letstalktech.uw.edu/" on:click={closeNav}><Icon name="arrow-left"/> Back</NavLink>
+      <NavLink active style="background-color:white" class="text-black" href="https://inform.dev.cirg.uw.edu/" on:click={closeNav}><Icon name="arrow-left"/> Back</NavLink>
     </NavItem>
   </Nav>
   <NavbarBrand class="mx-auto">
-    <a href="https://letstalktech.uw.edu" rel="noreferrer" target="_blank"><div style="background:#325c33;"><Image alt="Let's Talk Tech Logo" width="240" src="/img/ltt-logo.svg"/></div></a>
+    <a href="https://inform.dev.cirg.uw.edu" rel="noreferrer" target="_blank"><div style="background:#325c33;"><Image alt="Let's Talk Tech Logo" width="240" src="/img/ltt-logo.svg"/></div></a>
   </NavbarBrand>
   <Nav pills>
     <NavItem active>
-      <NavLink active style="background-color:white" class="text-black" href="https://letstalktech.uw.edu/help" on:click={closeNav}>Log Out</NavLink>
+      <NavLink active style="background-color:white" class="text-black" href="https://inform.dev.cirg.uw.edu/help" on:click={closeNav}>Log Out</NavLink>
     </NavItem>
   </Nav>
 </Navbar>
 <Navbar class="navbar d-block d-sm-none" expand="sm" style="background: #325c33; border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 10px">
   <NavbarBrand>
-    <a href="https://letstalktech.uw.edu" rel="noreferrer" target="_blank"><div style="background:#325c33;"><Image alt="Let's Talk Tech Logo" width="240" src="/img/ltt-logo.svg"/></div></a>
+    <a href="https://inform.dev.cirg.uw.edu" rel="noreferrer" target="_blank"><div style="background:#325c33;"><Image alt="Let's Talk Tech Logo" width="240" src="/img/ltt-logo.svg"/></div></a>
   </NavbarBrand>
   <NavbarToggler style="background-color: white" on:click={() => (isOpen = !isOpen)} />
   <Collapse {isOpen} navbar expand="sm" on:update={handleUpdate}>
     <Nav class="ms-auto" navbar>
       <NavItem>
-        <NavLink class="text-white" href="https://letstalktech.uw.edu/" on:click={closeNav}><Icon name="arrow-left"/> Back</NavLink>
+        <NavLink class="text-white" href="https://inform.dev.cirg.uw.edu/" on:click={closeNav}><Icon name="arrow-left"/> Back</NavLink>
       </NavItem>
       <NavItem>
         <NavLink class="text-white" href="https://letstalktech.uw.edu/help" on:click={closeNav}>Log Out</NavLink>
