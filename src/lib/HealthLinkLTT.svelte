@@ -94,8 +94,7 @@
 <div transition:fade>
 <Row class="justify-content-center">
   <Col sm="8">
-    <!-- <h2>{$shlStore.label}</h2> -->
-    <h2>Let's Talk Tech Choices Report (November 29, 2023)</h2>
+    <h2>{$shlStore.label}</h2>
     <h3>Share Report</h3>
     <p>There are 2 ways to share this electronically.</p>
     <ol>
