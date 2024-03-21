@@ -68,8 +68,8 @@ export const SOF_HOSTS = [
   {
     id: "keycloak",
     name: "Let's Talk Tech Login",
-    iss: "https://fhir-auth.inform.dev.cirg.uw.edu/fhir",
-    clientId: "shl_creator",
+    iss: import.meta.env.VITE_SOF_ISS,//"https://fhir-auth.inform.dev.cirg.uw.edu/fhir",
+    clientId: import.meta.env.VITE_SOF_CLIENT_ID, // shl_creator
     scope: keycloakScope,
     redirect_uri: SOF_REDIRECT_URI,
     note: "Credentials provided"
