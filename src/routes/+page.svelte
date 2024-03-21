@@ -6,5 +6,5 @@
 
   let shlClient: SHLClient = getContext('shlClient');
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
-  goto('/home');
+  goto('/share');
 </script>
