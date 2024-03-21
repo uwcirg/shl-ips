@@ -18,7 +18,7 @@
   } from 'sveltestrap';
   import { SHLClient, type SHLAdminParams } from '$lib/managementClient';
   import { SOFClient } from '$lib/sofClient';
-  import { SOF_HOSTS } from '$lib/config';
+  import { SOF_HOSTS, BACK_URL } from '$lib/config';
   let shlStore = writable<SHLAdminParams>(undefined);
   setContext('shlStore', shlStore);
 
@@ -51,7 +51,7 @@
 <Navbar class="navbar d-none d-sm-block" expand="sm" style="background: #325c33; border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 10px">
   <Nav navbar pills>
     <NavItem>
-      <NavLink active style="background-color:white" class="text-black" href="https://inform.dev.cirg.uw.edu/" on:click={closeNav}><Icon name="arrow-left"/> Back</NavLink>
+      <NavLink active style="background-color:white" class="text-black" href={BACK_URL} on:click={closeNav}><Icon name="arrow-left"/> Back</NavLink>
     </NavItem>
   </Nav>
   <NavbarBrand class="mx-auto">
@@ -71,7 +71,7 @@
   <Collapse {isOpen} navbar expand="sm" on:update={handleUpdate}>
     <Nav class="ms-auto" navbar>
       <NavItem>
-        <NavLink class="text-white" href="https://inform.dev.cirg.uw.edu/" on:click={closeNav}><Icon name="arrow-left"/> Back</NavLink>
+        <NavLink class="text-white" href={BACK_URL} on:click={closeNav}><Icon name="arrow-left"/> Back</NavLink>
       </NavItem>
       <NavItem>
         <NavLink class="text-white" href="https://letstalktech.uw.edu/help" on:click={closeNav}>Log Out</NavLink>

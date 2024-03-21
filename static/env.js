@@ -7,5 +7,6 @@ window.globalConfig = {
     // VITE_INTERMEDIATE_FHIR_SERVER_BASE: "",
     // VITE_SOF_CLIENT_ID: "",
     // VITE_SOF_ISS: "",
+    // VITE_BACK_URL: "",
     // DEV_SERVER_PORT: "",
 }
