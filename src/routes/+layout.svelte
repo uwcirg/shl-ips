@@ -18,7 +18,8 @@
   } from 'sveltestrap';
   import { SHLClient, type SHLAdminParams } from '$lib/managementClient';
   import { SOFClient } from '$lib/sofClient';
-  import { SOF_HOSTS, BACK_URL } from '$lib/config';
+  import { SOF_HOSTS, BACK_URL, LOGOUT_URL } from '$lib/config';
+  import { goto } from '$app/navigation';
   let shlStore = writable<SHLAdminParams>(undefined);
   setContext('shlStore', shlStore);
 
@@ -43,6 +44,17 @@
   }
   function closeNav() {
     isOpen = false;
+  }
+
+  function logout() {
+    closeNav();
+    let keyRaw = sessionStorage.getItem('SMART_KEY');
+    if (keyRaw != undefined) {
+      let key = JSON.parse(keyRaw);
+      sessionStorage.removeItem(key);
+    }
+    sessionStorage.removeItem('SMART_KEY');
+    goto(LOGOUT_URL);
   }
 </script>
 
@@ -74,7 +86,7 @@
         <NavLink class="text-white" href={BACK_URL} on:click={closeNav}><Icon name="arrow-left"/> Back</NavLink>
       </NavItem>
       <NavItem>
-        <NavLink class="text-white" href="https://letstalktech.uw.edu/help" on:click={closeNav}>Log Out</NavLink>
+        <NavLink class="text-white" on:click={logout}>Log Out</NavLink>
       </NavItem>
     </Nav>
   </Collapse>

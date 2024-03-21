@@ -1,5 +1,5 @@
 window.globalConfig = {
-    // VITE_SHOW_DEMO: "",
+    // VITE_SHOW_DEMO: false,
     // VITE_EPIC_CLIENT_ID: "",
     // VITE_CERNER_CLIENT_ID: "",
     // VITE_API_BASE: "",
@@ -8,5 +8,6 @@ window.globalConfig = {
     // VITE_SOF_CLIENT_ID: "",
     // VITE_SOF_ISS: "",
     // VITE_BACK_URL: "",
+    // VITE_LOGOUT_URL: "",
     // DEV_SERVER_PORT: "",
 }

@@ -7,6 +7,7 @@ export const INTERMEDIATE_FHIR_SERVER_BASE = ( window.globalConfig?.VITE_INTERME
 
 export const FHIR_R4_EXTERNAL_ID_SYSTEM = ( window.globalConfig?.VITE_FHIR_R4_EXTERNAL_ID_SYSTEM ?? import.meta.env.VITE_FHIR_R4_EXTERNAL_ID_SYSTEM);
 
+export const LOGOUT_URL = ( window.globalConfig?.VITE_LOGOUT_URL ?? import.meta.env.VITE_LOGOUT_URL);
 export const BACK_URL = ( window.globalConfig?.VITE_BACK_URL ?? import.meta.env.VITE_BACK_URL);
 
 export const SOF_RESOURCES = [
