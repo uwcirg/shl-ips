@@ -2,6 +2,8 @@
   import QRCode from 'qrcode';
   import { getContext, setContext } from 'svelte';
   import {
+    Accordion,
+    AccordionItem,
     Button,
     Card,
     CardHeader,
@@ -84,10 +86,17 @@
     shlClient.deleteShl($shlStore);
     toggle();
     // TODO: Implement post-deactivation flow
-    location.reload(true);
+    location.reload();
   }
 
-  async function renewShl() {}
+  let pasteHeader = "Click here to see how";
+  function updatePasteHeader({ detail }) {
+    pasteHeader = detail ? "Click here to close" : "Click here to see how";
+  }
+  let qrHeader = "Click here to see how";
+  function updateQRHeader({ detail }) {
+    qrHeader = detail ? "Click here to close" : "Click here to see how";
+  }
 </script>
 <div transition:fade>
 <Row class="justify-content-center">
@@ -111,14 +120,27 @@
                 {/if}
               </Button>
             </Col>
+            <Col xs="5">
+              {#await href then href}
+              <Button size="sm" color="success" {href} target="_blank">
+                <Icon name="box-arrow-up-right" /> Open Report
+              </Button>
+              {/await}
+            </Col>
           </Row>
           <li>
             Then, open your email and start a new message to the person you want to send it to.
           </li>
           <li>
-            Paste the link into the body of the email. Here’s how: After you have clicked the button
-            above, right-click, then choose “Paste” from the pop-up menu. Or, if you’re using a PC,
-            press the Ctrl and V buttons at the same time. On a Mac, press Command and V.
+            Paste the link into the body of the email.
+          <Accordion>
+            <AccordionItem on:toggle={updatePasteHeader}>
+              <h6 slot="header" class="my-2">{pasteHeader}</h6>
+              After you have clicked the button
+              above, right-click, then choose “Paste” from the pop-up menu. Or, if you’re using a PC,
+              press the Ctrl and V buttons at the same time. On a Mac, press Command and V.
+            </AccordionItem>
+          </Accordion>
           </li>
           <li>
             Send the email. The person you send it to will receive the link to be able to see your
@@ -127,27 +149,29 @@
         </ul>
       </li>
       <li>
-        <strong>Share a QR code:</strong> Point your phone’s camera at the QR code so that it's clearly
-        visible within your smartphone's screen. The phone automatically scans the code. On some QR readers,
-        you have to tap a button to scan the code. If necessary, tap the button. Your smartphone
-        reads the code and navigates to a page showing your Choices Report.
+        <strong>Share a QR code:</strong>
       </li>
+      <Accordion>
+        <AccordionItem on:toggle={updateQRHeader}>
+          <h6 slot="header" class="my-2">{qrHeader}</h6>
+          <Row>
+            <Col>
+              Point your phone’s camera at the QR code so that it's clearly
+              visible within your smartphone's screen. The phone automatically scans the code. On some QR readers,
+              you have to tap a button to scan the code. If necessary, tap the button. Your smartphone
+              reads the code and navigates to a page showing your Choices Report.
+            </Col>
+            <Col>
+              <img src="/img/qrphone.png" alt="Scan a QR Code"/>
+            </Col>
+          </Row>
+        </AccordionItem>
+      </Accordion>
     </ol>
     <Row class="justify-content-center mx-4">
       <Col>
         <Row class="justify-content-center">
           <Card class="mb-2 p-0" color="light">
-            <CardHeader>
-              <strong>
-                {#if expDisplay}
-                  {#if exp > today}
-                    Expires {expDisplay}
-                  {:else}
-                    <span class="text-danger">Expired {expDisplay}</span>
-                  {/if}
-                {/if}
-              </strong>
-            </CardHeader>
             <CardBody>
               <CardText>
                 {#await qrCode then qrImage}
@@ -173,13 +197,15 @@
               </CardText>
             </CardBody>
             <CardFooter>
-              {#await href then href}
-                <Row class="justify-content-center mx-auto">
-                  <Button size="sm" color="success" {href} target="_blank">
-                    <Icon name="box-arrow-up-right" /> View Report
-                  </Button>
-                </Row>
-              {/await}
+              <strong>
+                {#if expDisplay}
+                  {#if exp > today}
+                    Expires {expDisplay}
+                  {:else}
+                    <span class="text-danger">Expired {expDisplay}</span>
+                  {/if}
+                {/if}
+              </strong>
             </CardFooter>
           </Card>
         </Row>
