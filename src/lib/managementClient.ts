@@ -139,8 +139,7 @@ export class SHLClient {
       method: 'DELETE',
       headers: {
         authorization: `Bearer ${shl.managementToken}`
-      },
-      body: ""
+      }
     });
     const res = await req.json();
     return shl;
