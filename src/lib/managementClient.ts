@@ -127,7 +127,7 @@ export class SHLClient {
     const req = await fetch(`${API_BASE}/shl/${shl.id}/file`, {
       method: 'DELETE',
       headers: {
-        authorization: `Bearer ${shl.managementToken}`
+        authorization: `Bearer ${shl.managementToken}`,
       },
       body: contentEncrypted
     });
@@ -135,10 +135,10 @@ export class SHLClient {
     return shl;
   }
   async deleteAllFiles(shl: SHLAdminParams) {
-    const req = await fetch(`${API_BASE}/shl/${shl.id}/file`, {
+    const req = await fetch(`${API_BASE}/shl/${shl.id}/file/all`, {
       method: 'DELETE',
       headers: {
-        authorization: `Bearer ${shl.managementToken}`
+        authorization: `Bearer ${shl.managementToken}`,
       }
     });
     const res = await req.json();
