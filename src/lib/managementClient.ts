@@ -81,7 +81,7 @@ export class SHLClient {
       }
     });
     const res = await req.json();
-    return true;
+    return res;
   }
 
   async updateShl(shl: SHLAdminParams): Promise<boolean> {

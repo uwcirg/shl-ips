@@ -105,7 +105,7 @@ export class SOFClient {
         const shlData = {
             id: shl.id,
             label: label,
-            patientId: shl.userId,
+            userId: shl.userId,
             sessionId: docRef.id,//shl.sessionId,
             managementToken: shl.managementToken,
             encryptionKey: shl.encryptionKey
@@ -113,7 +113,7 @@ export class SOFClient {
         const shlPayload = btoa(JSON.stringify(shlData));
         let shlDocRefInputs = {
             date: new Date().toISOString(),
-            patientId: shl.userId,
+            userId: shl.userId,
             documentReferenceId: docRef.id,
             data: shlPayload,
             label: label,
@@ -133,7 +133,7 @@ export class SOFClient {
                 ]
             },
             "subject": {
-                "reference": `Patient/${shl.userId}`
+                "reference": `Patient?identifier=${shl.userId}`
             },
             "date": shlDocRefInputs.date,
             "description": "SMART Health Link Metadata",

@@ -1,6 +1,6 @@
 <script lang="ts">
   import QRCode from 'qrcode';
-  import { getContext } from 'svelte';
+  import { getContext, setContext } from 'svelte';
   import {
     Button,
     Card,
@@ -21,7 +21,6 @@
     Row
   } from 'sveltestrap';
   import { fade } from 'svelte/transition';
-  import { goto } from '$app/navigation';
   import type { Writable } from 'svelte/store';
   import type { SHLAdminParams, SHLClient } from './managementClient';
 
@@ -38,7 +37,6 @@
   let exp: Date;
   let today: Date;
   let expDisplay: string;
-  let inactive = false;
 
   $: {
     href = getUrl($shlStore);
@@ -86,7 +84,7 @@
     shlClient.deleteShl($shlStore);
     toggle();
     // TODO: Implement post-deactivation flow
-    goto('/share');
+    location.reload(true);
   }
 
   async function renewShl() {}
@@ -213,25 +211,6 @@
 </div>
 
 <style>
-  img.qr {
-    height: 100%;
-  }
-  p.logo {
-    position: relative;
-    width: 250px;
-    height: 250px;
-  }
-  .logo {
-    position: absolute;
-    background: #325c33;
-    width: 110px;
-    height: 27px;
-    /* padding: 2px; */
-    left: calc(50% - 55px);
-    top: calc(50% - 2em);
-    border: 5px solid #325c33;
-    box-sizing: border-box;
-  }
   :global(.shlbutton) {
     width: 300px !important;
   }

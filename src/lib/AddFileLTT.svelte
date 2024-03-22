@@ -56,9 +56,10 @@
         // TODO: Get summary DocumentReferences from resourcesToReview
         let summaryDocRefs: any[] = resourcesToReview.filter((r) => r.resourceType === "DocumentReference" && !(r.type?.coding[0]?.code === "34108-1"));
         // Compare sessionIDs in most recent DocRef with sessionID in most recent SHL
-        let mostRecentDocRef = summaryDocRefs.sort((a, b) => b.date - a.date)[0];
+        // let mostRecentDocRef = summaryDocRefs.sort((a, b) => b.date - a.date)[0];
+        let mostRecentDocRef = summaryDocRefs[summaryDocRefs.length-1];
         // TODO: Get shl DocumentReferences from resourcesToReview
-        let shlDocRefs: any[] = resourcesToReview.filter((r) => r.resourceType === "DocumentReference" && r.type?.coding[0]?.code === "34108-1");
+        let shlDocRefs: any[] = resourcesToReview.filter((r) => r.resourceType === "DocumentReference" && r.type?.coding[0]?.code === "34108-1").reverse();
 
         patientId = sofClient.getPatientID();
         sessionId = mostRecentDocRef.id;
@@ -114,8 +115,8 @@
         }
       }
 
-      console.log("Successfully retrieved SHL and Resources");
       if (found) {
+        console.log("Successfully retrieved SHL and Resources");
         // The current SHL is most recent, so use it
         shlReadyDispatch('shl-ready', true);
       } else if (mostRecentDocRef) {
