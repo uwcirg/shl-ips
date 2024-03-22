@@ -213,7 +213,7 @@ function prepareSHLContents(contents) {
         $("#loadSample").on('click', loadSample);
       }
       // $('#tabs').children().first().children().first().addClass('active show');
-      $('#rendered-ips div').first().addClass('active show');
+      // $('#rendered-ips div').first().addClass('active show');
     }).fail(function (e) {
       console.log("error", e);
     });
