@@ -88,7 +88,7 @@
             month: 'long',
             year: 'numeric'
           });
-        let reportLabel = `Let's Talk Tech Choices Report (${reportDate})`;
+        let reportLabel = `My Choices Report (${reportDate})`;
         let result = await sofClient.postShl(shl, mostRecentDocRef, reportLabel);
         $shlStore = shl;
         console.log($shlStore);
@@ -132,7 +132,7 @@
               month: 'long',
               year: 'numeric'
             });
-          let reportLabel = `Let's Talk Tech Choices Report (${reportDate})`;
+          let reportLabel = `My Choices Report (${reportDate})`;
           let result = await sofClient.postShl($shlStore, mostRecentDocRef, reportLabel);
         }
         // The current SHL is most recent, so use it
