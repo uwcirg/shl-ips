@@ -134,4 +134,15 @@ export class SHLClient {
     const res = await req.json();
     return shl;
   }
+  async deleteAllFiles(shl: SHLAdminParams) {
+    const req = await fetch(`${API_BASE}/shl/${shl.id}/file`, {
+      method: 'DELETE',
+      headers: {
+        authorization: `Bearer ${shl.managementToken}`
+      },
+      body: ""
+    });
+    const res = await req.json();
+    return shl;
+  }
 }

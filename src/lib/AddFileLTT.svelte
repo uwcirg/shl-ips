@@ -55,11 +55,14 @@
         let patient: any = resourcesToReview.filter((r) => r.resourceType === "Patient")[0];
         // TODO: Get summary DocumentReferences from resourcesToReview
         let summaryDocRefs: any[] = resourcesToReview.filter((r) => r.resourceType === "DocumentReference" && !(r.type?.coding[0]?.code === "34108-1"));
+        if (summaryDocRefs.length === 0) {
+          console.error('No sessions found for user');
+        }
         // Compare sessionIDs in most recent DocRef with sessionID in most recent SHL
         // let mostRecentDocRef = summaryDocRefs.sort((a, b) => b.date - a.date)[0];
-        let mostRecentDocRef = summaryDocRefs[summaryDocRefs.length-1];
+        let mostRecentDocRef = summaryDocRefs[0];
         // TODO: Get shl DocumentReferences from resourcesToReview
-        let shlDocRefs: any[] = resourcesToReview.filter((r) => r.resourceType === "DocumentReference" && r.type?.coding[0]?.code === "34108-1").reverse();
+        let shlDocRefs: any[] = resourcesToReview.filter((r) => r.resourceType === "DocumentReference" && r.type?.coding[0]?.code === "34108-1");
 
         patientId = sofClient.getPatientID();
         sessionId = mostRecentDocRef.id;
@@ -109,7 +112,7 @@
           $shlStore.encryptionKey = shlData.encryptionKey;
           $shlStore.managementToken = shlData.managementToken;
           $shlStore.label = shlData.label;
-          
+          $shlStore.files = [];
           found = true;
           break;
         }
@@ -117,10 +120,26 @@
 
       if (found) {
         console.log("Successfully retrieved SHL and Resources");
+        if (mostRecentDocRef.id != $shlStore.sessionId) {
+          console.log(`Most recent SHL ${$shlStore.id} doesn't match session ${$shlStore.sessionId}, updating SHL`);
+          let deleted = await shlClient.deleteAllFiles($shlStore);
+          let ips = createIpsPayload(patient, mostRecentDocRef);
+          let shc = await packageShc(ips);
+          $shlStore = await addFiles($shlStore, [shc]);
+          let reportDate = new Date(mostRecentDocRef.date)
+            .toLocaleDateString('en-US', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric'
+            });
+          let reportLabel = `Let's Talk Tech Choices Report (${reportDate})`;
+          let result = await sofClient.postShl($shlStore, mostRecentDocRef, reportLabel);
+        }
         // The current SHL is most recent, so use it
         shlReadyDispatch('shl-ready', true);
       } else if (mostRecentDocRef) {
         console.log(`Couldn't find FHIR record for SHL ${$shlStore.id} and session ${$shlStore.sessionId}, creating new SHL`);
+        shlClient.deleteShl($shlStore);
         newShl(patient, mostRecentDocRef);
       } else {
         throw Error("No summary found for patient")
