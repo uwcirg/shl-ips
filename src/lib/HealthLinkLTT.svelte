@@ -130,7 +130,7 @@
         <strong>Share a QR code:</strong> Point your phone’s camera at the QR code so that it's clearly
         visible within your smartphone's screen. The phone automatically scans the code. On some QR readers,
         you have to tap a button to scan the code. If necessary, tap the button. Your smartphone
-        reads the code and navigates to a page showing your Choices Summary.
+        reads the code and navigates to a page showing your Choices Report.
       </li>
     </ol>
     <Row class="justify-content-center mx-4">
@@ -176,7 +176,7 @@
               {#await href then href}
                 <Row class="justify-content-center mx-auto">
                   <Button size="sm" color="success" {href} target="_blank">
-                    <Icon name="box-arrow-up-right" /> View Summary
+                    <Icon name="box-arrow-up-right" /> View Report
                   </Button>
                 </Row>
               {/await}
@@ -189,11 +189,11 @@
           </Row>
         {/if}
         <Row class="justify-content-center mx-1 mt-1">
-          <Button size="sm" style="max-width:266px" on:click={toggle} color="danger">Recreate Summary Link</Button>
+          <Button size="sm" style="max-width:266px" on:click={toggle} color="danger">Recreate Report Link</Button>
           <Modal isOpen={open} backdrop="static" {toggle}>
-            <ModalHeader {toggle}>Recreate Summary Link</ModalHeader>
+            <ModalHeader {toggle}>Recreate Report Link</ModalHeader>
             <ModalBody>
-              Those with the old link to your "{$shlStore.label}" will no longer be able to view its contents. A new link to your Summary will be generated that you may share.
+              Those with an old link to your "{$shlStore.label}" will no longer be able to view its contents. A new link to your Report will be generated that you may share.
             </ModalBody>
             <ModalFooter>
               <Button color="secondary" on:click={toggle}>Cancel</Button>
@@ -204,7 +204,7 @@
       </Col>
     </Row>
     <Row class="mx-1 mt-4">
-      <p><strong>If you have any questions or problems using the system, please get in touch at ?clara@email.com? for assistance.</strong></p>
+      <p><strong>If you have any questions or problems using the system, please get in touch at clarawb@uw.edu for assistance.</strong></p>
     </Row>
   </Col>
 </Row>
