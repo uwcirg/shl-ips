@@ -1,15 +1,10 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import { setContext } from 'svelte';
+  import { setContext, onMount } from 'svelte';
   import { writable } from 'svelte/store';
   import {
-    Dropdown,
     Col,
     Collapse,
     Container,
-    DropdownItem,
-    DropdownMenu,
-    DropdownToggle,
     Icon,
     Image,
     Nav,
@@ -22,22 +17,26 @@
     Styles
   } from 'sveltestrap';
   import { SHLClient, type SHLAdminParams } from '$lib/managementClient';
-
-  const LOCAL_STORAGE_KEY = 'shlips_store_shls';
-  let shlStore = writable<SHLAdminParams[]>(
-    window.localStorage[LOCAL_STORAGE_KEY] ? JSON.parse(window.localStorage[LOCAL_STORAGE_KEY]) : []
-  );
-
-  $: {
-    if ($shlStore) window.localStorage[LOCAL_STORAGE_KEY] = JSON.stringify($shlStore);
-  }
+  import { SOFClient } from '$lib/sofClient';
+  import { SOF_HOSTS, BACK_URL, LOGOUT_URL } from '$lib/config';
+  import { goto } from '$app/navigation';
+  let shlStore = writable<SHLAdminParams>(undefined);
   setContext('shlStore', shlStore);
 
   let shlClient = new SHLClient();
   setContext('shlClient', shlClient);
 
-  let reset = writable(0);
-  setContext('reset', reset);
+  // TODO: Consider passing full configuration
+  // TODO: Consider array config
+  let sofClient = new SOFClient(SOF_HOSTS[0]);
+  setContext('sofClient', sofClient);
+  let initialized = false;
+
+  onMount(() => {
+    sofClient.initialize()?.then(() => {
+      initialized = true;
+    });
+  });
 
   let isOpen = false;
   function handleUpdate(event) {
@@ -46,56 +45,55 @@
   function closeNav() {
     isOpen = false;
   }
+
+  function logout() {
+    closeNav();
+    let keyRaw = sessionStorage.getItem('SMART_KEY');
+    if (keyRaw != undefined) {
+      let key = JSON.parse(keyRaw);
+      sessionStorage.removeItem(key);
+    }
+    sessionStorage.removeItem('SMART_KEY');
+    goto(LOGOUT_URL);
+  }
 </script>
 
 <Container class="main" fluid>
 <Styles />
-<Navbar color="light" light expand="md" style="border-bottom: 1px solid rgb(204, 204, 204);">
-  <NavbarBrand>
-    <a href="https://doh.wa.gov/" rel="noreferrer" target="_blank"><Image alt="Washington State Department of Health Logo" width="240" src="/img/doh_logo_doh-black.png"/></a>
+<Navbar class="navbar d-none d-sm-block" expand="sm" style="background: #325c33; border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 10px">
+  <Nav navbar pills>
+    <NavItem>
+      <NavLink active style="background-color:white" class="text-black" href={BACK_URL} on:click={closeNav}><Icon name="arrow-left"/> Back</NavLink>
+    </NavItem>
+  </Nav>
+  <NavbarBrand class="mx-auto">
+    <a href="https://inform.dev.cirg.uw.edu" rel="noreferrer" target="_blank"><div style="background:#325c33;"><Image alt="Let's Talk Tech Logo" width="240" src="/img/ltt-logo.svg"/></div></a>
   </NavbarBrand>
-  <NavbarToggler on:click={() => (isOpen = !isOpen)} />
-  <Collapse {isOpen} navbar expand="md" on:update={handleUpdate}>
+  <Nav pills>
+    <NavItem active>
+      <NavLink active style="background-color:white" class="text-black" href="https://inform.dev.cirg.uw.edu/help" on:click={closeNav}>Log Out</NavLink>
+    </NavItem>
+  </Nav>
+</Navbar>
+<Navbar class="navbar d-block d-sm-none" expand="sm" style="background: #325c33; border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 10px">
+  <NavbarBrand>
+    <a href="https://inform.dev.cirg.uw.edu" rel="noreferrer" target="_blank"><div style="background:#325c33;"><Image alt="Let's Talk Tech Logo" width="240" src="/img/ltt-logo.svg"/></div></a>
+  </NavbarBrand>
+  <NavbarToggler style="background-color: white" on:click={() => (isOpen = !isOpen)} />
+  <Collapse {isOpen} navbar expand="sm" on:update={handleUpdate}>
     <Nav class="ms-auto" navbar>
       <NavItem>
-        <NavLink href="/home" on:click={closeNav}>Home</NavLink>
+        <NavLink class="text-white" href={BACK_URL} on:click={closeNav}><Icon name="arrow-left"/> Back</NavLink>
       </NavItem>
-      <Dropdown nav inNavbar size="sm" direction="down">
-        <DropdownToggle color="primary" nav caret>Actions</DropdownToggle>
-        <DropdownMenu end>
-          <DropdownItem
-            on:click={() => {
-              closeNav();
-              goto("/create");
-            }}>Add New SHLink</DropdownItem>
-          <DropdownItem
-            on:click={() => {
-              closeNav();
-              $shlStore = [];
-              goto('/');
-            }}>Reset Demo</DropdownItem>
-          {#if $shlStore.length > 0}
-            <DropdownItem divider />
-            <DropdownItem header>View Stored SHLinks</DropdownItem>
-            {#each $shlStore as shl, i}
-              <DropdownItem
-                on:click={() => {
-                closeNav();
-                goto('/view/' + shl.id);
-              }}>{shl.label || `SHLink ${i + 1}`}</DropdownItem>
-            {/each}
-          {/if}
-        </DropdownMenu>
-      </Dropdown>
+      <NavItem>
+        <NavLink class="text-white" on:click={logout}>Log Out</NavLink>
+      </NavItem>
     </Nav>
   </Collapse>
 </Navbar>
-<Row style="padding:0px 12px">
-  <Col style="padding:0; margin-bottom: 20px; border-bottom: 1px solid rgb(204, 204, 204);">
-    <a href="\home"><Image alt="WA Verify Logo" width="200" src="/img/waverifypluslogo.png" style="align-self: center"></Image></a>
-    <div style="vertical-align: middle; font-size: 18px; display: inline-block; padding-left: 17px; font-family: Verdana, sans-serif; color: rgb(34, 72, 156);">International Patient Summary</div>
-  </Col>
-</Row>
+{#if !initialized}
+  Loading...
+{:else}
 <Row class="main-row">
   <Col>
     <slot />
@@ -120,6 +118,7 @@
     </footer>
   </Col>
 </Row>
+{/if}
 </Container>
 
 <style>
@@ -142,6 +141,6 @@
     height: 100%;
   }
   :global(.navbar .container-fluid) {
-    padding: 0px;
+    padding: 0,0.5rem;
   }
 </style>

@@ -2,10 +2,12 @@ import { randomStringWithEntropy, base64url } from './util';
 import { API_BASE, VIEWER_BASE } from './config';
 import * as jose from 'jose';
 
-type ConfigForServer = Pick<SHLAdminParams, 'passcode' | 'exp'>;
+type ConfigForServer = Pick<SHLAdminParams, 'passcode' | 'exp' | 'userId' | 'sessionId'>;
 
 export interface SHLAdminParams {
   id: string;
+  userId?: string;
+  sessionId?: string;
   managementToken: string;
   encryptionKey: string;
   files: {
@@ -13,6 +15,7 @@ export interface SHLAdminParams {
     contentType: string;
     date?: string;
   }[];
+  created?: number;
   passcode?: string;
   exp?: number;
   label?: string;
@@ -35,7 +38,7 @@ export class SHLClient {
   }
 
   async createShl(config: ConfigForServer = {}): Promise<SHLAdminParams> {
-    const ek = randomStringWithEntropy();
+    const ek = "ElRqo8OE_b19jtV49CxI6JCNSRsUV-q_9bd60kelroU" // randomStringWithEntropy();
     const create = await fetch(`${API_BASE}/shl`, {
       method: 'POST',
       headers: {
@@ -53,6 +56,23 @@ export class SHLClient {
     };
   }
 
+  async getUserShl(pid: string): Promise<SHLAdminParams>{
+    try {
+      const req = await fetch(`${API_BASE}/user/${pid}`, {
+        method: 'GET'
+      }).catch((reason) => {
+        console.error(reason);
+      });
+      let res;
+      if (req && req.status < 400) {
+        res = await req.json();
+      }
+      return res;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   async deleteShl(shl: SHLAdminParams): Promise<boolean> {
     const req = await fetch(`${API_BASE}/shl/${shl.id}`, {
       method: 'DELETE',
@@ -61,10 +81,10 @@ export class SHLClient {
       }
     });
     const res = await req.json();
-    return true;
+    return res;
   }
 
-  async resetShl(shl: SHLAdminParams): Promise<boolean> {
+  async updateShl(shl: SHLAdminParams): Promise<boolean> {
     const req = await fetch(`${API_BASE}/shl/${shl.id}`, {
       method: 'PUT',
       body: JSON.stringify({ passcode: shl.passcode, exp: shl.exp }),
@@ -107,9 +127,19 @@ export class SHLClient {
     const req = await fetch(`${API_BASE}/shl/${shl.id}/file`, {
       method: 'DELETE',
       headers: {
-        authorization: `Bearer ${shl.managementToken}`
+        authorization: `Bearer ${shl.managementToken}`,
       },
       body: contentEncrypted
+    });
+    const res = await req.json();
+    return shl;
+  }
+  async deleteAllFiles(shl: SHLAdminParams) {
+    const req = await fetch(`${API_BASE}/shl/${shl.id}/file/all`, {
+      method: 'DELETE',
+      headers: {
+        authorization: `Bearer ${shl.managementToken}`,
+      }
     });
     const res = await req.json();
     return shl;

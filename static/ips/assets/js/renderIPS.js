@@ -94,7 +94,7 @@ function render(templateName, data, targetLocation) {
     entryCheck = data.entry.length
   }
   if (mode == "Entries" && templateName !== "Other") {
-    var jqxhr = $.get(new URL(`../templates/${templateName}.html`, import.meta.url).href, function () { })
+    return $.get(new URL(`../templates/${templateName}.html`, import.meta.url).href, function () { })
       .done(function (template) {
         console.log(data);
         var templateResult = Sqrl.Render(template, data);
@@ -112,10 +112,10 @@ function render(templateName, data, targetLocation) {
     var content = { titulo: data.title, div: "No text defined.", index: sectionCount };
     if (!content.titulo) content.titulo = data.resourceType;
     if (data.text) content.div = data.text.div;
-    var jqxhr = $.get(new URL(`../templates/Text.html`, import.meta.url).href, function () { })
+    return $.get(new URL(`../templates/Text.html`, import.meta.url).href, function () { })
       .done(function (template) {
         var templateResult = Sqrl.Render(template, content);
-        $("#" + targetLocation).html(templateResult);
+        $("#" + targetLocation).append(templateResult);
         $("#text-body1").removeClass('show');
       }).fail(function (e) {
         console.log("error", e);
@@ -164,6 +164,24 @@ function getEntry(ips, fullUrl) {
   return result;
 };
 
+function loadBase64EncodedPDF(base64Data) {
+  let pdfData = atob(base64Data);
+  let uint8ArrayPdf = new Uint8Array(pdfData.length)
+  for (let i = 0; i < pdfData.length; i++) {
+    uint8ArrayPdf[i] = pdfData.charCodeAt(i)
+  }
+  let pdfjsframe = $('#ad-pdf-viewer');
+  pdfjsframe.addEventListener('load', function(e) {
+    e.currentTarget.contentWindow.PDFViewerApplication.open({data: uint8ArrayPdf});
+  });
+}
+
+function loadBase64EncodedHTML(base64Data) {
+  let htmlData = atob(base64Data);
+  let htmlDiv = $('#ad-html-viewer');
+  htmlDiv.html(htmlData);
+}
+
 function prepareSHLContents(contents) {
   if (!Array.isArray(contents)){
     contents = [contents];
@@ -194,8 +212,8 @@ function prepareSHLContents(contents) {
         $('#clearSample').on('click', clearData);
         $("#loadSample").on('click', loadSample);
       }
-      $('#tabs').children().first().children().first().addClass('active show');
-      $('#rendered-ips div').first().addClass('active show');
+      // $('#tabs').children().first().children().first().addClass('active show');
+      // $('#rendered-ips div').first().addClass('active show');
     }).fail(function (e) {
       console.log("error", e);
     });
@@ -242,99 +260,47 @@ function update(ips, index) {
       if (index !== "Demo" && composition.date) {
         $(`#tab${index}`).text(`IPS ${composition.date.split('T')[0]}`);
       }
-      render("Composition", composition, `Composition${index}`);
+      // render("Composition", composition, `Composition${index}`);
       console.log('Patient Card');
       if (patient) {
         console.log(patient)
-        render("Patient", patient, `Patient${index}`);
+        // render("Patient", patient, `Patient${index}`);
       }
       let alertMissingComposition = false;
       composition.section.forEach(function (section) {
-        if (!section || !section.code || !section.code.coding || !section.code.coding[0]) {
-          alertMissingComposition = true;
-          console.log('Section is missing coding information');
-        } else if (section.code.coding[0].code == "11450-4") {
-          console.log('Problems Section');
-          section.problems = [];
-          section.entry?.forEach(function (problem) {
-            console.log(problem.reference)
-            section.problems.push(getEntry(ips, problem.reference));
-          });
-          render("Problems", section, `Problems${index}`);
-        } else if (section.code.coding[0].code == "48765-2") {
-          console.log('Allergies Section');
-          section.allergies = [];
-          section.entry?.forEach(function (allergy) {
-            console.log(allergy.reference)
-            let allergy2 = getEntry(ips, allergy.reference);
-            if (!allergy2.category) allergy2.category = [' '];
-            if (!allergy2.type) allergy2.type = ' ';
-            section.allergies.push(allergy2);
-          });
-          render("Allergies", section, `Allergies${index}`);
-        } else if (section.code.coding[0].code == "10160-0") {
-          console.log('Medications Section');
-          section.medications = [];
-          section.entry?.forEach(function (medication) {
-            console.log(medication.reference);
-            // while variable name is Statement, this may be either MedicationStatement or MedicationRequest
-            let statement = getEntry(ips, medication.reference);
-            let medicationReference;
-            // Either MedicationRequest or MedicationStatement may have a reference to Medication 
-            if (statement.medicationReference && statement.medicationReference.reference) {
-              medicationReference = getEntry(ips, statement.medicationReference.reference);
-
-            } else if (statement.medicationCodeableConcept) {
-                medicationReference = { code: statement.medicationCodeableConcept };
-            } else {
-                medicationReference = {code: { coding: [ { system: '', display: '', code: '' } ] } };
-            }
-            // MedicationStatement has dosage while MedicationRequest has dosageInstruction. Use alias to simplify template
-            if (statement.dosageInstruction) statement.dosage = statement.dosageInstruction;
-            section.medications.push({
-              statement: statement,
-              medication: medicationReference
-            });
-          });
-          render("Medications", section, `Medications${index}`);
-        } else if (section.code.coding[0].code == "11369-6") {
-          console.log('Immunizations Section');
-          section.immunizations = [];
-          section.entry?.forEach(function (immunization) {
-            console.log(immunization.reference);
-            section.immunizations.push(getEntry(ips, immunization.reference));
-          });
-          section.immunizations.sort((a, b) => {
-            let fa = a.occurrenceDateTime,
-                fb = b.occurrenceDateTime;
-            if (fa < fb) {
-                return -1;
-            }
-            if (fa > fb) {
-                return 1;
-            }
-            return 0;
-          });
-          render("Immunizations", section, `Immunizations${index}`);
-        } else if (section.code.coding[0].code == "30954-2") {
-          console.log('Observations Section');
-          section.observations = [];
-          section.entry?.forEach(function (observation) {
-            console.log(observation.reference);
-            section.observations.push(getEntry(ips, observation.reference));
-          });
-          render("Observations", section, `Observations${index}`);
-        } else if (section.code.coding[0].code == "42348-3") {
+        if (section.code.coding[0].code == "42348-3") {
           console.log('Advance Directives Section');
-          section.ad = [];
+          section.ad = {
+            "consent": [],
+            "documentReference": [],
+            "other": []
+          };
           section.entry?.forEach(function (ad) {
             console.log(ad.reference);
-            section.ad.push(getEntry(ips, ad.reference));
+            entry = getEntry(ips, ad.reference);
+            if (entry.resourceType == "Consent") {
+              section.ad.consent.push(entry);
+            } else if (entry.resourceType == "DocumentReference") {
+              section.ad.documentReference.push(entry);
+            } else {
+              section.ad.other.push(entry);
+            }
           });
-          render("AdvanceDirectives", section, `AdvanceDirectives${index}`);
-        } else {
-          render("Other", section, `Other${index}`);
-          console.log(`Section with code: ${section.code.coding[0].code} not rendered since no template`);
+          render("AdvanceDirectives", section, `AdvanceDirectives${index}`).then(function(res) {
+            if (section.ad.documentReference.length) {
+              section.ad.documentReference[0].content.forEach(element => {
+                if (element.attachment.contentType === "application/pdf") {
+                  if (element.attachment.data) {
+                    loadBase64EncodedPDF(element.attachment.data);
+                  }
+                } else if (element.attachment.contentType === "text/html") {
+                  if (element.attachment.data) {
+                    loadBase64EncodedHTML(element.attachment.data);
+                  }
+                }
+              });
+            }
+          });
         }
       });
       if (alertMissingComposition) alert('Missing coding information in Composition resource. Rendering may be incomplete.')
