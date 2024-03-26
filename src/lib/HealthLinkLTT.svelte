@@ -106,7 +106,7 @@
     <p>There are 2 ways to share this electronically.</p>
     <ol>
       <li>
-        <strong>Email it:</strong> You can copy a link and paste it into an email to send.
+        <strong>Email it:</strong> You can copy a link and paste it into an email to send (if you are using your phone, you could also paste the link into a text message).
         <ul>
           <li>First, to copy the link, click the copy button below:</li>
           <li style="list-style-type: none;">
@@ -154,39 +154,6 @@
       <li>
         <strong>Share a QR code:</strong>
       </li>
-      <ul>
-        <li style="list-style-type: none;">
-          <Accordion>
-            <AccordionItem on:toggle={updateQRHeader}>
-              <h6 slot="header" class="my-2">{qrHeader}</h6>
-              <Row>
-                <Col xs=12 md=6 style="padding-left: 0px">
-                  <p>Here's how:</p>
-                  <ol>
-                    <li>
-                      Point your phone’s camera at the QR code so that it's clearly
-                      visible within your phone's camera app.
-                    </li>
-                    <li>
-                      Your device should recognize the QR code, automatically scan it, and show a notification.
-                      On some readers, you have to press a button to scan the code.
-                    </li>
-                    <li>
-                      If necessary, press the link button.
-                      Your device reads the code and navigates to a page showing your Choices Report.
-                    </li>
-                  </ol>
-                </Col>
-                <Col xs=12 md=6 style="padding-left: 0px">
-                  <Col class="d-flex justify-content-center mt-2">
-                    <img src="/img/qrphone.png" alt="Scan a QR Code"/>
-                  </Col>
-                </Col>
-              </Row>
-            </AccordionItem>
-          </Accordion>
-        </li>
-      </ul>
       <li style="list-style-type: none;">
         <Row class="justify-content-center mx-4">
           <Col>
@@ -249,6 +216,36 @@
             </Row>
           </Col>
         </Row>
+      </li>
+      <li style="list-style-type: none;">
+        <Accordion>
+          <AccordionItem on:toggle={updateQRHeader}>
+            <h6 slot="header" class="my-2">{qrHeader}</h6>
+            <Row>
+              <Col xs=12 md=6 style="padding-left: 0px">
+                <p>Here's how:</p>
+                <ol>
+                  <li>
+                    Point your phone’s camera at the QR code above like you are taking a photo of it.
+                  </li>
+                  <li>
+                    Your device should recognize the QR code, automatically scan it, and show a notification.
+                    On some readers, you have to press a button to scan the code.
+                  </li>
+                  <li>
+                    If necessary, press the link button.
+                    Your device reads the code and navigates to a page showing your Choices Report.
+                  </li>
+                </ol>
+              </Col>
+              <Col xs=12 md=6 style="padding-left: 0px">
+                <Col class="d-flex justify-content-center mt-2">
+                  <img src="/img/qrphone.png" alt="Scan a QR Code"/>
+                </Col>
+              </Col>
+            </Row>
+          </AccordionItem>
+        </Accordion>
       </li>
     </ol>
   </Col>
