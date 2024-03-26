@@ -112,7 +112,7 @@
           <li style="list-style-type: none;">
             <Row>
               <Col xs="auto" class="mb-2">
-                <Button size="sm" color="primary" style="width:120px !important" on:click={copyShl} disabled={!!copyNotice}>
+                <Button size="sm" color="primary" style="width:130px !important" on:click={copyShl} disabled={!!copyNotice}>
                   <Icon name="clipboard" />
                   {#if copyNotice}
                     {copyNotice}
@@ -123,7 +123,7 @@
               </Col>
               <Col xs="auto">
                 {#await href then href}
-                <Button size="sm" color="primary" {href} target="_blank">
+                <Button size="sm" color="primary" style="width:130px !important" {href} target="_blank">
                   <Icon name="box-arrow-up-right" /> Open Report
                 </Button>
                 {/await}
@@ -187,68 +187,70 @@
           </Accordion>
         </li>
       </ul>
+      <li style="list-style-type: none;">
+        <Row class="justify-content-center mx-4">
+          <Col>
+            <Row class="justify-content-center">
+              <Card class="mb-2 p-0">
+                <CardBody>
+                  <CardText>
+                    {#await qrCode then qrImage}
+                      <CardImg class="img-fluid" alt="QR Code for SHL" src={qrImage} />
+                      <CardImg
+                        style="position: absolute;
+                  background: #325c33;
+                  width: 110px;
+                  height: 27px;
+                  left: calc(50% - 55px);
+                  top: calc(50% - 2em);
+                  border: 5px solid #325c33;
+                  box-sizing: border-box;"
+                        class="logo"
+                        alt="Let's Talk Tech Logo"
+                        src="/img/ltt-logo.svg"
+                      />
+                      <!-- 
+                      <img class="qr" alt="QR Code for SHL" src={dataUrl} />
+                      <img class="logo" alt="Let's Talk Tech Logo" src='/img/ltt-logo.svg' />
+                    </p> -->
+                    {/await}
+                  </CardText>
+                </CardBody>
+                <CardFooter class={exp > today ? "valid" : "expired"}>
+                  <strong>
+                    {#if expDisplay}
+                      {#if exp > today}
+                        Expires {expDisplay}
+                      {:else}
+                        <span class="text-white">Expired {expDisplay}</span>
+                      {/if}
+                    {/if}
+                  </strong>
+                </CardFooter>
+              </Card>
+            </Row>
+            {#if exp <= today}
+              <Row class="justify-content-center mb-2">
+                Your link has expired. Click here to create a new link:
+              </Row>
+            {/if}
+            <Row class="justify-content-center mx-1 mt-1">
+              <Button size="sm" style="max-width:266px" on:click={toggle} color="danger"><Icon name="arrow-repeat"></Icon> Recreate Report Link</Button>
+              <Modal isOpen={open} backdrop="static" {toggle}>
+                <ModalHeader {toggle}>Recreate Report Link</ModalHeader>
+                <ModalBody>
+                  Those with an old link to "{$shlStore.label}" will no longer be able to view its contents. A new link to your Report will be generated that you may share.
+                </ModalBody>
+                <ModalFooter>
+                  <Button color="secondary" on:click={toggle}>Cancel</Button>
+                  <Button color="danger" on:click={deactivateShl}>Confirm</Button>
+                </ModalFooter>
+              </Modal>
+            </Row>
+          </Col>
+        </Row>
+      </li>
     </ol>
-    <Row class="justify-content-center mx-4">
-      <Col>
-        <Row class="justify-content-center">
-          <Card class="mb-2 p-0">
-            <CardBody>
-              <CardText>
-                {#await qrCode then qrImage}
-                  <CardImg class="img-fluid" alt="QR Code for SHL" src={qrImage} />
-                  <CardImg
-                    style="position: absolute;
-              background: #325c33;
-              width: 110px;
-              height: 27px;
-              left: calc(50% - 55px);
-              top: calc(50% - 2em);
-              border: 5px solid #325c33;
-              box-sizing: border-box;"
-                    class="logo"
-                    alt="Let's Talk Tech Logo"
-                    src="/img/ltt-logo.svg"
-                  />
-                  <!-- 
-                  <img class="qr" alt="QR Code for SHL" src={dataUrl} />
-                  <img class="logo" alt="Let's Talk Tech Logo" src='/img/ltt-logo.svg' />
-                </p> -->
-                {/await}
-              </CardText>
-            </CardBody>
-            <CardFooter class={exp > today ? "valid" : "expired"}>
-              <strong>
-                {#if expDisplay}
-                  {#if exp > today}
-                    Expires {expDisplay}
-                  {:else}
-                    <span class="text-white">Expired {expDisplay}</span>
-                  {/if}
-                {/if}
-              </strong>
-            </CardFooter>
-          </Card>
-        </Row>
-        {#if exp <= today}
-          <Row class="justify-content-center mb-2">
-            Your link has expired. Click here to create a new link:
-          </Row>
-        {/if}
-        <Row class="justify-content-center mx-1 mt-1">
-          <Button size="sm" style="max-width:266px" on:click={toggle} color="danger"><Icon name="arrow-repeat"></Icon> Recreate Report Link</Button>
-          <Modal isOpen={open} backdrop="static" {toggle}>
-            <ModalHeader {toggle}>Recreate Report Link</ModalHeader>
-            <ModalBody>
-              Those with an old link to "{$shlStore.label}" will no longer be able to view its contents. A new link to your Report will be generated that you may share.
-            </ModalBody>
-            <ModalFooter>
-              <Button color="secondary" on:click={toggle}>Cancel</Button>
-              <Button color="danger" on:click={deactivateShl}>Confirm</Button>
-            </ModalFooter>
-          </Modal>
-        </Row>
-      </Col>
-    </Row>
   </Col>
 </Row>
 </div>
@@ -264,9 +266,12 @@
   :global(div.card) {
     max-width: 300px;
   }
+  :global(div.card-footer) {
+    font-size: 16px;
+  }
   :global(div.card-footer.valid) {
     background-color: var(--primary-color);
-    color: var(--highlight-light-color)
+    color: var(--highlight-light-color);
   }
   :global(div.card-footer.expired) {
     background-color: var(--errorColor);
