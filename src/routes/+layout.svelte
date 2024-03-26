@@ -102,45 +102,9 @@
 <Row>
   <Col style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgb(204, 204, 204);" >
     <footer>
-      This demonstration shows how to create a <a
-        target="_blank"
-        rel="noreferrer"
-        href="https://docs.smarthealthit.org/smart-health-links/user-stories">SMART Health Link</a
-      >
-      for any FHIR
-      <a href="https://build.fhir.org/ig/HL7/fhir-ips/" target="_blank" rel="noreferrer"
-        >International Patient Summary</a
-      >
-      document. SHLinks can be shared by copy/paste, or by presenting a QR code. Source code and license at
-      <a href="https://github.com/uwcirg/shl-ips" target="_blank" rel="noreferrer"
-        >https://github.com/uwcirg/shl-ips</a
-      >.
+      <p><strong>If you have any questions or problems using the system, please get in touch at clarawb@uw.edu for assistance.</strong></p>
     </footer>
   </Col>
 </Row>
 {/if}
 </Container>
-
-<style>
-  :global(.main-row) {
-    flex-grow: 1;
-  }
-  footer {
-    margin-bottom: 1em;
-    font-style: italic;
-  }
-  :global(div.container-fluid.main) {
-    min-height: 100%;
-    margin-right: auto;
-    margin-left: auto;
-    max-width: 800px;
-    display: flex;
-    flex-direction: column;
-  }
-  :global(html, body) {
-    height: 100%;
-  }
-  :global(.navbar .container-fluid) {
-    padding: 0,0.5rem;
-  }
-</style>
