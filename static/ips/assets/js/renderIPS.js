@@ -178,7 +178,7 @@ function loadBase64EncodedPDF(base64Data) {
 
 function loadBase64EncodedHTML(base64Data) {
   let htmlData = atob(base64Data);
-  let htmlDiv = $('#ad-html-viewer');
+  let htmlDiv = $('.ad-html-viewer');
   htmlDiv.html(htmlData);
 }
 
