@@ -3,6 +3,15 @@
   --primary-color: #325c33;
 }
 
+div.container-fluid.main {
+  min-height: 100%;
+  margin-right: auto;
+  margin-left: auto;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+}
+
 #header {
   position: fixed;
   z-index: 10000;

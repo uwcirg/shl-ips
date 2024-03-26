@@ -1,4 +1,4 @@
-<div class="card">
+<div class="card d-none d-sm-block">
   <div class="card-body show" id="advanceDirectives-body">
       <ul class="list-group">
           {{each(options.ad.consent)}}
@@ -32,12 +32,51 @@
                 <iframe id="ad-pdf-viewer" src="/ips/assets/js/pdf-js/web/viewer.html" style="position: relative;   top: 0;  bottom: 0; left: 0;   width: 100%;   height: 700px;  border: 0"></iframe>
               {{#else}}
                 {{if (@this.attachment.contentType === "text/html")}}
-                  <div id="ad-html-viewer" style="position: relative; top: 0; bottom: 0; left: 0; width: 100%; border: 0"></div>
+                  <div class="ad-html-viewer" style="position: relative; top: 0; bottom: 0; left: 0; width: 100%; border: 0"></div>
                 {{/if}}
               {{/if}}
             {{/each}}
-            
           {{/each}}
       </ul>
   </div>
+</div>
+<div class="row d-block d-sm-none">
+  <ul class="list-group">
+    {{each(options.ad.consent)}}
+      <li>
+        Type: {{@this.resourceType}}
+        <br/>
+        Text: 
+        {{if (@this.text && @this.text.div)}}
+          {{@this.text.div}}
+        {{#else}}
+          <i>No text provided in resource</i>
+        {{/if}}
+        <br />
+        Category:
+        {{if (@this.category && @this.category[0] && @this.category[0].coding && @this.category[0].coding[0])}}
+          {{@this.category[0].coding[0].display}}
+        {{/if}}
+        <br/>
+        Intent:
+        {{if (@this.provision && @this.provision.code && @this.provision.code[0] && @this.provision.code[0].coding && @this.provision.code[0].coding[0]) }}
+          {{@this.provision.code[0].coding[0].display}}
+        {{/if}}
+        {{if (@this.description && @this.description.text)}}
+          {{@this.description.text}}
+        {{/if}}
+      </li>
+    {{/each}}
+    {{each(options.ad.documentReference)}}
+      {{each(@this.content)}}
+        {{if (@this.attachment.contentType === "application/pdf")}}
+          <iframe id="ad-pdf-viewer" src="/ips/assets/js/pdf-js/web/viewer.html" style="position: relative;   top: 0;  bottom: 0; left: 0;   width: 100%;   height: 700px;  border: 0"></iframe>
+        {{#else}}
+          {{if (@this.attachment.contentType === "text/html")}}
+            <div class="ad-html-viewer" style="position: relative; top: 0; bottom: 0; left: 0; width: 100%; border: 0"></div>
+          {{/if}}
+        {{/if}}
+      {{/each}}
+    {{/each}}
+  </ul>
 </div>
