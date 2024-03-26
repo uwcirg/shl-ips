@@ -100,8 +100,10 @@
 </script>
 <div transition:fade>
 <Row class="justify-content-center">
-  <Col sm="8">
-    <h2>{$shlStore.label?.split('(')[0]}<span class="date-display">{"("+$shlStore.label?.split('(')[1]}</span></h2>
+  <Col sm=10 md=9>
+    <Row style="margin-bottom: 10px; border-bottom: 1px solid rgb(204, 204, 204);">
+      <h2>{$shlStore.label?.split('(')[0]}<span class="date-display">{"("+$shlStore.label?.split('(')[1]}</span></h2>
+    </Row>
     <h3>Share Report</h3>
     <p>There are 2 ways to share this electronically.</p>
     <ol>
@@ -109,27 +111,25 @@
         <strong>Email it:</strong> You can copy a link and paste it into an email to send.
         <ul>
           <li>First, to copy the link, click the copy button below:</li>
-          <li style="list-style-type: none;">
-            <Row>
-              <Col xs="auto" class="mb-2">
-                <Button size="sm" color="primary" style="width:130px !important" on:click={copyShl} disabled={!!copyNotice}>
-                  <Icon name="clipboard" />
-                  {#if copyNotice}
-                    {copyNotice}
-                  {:else}
-                    Copy Link
-                  {/if}
-                </Button>
-              </Col>
-              <Col xs="auto">
-                {#await href then href}
-                <Button size="sm" color="primary" style="width:130px !important" {href} target="_blank">
-                  <Icon name="box-arrow-up-right" /> Open Report
-                </Button>
-                {/await}
-              </Col>
-            </Row>
-          </li>
+          <Row class="justify-content-center mt-2">
+            <Col xs="auto" class="mb-2">
+              <Button size="sm" color="primary" style="width:130px !important" on:click={copyShl} disabled={!!copyNotice}>
+                <Icon name="clipboard" />
+                {#if copyNotice}
+                  {copyNotice}
+                {:else}
+                  Copy Link
+                {/if}
+              </Button>
+            </Col>
+            <Col xs="auto">
+              {#await href then href}
+              <Button size="sm" color="primary" style="width:130px !important" {href} target="_blank">
+                <Icon name="box-arrow-up-right" /> Open Report
+              </Button>
+              {/await}
+            </Col>
+          </Row>
           <li>
             Then, open your email and start a new message to the person you want to send it to.
           </li>
@@ -160,7 +160,7 @@
             <AccordionItem on:toggle={updateQRHeader}>
               <h6 slot="header" class="my-2">{qrHeader}</h6>
               <Row>
-                <Col xs=12 md=6 style="padding-left: 0px">
+                <Col xs=12 md=6>
                   <p>Here's how:</p>
                   <ol>
                     <li>
@@ -216,13 +216,13 @@
                     {/await}
                   </CardText>
                 </CardBody>
-                <CardFooter class={exp > today ? "valid" : "expired"}>
+                <CardFooter class={(exp > today ? "valid" : "expired")+" d-flex justify-content-center"}>
                   <strong>
                     {#if expDisplay}
                       {#if exp > today}
-                        Expires {expDisplay}
+                        Expires on {expDisplay}
                       {:else}
-                        <span class="text-white">Expired {expDisplay}</span>
+                        <span class="text-white">Expired on {expDisplay}</span>
                       {/if}
                     {/if}
                   </strong>

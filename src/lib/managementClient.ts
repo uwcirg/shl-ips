@@ -38,7 +38,7 @@ export class SHLClient {
   }
 
   async createShl(config: ConfigForServer = {}): Promise<SHLAdminParams> {
-    const ek = "ElRqo8OE_b19jtV49CxI6JCNSRsUV-q_9bd60kelroU" // randomStringWithEntropy();
+    const ek = randomStringWithEntropy();
     const create = await fetch(`${API_BASE}/shl`, {
       method: 'POST',
       headers: {
@@ -87,7 +87,7 @@ export class SHLClient {
   async updateShl(shl: SHLAdminParams): Promise<boolean> {
     const req = await fetch(`${API_BASE}/shl/${shl.id}`, {
       method: 'PUT',
-      body: JSON.stringify({ passcode: shl.passcode, exp: shl.exp }),
+      body: JSON.stringify({ passcode: (shl.passcode ?? shl.config.passcode), exp: (shl.exp ?? shl.config.exp), sessionId: shl.sessionId }),
       headers: {
         authorization: `Bearer ${shl.managementToken}`
       }

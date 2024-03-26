@@ -357,7 +357,7 @@ button.accordion-button {
     align-items: center;
 }
 .warning {
-    color: #b57310;
+    color: var(--warningColor);
 }
 .icon {
     width: 50px;
