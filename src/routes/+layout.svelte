@@ -71,7 +71,7 @@
   </NavbarBrand>
   <Nav pills>
     <NavItem active>
-      <NavLink active style="background-color:white" class="text-black" href="https://inform.dev.cirg.uw.edu/help" on:click={closeNav}>Log Out</NavLink>
+      <NavLink active style="background-color:white" class="text-black" on:click={logout}>Log Out</NavLink>
     </NavItem>
   </Nav>
 </Navbar>

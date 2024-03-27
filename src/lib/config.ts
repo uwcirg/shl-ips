@@ -1,14 +1,15 @@
 // import {PUBLIC_BASE_URL} from '$env/static/public';
 import { dev } from '$app/environment';
+import { getEnv } from './util';
 
-export const API_BASE = ( window.globalConfig?.VITE_API_BASE ?? import.meta.env.VITE_API_BASE);
+export const API_BASE = await getEnv("VITE_API_BASE");
 
-export const INTERMEDIATE_FHIR_SERVER_BASE = ( window.globalConfig?.VITE_INTERMEDIATE_FHIR_SERVER_BASE ?? import.meta.env.VITE_INTERMEDIATE_FHIR_SERVER_BASE);
+export const INTERMEDIATE_FHIR_SERVER_BASE = await getEnv("VITE_INTERMEDIATE_FHIR_SERVER_BASE");
 
-export const FHIR_R4_EXTERNAL_ID_SYSTEM = ( window.globalConfig?.VITE_FHIR_R4_EXTERNAL_ID_SYSTEM ?? import.meta.env.VITE_FHIR_R4_EXTERNAL_ID_SYSTEM);
+export const FHIR_R4_EXTERNAL_ID_SYSTEM = await getEnv("VITE_FHIR_R4_EXTERNAL_ID_SYSTEM");
 
-export const LOGOUT_URL = ( window.globalConfig?.VITE_LOGOUT_URL ?? import.meta.env.VITE_LOGOUT_URL);
-export const BACK_URL = ( window.globalConfig?.VITE_BACK_URL ?? import.meta.env.VITE_BACK_URL);
+export const LOGOUT_URL = await getEnv("VITE_LOGOUT_URL");
+export const BACK_URL = await getEnv("VITE_BACK_URL");
 
 export const SOF_RESOURCES = [
   'Patient',
@@ -71,8 +72,8 @@ export const SOF_HOSTS = [
   {
     id: "keycloak",
     name: "Let's Talk Tech Login",
-    iss: ( window.globalConfig?.VITE_SOF_ISS ?? import.meta.env.VITE_SOF_ISS),//"https://fhir-auth.inform.dev.cirg.uw.edu/fhir",
-    clientId: ( window.globalConfig?.VITE_SOF_CLIENT_ID ?? import.meta.env.VITE_SOF_CLIENT_ID), // shl_creator
+    iss: await getEnv("VITE_SOF_ISS"),//"https://fhir-auth.inform.dev.cirg.uw.edu/fhir",
+    clientId: await getEnv("VITE_SOF_CLIENT_ID"), // shl_creator
     scope: keycloakScope,
     redirect_uri: SOF_REDIRECT_URI,
     note: "Credentials provided"
@@ -80,7 +81,7 @@ export const SOF_HOSTS = [
 ];
 
 export const VIEWER_BASE = new URL(
-  (( window.globalConfig?.VITE_VIEWER_BASE ?? import.meta.env.VITE_VIEWER_BASE) ? ( window.globalConfig?.VITE_VIEWER_BASE ?? import.meta.env.VITE_VIEWER_BASE) : `/ips${dev ? '/index.html' : ''}`)+'#',
+  (await getEnv("VITE_VIEWER_BASE") ? await getEnv("VITE_VIEWER_BASE") : `/ips${dev ? '/index.html' : ''}`)+'#',
   window.location.href
 ).toString();
 export const PATIENT_IPS = {

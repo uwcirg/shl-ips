@@ -7,17 +7,18 @@ ENV NODE_ENV production
 
 WORKDIR /opt/app
 
-COPY package*.json ./
+COPY . .
 RUN npm clean-install --include=dev
 
-COPY ./fix-popper.sh ./
+COPY ./fix-popper.sh .
 RUN ./fix-popper.sh
 
-COPY . .
 RUN npm run build
 
 RUN cp -r build/ips/assets build/assets
 
 RUN cp build/404.html build/index.html
+
+ENTRYPOINT ["/opt/app/docker-entrypoint.sh", "./docker-entrypoint.sh"]
 
 CMD ["npm", "run", "start"]
