@@ -1,3 +1,5 @@
+import type { SHLAdminParams } from "./managementClient";
+
 export type Bundle = unknown;
 export interface SHLSubmitEvent {
   shcs: SHCFile[];
@@ -18,6 +20,9 @@ export interface SHCRetrieveEvent {
 export interface IPSRetrieveEvent {
   ips: Bundle | undefined;
   source?: string | undefined;
+}
+export interface SHLRetrieveEvent {
+  shl: SHLAdminParams | undefined;
 }
 export interface SOFAuthEvent {
   data: any | undefined;

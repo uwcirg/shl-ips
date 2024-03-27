@@ -1,34 +1,16 @@
 // import {PUBLIC_BASE_URL} from '$env/static/public';
 import { dev } from '$app/environment';
+import { getEnv } from './util';
 
-export const API_BASE = import.meta.env.VITE_API_BASE;
+export const API_BASE = await getEnv("VITE_API_BASE");
 
-export const INTERMEDIATE_FHIR_SERVER_BASE = import.meta.env.VITE_INTERMEDIATE_FHIR_SERVER_BASE;
+export const INTERMEDIATE_FHIR_SERVER_BASE = await getEnv("VITE_INTERMEDIATE_FHIR_SERVER_BASE");
 
-export const SOF_HOSTS = [
-  {
-    id: "epic",
-    name: "EPIC Demo",
-    url: "https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4",
-    clientId: import.meta.env.VITE_EPIC_CLIENT_ID,
-    note: "<a href='https://fhir.epic.com/Documentation?docId=testpatients' target='_blank' rel='noreferrer'>Test patient credentials <Icon name='box-arrow-up-right' /></a>"
-  },
-  { 
-    id: "cerner",
-    name: "Oracle Cerner Demo",
-    url: "https://fhir-myrecord.cerner.com/r4/ec2458f2-1e24-41c8-b71b-0e701af7583d",
-    clientId: import.meta.env.VITE_CERNER_CLIENT_ID,
-    note: "<a href='https://docs.google.com/document/u/1/d/e/2PACX-1vQwyX3px4qi5t1O6_El6022zYt4ymKAWCrcgxcX5NvYGUJAkJ4WFwOnLoikow6rEccpFZzDWBdcBqsQ/pub' target='_blank' rel='noreferrer'>Test patient credentials <Icon name='box-arrow-up-right' /></a>"
-  },
-  {
-    id: "smit",
-    name: "SMART Health IT Demo",
-    url: "https://launch.smarthealthit.org/v/r4/sim/WzMsIiIsIiIsIkFVVE8iLDAsMCwwLCIiLCIiLCIiLCIiLCIiLCIiLCIiLDAsMF0/fhir",
-    clientId: "<no client id>",
-    note: "Credentials provided"
-  }
-];
-export const SOF_REDIRECT_URI = '/create';
+export const FHIR_R4_EXTERNAL_ID_SYSTEM = await getEnv("VITE_FHIR_R4_EXTERNAL_ID_SYSTEM");
+
+export const LOGOUT_URL = await getEnv("VITE_LOGOUT_URL");
+export const BACK_URL = await getEnv("VITE_BACK_URL");
+
 export const SOF_RESOURCES = [
   'Patient',
   'AllergyIntolerance',
@@ -52,27 +34,54 @@ export const SOF_RESOURCES = [
 
 export const SOF_PATIENT_RESOURCES = [
   'Patient',
-  'AllergyIntolerance',
+  'DocumentReference',
+  // 'AllergyIntolerance',
   // 'MedicationStatement', // Not in EPIC USCDI R4
-  'MedicationRequest',
+  // 'MedicationRequest',
   // 'Medication', // can't search by patient; "Only an _ID search is allowed."
-  'Condition',
+  // 'Condition',
   // 'Observation', // "Must have either code or category."
   // 'Organization', // can't search by patient; "Only an _ID search is allowed."
-  'Immunization',
+  // 'Immunization',
   // 'Device',
   // 'DeviceUseStatement', // Not in EPIC USCDI R4
-  'DiagnosticReport', // TODO change to subject
+  // 'DiagnosticReport', // TODO change to subject
   // 'ImagingStudy', // Not in EPIC USCDI R4
   // 'Media', // Not in EPIC USCDI R4
   // 'Practitioner', // can't search by patient; "Either name, family, or identifier is a required parameter."
   // 'PractitionerRole',  // can't search by patient; "An identifier, practitioner, organization, location, or specialty parameter is required."
-  'Procedure', // TODO change to subject
+  // 'Procedure', // TODO change to subject
   // 'Specimen', // Not in EPIC USCDI R4
 ];
 
+export const RESOURCE_SCOPE = SOF_PATIENT_RESOURCES.map(resourceType => `patient/${resourceType}.read`).join(" ");
+const keycloakScope = `openid online_access`;
+const fullScope = `${keycloakScope} fhirUser ${RESOURCE_SCOPE}`;
+const SOF_REDIRECT_URI = '/share';
+
+export const SOF_HOSTS = [
+  // {
+  //   id: "smit",
+  //   name: "SMART Health IT Demo",
+  //   iss: "https://launch.smarthealthit.org/v/r4/sim/WzMsIiIsIiIsIkFVVE8iLDAsMCwwLCIiLCIiLCIiLCIiLCIiLCIiLCIiLDAsMF0/fhir",
+  //   clientId: "<no client id>",
+  //   scope: fullScope,
+  //   redirect_uri: SOF_REDIRECT_URI,
+  //   note: "Credentials provided"
+  // },
+  {
+    id: "keycloak",
+    name: "Let's Talk Tech Login",
+    iss: await getEnv("VITE_SOF_ISS"),//"https://fhir-auth.inform.dev.cirg.uw.edu/fhir",
+    clientId: await getEnv("VITE_SOF_CLIENT_ID"), // shl_creator
+    scope: keycloakScope,
+    redirect_uri: SOF_REDIRECT_URI,
+    note: "Credentials provided"
+  }
+];
+
 export const VIEWER_BASE = new URL(
-  (import.meta.env.VITE_VIEWER_BASE ?? `/ips${dev ? '/index.html' : ''}`)+'#',
+  (await getEnv("VITE_VIEWER_BASE") ? await getEnv("VITE_VIEWER_BASE") : `/ips${dev ? '/index.html' : ''}`)+'#',
   window.location.href
 ).toString();
 export const PATIENT_IPS = {
