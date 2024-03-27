@@ -26,7 +26,7 @@
             shl: shl
           });
         } catch (error) {
-          fetchError = "Unable to retrieve most recent sharing link. Please try again later.";
+          fetchError = "Unable to retrieve most recent sharing link.";
           console.error(`Error retrieving SHL for patient ${patientId}: ${error}`);
         }
         // Meanwhile, in FetchSOF:

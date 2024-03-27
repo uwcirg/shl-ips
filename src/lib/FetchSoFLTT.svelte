@@ -35,6 +35,7 @@
     } catch (e) {
       processing = false;
       console.error('Error while fetching data: ', e);
+      fetchError = "Unable to find your Report.";
     }
   }
 </script>
