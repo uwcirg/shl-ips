@@ -1,15 +1,14 @@
 // import {PUBLIC_BASE_URL} from '$env/static/public';
 import { dev } from '$app/environment';
-import { getEnv } from './util';
 
-export const API_BASE = await getEnv("VITE_API_BASE");
+export const API_BASE = import.meta.env.VITE_API_BASE;
 
-export const INTERMEDIATE_FHIR_SERVER_BASE = await getEnv("VITE_INTERMEDIATE_FHIR_SERVER_BASE");
+export const INTERMEDIATE_FHIR_SERVER_BASE = import.meta.env.VITE_INTERMEDIATE_FHIR_SERVER_BASE;
 
-export const FHIR_R4_EXTERNAL_ID_SYSTEM = await getEnv("VITE_FHIR_R4_EXTERNAL_ID_SYSTEM");
+export const FHIR_R4_EXTERNAL_ID_SYSTEM = import.meta.env.VITE_FHIR_R4_EXTERNAL_ID_SYSTEM;
 
-export const LOGOUT_URL = await getEnv("VITE_LOGOUT_URL");
-export const BACK_URL = await getEnv("VITE_BACK_URL");
+export const LOGOUT_URL = import.meta.env.VITE_LOGOUT_URL;
+export const BACK_URL = import.meta.env.VITE_BACK_URL;
 
 export const SOF_RESOURCES = [
   'Patient',
@@ -72,8 +71,8 @@ export const SOF_HOSTS = [
   {
     id: "keycloak",
     name: "Let's Talk Tech Login",
-    iss: await getEnv("VITE_SOF_ISS"),//"https://fhir-auth.inform.dev.cirg.uw.edu/fhir",
-    clientId: await getEnv("VITE_SOF_CLIENT_ID"), // shl_creator
+    iss: import.meta.env.VITE_SOF_ISS,//"https://fhir-auth.inform.dev.cirg.uw.edu/fhir",
+    clientId: import.meta.env.VITE_SOF_CLIENT_ID, // shl_creator
     scope: keycloakScope,
     redirect_uri: SOF_REDIRECT_URI,
     note: "Credentials provided"
@@ -81,7 +80,7 @@ export const SOF_HOSTS = [
 ];
 
 export const VIEWER_BASE = new URL(
-  (await getEnv("VITE_VIEWER_BASE") ? await getEnv("VITE_VIEWER_BASE") : `/ips${dev ? '/index.html' : ''}`)+'#',
+  (import.meta.env.VITE_VIEWER_BASE ? import.meta.env.VITE_VIEWER_BASE : `/ips${dev ? '/index.html' : ''}`)+'#',
   window.location.href
 ).toString();
 export const PATIENT_IPS = {

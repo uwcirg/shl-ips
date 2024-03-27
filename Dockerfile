@@ -15,12 +15,6 @@ RUN sed -i '/2\.11\.6/a \ \ "type": "module",' node_modules/@popperjs/core/packa
 
 RUN npm run build
 
-RUN cp -r build/ips/assets build/assets
-
 RUN cp build/404.html build/index.html
 
-RUN chmod +x /opt/app/docker-entrypoint.sh
-
-ENTRYPOINT ["/opt/app/docker-entrypoint.sh", "./docker-entrypoint.sh"]
-
-CMD ["npm", "run", "start"]
+CMD ["sh", "-c", "npm run build && cp build/404.html build/index.html && npm run start"]
