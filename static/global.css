@@ -147,7 +147,7 @@ body {
     margin-bottom: 16px;
 }
 h1, h2, h3, h4, h5, h6 {
-    color: var(--primary-color) !important;
+    color: var(--primary-color);
     line-height: 1.2 !important;
     font-weight: 600 !important;
 }
@@ -357,7 +357,7 @@ button.accordion-button {
     align-items: center;
 }
 .warning {
-    color: #b57310;
+    color: var(--warningColor);
 }
 .icon {
     width: 50px;

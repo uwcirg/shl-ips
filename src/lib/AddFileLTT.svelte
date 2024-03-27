@@ -2,6 +2,9 @@
     import * as jose from 'jose';
     import * as pako from 'pako';
     import { createEventDispatcher, getContext } from 'svelte';
+    import {
+      Alert
+    } from 'sveltestrap';
     import FetchSoFLTT from './FetchSoFLTT.svelte';
     import type { Writable } from 'svelte/store';
     import type { SHLAdminParams, SHLClient } from '$lib/managementClient';
@@ -34,7 +37,7 @@
 
     let resourcesToReview: any[] = [];
 
-    let label = `Let’s Talk Tech Choices Report (${new Date().toLocaleDateString('en-US', {day: 'numeric', month: 'long', year: 'numeric'})})`;
+    let label = `My Choices Report (${new Date().toLocaleDateString('en-US', {day: 'numeric', month: 'long', year: 'numeric'})})`;
     let passcode = "";
 
     let checkedShl = false;
@@ -102,13 +105,10 @@
       // Look for id of shlStore in shls from HAPI
       let found = false;
       for(let i=0; i < shlDocRefs.length; i++) {
-        let docRef = shlDocRefs[i];
-        let relatedSessionDocRefId = docRef.context?.related[0].reference.split('/')[1];
-        if (relatedSessionDocRefId == $shlStore.sessionId) {
-          // Decode docref data
-          let data = atob(shlDocRefs[i].content[0].attachment.data);
-          let shlData = JSON.parse(data);
-          
+        // Decode docref data
+        let data = atob(shlDocRefs[i].content[0].attachment.data);
+        let shlData = JSON.parse(data);
+        if (shlData.id == $shlStore.id) {
           $shlStore.encryptionKey = shlData.encryptionKey;
           $shlStore.managementToken = shlData.managementToken;
           $shlStore.label = shlData.label;
@@ -125,6 +125,8 @@
           let deleted = await shlClient.deleteAllFiles($shlStore);
           let ips = createIpsPayload(patient, mostRecentDocRef);
           let shc = await packageShc(ips);
+          $shlStore.sessionId = mostRecentDocRef.id;
+          let updated = await shlClient.updateShl($shlStore);
           $shlStore = await addFiles($shlStore, [shc]);
           let reportDate = new Date(mostRecentDocRef.date)
             .toLocaleDateString('en-US', {
@@ -134,6 +136,7 @@
             });
           let reportLabel = `My Choices Report (${reportDate})`;
           let result = await sofClient.postShl($shlStore, mostRecentDocRef, reportLabel);
+          $shlStore.label = result.label;
         }
         // The current SHL is most recent, so use it
         shlReadyDispatch('shl-ready', true);
@@ -142,27 +145,23 @@
         shlClient.deleteShl($shlStore);
         newShl(patient, mostRecentDocRef);
       } else {
-        throw Error("No summary found for patient")
+        fetchError = "No report found.";
       }
     }
 
     async function handleNewResources(details: ResourceRetrieveEvent) {
-      try {
-        resourceResult = details;
-        if (resourceResult.resources) {
-          // Trigger update in ResourceSelector
-          resourcesToReview = resourceResult.resources;
-          fetchedResources = true;
-        }
-      } catch (e) {
-        console.log('Failed', e);
-        fetchError = "Error preparing IPS";
+      resourceResult = details;
+      if (resourceResult.resources) {
+        // Trigger update in ResourceSelector
+        resourcesToReview = resourceResult.resources;
+        fetchedResources = true;
+      } else {
+        fetchError = "Error fetching Choices Report.";
       }
     }
 
     async function updateShl(details: SHLRetrieveEvent) {
-      try {
-        shlResult = details;
+      shlResult = details;
         if (shlResult.shl) {
           // Trigger update in store
           $shlStore = shlResult.shl;
@@ -170,10 +169,6 @@
           createSHL = true;
         }
         checkedShl = true;
-      } catch (e) {
-        console.log('Failed', e);
-        fetchError = "Error preparing IPS";
-      }
     }
 
     function createIpsPayload(patient:any, docref:any) {
@@ -309,3 +304,10 @@
 <FetchSoFLTT
   on:updateResources={ async ({ detail }) => { handleNewResources(detail) } }
 />
+
+{#if fetchError}
+<Alert color="danger">
+  <h4 class="alert-heading text-capitalize">{fetchError}</h4>
+  You can try again later, click "Back" to choose another option, or reach out for help below.
+</Alert>
+{/if}

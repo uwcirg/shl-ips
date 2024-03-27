@@ -1,6 +1,7 @@
 <script lang="ts">
     import { createEventDispatcher, onMount, getContext } from 'svelte';
-    import type { SHLAdminParams, SHLClient } from '$lib/managementClient';
+    import { Alert } from 'sveltestrap';
+    import type { SHLClient } from '$lib/managementClient';
     import type { SHLRetrieveEvent } from './types';
     import type { SOFClient } from '$lib/sofClient'
 
@@ -25,7 +26,7 @@
             shl: shl
           });
         } catch (error) {
-          fetchError = "Unable to retrieve most recent sharing link. Please try again later.";
+          fetchError = "Unable to retrieve most recent sharing link.";
           console.error(`Error retrieving SHL for patient ${patientId}: ${error}`);
         }
         // Meanwhile, in FetchSOF:
@@ -38,3 +39,10 @@
     });
 
 </script>
+
+{#if fetchError}
+<Alert color="danger">
+  <h4 class="alert-heading text-capitalize">{fetchError}</h4>
+  You can try again later, click "Back" to choose another option, or reach out for help below.
+</Alert>
+{/if}

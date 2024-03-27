@@ -71,7 +71,7 @@
   </NavbarBrand>
   <Nav pills>
     <NavItem active>
-      <NavLink active style="background-color:white" class="text-black" href="https://inform.dev.cirg.uw.edu/help" on:click={closeNav}>Log Out</NavLink>
+      <NavLink active style="background-color:white" class="text-black" on:click={logout}>Log Out</NavLink>
     </NavItem>
   </Nav>
 </Navbar>
@@ -102,7 +102,9 @@
 <Row>
   <Col style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgb(204, 204, 204);" >
     <footer>
-      <p>If you have any questions or problems using the system, please get in touch at <a  href="mailto:clarawb@uw.edu">clarawb@uw.edu</a> for assistance.</p>
+      <Row class="justify-content-center">
+        <p><center>If you have any questions or problems using the system, please get in touch at <a  href="mailto:clarawb@uw.edu">clarawb@uw.edu</a> for assistance.</center></p>
+      </Row>
     </footer>
   </Col>
 </Row>

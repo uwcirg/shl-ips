@@ -4,6 +4,7 @@
   import {
     Accordion,
     AccordionItem,
+    Alert,
     Button,
     Card,
     CardHeader,
@@ -89,10 +90,26 @@
     location.reload();
   }
 
-  let pasteHeader = "Click here to see how";
-  function updatePasteHeader({ detail }) {
-    pasteHeader = detail ? "Click here to close" : "Click here to see how";
+  let openedHeader = "Click here to close"
+  let closedHeader = "Click here to see how on your";
+  let computerHeader = `${closedHeader} computer`;
+  let phoneHeader = `${closedHeader} phone`;
+  function updateComputerHeader({ detail }) {
+    computerHeader = updateHeader(detail, 'computer');
+    if (detail) {
+      phoneHeader = updateHeader(!detail, 'phone');
+    }
   }
+  function updatePhoneHeader({ detail }) {
+    phoneHeader = updateHeader(detail, 'phone');
+    if (detail) {
+      computerHeader = updateHeader(!detail, 'computer');
+    }
+  }
+  function updateHeader(detail, device: string) {
+    return detail ? openedHeader : `${closedHeader} ${device}`
+  }
+
   let qrHeader = "Click here to see how";
   function updateQRHeader({ detail }) {
     qrHeader = detail ? "Click here to close" : "Click here to see how";
@@ -100,154 +117,202 @@
 </script>
 <div transition:fade>
 <Row class="justify-content-center">
-  <Col sm="8">
-    <h2>{$shlStore.label?.split('(')[0]}<span class="date-display">{"("+$shlStore.label?.split('(')[1]}</span></h2>
+  <Col sm=10 md=9>
+    <Row style="margin-bottom: 10px; border-bottom: 1px solid rgb(204, 204, 204);">
+      <h2>{$shlStore.label?.split('(')[0]}<span class="date-display">{"("+$shlStore.label?.split('(')[1]}</span></h2>
+    </Row>
+    {#if exp < today}
+    <Alert color="warning">
+      <Row cols={{sm:2, xs:1}}>
+        <Col class="d-flex align-items-center">
+          <h5 class="alert-heading">This link has expired.</h5>
+        </Col>
+        <Col>
+          <Row>
+            <Col class="d-flex align-itmes-center">
+              Click here to create a new link:
+            </Col>
+          </Row>
+          <Row>
+            <Col class="d-flex align-itmes-center">
+              <Button size="sm" style="width:100%" on:click={toggle} color="primary">
+                <Icon name="arrow-repeat"></Icon> Create New Report Link
+              </Button>
+            </Col>
+          </Row>
+        </Col>
+      </Row>
+    </Alert>
+    {/if}
     <h3>Share Report</h3>
     <p>There are 2 ways to share this electronically.</p>
     <ol>
       <li>
-        <strong>Email it:</strong> You can copy a link and paste it into an email to send (if you are using your phone, you could also paste the link into a text message).
-        <ul>
-          <li>First, to copy the link, click the copy button below:</li>
-          <li style="list-style-type: none;">
-            <Row>
-              <Col xs="auto" class="mb-2">
-                <Button size="sm" color="primary" style="width:130px !important" on:click={copyShl} disabled={!!copyNotice}>
-                  <Icon name="clipboard" />
-                  {#if copyNotice}
-                    {copyNotice}
-                  {:else}
-                    Copy Link
-                  {/if}
-                </Button>
-              </Col>
-              <Col xs="auto">
-                {#await href then href}
-                <Button size="sm" color="primary" style="width:130px !important" {href} target="_blank">
-                  <Icon name="box-arrow-up-right" /> Open Report
-                </Button>
-                {/await}
-              </Col>
-            </Row>
-          </li>
-          <li>
-            Then, open your email and start a new message to the person you want to send it to.
-          </li>
-          <li>
-            Paste the link into the body of the email.
-            <Accordion class="mt-1">
-              <AccordionItem on:toggle={updatePasteHeader}>
-                <h6 slot="header" class="my-2">{pasteHeader}</h6>
-                <p>Here's how:</p>
-                <p>After you have clicked the "Copy Link" button above, right-click, then choose “Paste” from the pop-up menu.</p>
-                <p>Or, if you’re using a PC, press the Ctrl and V buttons at the same time.</p>
-                <p>On a Mac, press Command and V.</p>
-              </AccordionItem>
-            </Accordion>
-          </li>
-          <li>
-            Send the email. The person you send it to will receive the link to be able to see your
-            saved Choices Report.
-          </li>
-        </ul>
+        <strong>Email or text it:</strong> You can copy a link and paste it into an email to send. If you are using your phone, you could also paste the link into a text message.
       </li>
+      <Row class="justify-content-center mt-2">
+        <Col xs="auto" class="mb-2">
+          <Button size="sm" color="primary" style="width:130px !important" on:click={copyShl} disabled={!!copyNotice}>
+            <Icon name="clipboard" />
+            {#if copyNotice}
+              {copyNotice}
+            {:else}
+              Copy Link
+            {/if}
+          </Button>
+        </Col>
+        <Col xs="auto">
+          {#await href then href}
+          <Button size="sm" color="primary" style="width:130px !important" {href} target="_blank">
+            <Icon name="box-arrow-up-right" /> Open Report
+          </Button>
+          {/await}
+        </Col>
+      </Row>
+      <Accordion class="mt-1 mb-4">
+        <AccordionItem id="computer" on:toggle={updateComputerHeader}>
+          <h6 slot="header" class="my-2">{computerHeader}</h6>
+          <p><strong>Here's how on your computer:</strong></p>
+          <ul>
+            <li>First, to copy the link, click the "Copy Link" button above.</li>
+            <li>Then, open your email and start a new message to the person you want to send it to.</li>
+            <li>Paste the link into the body of the email.</li>
+            <p class="mb-0">To Paste:</p>
+            <ul style="list-style-type: circle">
+              <li>After you have clicked the copy button above, control-click (or right-click), then choose "Paste" from the pop-up menu.</li>
+              <li>Or, if you're using a PC, press the Ctrl and V buttons at the same time.</li>
+              <li>On a Mac, press Command and V at the same time.</li>
+            </ul>
+            <li>Send the email. The person you send it to will receive the link to be able to see your saved Choices Report.</li>
+          </ul>
+        </AccordionItem>
+        <AccordionItem id="phone" on:toggle={updatePhoneHeader}>
+          <h6 slot="header" class="my-2">{phoneHeader}</h6>
+          <p><strong>Here's how on your phone:</strong></p>
+          <ul>
+            <li>First, to copy the link, click the "Copy Link" button above.</li>
+            <li>Then, open your email or text message app and start a new message to the person you want to send it to.</li>
+            <li>Paste the link into the body of the message.</li>
+            <p class="mb-0">To Paste:</p>
+            <ul style="list-style-type: circle">
+              <li>Tap where you want to add or edit text. Tap again, then tap the "Paste" button.</li>
+            </ul>
+            <li>Send the message. The person you send it to will receive the link to be able to see your saved Choices Report.</li>
+          </ul>
+        </AccordionItem>
+      </Accordion>
       <li>
         <strong>Share a QR code:</strong>
       </li>
-      <li style="list-style-type: none;">
-        <Row class="justify-content-center mx-4">
-          <Col>
-            <Row class="justify-content-center">
-              <Card class="mb-2 p-0">
-                <CardBody>
-                  <CardText>
-                    {#await qrCode then qrImage}
-                      <CardImg class="img-fluid" alt="QR Code for SHL" src={qrImage} />
-                      <CardImg
-                        style="position: absolute;
-                  background: #325c33;
-                  width: 110px;
-                  height: 27px;
-                  left: calc(50% - 55px);
-                  top: calc(50% - 2em);
-                  border: 5px solid #325c33;
-                  box-sizing: border-box;"
-                        class="logo"
-                        alt="Let's Talk Tech Logo"
-                        src="/img/ltt-logo.svg"
-                      />
-                      <!-- 
-                      <img class="qr" alt="QR Code for SHL" src={dataUrl} />
-                      <img class="logo" alt="Let's Talk Tech Logo" src='/img/ltt-logo.svg' />
-                    </p> -->
-                    {/await}
-                  </CardText>
-                </CardBody>
-                <CardFooter class={exp > today ? "valid" : "expired"}>
-                  <strong>
-                    {#if expDisplay}
-                      {#if exp > today}
-                        Expires {expDisplay}
-                      {:else}
-                        <span class="text-white">Expired {expDisplay}</span>
-                      {/if}
-                    {/if}
-                  </strong>
-                </CardFooter>
-              </Card>
-            </Row>
-            {#if exp <= today}
-              <Row class="justify-content-center mb-2">
-                Your link has expired. Click here to create a new link:
-              </Row>
-            {/if}
-            <Row class="justify-content-center mx-1 mt-1">
-              <Button size="sm" style="max-width:266px" on:click={toggle} color="danger"><Icon name="arrow-repeat"></Icon> Recreate Report Link</Button>
-              <Modal isOpen={open} backdrop="static" {toggle}>
-                <ModalHeader {toggle}>Recreate Report Link</ModalHeader>
-                <ModalBody>
-                  Those with an old link to "{$shlStore.label}" will no longer be able to view its contents. A new link to your Report will be generated that you may share.
-                </ModalBody>
-                <ModalFooter>
-                  <Button color="secondary" on:click={toggle}>Cancel</Button>
-                  <Button color="danger" on:click={deactivateShl}>Confirm</Button>
-                </ModalFooter>
-              </Modal>
-            </Row>
-          </Col>
-        </Row>
-      </li>
-      <li style="list-style-type: none;">
-        <Accordion>
-          <AccordionItem on:toggle={updateQRHeader}>
-            <h6 slot="header" class="my-2">{qrHeader}</h6>
-            <Row>
-              <Col xs=12 md=6 style="padding-left: 0px">
-                <p>Here's how:</p>
-                <ol>
-                  <li>
-                    Point your phone’s camera at the QR code above like you are taking a photo of it.
-                  </li>
-                  <li>
-                    Your device should recognize the QR code, automatically scan it, and show a notification.
-                    On some readers, you have to press a button to scan the code.
-                  </li>
-                  <li>
-                    If necessary, press the link button.
-                    Your device reads the code and navigates to a page showing your Choices Report.
-                  </li>
-                </ol>
+      <Row class="justify-content-center mx-4">
+        <Col>
+          <Row class="justify-content-center">
+            <Card class="my-2 p-0">
+              <CardBody class="p-0">
+                <CardText>
+                  {#await qrCode then qrImage}
+                    <CardImg class="img-fluid" alt="QR Code for SHL" src={qrImage} />
+                    <CardImg
+                      style="position: absolute;
+                background: #325c33;
+                width: 130px;
+                height: 30px;
+                left: calc(50% - 65px);
+                top: calc(50% - 15px);
+                border: 5px solid #325c33;
+                box-sizing: border-box;"
+                      class="logo"
+                      alt="Let's Talk Tech Logo"
+                      src="/img/ltt-logo.svg"
+                    />
+                  {/await}
+                </CardText>
+              </CardBody>
+            </Card>
+          </Row>
+        </Col>
+      </Row>
+      <Accordion class="my-2">
+        <AccordionItem on:toggle={updateQRHeader}>
+          <h6 slot="header" class="my-2">{qrHeader}</h6>
+          <Row>
+            <Col xs=12 md=6>
+              <p><strong>Here's how:</strong></p>
+              <ol>
+                <li>
+                  Point your device’s camera at the QR code like you are taking a photo of it.
+                </li>
+                <li>
+                  Your device should recognize the QR code, automatically scan it, and show a notification.
+                  On some QR code readers, you have to press a button to scan the code.
+                </li>
+                <li>
+                  If necessary, press the link button.
+                  Your device reads the code and navigates to a page showing your Choices Report.
+                </li>
+              </ol>
+            </Col>
+            <Col xs=12 md=6 style="padding-left: 0px">
+              <Col class="d-flex justify-content-center mt-2">
+                <img src="/img/qrphone.png" alt="Scan a QR Code"/>
               </Col>
-              <Col xs=12 md=6 style="padding-left: 0px">
-                <Col class="d-flex justify-content-center mt-2">
-                  <img src="/img/qrphone.png" alt="Scan a QR Code"/>
-                </Col>
-              </Col>
-            </Row>
-          </AccordionItem>
-        </Accordion>
-      </li>
+            </Col>
+          </Row>
+        </AccordionItem>
+      </Accordion>
     </ol>
+    <Row style="margin-bottom: 10px; border-bottom: 1px solid rgb(204, 204, 204);">
+      <h3 class="mt-4">Frequently Asked Questions</h3>
+    </Row>
+    <h5><u>Does this link expire?</u></h5>
+    <p>This link and QR code
+      {#if expDisplay}
+        {#if exp > today}
+          will last 6 months and will expire on <strong>{expDisplay}</strong>.
+        {:else}
+          expired on <strong>{expDisplay}</strong>.
+        {/if}
+      {/if}
+      Even after the link expires, you can always access your saved Report through the Let’s Talk Tech website. You can deactivate the link earlier than the expiration date by clicking the <strong>Create New Report Link</strong> button below.</p>
+    <h5><u>What happens after the link expires?</u></h5>
+    <p>
+      When your link expires, the url or QR code above will no longer work to access your saved Report. If you want to share the Report after this link expired, there are two steps:
+    </p>
+      <ol>
+        <li>Click the <strong>Create New Report Link</strong> button below</li>
+        <li>Go through the steps described above to share the new link.</li>
+      </ol>
+    <p>
+      Even if you have already shared the Report with someone, you will need to share it again for them to still access it.
+    </p>
+    <h5><u>What if I change my mind about who I shared the Report with?</u></h5>
+    <p>
+      You can deactivate the link you shared earlier than the expiration date by clicking the <strong>Create New Report Link</strong> button below. No one you shared it with can access the Report unless you share the new link with them. The old link will no longer connect to your Report.
+    </p>
+    <h5><u>What if I want to share an updated Report?</u></h5>
+    <p>
+      After you have edited your Report, come back to this page. Then, anyone who you already shared your Report with will be able to see the updated version. To share the Report with more people, go through the steps described above.
+    </p>
+    <Row class="justify-content-center mx-1 mt-1">
+      <Button size="sm" style="max-width:266px" on:click={toggle} color="danger"><Icon name="arrow-repeat"></Icon> Create New Report Link</Button>
+      <Modal isOpen={open} backdrop="static" {toggle}>
+        <ModalHeader {toggle}>Create New Report Link</ModalHeader>
+        <ModalBody>
+          {#if expDisplay}
+            {#if exp > today}
+              Those with an old link to "{$shlStore.label}" will no longer be able to view its contents.
+            {:else}
+              Those with the expired link can no longer view your Report.
+            {/if}
+          {/if}
+          A new link to your Report will be generated that you may share.
+        </ModalBody>
+        <ModalFooter>
+          <Button color="secondary" on:click={toggle}>Cancel</Button>
+          <Button color="danger" on:click={deactivateShl}>Confirm</Button>
+        </ModalFooter>
+      </Modal>
+    </Row>
   </Col>
 </Row>
 </div>
