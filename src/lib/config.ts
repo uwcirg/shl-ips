@@ -11,7 +11,8 @@ export const FHIR_R4_EXTERNAL_ID_SYSTEM = import.meta.env.VITE_FHIR_R4_EXTERNAL_
 export const LOGOUT_URL = import.meta.env.VITE_LOGOUT_URL;
 export const BACK_URL = import.meta.env.VITE_BACK_URL;
 
-export const INACTIVITY_TIMEOUT = toMilliseconds(4,0,0);
+const timeout = (import.meta.env.VITE_INACTIVITY_TIMEOUT ?? "04:00:00").split(":").map((n) => Number(n));
+export const INACTIVITY_TIMEOUT = toMilliseconds(timeout[0] ?? 0, timeout[1] ?? 0, timeout[2] ?? 0);
 
 export const SOF_RESOURCES = [
   'Patient',

@@ -11,6 +11,7 @@ interface ImportMetaEnv {
     readonly VITE_SOF_ISS: string
     readonly VITE_BACK_URL: string
     readonly VITE_LOGOUT_URL: string
+    readonly VITE_INACTIVITY_TIMEOUT: string;
     readonly DEV_SERVER_PORT: number
 }
   
