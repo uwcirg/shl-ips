@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+    integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css"
+    integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+
+  <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
+    integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
+    integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/squirrelly@7.9.2/dist/squirrelly.min.js"></script>
+  <!-- IPS Specific Custom CSS-->
+  <link rel="stylesheet" href="/view/assets/css/custom.css">
+
+  <!-- IPS Rendering -->
+  <script type="module" src="/view/assets/js/renderIPS.js"></script>
+  <script type="module" src="/view/assets/js/retreiveIPS.js"></script>
+  
+
+  <title>My Choices Report Viewer</title>
+</head>
+
+<body>
+  <div id="content" style="display:none; padding: auto; margin:auto" class="main container-fluid">
+    <!-- IPS Default Header for Connectathons -->
+    <!-- Removing header id element will remove header -->
+    <!-- <div style="padding: 28px"></div> -->
+    <div id="ips-loader" class="row">
+      <span class="loader"></span>
+    </div>
+    <div id="rendered-ips" class="ml-4 mt-0 ml-sm-4 mt-sm-4">
+    </div>
+
+  </div>
+  </div>
+  </body>
+
+</html>
