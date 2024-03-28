@@ -39,6 +39,8 @@
 
     let label = `My Choices Report (${new Date().toLocaleDateString('en-US', {day: 'numeric', month: 'long', year: 'numeric'})})`;
     let passcode = "";
+    let today = new Date();
+    let sixMonths = new Date(today.getFullYear(), today.getMonth() + 6, today.getDay());
 
     let checkedShl = false;
     let fetchedResources = false;
@@ -126,6 +128,7 @@
           let ips = createIpsPayload(patient, mostRecentDocRef);
           let shc = await packageShc(ips);
           $shlStore.sessionId = mostRecentDocRef.id;
+          $shlStore.exp = sixMonths.getTime() / 1000;
           let updated = await shlClient.updateShl($shlStore);
           $shlStore = await addFiles($shlStore, [shc]);
           let reportDate = new Date(mostRecentDocRef.date)
@@ -241,8 +244,6 @@
     }
 
     function submitShl(shcs: SHCFile[]): Promise<SHLAdminParams>{
-      let today = new Date();
-      let sixMonths = new Date(today.getFullYear(), today.getMonth() + 6, today.getDay());
       return newShlFromShc({
         shcs: shcs,
         label,
