@@ -5,14 +5,9 @@ export default defineConfig(({ mode }) => {
 	// Load env file based on `mode` in the current working directory.
 	// Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
 	// const env = {...process.env, ...loadEnv(mode, process.cwd(), '')};
-	process.env = {...process.env, ...loadEnv(mode, process.cwd(), ''), ...loadEnv(mode, process.cwd(), 'shl-creator')};
+	process.env = {...process.env, ...loadEnv(mode, process.cwd(), '')};
 	return {
 		// vite config
-		esbuild: {
-			supported: {
-			  	'top-level-await': true
-			},
-		},
 		plugins: [sveltekit()],
 		server: {
 			host: true,
