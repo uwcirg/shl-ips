@@ -18,7 +18,7 @@
   } from 'sveltestrap';
   import { SHLClient, type SHLAdminParams } from '$lib/managementClient';
   import { SOFClient } from '$lib/sofClient';
-  import { SOF_HOSTS, BACK_URL, LOGOUT_URL } from '$lib/config';
+  import { SOF_HOSTS, BACK_URL, INACTIVITY_TIMEOUT } from '$lib/config';
   import { goto } from '$app/navigation';
   let shlStore = writable<SHLAdminParams>(undefined);
   setContext('shlStore', shlStore);
@@ -32,10 +32,20 @@
   setContext('sofClient', sofClient);
   let initialized = false;
 
+  let inactivityTimer: NodeJS.Timer | undefined;
+  function resetInactivityTimer() {
+    if (inactivityTimer !== undefined) {
+        clearTimeout(inactivityTimer);
+      }
+      inactivityTimer = undefined;
+      inactivityTimer = setTimeout(logout, INACTIVITY_TIMEOUT);
+  }
   onMount(() => {
     sofClient.initialize()?.then(() => {
       initialized = true;
+      resetInactivityTimer();
     });
+    document.addEventListener('click', resetInactivityTimer);
   });
 
   let isOpen = false;
@@ -48,13 +58,8 @@
 
   function logout() {
     closeNav();
-    let keyRaw = sessionStorage.getItem('SMART_KEY');
-    if (keyRaw != undefined) {
-      let key = JSON.parse(keyRaw);
-      sessionStorage.removeItem(key);
-    }
-    sessionStorage.removeItem('SMART_KEY');
-    goto(LOGOUT_URL);
+    let logout_url = sofClient.getLogoutURL();
+    goto(logout_url);
   }
 </script>
 
@@ -91,9 +96,7 @@
     </Nav>
   </Collapse>
 </Navbar>
-{#if !initialized}
-  Loading...
-{:else}
+{#if initialized}
 <Row class="main-row">
   <Col>
     <slot />

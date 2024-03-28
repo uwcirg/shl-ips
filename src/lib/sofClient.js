@@ -1,5 +1,5 @@
 import FHIR from 'fhirclient';
-import { SOF_PATIENT_RESOURCES, SOF_RESOURCES, FHIR_R4_EXTERNAL_ID_SYSTEM } from './config.ts';
+import { SOF_PATIENT_RESOURCES, SOF_RESOURCES, LOGOUT_URL } from './config.ts';
 
 const patientResourceScope = SOF_PATIENT_RESOURCES.map(resourceType => `patient/${resourceType}.read`);
 const resourceScope = patientResourceScope.join(" ");
@@ -41,6 +41,23 @@ export class SOFClient {
         config.clientId = clientId ?? "no clientId configured";
         return FHIR.oauth2.authorize(config);
     };
+
+    getLogoutURL() {
+        let logoutUrl = LOGOUT_URL;
+        let idToken = this.client.getState("tokenResponse.id_token");
+        
+        let keyRaw = sessionStorage.getItem('SMART_KEY');
+        if (keyRaw != undefined) {
+          let key = JSON.parse(keyRaw);
+          sessionStorage.removeItem(key);
+        }
+        sessionStorage.removeItem('SMART_KEY');
+
+        if (idToken) {
+            logoutUrl = `${LOGOUT_URL}?id_token_hint=${idToken}&post_logout_redirect_uri=${new URL(this.configuration.redirect_uri).toString()}`;
+        }
+        return logoutUrl;
+    }
 
     getReferences(obj, references) {
         let key = "reference";

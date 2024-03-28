@@ -1,5 +1,6 @@
 // import {PUBLIC_BASE_URL} from '$env/static/public';
 import { dev } from '$app/environment';
+import { toMilliseconds } from '$lib/util';
 
 export const API_BASE = import.meta.env.VITE_API_BASE;
 
@@ -9,6 +10,8 @@ export const FHIR_R4_EXTERNAL_ID_SYSTEM = import.meta.env.VITE_FHIR_R4_EXTERNAL_
 
 export const LOGOUT_URL = import.meta.env.VITE_LOGOUT_URL;
 export const BACK_URL = import.meta.env.VITE_BACK_URL;
+
+export const INACTIVITY_TIMEOUT = toMilliseconds(4,0,0);
 
 export const SOF_RESOURCES = [
   'Patient',
@@ -56,7 +59,7 @@ export const SOF_PATIENT_RESOURCES = [
 export const RESOURCE_SCOPE = SOF_PATIENT_RESOURCES.map(resourceType => `patient/${resourceType}.read`).join(" ");
 const keycloakScope = `openid online_access`;
 const fullScope = `${keycloakScope} fhirUser ${RESOURCE_SCOPE}`;
-const SOF_REDIRECT_URI = '/share';
+const SOF_REDIRECT_URI = `${window.location.origin}/share`;
 
 export const SOF_HOSTS = [
   // {
