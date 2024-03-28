@@ -46,6 +46,7 @@
       resetInactivityTimer();
     });
     document.addEventListener('click', resetInactivityTimer);
+    document.addEventListener('scroll', resetInactivityTimer);
   });
 
   let isOpen = false;
