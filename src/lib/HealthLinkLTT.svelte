@@ -170,7 +170,7 @@
         </Col>
       </Row>
       <Accordion class="mt-1 mb-4">
-        <AccordionItem id="computer" on:toggle={updateComputerHeader}>
+        <AccordionItem on:toggle={updateComputerHeader}>
           <h6 slot="header" class="my-2">{computerHeader}</h6>
           <p><strong>Here's how on your computer:</strong></p>
           <ul>
@@ -186,7 +186,7 @@
             <li>Send the email. The person you send it to will receive the link to be able to see your saved Choices Report.</li>
           </ul>
         </AccordionItem>
-        <AccordionItem id="phone" on:toggle={updatePhoneHeader}>
+        <AccordionItem on:toggle={updatePhoneHeader}>
           <h6 slot="header" class="my-2">{phoneHeader}</h6>
           <p><strong>Here's how on your phone:</strong></p>
           <ul>
