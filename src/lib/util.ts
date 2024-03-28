@@ -7,3 +7,7 @@ export function randomStringWithEntropy(entropy = 32): string {
   crypto.getRandomValues(b);
   return base64url.encode(b);
 }
+
+export function toMilliseconds(hrs:number,min:number,sec:number):number {
+  return (hrs*60*60+min*60+sec)*1000;
+}
