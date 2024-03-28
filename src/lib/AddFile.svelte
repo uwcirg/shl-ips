@@ -5,7 +5,7 @@
     import {
       Alert
     } from 'sveltestrap';
-    import FetchSoFLTT from './FetchSoFLTT.svelte';
+    import FetchSoF from './FetchSoF.svelte';
     import type { Writable } from 'svelte/store';
     import type { SHLAdminParams, SHLClient } from '$lib/managementClient';
     import type { SOFClient } from './sofClient';
@@ -302,7 +302,7 @@
 />
 
 <!-- Retrieves SOF resources on mount -->
-<FetchSoFLTT
+<FetchSoF
   on:updateResources={ async ({ detail }) => { handleNewResources(detail) } }
 />
 

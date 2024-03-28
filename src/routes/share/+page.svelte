@@ -1,6 +1,6 @@
 <script lang="ts">
-    import HealthLinkLTT from '$lib/HealthLinkLTT.svelte';
-    import AddFileLTT from '$lib/AddFileLTT.svelte';
+    import HealthLink from '$lib/HealthLink.svelte';
+    import AddFile from '$lib/AddFile.svelte';
   
     let shlReady = false;
 
@@ -9,10 +9,10 @@
     }
   </script>
   
-  <AddFileLTT
+  <AddFile
     on:shl-ready={ ({ detail }) => { updateReady(detail) } }
   />
 
   {#if shlReady}
-    <HealthLinkLTT/>
+    <HealthLink/>
   {/if}
