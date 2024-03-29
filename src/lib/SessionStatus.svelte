@@ -2,14 +2,8 @@
   import { onMount, getContext } from "svelte";
   import { OIDC_BASE, CHECK_SESSION_IFRAME } from "./config";
   import { goto } from "$app/navigation";
-  function checkSessionStatus() {
-    var opIframe = document.getElementById('opIframe');
-    var message = {
-      type: 'checkSession'
-    };
-    // Send message to OP iframe
-    opIframe.contentWindow.postMessage(message, OIDC_BASE);
-  }
+
+  let sofClient = getContext('sofClient');
 
   // Poll the OP iframe periodically
   let checkSession = setInterval(checkSessionStatus, 5000); // Adjust interval as needed
@@ -17,34 +11,40 @@
   onMount(() => {    
     // Listen for messages from OP iframe
     window.addEventListener('message', function(event) {
+      const cookies = new Map();
+      if (!("hasStorageAccess" in document)) {
+          return true;
+        }
+
+      let access = document.hasStorageAccess();
+      for (const cookie of document.cookie.split(";")) {
+        const [key, value] = cookie.split("=").map((value) => value.trim());
+        cookies.set(key, value);
+      }
       if (event.origin === OIDC_BASE) {
         var data = event.data;
-        if (data && data.type === 'sessionStatus') {
-          // Session status received from OP iframe
-          var sessionState = data.sessionState;
-          if (sessionState === 'logged_out') {
-            // Update session state in RP accordingly
-            console.log('User logged out');
-            // Perform logout actions or redirect to logout page
+        if (data === 'changed') {
+          console.log('Session state changed.');
+          try {
+            sofClient.getClient().refresh();
+          } catch (e) {
+            console.error(e);
             goto('/logout');
-          } else if (sessionState === 'unknown') {
-            // Update session state in RP accordingly
-            console.log('User session status: unknown');
-            // Perform actions based on unknown session status
-            goto('/logout');
-          } else if (sessionState === 'loggedin') {
-            // Update session state in RP accordingly
-            console.log('User session status: logged in');
-            // Perform actions based on logged in session status
-          } else if (sessionState === 'unchanged') {
-            // No change in session state on the OP side
-            console.log('Session state unchanged');
-            // Perform actions based on unchanged session status
           }
+
+        } else if (data === 'error') {
+          goto('/logout');
         }
       }
     });
   });
+
+  function checkSessionStatus() {
+    var opIframe = document.getElementById('opIframe');
+    var message = `${sofClient.getClient().getState('clientId')} ${sofClient.getClient().getState('tokenResponse.session_state')}`;
+    // Send message to OP iframe
+    opIframe.contentWindow.postMessage(message, OIDC_BASE);
+  }
 </script>
 
 <iframe title="Check Session Status" id="opIframe" src={CHECK_SESSION_IFRAME} style="display:none;"></iframe>

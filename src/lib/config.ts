@@ -6,11 +6,9 @@ export const API_BASE = import.meta.env.VITE_API_BASE;
 
 export const INTERMEDIATE_FHIR_SERVER_BASE = import.meta.env.VITE_INTERMEDIATE_FHIR_SERVER_BASE;
 
-export const FHIR_R4_EXTERNAL_ID_SYSTEM = import.meta.env.VITE_FHIR_R4_EXTERNAL_ID_SYSTEM;
-
 export const OIDC_BASE = import.meta.env.VITE_OIDC_SERVER_BASE;
 export const CHECK_SESSION_IFRAME = import.meta.env.VITE_OIDC_CHECK_SESSION_IFRAME;
-export const LOGOUT_URL = import.meta.env.VITE_LOGOUT_ENDPOINT;
+export const LOGOUT_URL = import.meta.env.VITE_OIDC_LOGOUT_ENDPOINT;
 
 export const BACK_URL = import.meta.env.VITE_BACK_URL;
 
