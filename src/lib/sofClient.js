@@ -44,8 +44,6 @@ export class SOFClient {
     }
 
     getKeyCloakUserID() {
-        this.checkState();
-
         let stateToken = this.client.getState("tokenResponse.access_token");
         if (stateToken) {
             // let state = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
