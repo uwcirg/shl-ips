@@ -18,8 +18,10 @@
   } from 'sveltestrap';
   import { SHLClient, type SHLAdminParams } from '$lib/managementClient';
   import { SOFClient } from '$lib/sofClient';
-  import { SOF_HOSTS, BACK_URL, LOGOUT_URL } from '$lib/config';
+  import { SOF_HOSTS, BACK_URL, INACTIVITY_TIMEOUT } from '$lib/config';
   import { goto } from '$app/navigation';
+  import SessionStatus from '$lib/SessionStatus.svelte';
+
   let shlStore = writable<SHLAdminParams>(undefined);
   setContext('shlStore', shlStore);
 
@@ -28,14 +30,33 @@
 
   // TODO: Consider passing full configuration
   // TODO: Consider array config
-  let sofClient = new SOFClient(SOF_HOSTS[0]);
+  let sofClient: SOFClient = new SOFClient(SOF_HOSTS[0]);
   setContext('sofClient', sofClient);
   let initialized = false;
+
+  let inactivityTimer: NodeJS.Timeout | undefined;
+  function resetInactivityTimer() {
+    if (inactivityTimer !== undefined) {
+        clearTimeout(inactivityTimer);
+      }
+      inactivityTimer = undefined;
+      inactivityTimer = setTimeout(logout, INACTIVITY_TIMEOUT);
+  }
+
+  let stateChecker: NodeJS.Timeout = setInterval(sofClient.checkState, 60000);
 
   onMount(() => {
     sofClient.initialize()?.then(() => {
       initialized = true;
+      resetInactivityTimer();
     });
+    document.addEventListener('click', resetInactivityTimer);
+    document.addEventListener('scroll', resetInactivityTimer);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === "visible") {
+        resetInactivityTimer();
+      }
+    })
   });
 
   let isOpen = false;
@@ -48,13 +69,7 @@
 
   function logout() {
     closeNav();
-    let keyRaw = sessionStorage.getItem('SMART_KEY');
-    if (keyRaw != undefined) {
-      let key = JSON.parse(keyRaw);
-      sessionStorage.removeItem(key);
-    }
-    sessionStorage.removeItem('SMART_KEY');
-    goto(LOGOUT_URL);
+    goto('/logout');
   }
 </script>
 
@@ -91,9 +106,8 @@
     </Nav>
   </Collapse>
 </Navbar>
-{#if !initialized}
-  Loading...
-{:else}
+{#if initialized}
+<SessionStatus/>
 <Row class="main-row">
   <Col>
     <slot />

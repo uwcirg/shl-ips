@@ -1,5 +1,5 @@
 import FHIR from 'fhirclient';
-import { SOF_PATIENT_RESOURCES, SOF_RESOURCES, FHIR_R4_EXTERNAL_ID_SYSTEM } from './config.ts';
+import { SOF_PATIENT_RESOURCES, SOF_RESOURCES, LOGOUT_URL } from './config.ts';
 
 const patientResourceScope = SOF_PATIENT_RESOURCES.map(resourceType => `patient/${resourceType}.read`);
 const resourceScope = patientResourceScope.join(" ");
@@ -22,7 +22,30 @@ export class SOFClient {
         }
     }
 
+    clearClient() {
+        this.client = null;
+    }
+
+    logout() {
+        let logout_url = this.getLogoutURL() ?? "";
+        this.clearClient();
+        let keyRaw = sessionStorage.getItem('SMART_KEY');
+        if (keyRaw) {
+            let key = JSON.parse(keyRaw);
+            sessionStorage.removeItem(key);
+        }
+        sessionStorage.removeItem('SMART_KEY');
+
+        if (logout_url !== "") {
+            window.location.href = logout_url;
+        } else {
+            throw Error("Empty logout URL");
+        }
+    }
+
     getKeyCloakUserID() {
+        this.checkState();
+
         let stateToken = this.client.getState("tokenResponse.access_token");
         if (stateToken) {
             // let state = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
@@ -41,6 +64,15 @@ export class SOFClient {
         config.clientId = clientId ?? "no clientId configured";
         return FHIR.oauth2.authorize(config);
     };
+
+    getLogoutURL() {
+        let logoutUrl = LOGOUT_URL;
+        let idToken = this.client.getState("tokenResponse.id_token");
+        if (idToken) {
+            logoutUrl = `${LOGOUT_URL}?id_token_hint=${idToken}&post_logout_redirect_uri=${new URL(this.configuration.redirect_uri).toString()}`;
+        }
+        return logoutUrl;
+    }
 
     getReferences(obj, references) {
         let key = "reference";
@@ -210,14 +242,6 @@ export class SOFClient {
         }
 
         return allResources;
-    }
-
-    endSession() {
-        let key = sessionStorage.getItem('SMART_KEY');
-        if (key) {
-            sessionStorage.removeItem(JSON.parse(key));
-            sessionStorage.removeItem('SMART_KEY');
-        }
     }
 
     // Utility function to validate a URL
