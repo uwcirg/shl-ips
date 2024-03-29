@@ -36,7 +36,6 @@
 
   let inactivityTimer: NodeJS.Timeout | undefined;
   function resetInactivityTimer() {
-    sofClient.checkState();
     if (inactivityTimer !== undefined) {
         clearTimeout(inactivityTimer);
       }

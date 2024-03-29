@@ -43,18 +43,6 @@ export class SOFClient {
         }
     }
 
-    checkState() {
-        let state;
-        let keyRaw = sessionStorage.getItem('SMART_KEY');
-        if (keyRaw) {
-            let key = JSON.parse(keyRaw);
-            state = JSON.parse(sessionStorage.getItem(key));
-        }
-        if (this.client && !state) {
-            this.logout();
-        }
-    }
-
     getKeyCloakUserID() {
         this.checkState();
 
@@ -87,8 +75,6 @@ export class SOFClient {
     }
 
     getReferences(obj, references) {
-        this.checkState();
-        
         let key = "reference";
         if (references === undefined) {
         references = [];
@@ -112,8 +98,6 @@ export class SOFClient {
     }
 
     async requestResources(resourceType) {
-        this.checkState();
-
         let self = this;
         let endpoint = (resourceType == 'Patient' ? 'Patient?identifier=' : `${resourceType}?_count=1000&_sort=-date&subject.identifier=`) + this.getPatientID();
         return this.client.request(endpoint, { flat: true }).then((result) => {
@@ -134,8 +118,6 @@ export class SOFClient {
     }
 
     async postShl(shl, docRef, label) {
-        this.checkState();
-        
         // Check that a patient is logged in
         let pid = this.getPatientID();
         if (!pid) {
@@ -218,8 +200,6 @@ export class SOFClient {
     }
 
     async getResources() {
-        this.checkState();
-
         const self = this;
         let pid = this.getPatientID();
         // TODO SOF: Bring back in once SMART Auth is set up?
@@ -235,8 +215,6 @@ export class SOFClient {
     }
 
     async getResourcesWithReferences(depth=1) {
-        this.checkState();
-
         const self = this;
         let resources = await this.getResources();
         let allResources = [].concat(...resources);
