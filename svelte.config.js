@@ -16,7 +16,7 @@ export default {
       precompress: false,
       strict: true,
       paths: {
-        base: dev ? '' : '/shlips'
+        base: dev ? '' : '/shl-ltt'
       }
     })
   }
