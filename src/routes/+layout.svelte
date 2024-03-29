@@ -20,6 +20,8 @@
   import { SOFClient } from '$lib/sofClient';
   import { SOF_HOSTS, BACK_URL, INACTIVITY_TIMEOUT } from '$lib/config';
   import { goto } from '$app/navigation';
+  import SessionStatus from '$lib/SessionStatus.svelte';
+
   let shlStore = writable<SHLAdminParams>(undefined);
   setContext('shlStore', shlStore);
 
@@ -42,11 +44,7 @@
       inactivityTimer = setTimeout(logout, INACTIVITY_TIMEOUT);
   }
 
-  let stateChecker: NodeJS.Timeout = setTimeout(checkState, 60000);
-  function checkState() {
-    sofClient.checkState();
-    stateChecker = setTimeout(checkState, 60000);
-  }
+  let stateChecker: NodeJS.Timeout = setInterval(sofClient.checkState, 60000);
 
   onMount(() => {
     sofClient.initialize()?.then(() => {
@@ -110,6 +108,7 @@
   </Collapse>
 </Navbar>
 {#if initialized}
+<SessionStatus/>
 <Row class="main-row">
   <Col>
     <slot />
