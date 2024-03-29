@@ -8,7 +8,10 @@ export const INTERMEDIATE_FHIR_SERVER_BASE = import.meta.env.VITE_INTERMEDIATE_F
 
 export const FHIR_R4_EXTERNAL_ID_SYSTEM = import.meta.env.VITE_FHIR_R4_EXTERNAL_ID_SYSTEM;
 
-export const LOGOUT_URL = import.meta.env.VITE_LOGOUT_URL;
+export const OIDC_BASE = import.meta.env.VITE_OIDC_SERVER_BASE;
+export const CHECK_SESSION_IFRAME = import.meta.env.VITE_OIDC_CHECK_SESSION_IFRAME;
+export const LOGOUT_URL = import.meta.env.VITE_LOGOUT_ENDPOINT;
+
 export const BACK_URL = import.meta.env.VITE_BACK_URL;
 
 const timeout = (import.meta.env.VITE_INACTIVITY_TIMEOUT ?? "04:00:00").split(":").map((n) => Number(n));
@@ -84,7 +87,7 @@ export const SOF_HOSTS = [
 ];
 
 export const VIEWER_BASE = new URL(
-  (import.meta.env.VITE_VIEWER_BASE ? import.meta.env.VITE_VIEWER_BASE : `/view${dev ? '/index.html' : ''}`)+'#',
+  (import.meta.env.VITE_VIEWER_BASE || `/view${dev ? '/index.html' : ''}`)+'#',
   window.location.href
 ).toString();
 export const PATIENT_IPS = {

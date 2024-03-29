@@ -1,11 +1,12 @@
 <script>
+  import { OIDC_BASE, CHECK_SESSION_IFRAME } from "./config";
   function checkSessionStatus() {
     var opIframe = document.getElementById('opIframe');
     var message = {
       type: 'checkSession'
     };
     // Send message to OP iframe
-    opIframe.contentWindow.postMessage(message, 'https://keycloak.inform.ubu.dlorigan.dev.cirg.uw.edu');
+    opIframe.contentWindow.postMessage(message, OIDC_BASE);
   }
 
   // Poll the OP iframe periodically
@@ -13,7 +14,7 @@
 
   // Listen for messages from OP iframe
   window.addEventListener('message', function(event) {
-    if (event.origin === 'https://keycloak.inform.ubu.dlorigan.dev.cirg.uw.edu') {
+    if (event.origin === OIDC_BASE) {
       var data = event.data;
       if (data && data.type === 'sessionStatus') {
         // Session status received from OP iframe
@@ -40,4 +41,4 @@
   });
 </script>
 
-<iframe title="Check Session Status" id="opIframe" src="https://keycloak.inform.ubu.dlorigan.dev.cirg.uw.edu/realms/ltt/protocol/openid-connect/login-status-iframe.html" style="display:none;"></iframe>
+<iframe title="Check Session Status" id="opIframe" src={CHECK_SESSION_IFRAME} style="display:none;"></iframe>
