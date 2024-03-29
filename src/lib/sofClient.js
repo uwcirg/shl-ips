@@ -22,7 +22,42 @@ export class SOFClient {
         }
     }
 
+    clearClient() {
+        this.client = null;
+    }
+
+    logout() {
+        let logout_url = this.getLogoutURL() ?? "";
+        this.clearClient();
+        let keyRaw = sessionStorage.getItem('SMART_KEY');
+        if (keyRaw) {
+            let key = JSON.parse(keyRaw);
+            sessionStorage.removeItem(key);
+        }
+        sessionStorage.removeItem('SMART_KEY');
+
+        if (logout_url !== "") {
+            window.location.href = logout_url;
+        } else {
+            throw Error("Empty logout URL");
+        }
+    }
+
+    checkState() {
+        let state;
+        let keyRaw = sessionStorage.getItem('SMART_KEY');
+        if (keyRaw) {
+            let key = JSON.parse(keyRaw);
+            state = JSON.parse(sessionStorage.getItem(key));
+        }
+        if (this.client && !state) {
+            this.logout();
+        }
+    }
+
     getKeyCloakUserID() {
+        this.checkState();
+
         let stateToken = this.client.getState("tokenResponse.access_token");
         if (stateToken) {
             // let state = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
@@ -45,14 +80,6 @@ export class SOFClient {
     getLogoutURL() {
         let logoutUrl = LOGOUT_URL;
         let idToken = this.client.getState("tokenResponse.id_token");
-        
-        let keyRaw = sessionStorage.getItem('SMART_KEY');
-        if (keyRaw != undefined) {
-          let key = JSON.parse(keyRaw);
-          sessionStorage.removeItem(key);
-        }
-        sessionStorage.removeItem('SMART_KEY');
-
         if (idToken) {
             logoutUrl = `${LOGOUT_URL}?id_token_hint=${idToken}&post_logout_redirect_uri=${new URL(this.configuration.redirect_uri).toString()}`;
         }
@@ -60,6 +87,8 @@ export class SOFClient {
     }
 
     getReferences(obj, references) {
+        this.checkState();
+        
         let key = "reference";
         if (references === undefined) {
         references = [];
@@ -83,6 +112,8 @@ export class SOFClient {
     }
 
     async requestResources(resourceType) {
+        this.checkState();
+
         let self = this;
         let endpoint = (resourceType == 'Patient' ? 'Patient?identifier=' : `${resourceType}?_count=1000&_sort=-date&subject.identifier=`) + this.getPatientID();
         return this.client.request(endpoint, { flat: true }).then((result) => {
@@ -103,6 +134,8 @@ export class SOFClient {
     }
 
     async postShl(shl, docRef, label) {
+        this.checkState();
+        
         // Check that a patient is logged in
         let pid = this.getPatientID();
         if (!pid) {
@@ -185,6 +218,8 @@ export class SOFClient {
     }
 
     async getResources() {
+        this.checkState();
+
         const self = this;
         let pid = this.getPatientID();
         // TODO SOF: Bring back in once SMART Auth is set up?
@@ -200,6 +235,8 @@ export class SOFClient {
     }
 
     async getResourcesWithReferences(depth=1) {
+        this.checkState();
+
         const self = this;
         let resources = await this.getResources();
         let allResources = [].concat(...resources);
@@ -227,14 +264,6 @@ export class SOFClient {
         }
 
         return allResources;
-    }
-
-    endSession() {
-        let key = sessionStorage.getItem('SMART_KEY');
-        if (key) {
-            sessionStorage.removeItem(JSON.parse(key));
-            sessionStorage.removeItem('SMART_KEY');
-        }
     }
 
     // Utility function to validate a URL
