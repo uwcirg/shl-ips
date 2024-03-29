@@ -28,18 +28,26 @@
 
   // TODO: Consider passing full configuration
   // TODO: Consider array config
-  let sofClient = new SOFClient(SOF_HOSTS[0]);
+  let sofClient: SOFClient = new SOFClient(SOF_HOSTS[0]);
   setContext('sofClient', sofClient);
   let initialized = false;
 
-  let inactivityTimer: NodeJS.Timer | undefined;
+  let inactivityTimer: NodeJS.Timeout | undefined;
   function resetInactivityTimer() {
+    sofClient.checkState();
     if (inactivityTimer !== undefined) {
         clearTimeout(inactivityTimer);
       }
       inactivityTimer = undefined;
       inactivityTimer = setTimeout(logout, INACTIVITY_TIMEOUT);
   }
+
+  let stateChecker: NodeJS.Timeout = setTimeout(checkState, 60000);
+  function checkState() {
+    sofClient.checkState();
+    stateChecker = setTimeout(checkState, 60000);
+  }
+
   onMount(() => {
     sofClient.initialize()?.then(() => {
       initialized = true;
@@ -47,6 +55,11 @@
     });
     document.addEventListener('click', resetInactivityTimer);
     document.addEventListener('scroll', resetInactivityTimer);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === "visible") {
+        resetInactivityTimer();
+      }
+    })
   });
 
   let isOpen = false;
@@ -59,8 +72,7 @@
 
   function logout() {
     closeNav();
-    let logout_url = sofClient.getLogoutURL();
-    goto(logout_url);
+    goto('/logout');
   }
 </script>
 
