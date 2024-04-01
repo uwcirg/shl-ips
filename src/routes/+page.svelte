@@ -8,3 +8,7 @@
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
   goto('/share');
 </script>
+
+<svelte:head>
+  <title>Let's Talk Tech - Share</title> 
+</svelte:head>
