@@ -8,7 +8,7 @@ if (shl) {
         retrieve()
     } catch (e) {
         console.error("Unable to load Report: " + e);
-        $("#error").html("There was a problem loading this report. Please ensure this link is active before trying again.");
+        $("#error").show();
         $("#status").hide();
         $("#ips-loader").hide();
     }
@@ -66,7 +66,7 @@ async function retrieve(){
                 errorMsg = retrieveResult.error;
             }
         }
-        $("#error").html(`${errorMsg}`);
+        $('#error').show();
         $("#ips-loader").hide();
         return;
     }
