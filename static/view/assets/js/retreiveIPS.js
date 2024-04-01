@@ -8,14 +8,14 @@ if (shl) {
         retrieve()
     } catch (e) {
         console.error("Unable to load Report: " + e);
-        $("#error").html("There was a problem loading this report. Please ensure the link used is active before trying again.");
+        $("#error").html("There was a problem loading this report. Please ensure this link is active before trying again.");
         $("#status").hide();
         $("#ips-loader").hide();
     }
 }
 
 async function retrieve(){
-    const recipient = "WA Verify+ IPS Viewer";
+    const recipient = "LTT Choices Report Viewer";
 
     let passcode;
     const needPasscode = shlClient.flag({ shl }).includes('P');
@@ -40,13 +40,12 @@ async function retrieve(){
         let errorMsg = "";
         if (retrieveResult.status) {
             if (retrieveResult.status === 404) {
-                // Couldn't find the shl, or it's been deactivated
-                const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl })}">Manage it here</a>`;
-                errorMsg = `<p>The requested SHL does not exist or has been deactivated.</p>`;
+                // Couldn't find the shl, or it has been deactivated
+                errorMsg = `<p>This link to view a Choices Report does not exist or has been deactivated.</p>`;
             } else if (retrieveResult.status === 401) {
                 // Failed the password requirement
                 while (retrieveResult.status === 401) {
-                    passcode = prompt(`Enter passcode for SMART Health Link ${retrieveResult.error.remainingAttempts !== undefined ? "\nAttempts remaining: "+retrieveResult.error.remainingAttempts : ""}`);
+                    passcode = prompt(`Enter passcode to view this Choices Report ${retrieveResult.error.remainingAttempts !== undefined ? "\nAttempts remaining: "+retrieveResult.error.remainingAttempts : ""}`);
                     try {
                         retrieveResult = await shlClient.retrieve({
                             shl,
@@ -61,7 +60,7 @@ async function retrieve(){
                 }
                 if (!retrieveResult.ok) {
                     const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl })}">Manage or reactivate it here</a>`;
-                    errorMsg = `<p>The requested SHL has been deactivated due to too many failed password attempts.</p><p>Are you the owner of this link? ${managerLink}</p>`;
+                    errorMsg = `<p>This link to the requested Choices Report has been deactivated due to too many failed password attempts.</p><p>Are you the owner of this link? ${managerLink}</p>`;
                 }
             } else {
                 errorMsg = retrieveResult.error;
