@@ -19,6 +19,10 @@
     });
 </script>
 
+<svelte:head>
+  <title>Let's Talk Tech - Logout</title> 
+</svelte:head>
+
 {#if errorMsg}
 <Alert color="danger">
     {errorMsg}
