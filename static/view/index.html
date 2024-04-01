@@ -23,6 +23,7 @@
   <script src="https://unpkg.com/squirrelly@7.9.2/dist/squirrelly.min.js"></script>
   <!-- IPS Specific Custom CSS-->
   <link rel="stylesheet" href="/view/assets/css/custom.css">
+  <link rel="stylesheet" href="/global.css">
 
   <!-- IPS Rendering -->
   <script type="module" src="/view/assets/js/renderIPS.js"></script>
@@ -34,18 +35,29 @@
 
 <body>
   <div id="content" style="display:none; padding: auto; margin:auto" class="main container-fluid">
-    <div style="padding-left: 17px;" class="row">
-      <p id="error"></p>
+    <div id="error" style="padding-left: 17px; display: none;">
+      <header id="header">
+        <img id="logo" class="logo" alt="Let's Talk Tech Logo" src="/img/ltt-logo.svg" width="240px">
+      </header>
+      <div class="row d-flex justify-content-center mt-4 pt-5">
+        <p style="text-align:center">The link to this Let's Talk Tech report is no longer available. It may have been replaced with a newer one.</p>
+        <p style="text-align:center">If you are the creator of the report, click below to log in and view your report:</p>
+      </div>
+      <div class="row d-flex justify-content-center mb-3">
+        <a href="/share"><button class="btn btn-primary">Login to Let's Talk Tech</button></a>
+      </div>
+      <div class="row d-flex justify-content-center">
+        <p style="text-align:center">If someone shared this report with you, contact them for a new link.</p>
+      </div>
     </div>
-    <div id="ips-loader" class="row">
+    <div id="ips-loader" class="row" style="display: none;">
       <div style="margin-left: 38px;" class="row">
-        <p id="status"></p>
+        <p id="status">Retrieving contents...</p>
       </div>
       <span class="loader"></span>
     </div>
     <div id="rendered-ips" class="ml-4 mt-0 ml-sm-4 mt-sm-4">
     </div>
-
   </div>
   </div>
   </body>
