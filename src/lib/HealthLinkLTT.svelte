@@ -84,8 +84,8 @@
   }
 
   async function deactivateShl() {
-    shlClient.deleteShl($shlStore);
     toggle();
+    await shlClient.deleteShl($shlStore);
     // TODO: Implement post-deactivation flow
     location.reload();
   }
