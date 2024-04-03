@@ -97,7 +97,11 @@ export class SOFClient {
 
     async requestResources(resourceType) {
         let self = this;
-        let endpoint = (resourceType == 'Patient' ? 'Patient?identifier=' : `${resourceType}?_count=1000&_sort=-date&subject.identifier=`) + this.getPatientID();
+        let endpoint = (
+            resourceType == 'Patient' 
+            ? 'Patient?identifier=' 
+            : `${resourceType}?_count=1000&_sort=-date&subject.identifier=`
+            ) + "https://keycloak.ltt.cirg.uw.edu|" + this.getPatientID();
         return this.client.request(endpoint, { flat: true }).then((result) => {
             let resourcesToPass = [];
             if (Array.isArray(result)) {
