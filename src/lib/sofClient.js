@@ -167,7 +167,7 @@ export class SOFClient {
                 ]
             },
             "subject": {
-                "reference": `Patient?identifier=${shl.userId}`
+                "reference": `Patient?identifier=https%3A%2F%2Fkeycloak.ltt.cirg.uw.edu%7C${shl.userId}`
             },
             "date": shlDocRefInputs.date,
             "description": "SMART Health Link Metadata",
