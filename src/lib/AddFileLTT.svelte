@@ -99,6 +99,7 @@
         console.log($shlStore);
         shlReadyDispatch('shl-ready', true);
       } else {
+        fetchError = "No Report found";
         throw Error("Unable to create SHL: no summary found for patient");
       }
     }
@@ -110,6 +111,7 @@
         // Decode docref data
         let data = atob(shlDocRefs[i].content[0].attachment.data);
         let shlData = JSON.parse(data);
+        // Populate shl fields if the document reference is a match
         if (shlData.id == $shlStore.id) {
           $shlStore.encryptionKey = shlData.encryptionKey;
           $shlStore.managementToken = shlData.managementToken;

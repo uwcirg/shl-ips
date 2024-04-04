@@ -102,7 +102,7 @@ export class SOFClient {
             ? 'Patient?identifier=' 
             : `${resourceType}?_count=1000&_sort=-date&subject.identifier=`
             ) + "https://keycloak.ltt.cirg.uw.edu|" + this.getPatientID();
-        return this.client.request(endpoint, { flat: true }).then((result) => {
+        return this.client.request({url: endpoint, headers: {'cache-control': 'no-cache'}}, { flat: true }).then((result) => {
             let resourcesToPass = [];
             if (Array.isArray(result)) {
                 result.forEach(resource => {
