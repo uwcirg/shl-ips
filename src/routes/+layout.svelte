@@ -108,26 +108,20 @@
   </Collapse>
 </Navbar>
 {#if initialized}
-  <SessionStatus on:valid-session={({ detail }) => {
-    if (detail) {
-      validSession = true;
-    }
-  }}/>
-  {#if validSession}
-    <Row class="main-row">
-      <Col>
-        <slot />
-      </Col>
-    </Row>
-    <Row>
-      <Col style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgb(204, 204, 204);" >
-        <footer>
-          <Row class="justify-content-center">
-            <p><center>If you have any questions or problems using the system, please get in touch at <a  href="mailto:clarawb@uw.edu">clarawb@uw.edu</a> for assistance.</center></p>
-          </Row>
-        </footer>
-      </Col>
-    </Row>
-  {/if}
+<SessionStatus/>
+<Row class="main-row">
+  <Col>
+    <slot />
+  </Col>
+</Row>
+<Row>
+  <Col style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgb(204, 204, 204);" >
+    <footer>
+      <Row class="justify-content-center">
+        <p><center>If you have any questions or problems using the system, please get in touch at <a  href="mailto:clarawb@uw.edu">clarawb@uw.edu</a> for assistance.</center></p>
+      </Row>
+    </footer>
+  </Col>
+</Row>
 {/if}
 </Container>
