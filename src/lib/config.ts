@@ -9,6 +9,7 @@ export const INTERMEDIATE_FHIR_SERVER_BASE = import.meta.env.VITE_INTERMEDIATE_F
 export const OIDC_BASE = import.meta.env.VITE_OIDC_SERVER_BASE;
 export const CHECK_SESSION_IFRAME = import.meta.env.VITE_OIDC_CHECK_SESSION_IFRAME;
 export const LOGOUT_URL = import.meta.env.VITE_OIDC_LOGOUT_ENDPOINT;
+export const POST_LOGOUT_REDIRECT_URI = import.meta.env.VITE_POST_LOGOUT_REDIRECT_URI;
 
 export const BACK_URL = import.meta.env.VITE_BACK_URL;
 

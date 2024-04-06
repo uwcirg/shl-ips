@@ -12,6 +12,7 @@ interface ImportMetaEnv {
     readonly VITE_BACK_URL: string
     readonly VITE_OIDC_SERVER_BASE: string
     readonly VITE_OIDC_LOGOUT_ENDPOINT: string
+    readonly VITE_POST_LOGOUT_REDIRECT_URI: string
     readonly VITE_OIDC_CHECK_SESSION_IFRAME: string
     readonly VITE_INACTIVITY_TIMEOUT: string
     readonly DEV_SERVER_PORT: number
