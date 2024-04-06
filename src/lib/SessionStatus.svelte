@@ -72,7 +72,8 @@
       }
       if (sessionCheckValid) {
         // If check has been valid at some point, base action on result
-        // Clean up listeners if they were added before 
+        // Clean up timeout and listeners if they were added before
+        checkSession = undefined;
         document.removeEventListener('click', resetBackupInactivityTimer);
         document.removeEventListener('scroll', resetBackupInactivityTimer);
         document.removeEventListener('visibilitychange', onVisible_resetBackupInactivityTimer);
