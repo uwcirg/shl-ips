@@ -13,8 +13,13 @@ export const POST_LOGOUT_REDIRECT_URI = import.meta.env.VITE_POST_LOGOUT_REDIREC
 
 export const BACK_URL = import.meta.env.VITE_BACK_URL;
 
-const timeout = (import.meta.env.VITE_INACTIVITY_TIMEOUT ?? "04:00:00").split(":").map((n) => Number(n));
+const default_timout = "04:00:00";
+const timeout = (import.meta.env.VITE_INACTIVITY_TIMEOUT ?? default_timout).split(":").map((n) => Number(n));
 export const INACTIVITY_TIMEOUT = toMilliseconds(timeout[0] ?? 0, timeout[1] ?? 0, timeout[2] ?? 0);
+
+const default_backup_timout = "00:15:00";
+const backup_timeout = (import.meta.env.VITE_BACKUP_INACTIVITY_TIMEOUT ?? default_backup_timout).split(":").map((n) => Number(n));
+export const BACKUP_INACTIVITY_TIMEOUT = toMilliseconds(timeout[0] ?? 0, timeout[1] ?? 0, timeout[2] ?? 0);
 
 export const SOF_RESOURCES = [
   'Patient',
