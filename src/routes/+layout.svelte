@@ -46,11 +46,20 @@
 
   let stateChecker: NodeJS.Timeout = setInterval(sofClient.checkState, 60000);
 
-  onMount(() => {
+  function initializeClient() {
     sofClient.initialize()?.then(() => {
-      initialized = true;
-      resetInactivityTimer();
+      if (sofClient.getPatientID()) {
+        initialized = true;
+        resetInactivityTimer();
+      } else {
+        sofClient.reset();
+        initializeClient();
+      }
     });
+  }
+
+  onMount(() => {
+    initializeClient();
     document.addEventListener('click', resetInactivityTimer);
     document.addEventListener('scroll', resetInactivityTimer);
     document.addEventListener('visibilitychange', () => {

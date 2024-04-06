@@ -17,6 +17,7 @@ export class SOFClient {
         try {
             // Initialize FHIR client
             this.client = await FHIR.oauth2.init(this.configuration);
+            this.patientId = this.getKeyCloakUserID();
         } catch (error) {
             console.error('Error initializing FHIR client:', error);
         }
@@ -26,8 +27,7 @@ export class SOFClient {
         this.client = null;
     }
 
-    logout() {
-        let logout_url = this.getLogoutURL() ?? "";
+    reset() {
         this.clearClient();
         let keyRaw = sessionStorage.getItem('SMART_KEY');
         if (keyRaw) {
@@ -35,7 +35,11 @@ export class SOFClient {
             sessionStorage.removeItem(key);
         }
         sessionStorage.removeItem('SMART_KEY');
+    }
 
+    logout() {
+        let logout_url = this.getLogoutURL() ?? "";
+        this.reset();
         if (logout_url !== "") {
             window.location.href = logout_url;
         } else {

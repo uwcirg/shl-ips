@@ -6,7 +6,8 @@
 
   let sofClient: SOFClient = getContext('sofClient');
 
-  let checkSession;
+  // Poll the OP iframe periodically
+  let checkSession = setInterval(checkSessionStatus, 5000);
   
   onMount(() => {
     // Listen for messages from OP iframe
@@ -17,9 +18,13 @@
     iframe?.addEventListener('load', () => {
       // Poll the iframe on load
       checkSessionStatus();
-      // Poll the OP iframe periodically
-      checkSession = setInterval(checkSessionStatus, 5000);
-    })
+    });
+    // Check status as soon as the tab is refocused
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === "visible") {
+        checkSessionStatus();
+      }
+    });
   });
 
   function checkSessionStatus() {
@@ -29,13 +34,15 @@
     opIframe?.contentWindow?.postMessage(message, OIDC_BASE);
   }
 
-  function processStatus(event: any) {
+  async function processStatus(event: any) {
     if (event.origin === OIDC_BASE) {
       var data = event.data;
       if (data === 'changed') {
-        console.log('Session state changed.');
         try {
-          sofClient.getClient().refresh();
+          let res = await sofClient.getClient().refresh();
+          if (!sofClient?.getClient()?.getState("tokenResponse.access_token")) {
+            throw Error("Unable to refresh token after session state change. Logging out.");
+          }
         } catch (e) {
           console.error(e);
           goto('/logout');
