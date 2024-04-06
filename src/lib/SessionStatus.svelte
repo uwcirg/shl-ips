@@ -50,7 +50,7 @@
   }
   function onVisible_resetBackupInactivityTimer() {
     if (document.visibilityState === "visible") {
-      onVisible_resetBackupInactivityTimer();
+      resetBackupInactivityTimer();
     }
   }
 
