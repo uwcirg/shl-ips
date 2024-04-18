@@ -110,9 +110,10 @@
     return detail ? openedHeader : `${closedHeader} ${device}`
   }
 
-  let qrHeader = "Click here to see how";
+  let qrHeaderClosed = "Click here to see how to scan a QR code";
+  let qrHeader = qrHeaderClosed;
   function updateQRHeader({ detail }) {
-    qrHeader = detail ? "Click here to close" : "Click here to see how";
+    qrHeader = detail ? openedHeader : qrHeaderClosed;
   }
 </script>
 <div transition:fade>
@@ -202,7 +203,7 @@
         </AccordionItem>
       </Accordion>
       <li>
-        <strong>Share a QR code:</strong>
+        <strong>Share a QR code:</strong> Show this QR code to the person you want to share your report with. They can scan it to see your report.
       </li>
       <Row class="justify-content-center mx-4">
         <Col>
@@ -237,7 +238,7 @@
           <h6 slot="header" class="my-2">{qrHeader}</h6>
           <Row>
             <Col xs=12 md=6>
-              <p><strong>Here's how:</strong></p>
+              <p><strong>Here's how to scan a QR code:</strong></p>
               <ol>
                 <li>
                   Point your device’s camera at the QR code like you are taking a photo of it.
