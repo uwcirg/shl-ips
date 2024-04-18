@@ -26,6 +26,7 @@
     let submitting = false;
     let fetchError = "";
     let createSHL = false;
+    let updatedShl = false;
 
     let shlResult: SHLRetrieveEvent = {
       shl: undefined
@@ -142,6 +143,7 @@
           let reportLabel = `My Choices Report (${reportDate})`;
           let result = await sofClient.postShl($shlStore, mostRecentDocRef, reportLabel);
           $shlStore.label = result.label;
+          updatedShl = true;
         }
         // The current SHL is most recent, so use it
         shlReadyDispatch('shl-ready', true);
@@ -312,5 +314,14 @@
 <Alert color="danger">
   <h4 class="alert-heading text-capitalize">{fetchError}</h4>
   You can try again later, click "Back" to choose another option, or reach out for help below.
+</Alert>
+{/if}
+
+{#if updatedShl}
+<Alert color="success" dismissible>
+  <h4 class="alert-heading">Your report has been updated</h4>
+  Your shareable link now shows your most recent Choices Report.
+  <br>
+  People who already have access can now see your updated choices.
 </Alert>
 {/if}
