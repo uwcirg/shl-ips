@@ -40,7 +40,7 @@
     let label = `My Choices Report (${new Date().toLocaleDateString('en-US', {day: 'numeric', month: 'long', year: 'numeric'})})`;
     let passcode = "";
     let today = new Date();
-    let sixMonths = new Date(today.getFullYear(), today.getMonth() + 6, today.getDay());
+    let sixMonths = new Date(today.getFullYear(), today.getMonth() + 6, today.getDate());
 
     let checkedShl = false;
     let fetchedResources = false;
