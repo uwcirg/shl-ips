@@ -21,7 +21,6 @@
   import FetchUrl from './FetchUrl.svelte';
   import FetchFile from './FetchFile.svelte';
   import FetchSoF from './FetchSoF.svelte';
-  import FetchIIS from './FetchIIS.svelte';
   import ODHForm from './ODHForm.svelte';
   import ResourceSelector from './ResourceSelector.svelte';
   import { verify } from './shcDecoder.js';
@@ -329,12 +328,6 @@
           on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
           on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }>
         </FetchSoF>
-      </TabPane>
-      <TabPane class="iis-tab" tabId="iis" style="padding-top:10px">
-        <span class="iis-tab" slot="tab">WA Immunization Registry</span>
-        <FetchIIS
-          on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }>
-        </FetchIIS>
       </TabPane>
       <TabPane class="url-tab" tabId="url" style="padding-top:10px">
         <span class="url-tab" slot="tab" >FHIR URL</span>
