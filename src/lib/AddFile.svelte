@@ -24,7 +24,7 @@
   import FetchIIS from './FetchIIS.svelte';
   import ODHForm from './ODHForm.svelte';
   import ResourceSelector from './ResourceSelector.svelte';
-  import { verify } from './shc-decoder.js';
+  import { verify } from './shcDecoder.js';
 
   import issuerKeys from './issuer.private.jwks.json';
   import { type SHCFile,
