@@ -10,8 +10,7 @@ WORKDIR /opt/app
 COPY package*.json ./
 RUN npm clean-install --include=dev
 
-COPY ./fix-popper.sh ./
-RUN ./fix-popper.sh
+RUN sed -i '/2\.11\.6/a \ \ "type": "module",' node_modules/@popperjs/core/package.json
 
 COPY . .
 RUN npm run build
