@@ -7,7 +7,7 @@ const patientResourceScope = SOF_PATIENT_RESOURCES.map(resourceType => `patient/
 const resourceScope = patientResourceScope.join(" ");
 const config = {
         clientId: '(ehr client id, populated later)', // clientId() is ignored at smit
-        scope: `openid fhirUser launch/patient ${resourceScope} offline_access`,
+        scope: `openid fhirUser launch/patient ${resourceScope}`,
         iss: '(authorization url, populated later)',
         redirect_uri: SOF_REDIRECT_URI
     };
@@ -17,6 +17,7 @@ let client;
 function authorize(inputFhirUrl, clientId) {
     config.iss = inputFhirUrl;
     config.clientId = clientId ?? "no clientId configured";
+    config.pkceMode = "ifSupported";
     return FHIR.oauth2.authorize(config);
 };
 
@@ -75,9 +76,17 @@ async function getResources() {
         return undefined;
     }
     // Establish resource display methods
-    let resources = (await Promise.allSettled(SOF_PATIENT_RESOURCES.map((resourceType) => {
-        return requestResources(client, resourceType);
-    }))).filter(x => x.status == "fulfilled").map(x => x.value);
+    let resources;
+    if (client.state.clientId === "XfubBaEQzzHCOvgeB9Q7qZbg4QcK3Jro_65w5VWFRP8") {
+        resources = (await Promise.allSettled(['Patient', 'Immunization'].map((resourceType) => {
+            return requestResources(client, resourceType);
+        }))).filter(x => x.status == "fulfilled").map(x => x.value);
+    } else {
+        resources = (await Promise.allSettled(SOF_PATIENT_RESOURCES.map((resourceType) => {
+            return requestResources(client, resourceType);
+        }))).filter(x => x.status == "fulfilled").map(x => x.value);
+    }
+   
 
     return resources;
 }

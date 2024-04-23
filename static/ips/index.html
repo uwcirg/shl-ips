@@ -21,6 +21,7 @@
     integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
     crossorigin="anonymous"></script>
   <script src="https://unpkg.com/squirrelly@7.9.2/dist/squirrelly.min.js"></script>
+  <script src="https://mozilla.github.io/pdf.js/build/pdf.mjs" type="module"></script>
   <!-- IPS Specific Custom CSS-->
   <link rel="stylesheet" href="./assets/css/custom.css">
 
@@ -103,7 +104,13 @@
       </div>
     </div>
     <ul id="tabs" class="nav nav-tabs" style="margin: 19px 0px 18px; visibility: visible; padding-left: 17px"></ul>
+    <div style="padding-left: 17px;" class="row">
+      <p id="error"></p>
+    </div>
     <div id="ips-loader" class="row">
+      <div style="margin-left: 38px;" class="row">
+        <p id="status"></p>
+      </div>
       <span class="loader"></span>
     </div>
     <div id="rendered-ips" class="tab-content" style="margin: 30px; margin-right: 0px;">

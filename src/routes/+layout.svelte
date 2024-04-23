@@ -46,13 +46,44 @@
   function closeNav() {
     isOpen = false;
   }
-</script>
 
+  let locale = "English";
+  let locales = {
+    "Amharic": "አማርኛ", "Arabic": "العَرَبِيةُ", "Armenian": "Հայերեն",
+    "Basque": "euskara", "Burmese": "မြန်မာ", "Catalan": "català",
+    "Chinese (Simplified)": "简体中文", "Chinese (Traditional)": "繁體中文",
+    "Chuukese": "Fosun Chuuk", "Dari": "دری", "English": "English", "Farsi": "فارسی",
+    "French": "Français", "Fijian": "Vosa vakaviti", "German": "Deutsch",
+    "Gujarati": "ગુજરાતી", "Haitian Creole": "Kreyòl ayisyen",
+    "Hebrew": "עִברִית", "Hindi": "हिन्दी", "Hmong": "Hmoob",
+    "Italian": "Italiano", "Japanese": "日本語", "Karen": "ကညီၤ",
+    "Khmer (Cambodian)": "ភាសាខ្មែរ", "Korean": "한국어", "Lao": "ພາ​ສາ​ລາວ",
+    "Malayalam": "മലയാളം", "Mam": "Qyol Mam", "Marathi": "मराठी",
+    "Marshallese": "Kajin Ṃajeḷ", "Mixteco Bajo": "Ñuu savi",
+    "Nepali": "नेपाली", "Oromo": "Oromiffa", "Pashto": "پښتو",
+    "Portuguese": "Português", "Punjabi": "ਪੰਜਾਬੀ",
+    "Romanian": "Română", "Russian": "Русский", "Samoan": "Faa-Samoa",
+    "Somali": "Af Soomaali", "Spanish": "Español", "Swahili": "Kiswahili",
+    "Tamil": "தமிழ்", "Tagalog": "Tagalog", "Telugu": "తెలుగు",
+    "Thai": "ภาษาไทย", "Tigrinya": "ትግርኛ", "Tongan": "Lea fakaTonga",
+    "Turkish": "Türkçe", "Ukrainian": "Український", "Urdu": "اُردُو",
+    "Vietnamese": "Tiếng Việt"
+  };
+</script>
 <Container class="main" fluid>
 <Styles />
 <Navbar color="light" light expand="md" style="border-bottom: 1px solid rgb(204, 204, 204);">
-  <NavbarBrand>
-    <a href="https://doh.wa.gov/" rel="noreferrer" target="_blank"><Image alt="Washington State Department of Health Logo" width="240" src="/img/doh_logo_doh-black.png"/></a>
+  <NavbarBrand href="https://doh.wa.gov/">
+    <Row>
+      <Col>
+        <Image alt="Washington State Department of Health Logo" width="240" src="/img/doh_logo_doh-black.png"/>
+      </Col>
+      <Col style="vertical-align:middle" class="d-none d-sm-block">
+        <span style="font-size:medium">Washington State</span>
+        <p style="margin: 0px; padding: 0px: line-height: 0;"></p>
+        <span style="font-size:medium">Department of Health</span>
+      </Col>
+    </Row>
   </NavbarBrand>
   <NavbarToggler on:click={() => (isOpen = !isOpen)} />
   <Collapse {isOpen} navbar expand="md" on:update={handleUpdate}>
@@ -62,7 +93,7 @@
       </NavItem>
       <Dropdown nav inNavbar size="sm" direction="down">
         <DropdownToggle color="primary" nav caret>Actions</DropdownToggle>
-        <DropdownMenu end>
+        <DropdownMenu end style="max-height: 500px; overflow:scroll">
           <DropdownItem
             on:click={() => {
               closeNav();
@@ -87,12 +118,30 @@
           {/if}
         </DropdownMenu>
       </Dropdown>
+      <Dropdown nav inNavbar size="sm" direction="down">
+        <DropdownToggle color="primary" nav caret>
+          <Icon name="globe2"></Icon>
+          {locale}
+        </DropdownToggle>
+        <DropdownMenu end style="height: 500px; overflow:scroll">
+          {#each Object.entries(locales) as [en, loc]}
+            <DropdownItem
+              style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"
+              on:click={() => {
+                closeNav();
+                locale=loc;
+              }}>{`${en}${en !== loc ? " - "+loc : ""}`}</DropdownItem
+            >
+          {/each}
+        </DropdownMenu>
+      </Dropdown>
     </Nav>
   </Collapse>
 </Navbar>
+<div on:click={closeNav} on:keypress={closeNav}>
 <Row style="padding:0px 12px">
   <Col style="padding:0; margin-bottom: 20px; border-bottom: 1px solid rgb(204, 204, 204);">
-    <a href="\home"><Image alt="WA Verify Logo" width="200" src="/img/waverifypluslogo.png" style="align-self: center"></Image></a>
+    <Image alt="WA Verify Logo" width="200" src="/img/waverifypluslogo.png" style="align-self: center" />
     <div style="vertical-align: middle; font-size: 18px; display: inline-block; padding-left: 17px; font-family: Verdana, sans-serif; color: rgb(34, 72, 156);">International Patient Summary</div>
   </Col>
 </Row>
@@ -120,6 +169,7 @@
     </footer>
   </Col>
 </Row>
+</div>
 </Container>
 
 <style>

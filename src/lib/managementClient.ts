@@ -12,6 +12,7 @@ export interface SHLAdminParams {
     contentEncrypted: string;
     contentType: string;
     date?: string;
+    label?: string;
   }[];
   passcode?: string;
   exp?: number;
@@ -76,10 +77,53 @@ export class SHLClient {
     return true;
   }
 
+  async isActive(id: string): Promise<boolean> {
+    const res = await fetch(`${API_BASE}/shl/${id}/active`, {
+      method: 'GET'
+    });
+    let content;
+    const contentLength = res.headers.get('Content-Length');
+    if (contentLength && parseInt(contentLength) > 0) {
+      const contentType = res.headers.get('Content-Type');
+  
+      // Check if the content type indicates JSON
+      if (contentType && contentType.includes('application/json')) {
+        content = await res.json();
+      } else {
+        content = await res.text();
+      }
+    }
+    if (res.ok && content !==undefined) {
+      return content;
+    }
+    if (!res.ok) {
+      if (res.status === 404) {
+        if (content !== undefined && "message" in content && content.message === "Deleted") {
+          throw Error(content.message);
+        }
+        return false;
+      } else {
+        return false;
+      }
+    }
+  }
+
+  async reactivate(shl: SHLAdminParams): Promise<boolean> {
+    const req = await fetch(`${API_BASE}/shl/${shl.id}/reactivate`, {
+      method: 'PUT',
+      headers: {
+        authorization: `Bearer ${shl.managementToken}`
+      }
+    });
+    const res = await req.json();
+    return res;
+  }
+
   async addFile(
     shl: SHLAdminParams,
     content: unknown,
-    contentType: string
+    patientName: string = "",
+    contentType: string = "application/smart-health-card"
   ): Promise<SHLAdminParams> {
     let contentEncrypted = await new jose.CompactEncrypt(
       new TextEncoder().encode(JSON.stringify(content))
@@ -91,7 +135,8 @@ export class SHLClient {
       .encrypt(jose.base64url.decode(shl.encryptionKey));
 
     let date = new Date().toISOString().slice(0, 10);
-    new TextEncoder().encode(contentEncrypted), shl.files.push({ contentEncrypted, contentType, date });
+    let label = (patientName ? patientName.charAt(0).toUpperCase() + patientName.slice(1).toLowerCase() + "'s" : "My")+ " Summary";
+    new TextEncoder().encode(contentEncrypted), shl.files.push({ contentEncrypted, contentType, date, label });
     const add = await fetch(`${API_BASE}/shl/${shl.id}/file`, {
       method: 'POST',
       headers: {

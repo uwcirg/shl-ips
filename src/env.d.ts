@@ -1,7 +1,8 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-    readonly VITE_SHOW_DEMO: boolean
+    readonly VITE_EPIC_HIMSS_CLIENT_ID: string
+    readonly VITE_ECW_HIMSS_CLIENT_ID: string
     readonly VITE_EPIC_CLIENT_ID: string
     readonly VITE_CERNER_CLIENT_ID: string
     readonly VITE_API_BASE: string
