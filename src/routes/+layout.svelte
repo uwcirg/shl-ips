@@ -66,7 +66,7 @@
       if (document.visibilityState === "visible") {
         resetInactivityTimer();
       }
-    })
+    });
   });
 
   let isOpen = false;
