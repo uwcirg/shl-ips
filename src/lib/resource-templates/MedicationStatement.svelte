@@ -22,8 +22,10 @@
 {#if resource.resourceReference && resource.resourceReference.display}
   {resource.resourceReference.display}<br>
 {/if}
-{#if resource.effectivePeriod}
-  Effective period: {resource.effectivePeriod.start.split("T")[0]} - {resource.effectivePeriod.end.split("T")[0] ?? "*"}
+{#if resource.effectivePeriod?.start}
+  Effective {resource.effectivePeriod.start}{resource.effectivePeriod.end
+    ? ` - ${resource.effectivePeriod.end}`
+    : ''}
 {:else if resource.effectiveDateTime}
   {resource.effectiveDateTime ? `Effective date: ${resource.effectiveDateTime.split("T")[0]}` : ''}
 {/if}

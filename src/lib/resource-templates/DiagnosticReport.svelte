@@ -16,8 +16,8 @@
     <strong>{resource.code.text}</strong><br>
   {/if}
 {/if}
-{#if resource.effectivePeriod}
-    Effective {resource.effectivePeriod.start}{resource.effectivePeriod.end
+{#if resource.effectivePeriod?.start}
+  Effective {resource.effectivePeriod.start}{resource.effectivePeriod.end
     ? ` - ${resource.effectivePeriod.end}`
     : ''}
 {:else if resource.effectiveDateTime}
