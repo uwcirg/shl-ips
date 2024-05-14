@@ -19,7 +19,7 @@ const allowableResourceTypes = [
     'Consent',
     'Condition',
     'Immunization',
-    // 'Procedure', Removed until hapi server thymeleaf fixes are available
+    'Procedure', // Removed until hapi server thymeleaf fixes are available
     'Observation',
     'DiagnosticReport',
     'MedicationRequest',
@@ -71,7 +71,10 @@ export async function uploadResources(resources) {
             },
             body: JSON.stringify(bundle),
         }).then((response) => {
-            return response.json()
+            if (!response.ok) {
+                throw new Error('Error uploading resources', { cause: response });
+            }
+            return response.json();
         }).then((body) => {
             let ipsUrl = "";
             body.entry.forEach(entry => {

@@ -32,12 +32,13 @@
     import OccupationalDataForHealth from './resource-templates/OccupationalDataForHealth.svelte';
 
     export let newResources: Array<any> | undefined;
-    export let submitSelections: boolean;
+    export let submitting: boolean;
     export let patient: any | undefined;
     export let injectedResources: Record<string, {section: any|undefined; resources: { [key: string]: ResourceHelper }}>;
 
     const components: Record<string, any> = {
         "DocumentReference": AdvanceDirective,
+        "Consent": AdvanceDirective,
         "AllergyIntolerance": AllergyIntolerance,
         "Condition": Condition,
         "DiagnosticReport": DiagnosticReport,
@@ -57,9 +58,9 @@
 
     const ipsDispatch = createEventDispatcher<{ 'ips-retrieved': IPSRetrieveEvent }>();
     const statusDispatch = createEventDispatcher<{ 'status-update': string }>();
+    const errorDispatch = createEventDispatcher<{ 'error': string }>();
     let resources:{ [key: string]: ResourceHelper } = {};
     let resourcesByType:{ [key: string]: { [key: string]: ResourceHelper} } = {};
-    let submitting = false;
     let reference: string;
     let patientReference: string;
     let patients: {[key: string]: ResourceHelper} = {};
@@ -78,8 +79,12 @@
         }
     }
     $: {
-        if (submitSelections) {
-            confirm();
+        if (submitting) {
+            confirm().catch(error => {
+                submitting = false;
+                console.error(error);
+                errorDispatch("error", error.message);
+            });
         }
     }
 
@@ -224,7 +229,11 @@
         statusDispatch("status-update", "Preparing");
         let preparedResources = prepareResources(getSelectedResources());
         statusDispatch("status-update", "Adding data");
-        reference = await uploadResources(preparedResources);
+        try {
+            reference = await uploadResources(preparedResources);
+        } catch (e:any) {
+            throw new Error("Unable to upload resources", {cause: e});
+        }
 
         let content:any;
         statusDispatch("status-update", "Building IPS");
@@ -232,7 +241,7 @@
             headers: { accept: 'application/fhir+json' }
         }).then(function(response) {
             if (!response.ok) {
-                // make the promise be rejected if we didn't get a 2xx response
+                // reject the promise if we didn't get a 2xx response
                 throw new Error("Unable to fetch IPS", {cause: response});
             } else {
                 return response;

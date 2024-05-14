@@ -87,7 +87,6 @@
       patientName = patient.name[0]?.given[0];
     }
     if (patientName) {
-      console.log("Patient name: " + patientName);
       label = (patientName !== undefined ? patientName.charAt(0).toUpperCase() + patientName.slice(1).toLowerCase() + "'s" : "My")+ " Summary Link " + new Date().toISOString().slice(0, 10);
     }
   }
@@ -301,6 +300,10 @@
     status = newStatus;
   }
 
+  function showError(message: string) {
+    fetchError = message;
+  }
+
   function confirmContent() {
     submitting = true;
   }
@@ -354,10 +357,11 @@
     <ResourceSelector
       bind:newResources={resourcesToReview}
       bind:patient={patient}
-      bind:submitSelections={submitting}
+      bind:submitting={submitting}
       bind:injectedResources={resourcesToInject}
       on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }
       on:status-update={ ({ detail }) => { updateStatus(detail) } }
+      on:error={ ({ detail }) => { showError(detail) } }
     />
   {/if}
 </Accordion>
