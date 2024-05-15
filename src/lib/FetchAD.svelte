@@ -146,7 +146,6 @@
         }
       ]
     };
-
     return patient;
   }
 
