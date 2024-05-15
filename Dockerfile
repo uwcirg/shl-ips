@@ -7,16 +7,13 @@ ENV NODE_ENV production
 
 WORKDIR /opt/app
 
-COPY package*.json ./
+COPY . .
 RUN npm clean-install --include=dev
 
 RUN sed -i '/2\.11\.6/a \ \ "type": "module",' node_modules/@popperjs/core/package.json
 
-COPY . .
 RUN npm run build
-
-RUN cp -r build/ips/assets build/assets
 
 RUN cp build/404.html build/index.html
 
-CMD ["npm", "run", "start"]
+CMD ["sh", "-c", "npm run build && cp build/404.html build/index.html && npm run start"]

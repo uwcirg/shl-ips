@@ -17,6 +17,8 @@
 		"lib": ["es2022"],
 		// "outDir": "dist",
 		"sourceMap": true,
+		"suppressImplicitAnyIndexErrors": true,
+		"ignoreDeprecations": "5.0",
 	}
 	// Path aliases are handled by https://kit.svelte.dev/docs/configuration#alias
 	//
