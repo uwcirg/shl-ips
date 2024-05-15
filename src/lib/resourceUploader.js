@@ -2,28 +2,29 @@ import { INTERMEDIATE_FHIR_SERVER_BASE } from './config';
 
 // This is both allowable and reverse order of loading
 const allowableResourceTypes = [
-    //'Patient', this is loaded separately
-    'Organization',
-    'Location',
-    'Practitioner',
-    'Device',
-    'Medication',
-    // 'PractitionerRole', Not relevant to IPS
-    'Encounter',
-    'DeviceUseStatement',
-    'Media',
-    'Specimen',
     'AllergyIntolerance',
     // 'CarePlan', Still needs some work for referential integrity
-    'ClinicalImpression',
     'Consent',
     'Condition',
-    'Immunization',
-    'Procedure', // Removed until hapi server thymeleaf fixes are available
-    'Observation',
+    'ClinicalImpression',
+    'Device',
+    'DeviceUseStatement',
     'DiagnosticReport',
+    'DocumentReference',
+    'Encounter',
+    'Immunization',
+    'Location',
+    'Media',
+    'Medication',
     'MedicationRequest',
-    'MedicationStatement'
+    'MedicationStatement',
+    'Observation',
+    'Organization',
+    // 'Patient', // This is loaded separately
+    'Practitioner',
+    // 'PractitionerRole', Not relevant to IPS
+    'Procedure',
+    'Specimen'
 ];
 
 export function getResourcesFromIPS(ips) {

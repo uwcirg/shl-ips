@@ -21,6 +21,7 @@
   import FetchUrl from './FetchUrl.svelte';
   import FetchFile from './FetchFile.svelte';
   import FetchSoF from './FetchSoF.svelte';
+  import FetchAD from './FetchAD.svelte';
   import ODHForm from './ODHForm.svelte';
   import ResourceSelector from './ResourceSelector.svelte';
   import { verify } from './shcDecoder.js';
@@ -346,10 +347,16 @@
           on:ips-retrieved={ async ({ detail }) => { stageRetrievedIPS(detail) } }>
         </FetchFile>
       </TabPane>
+      <TabPane class="ad-tab" tabId="ad" style="padding-top:10px">
+        <span class="ad-tab" slot="tab">Advance Directive Search</span>
+        <FetchAD
+          on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }>
+        </FetchAD>
+      </TabPane>
     </TabContent>
   </AccordionItem>
   {#if resourcesToReview.length > 0}
-    <AccordionItem active class="odh-data">
+    <AccordionItem class="odh-data">
       <h5 slot="header" class="my-2">2. Add health-related occupational information</h5>
       <Label>It may be helpful to include information about the work you do in your medical summary</Label>
       <ODHForm bind:odhSection={odhData.section} bind:odhSectionResources={odhData.resources} />
