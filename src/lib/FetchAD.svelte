@@ -14,14 +14,14 @@
 
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
 
-  let defaultUrl = "https://fhir.ips-demo.dev.cirg.uw.edu/fhir";
+  let selectedUrl = "https://qa-rr-fhir.maxmddirect.com";
   let processing = false;
   let fetchError = '';
 
   let mrn = '';
-  let first = '';
-  let last = '';
-  let dob = '';
+  let first = 'Betsy';
+  let last = 'Smith-Johnson';
+  let dob = '1950-11-15';
   let address1 = '';
   let address2 = '';
   let city = '';
@@ -51,7 +51,7 @@
 
   let summaryUrlValidated: URL | undefined = undefined;
   $: {
-    setSummaryUrlValidated(defaultUrl);
+    setSummaryUrlValidated(selectedUrl);
   }
 
   function setSummaryUrlValidated(url: string) {
@@ -108,7 +108,7 @@
         }
       ]
     };
-    
+
     return patient;
   }
 
@@ -124,13 +124,14 @@
     query += city ? `address-city=${city}&` : '';
     query += state ? `address-state=${state}&` : '';
     query += zip ? `address-postalcode=${zip}&` : '';
-    return query.substring(0, query.length - 1);
+    query += 'active=true';
+    return query;
   }
 
   async function fetchPatient(patient: any) {
     let result;
     try {
-      result = await fetch(`${defaultUrl}/Patient/$match`, {
+      result = await fetch(`${selectedUrl}/Patient/$match`, {
         method: 'POST',
         headers: { accept: 'application/json' },
         body: JSON.stringify(patient)
@@ -144,7 +145,7 @@
       });
     } catch (e) {
       let query = buildPatientSearchQuery();
-      result = await fetch(`${defaultUrl}/Patient${query}`, {
+      result = await fetch(`${selectedUrl}/Patient${query}`, {
         method: 'GET',
         headers: { accept: 'application/json' },
       }).then(function (response: any) {
@@ -172,7 +173,7 @@
 
   async function fetchAdvanceDirective(patient: any) {
     let query = buildAdvanceDirectiveSearchQuery(patient);
-    return result = await fetch(`${defaultUrl}/DocumentReference${query}`, {
+    return result = await fetch(`${selectedUrl}/DocumentReference${query}`, {
         method: 'GET',
         headers: { accept: 'application/json' }
       }).then(function (response: any) {
@@ -194,7 +195,7 @@
       const patient = await fetchPatient(constructPatient());
       const contentResponse = await fetchAdvanceDirective(patient.id);
       content = await contentResponse.json();
-      hostname = defaultUrl;
+      hostname = selectedUrl;
       processing = false;
       let resources = content.entry ? content.entry.map((e) => {
         return e.resource;
@@ -222,11 +223,14 @@
   <FormGroup>
     <Row>
       <Row class="mx-2">
-        <Input type="radio" bind:group={defaultUrl} value="https://fhir.ips-demo.dev.cirg.uw.edu/fhir" label="WA Verify+ Demo Server" />
+        <Input type="radio" bind:group={selectedUrl} value="https://qa-rr-fhir.maxmddirect.com" label="AD Vault" />
+      </Row>
+      <Row class="mx-2">
+        <Input type="radio" bind:group={selectedUrl} value="https://fhir.ips-demo.dev.cirg.uw.edu/fhir" label="WA Verify+ Demo Server" />
       </Row>
     </Row>
   </FormGroup>
-  {#if defaultUrl}
+  {#if selectedUrl}
   <FormGroup>
     <Label>Enter your information to fetch an advance directive</Label>
     <p class="text-secondary"><em>WA Verify+ does not save this information</em></p>
