@@ -19,9 +19,9 @@
   let fetchError = '';
 
   let mrn = '';
-  let first = '';
-  let last = '';
-  let dob = '';
+  let first = 'Betsy';
+  let last = 'Smith-Johnson';
+  let dob = '1950-11-15';
   let address1 = '';
   let address2 = '';
   let city = '';
@@ -124,7 +124,8 @@
     query += city ? `address-city=${city}&` : '';
     query += state ? `address-state=${state}&` : '';
     query += zip ? `address-postalcode=${zip}&` : '';
-    return query.substring(0, query.length - 1);
+    query += 'active=true';
+    return query;
   }
 
   async function fetchPatient(patient: any) {
