@@ -33,6 +33,11 @@ Description:
   {resource.description}
 {/if}
 <br />
+setId:
+{#if resource.identifier && resource.identifier[0] && resource.identifier[0].system && resource.identifier[0].system == 'https://mydirectives.com/standards/terminology/namingSystem/setId'}
+  {resource.identifier[0].value}
+{/if}
+<br />
 Date:
 {#if resource.date}
   {resource.date}
