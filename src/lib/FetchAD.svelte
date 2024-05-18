@@ -203,6 +203,13 @@
       if (resources.length === 0) {
         console.warn("No advance directives found for patient "+patient.id);
       }
+
+      // If resource.category doesn't exist, ignore the DR - DR's w/out that are simply signature DR's.
+      // Lambda function to check if resource.category exists
+      const nonSignatureDR = dr => dr.category !== undefined;
+      // Filter out resources that don't have a category
+      resources = resources.filter(nonSignatureDR);
+
       resources.unshift(patient);
 
       result = {
