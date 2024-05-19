@@ -186,6 +186,30 @@
       });
   }
 
+async function injectPdfIntoDocRef(url, attachment) {
+  try {
+    const response = await fetch(url);
+    if (response.ok) {
+      const blob = await response.blob();
+      const reader = new FileReader();
+      reader.onloadend = () => {
+  			console.log(reader.result); // Log the full data URL for debugging
+        attachment.data = reader.result.split(',')[1]; // Base64 encoded data
+      };
+      reader.readAsDataURL(blob);
+/**
+          const arrayBuffer = await response.arrayBuffer();
+          const base64String = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+          attachment.data = base64String;
+*/
+    } else {
+      console.error(`Failed to fetch PDF from ${url}`);
+    }
+  } catch (error) {
+    console.error(`Error fetching PDF from ${url}:`, error);
+  }
+}
+
   async function prepareIps() {
     fetchError = '';
     processing = true;
@@ -203,6 +227,25 @@
       if (resources.length === 0) {
         console.warn("No advance directives found for patient "+patient.id);
       }
+
+      // If resource.category doesn't exist, ignore the DR - DR's w/out that are simply signature DR's.
+      // Lambda function to check if resource.category exists
+      const nonSignatureDR = dr => dr.category !== undefined;
+      // Filter out resources that don't have a category
+      resources = resources.filter(nonSignatureDR);
+
+      // if one of the DR's `content` elements has attachment.contentType = 'application/pdf', download if possible, put base64 of pdf in DR.content.attachment.data
+      const hasPdfContent = dr => dr.content && dr.content.some(content => content.attachment && content.attachment.contentType === 'application/pdf');
+
+      resources.forEach(async dr => {
+        if (hasPdfContent(dr)) {
+          const pdfContent = dr.content.find(content => content.attachment && content.attachment.contentType === 'application/pdf');
+          if (pdfContent && pdfContent.attachment && pdfContent.attachment.url) {
+            await injectPdfIntoDocRef (pdfContent.attachment.url, pdfContent.attachment);
+          }
+        }
+      });
+
       resources.unshift(patient);
 
       result = {
