@@ -6,7 +6,6 @@
       Col,
       FormGroup,
       Input,
-      Label,
       Row } from 'sveltestrap';
     
     export let odhSection: any | undefined;
@@ -37,7 +36,7 @@
         "Clothier [Retail Salespersons]": "41-2031.00.008618",
     };
     let industries: Record<string,string> = {
-        "Alcoholic beverage drinking places [Drinking Places (Alcoholic Beverages)": "722410.000378",
+        "Alcoholic beverage drinking places [Drinking Places (Alcoholic Beverages)]": "722410.000378",
         "Home nursing services": "621610.008495",
         "Academies, college or university [Colleges, Universities, and Professional Schools]": "611310.000015",
         "Clothing stores, family [Family Clothing Stores]": "6448140.003510",
@@ -53,6 +52,7 @@
     let startCombat = canShare ? "2016-08" : "2016-08-01";
     let endCombat = canShare ? "2017-01" : "2017-01-01";
 
+    // Top-level ODH section template
     let odhSectionTemplate = {
         title: "History of Occupation",
         code: {
@@ -62,15 +62,15 @@
                 code: "11341-5",
                 display: "History of Occupation"
             }
-            ]
+          ]
         },
         entry: []
     };
 
+    // Present job resource template
     let currentJobTemplate = {
       resource: {
         resourceType: "Observation",
-        id: "observation-odh-present-job-sample",
         meta: {
           versionId: "10",
           lastUpdated: "2021-05-27T09:19:44.894+00:00",
@@ -118,13 +118,13 @@
           }
         ]
       },
-      fullUrl: "observation-odh-present-job-sample"
+      fullUrl: "urn:uuid:126e7704-b9dc-4559-ad88-138ad7a3f234"
     }
 
+    // Employment status resource template
     let employmentStatusTemplate = {
       resource: {
         resourceType: "Observation",
-        id: "observation-odh-employment-status-sample",
         meta: {
           versionId: "7",
           lastUpdated: "2021-05-26T17:22:34.756+00:00",
@@ -133,12 +133,6 @@
             "http://hl7.org/fhir/us/odh/StructureDefinition/odh-EmploymentStatus"
           ]
         },
-        extension: [
-          {
-            url: "http://hl7.org/fhir/StructureDefinition/NarrativeLink",
-            valueUri: "urn:uuid:126e7704-b9dc-4559-ad88-138ad7a3f233#HistoryOfOccupation-observation-odh-employment-status-sample"
-          }
-        ],
         status: "final",
         code: {
           coding: [
@@ -162,13 +156,13 @@
           ]
         }
       },
-      fullUrl: "observation-odh-employment-status-sample"
+      fullUrl: "urn:uuid:126e7704-b9dc-4559-ad88-138ad7a3f235"
     };
 
+    // Past job resource template
     let pastJobTemplate = {
       resource: {
         resourceType: "Observation",
-        id: "observation-odh-past-job-sample",
         meta: {
           versionId: "10",
           lastUpdated: "2021-05-27T09:19:44.894+00:00",
@@ -216,13 +210,13 @@
           }
         ]
       },
-      fullUrl: "observation-odh-past-job-sample"
+      fullUrl: "urn:uuid:126e7704-b9dc-4559-ad88-138ad7a3f236"
     }
 
+    // Retirement date resource template
     let retirementDateTemplate = {
       resource: {
         resourceType : "Observation",
-        id : "observation-odh-retirement-date-sample",
         meta : {
           versionId : "1",
           lastUpdated : "2021-05-26T02:20:50.364+00:00",
@@ -246,13 +240,13 @@
         },
         valueDateTime : "2021-05-30"
       },
-      fullUrl: "observation-odh-retirement-date-sample"
+      fullUrl: "urn:uuid:126e7704-b9dc-4559-ad88-138ad7a3f237"
     };
 
+    // Combat zone period resource template
     let combatPeriodTemplate = {
       resource: {
         resourceType: "Observation",
-        id: "observation-odh-combat-zone-period-sample",
         meta: {
           versionId: "2",
           lastUpdated: "2021-05-26T02:30:21.329+00:00",
@@ -261,12 +255,6 @@
             "http://hl7.org/fhir/us/odh/StructureDefinition/odh-CombatZonePeriod"
           ]
         },
-        extension: [
-          {
-            url: "http://hl7.org/fhir/StructureDefinition/NarrativeLink",
-            valueUri: "urn:uuid:126e7704-b9dc-4559-ad88-138ad7a3f233#HistoryOfOccupation-observation-odh-combat-zone-period-sample"
-          }
-        ],
         status: "final",
         code: {
           coding: [
@@ -285,7 +273,7 @@
           end: "2006-03-31"
         }
       },
-      fullUrl: "observation-odh-combat-zone-period-sample"
+      fullUrl: "urn:uuid:126e7704-b9dc-4559-ad88-138ad7a3f238"
     };
 
     $: {
@@ -320,14 +308,14 @@
             }
             if (jobCurrent) {
                 currentJob.resource.valueCodeableConcept.coding[0] = {
-                    system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH",
+                    system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH.html",
                     code: jobs[jobCurrent],
                     display: jobCurrent
                 };
             }
             if (industryCurrent) {
                 currentJob.resource.component[0].valueCodeableConcept.coding[0] = {
-                    system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH",
+                    system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH.html",
                     code: industries[industryCurrent],
                     display: industryCurrent
                 };
@@ -350,14 +338,14 @@
             }
             if (jobPast) {
                 pastJob.resource.valueCodeableConcept.coding[0] = {
-                    system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH",
+                    system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH.html",
                     code: jobs[jobPast],
                     display: jobPast
                 };
             }
             if (industryPast) {
                 pastJob.resource.component[0].valueCodeableConcept.coding[0] = {
-                    system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH",
+                    system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH.html",
                     code: industries[industryPast],
                     display: industryPast
                 };
