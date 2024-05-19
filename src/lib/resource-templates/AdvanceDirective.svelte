@@ -33,6 +33,11 @@ Text:
   {resource.description}
 {/if}
 <br />
+<b>Author:</b>
+{#if resource.author && resource.author[0] && resource.author[0].display}
+  {resource.author[0].display}
+{/if}
+<br />
 <b>setId:</b>
 {#if resource.identifier && resource.identifier[0] && resource.identifier[0].system && resource.identifier[0].system == 'https://mydirectives.com/standards/terminology/namingSystem/setId'}
   {resource.identifier[0].value}
