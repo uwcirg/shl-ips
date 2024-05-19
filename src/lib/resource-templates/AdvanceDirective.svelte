@@ -52,7 +52,15 @@ docStatus:
 {#if resource.docStatus}
   {resource.docStatus}
 {/if}
-<br />
 {#if resource.description && resource.description.text}
+  <br />
   {resource.description.text}
+{/if}
+<br/>
+{#if resource.content}
+  {#each resource.content as content}
+    {#if content.attachment && content.attachment.data}
+      PDF present: <a href={"data:application/pdf;base64," + content.attachment.data} target="_blank" rel="noopener noreferrer">View</a>
+    {/if}
+  {/each}
 {/if}
