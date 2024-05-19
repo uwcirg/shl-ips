@@ -22,6 +22,7 @@
   import FetchFile from './FetchFile.svelte';
   import FetchSoF from './FetchSoF.svelte';
   import FetchAD from './FetchAD.svelte';
+  import FetchTEFCA from './FetchTEFCA.svelte';
   import ODHForm from './ODHForm.svelte';
   import ResourceSelector from './ResourceSelector.svelte';
   import { verify } from './shcDecoder.js';
@@ -38,6 +39,7 @@
   import { page } from '$app/stores';
   import { getResourcesFromIPS } from './resourceUploader.js';
   import { goto } from '$app/navigation';
+    import FetchTefca from './FetchTEFCA.svelte';
 
   export let status = "";
   
@@ -373,6 +375,12 @@
           bind:adSection={adData.section} bind:adSectionResources={adData.resources}
           on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }>
         </FetchAD>
+      </TabPane>
+      <TabPane class="tefca-tab" tabId="tefca" style="padding-top:10px">
+        <span class="tefca-tab" slot="tab">TEFCA Search</span>
+        <FetchTEFCA
+          on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }>
+        </FetchTEFCA>
       </TabPane>
     </TabContent>
   </AccordionItem>
