@@ -24,7 +24,7 @@
 
   let baseUrl = "https://concept01.ehealthexchange.org:52780/fhirproxy/r4";
   let selectedSource = "Meld";
-  let method = 'url';
+  let method = 'destination';
   let processing = false;
   let fetchError = '';
 
@@ -175,13 +175,13 @@
     let url = baseUrl;
     let headers = {
       accept: 'application/json+fhir',
-      'X-Request-Id': '5c92758f-79c8-4137-b104-9c0064205407',
       'Content-Type': 'application/fhir+json; charset=UTF-8',
       'prefer': 'return=representation'
     };
     if (method === 'url') {
       url = sources[selectedSource].url;
     } else if (method === 'destination') {
+      headers['X-Request-Id'] = '5c92758f-79c8-4137-b104-9c0064205407',
       headers['X-DESTINATION'] = selectedSource,
       headers['X-POU'] = 'PUBHLTH'
     }
@@ -226,13 +226,13 @@
     let url = baseUrl;
     let headers = {
       accept: 'application/json+fhir',
-      'X-Request-Id': '5c92758f-79c8-4137-b104-9c0064205407',
       'Content-Type': 'application/fhir+json; charset=UTF-8',
       'prefer': 'return=representation'
     };
     if (method === 'url') {
       url = sources[selectedSource].url;
     } else if (method === 'destination') {
+      headers['X-Request-Id'] = '5c92758f-79c8-4137-b104-9c0064205407',
       headers['X-DESTINATION'] = selectedSource,
       headers['X-POU'] = 'PUBHLTH'
     }
@@ -302,6 +302,9 @@
             </option>
           </Input>
         </FormGroup>
+        {#if method === 'destination'}
+        <p style="font-size:small" class="text-danger">Please <a href="https://concept01.ehealthexchange.org:52780/" target="_blank" rel="noreferrer">click here</a> and trust the site in your browser to perform this proxied query</p>
+        {/if}
       </Col>
     </Row>
   </FormGroup>
