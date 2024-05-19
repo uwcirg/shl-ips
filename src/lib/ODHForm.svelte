@@ -71,6 +71,7 @@
     let currentJobTemplate = {
       resource: {
         resourceType: "Observation",
+        id: "126e7704-b9dc-4559-ad88-138ad7a3f234",
         meta: {
           versionId: "10",
           lastUpdated: "2021-05-27T09:19:44.894+00:00",
@@ -125,6 +126,7 @@
     let employmentStatusTemplate = {
       resource: {
         resourceType: "Observation",
+        id: "126e7704-b9dc-4559-ad88-138ad7a3f235",
         meta: {
           versionId: "7",
           lastUpdated: "2021-05-26T17:22:34.756+00:00",
@@ -163,6 +165,7 @@
     let pastJobTemplate = {
       resource: {
         resourceType: "Observation",
+        id: "126e7704-b9dc-4559-ad88-138ad7a3f236",
         meta: {
           versionId: "10",
           lastUpdated: "2021-05-27T09:19:44.894+00:00",
@@ -217,6 +220,7 @@
     let retirementDateTemplate = {
       resource: {
         resourceType : "Observation",
+        id: "126e7704-b9dc-4559-ad88-138ad7a3f237",
         meta : {
           versionId : "1",
           lastUpdated : "2021-05-26T02:20:50.364+00:00",
@@ -247,6 +251,7 @@
     let combatPeriodTemplate = {
       resource: {
         resourceType: "Observation",
+        id: "126e7704-b9dc-4559-ad88-138ad7a3f238",
         meta: {
           versionId: "2",
           lastUpdated: "2021-05-26T02:30:21.329+00:00",
@@ -416,7 +421,7 @@
             odhSection.entry = odhSectionResources.map((r) => {
                 let uri = r.fullUrl;
                 return {
-                    reference: `Observation/${uri}`
+                    reference: `${uri}`
                 };
             });
         } else {
