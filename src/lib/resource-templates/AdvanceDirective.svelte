@@ -38,6 +38,11 @@ setId:
   {resource.identifier[0].value}
 {/if}
 <br />
+Version number:
+{#if resource.extension && resource.extension[0] && resource.extension[0].url && resource.extension[0].url == 'http://hl7.org/fhir/us/ccda/StructureDefinition/VersionNumber'}
+  {resource.extension[0].valueInteger}
+{/if}
+<br />
 Date:
 {#if resource.date}
   {resource.date}
