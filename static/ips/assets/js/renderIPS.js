@@ -11,6 +11,7 @@ let sectionCount = 0;
 let mode = "Entries";
 
 let shlContents;
+let originalShlContents;
 
 // Sqrl setting. See https://v7--squirrellyjs.netlify.app/docs/v7/auto-escaping
 Sqrl.autoEscaping(false);
@@ -51,7 +52,7 @@ function updateDisplayMode(displayMode) {
     update(e, (shlContents.length === 1 ? "" : i));
   });
   if (config.show_demo) {
-    $('#ipsInput').val(JSON.stringify(shlContents[0], null, 2));
+    $('#ipsInput').val(JSON.stringify(originalShlContents[0], null, 2));
     updateFromText();
   }
 };
@@ -180,14 +181,13 @@ function loadBase64EncodedPDF(base64Data) {
 }
 
 function prepareSHLContents(contents) {
-  if (!Array.isArray(contents)){
-    contents = [contents];
-  }
-  shlContents = contents.reverse();
+  originalShlContents = Array.isArray(contents) ? contents : [contents];
+  shlContents = JSON.parse(JSON.stringify(originalShlContents)).reverse();
   var jqxh = $.get(new URL(`../templates/IPS.html`, import.meta.url).href, function () { })
     .done(function (template) {
       shlContents.forEach((e, i) => {
         let data = { index: i };
+        // Create tabs at the top if more than 1 IPS or if in demo mode
         if (shlContents.length > (config.show_demo ? 0 : 1)) {
           addTab(`IPS ${i+1}`, i);
         } else {
@@ -204,7 +204,7 @@ function prepareSHLContents(contents) {
         addTab("IPS Demo", "Demo");
         $(Sqrl.Render(template, {index: "Demo"}))
           .appendTo('#rendered-ips');
-        $('#ipsInput').val(JSON.stringify(shlContents[0], null, 2));
+        $('#ipsInput').val(JSON.stringify(originalShlContents[0], null, 2));
         updateFromText();
         $("#submit").on('click', updateFromText);
         $('#clearSample').on('click', clearData);
