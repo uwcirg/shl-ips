@@ -204,7 +204,7 @@ function prepareSHLContents(contents) {
         addTab("IPS Demo", "Demo");
         $(Sqrl.Render(template, {index: "Demo"}))
           .appendTo('#rendered-ips');
-        $('#ipsInput').val(JSON.stringify(shlContents[0]));
+        $('#ipsInput').val(JSON.stringify(shlContents[0], null, 2));
         updateFromText();
         $("#submit").on('click', updateFromText);
         $('#clearSample').on('click', clearData);
