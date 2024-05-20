@@ -37,11 +37,11 @@
     export let injectedResources: Record<string, {section: any|undefined; resources: { [key: string]: ResourceHelper }}>;
 
     const components: Record<string, any> = {
-        "DocumentReference": AdvanceDirective,
-        "Consent": AdvanceDirective,
         "AllergyIntolerance": AllergyIntolerance,
         "Condition": Condition,
+        "Consent": AdvanceDirective,
         "DiagnosticReport": DiagnosticReport,
+        "DocumentReference": AdvanceDirective,
         "Immunization": Immunization,
         "Location": Location,
         "Medication": Medication,
@@ -53,7 +53,8 @@
         "Practitioner": Practitioner,
         "Problem": Problem,
         "Procedure": Procedure,
-        "Occupational Data for Health": OccupationalDataForHealth
+        "Occupational Data for Health": OccupationalDataForHealth,
+        "Advance Directives": AdvanceDirective
     };
 
     const ipsDispatch = createEventDispatcher<{ 'ips-retrieved': IPSRetrieveEvent }>();
@@ -305,7 +306,7 @@
                         if (injectedResources[section].resources[rkeys[i]].include) {
                             let entry = {
                                 resource: injectedResources[section].resources[rkeys[i]].resource,
-                                fullUrl: injectedResources[section].resources[rkeys[i]].resource.id
+                                fullUrl: `urn:uuid:${injectedResources[section].resources[rkeys[i]].resource.id}`
                             }
                             content.entry.push(entry);
                             injectedResources[section].section.entry.push({
