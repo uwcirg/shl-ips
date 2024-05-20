@@ -219,30 +219,30 @@
     // Retirement date resource template
     let retirementDateTemplate = {
       resource: {
-        resourceType : "Observation",
+        resourceType: "Observation",
         id: "126e7704-b9dc-4559-ad88-138ad7a3f237",
-        meta : {
-          versionId : "1",
-          lastUpdated : "2021-05-26T02:20:50.364+00:00",
-          source : "#xIztR2ILtakKFMdW",
-          profile : [
+        meta: {
+          versionId: "1",
+          lastUpdated: "2021-05-26T02:20:50.364+00:00",
+          source: "#xIztR2ILtakKFMdW",
+          profile: [
             "http://hl7.org/fhir/us/odh/StructureDefinition/odh-RetirementDate"
           ]
         },
-        status : "final",
-        code : {
-          coding : [
+        status: "final",
+        code: {
+          coding: [
             {
-              system : "http://loinc.org",
-              code : "87510-4",
-              display : "Date of Retirement"
+              system: "http://loinc.org",
+              code: "87510-4",
+              display: "Date of Retirement"
             }
           ]
         },
         subject: {
           reference: "Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299",
         },
-        valueDateTime : "2021-05-30"
+        valueDateTime: "2021-05-30"
       },
       fullUrl: "urn:uuid:126e7704-b9dc-4559-ad88-138ad7a3f237"
     };
