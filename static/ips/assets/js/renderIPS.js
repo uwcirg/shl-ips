@@ -27,7 +27,7 @@ function loadSample() {
     console.log("success");
   })
     .done(function (data) {
-      $('#ipsInput').val(JSON.stringify(data));
+      $('#ipsInput').val(JSON.stringify(data, null, 2));
       updateFromText();
     })
     .fail(function (e) {
