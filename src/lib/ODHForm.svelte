@@ -6,7 +6,6 @@
       Col,
       FormGroup,
       Input,
-      Label,
       Row } from 'sveltestrap';
     
     export let odhSection: any | undefined;
@@ -20,28 +19,78 @@
     let retirementDate: any | undefined;
     let combatPeriod: any | undefined;
 
-    let working = true;
-    let workingPast = true;
-    let retired = false;
-    let combat = false;
-    let status = "Employed";
     let statuses: Record<string, string> = {
       "Employed": "Employed",
       "Unemployed": "Unemployed",
       "Not in labor force": "NotInLaborForce"
     }
-    let jobs: Record<string,string> = {
-        "Bartender [Bartender]": "2345",
-        "Certified Nursing Assistant (CNA) [Nursing Assistants]": "31-1014.00.007136",
-        "Medical Researcher [Medical Scientists, Except Epidemiologists]": "19-1042.00.026469",
-        "Clothier [Retail Salespersons]": "41-2031.00.008618",
+    let jobs: Record<string,any> = {
+      "Bartender [Bartender]": [{
+        display: "Bartender [Bartender]",
+        code: "2345",
+        system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH.html"
+      }],
+      "Certified Nursing Assistant (CNA) [Nursing Assistants]": [{
+        display: "Certified Nursing Assistant (CNA) [Nursing Assistants]",
+        code: "31-1014.00.007136",
+        system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH.html"
+      }, {
+        system: "https://terminology.hl7.org/2.0.0/CodeSystem-PHIndustryCDCCensus2010.html",
+        code: "8270",
+        display: "Nursing care facilities"
+      }],
+      "Medical Researcher [Medical Scientists, Except Epidemiologists]": [{
+        display: "Medical Researcher [Medical Scientists, Except Epidemiologists]",
+        code: "19-1042.00.026469",
+        system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH.html"
+      }, {
+        system: "https://terminology.hl7.org/2.0.0/CodeSystem-PHOccupationCDCCensus2010.html",
+        code: "1650",
+        display: "Medical scientists"
+      }],
+      "Clothier [Retail Salespersons]": [{
+        display: "Clothier [Retail Salespersons]",
+        code: "41-2031.00.008618",
+        system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH.html"
+      }]
     };
-    let industries: Record<string,string> = {
-        "Alcoholic beverage drinking places [Drinking Places (Alcoholic Beverages)": "722410.000378",
-        "Home nursing services": "621610.008495",
-        "Academies, college or university [Colleges, Universities, and Professional Schools]": "611310.000015",
-        "Clothing stores, family [Family Clothing Stores]": "6448140.003510",
+    let industries: Record<string,any> = {
+      "Alcoholic beverage drinking places [Drinking Places (Alcoholic Beverages)]": [{
+        display: "Alcoholic beverage drinking places [Drinking Places (Alcoholic Beverages)]",
+        code: "722410.000378",
+        system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH.html"
+      }],
+      "Home nursing services": [{
+        display: "Home nursing services",
+        code: "621610.008495",
+        system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH.html"
+      }, {
+        system: "https://terminology.hl7.org/2.0.0/CodeSystem-PHOccupationCDCCensus2010.html",
+        code: "3600",
+        display: "Nursing, psychiatric, and home health aides"
+      }],
+      "Academies, college or university [Colleges, Universities, and Professional Schools]": [{
+        display: "Academies, college or university [Colleges, Universities, and Professional Schools]",
+        code: "611310.000015",
+        system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH.html"
+      }, {
+        system: "https://terminology.hl7.org/2.0.0/CodeSystem-PHOccupationCDCCensus2010.html",
+        code: "7460",
+        display: "Scientific research and development services"
+      }],
+      "Clothing stores, family [Family Clothing Stores]": [{
+        display: "Clothing stores, family [Family Clothing Stores]",
+        code: "6448140.003510",
+        system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH.html"
+      }]
     };
+
+    // Defaults
+    let working = true;
+    let workingPast = true;
+    let retired = false;
+    let combat = false;
+    let status = "Employed";
     let jobCurrent = "Medical Researcher [Medical Scientists, Except Epidemiologists]";
     let industryCurrent = "Academies, college or university [Colleges, Universities, and Professional Schools]";
     let startCurrent = canShare ? "2021-09" : "2021-09-07";
@@ -53,6 +102,7 @@
     let startCombat = canShare ? "2016-08" : "2016-08-01";
     let endCombat = canShare ? "2017-01" : "2017-01-01";
 
+    // Top-level ODH section template
     let odhSectionTemplate = {
         title: "History of Occupation",
         code: {
@@ -62,15 +112,16 @@
                 code: "11341-5",
                 display: "History of Occupation"
             }
-            ]
+          ]
         },
         entry: []
     };
 
+    // Present job resource template
     let currentJobTemplate = {
       resource: {
         resourceType: "Observation",
-        id: "observation-odh-present-job-sample",
+        id: "126e7704-b9dc-4559-ad88-138ad7a3f234",
         meta: {
           versionId: "10",
           lastUpdated: "2021-05-27T09:19:44.894+00:00",
@@ -118,13 +169,14 @@
           }
         ]
       },
-      fullUrl: "observation-odh-present-job-sample"
+      fullUrl: "urn:uuid:126e7704-b9dc-4559-ad88-138ad7a3f234"
     }
 
+    // Employment status resource template
     let employmentStatusTemplate = {
       resource: {
         resourceType: "Observation",
-        id: "observation-odh-employment-status-sample",
+        id: "126e7704-b9dc-4559-ad88-138ad7a3f235",
         meta: {
           versionId: "7",
           lastUpdated: "2021-05-26T17:22:34.756+00:00",
@@ -133,12 +185,6 @@
             "http://hl7.org/fhir/us/odh/StructureDefinition/odh-EmploymentStatus"
           ]
         },
-        extension: [
-          {
-            url: "http://hl7.org/fhir/StructureDefinition/NarrativeLink",
-            valueUri: "urn:uuid:126e7704-b9dc-4559-ad88-138ad7a3f233#HistoryOfOccupation-observation-odh-employment-status-sample"
-          }
-        ],
         status: "final",
         code: {
           coding: [
@@ -162,13 +208,14 @@
           ]
         }
       },
-      fullUrl: "observation-odh-employment-status-sample"
+      fullUrl: "urn:uuid:126e7704-b9dc-4559-ad88-138ad7a3f235"
     };
 
+    // Past job resource template
     let pastJobTemplate = {
       resource: {
         resourceType: "Observation",
-        id: "observation-odh-past-job-sample",
+        id: "126e7704-b9dc-4559-ad88-138ad7a3f236",
         meta: {
           versionId: "10",
           lastUpdated: "2021-05-27T09:19:44.894+00:00",
@@ -216,43 +263,45 @@
           }
         ]
       },
-      fullUrl: "observation-odh-past-job-sample"
+      fullUrl: "urn:uuid:126e7704-b9dc-4559-ad88-138ad7a3f236"
     }
 
+    // Retirement date resource template
     let retirementDateTemplate = {
       resource: {
-        resourceType : "Observation",
-        id : "observation-odh-retirement-date-sample",
-        meta : {
-          versionId : "1",
-          lastUpdated : "2021-05-26T02:20:50.364+00:00",
-          source : "#xIztR2ILtakKFMdW",
-          profile : [
+        resourceType: "Observation",
+        id: "126e7704-b9dc-4559-ad88-138ad7a3f237",
+        meta: {
+          versionId: "1",
+          lastUpdated: "2021-05-26T02:20:50.364+00:00",
+          source: "#xIztR2ILtakKFMdW",
+          profile: [
             "http://hl7.org/fhir/us/odh/StructureDefinition/odh-RetirementDate"
           ]
         },
-        status : "final",
-        code : {
-          coding : [
+        status: "final",
+        code: {
+          coding: [
             {
-              system : "http://loinc.org",
-              code : "87510-4",
-              display : "Date of Retirement"
+              system: "http://loinc.org",
+              code: "87510-4",
+              display: "Date of Retirement"
             }
           ]
         },
         subject: {
           reference: "Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299",
         },
-        valueDateTime : "2021-05-30"
+        valueDateTime: "2021-05-30"
       },
-      fullUrl: "observation-odh-retirement-date-sample"
+      fullUrl: "urn:uuid:126e7704-b9dc-4559-ad88-138ad7a3f237"
     };
 
+    // Combat zone period resource template
     let combatPeriodTemplate = {
       resource: {
         resourceType: "Observation",
-        id: "observation-odh-combat-zone-period-sample",
+        id: "126e7704-b9dc-4559-ad88-138ad7a3f238",
         meta: {
           versionId: "2",
           lastUpdated: "2021-05-26T02:30:21.329+00:00",
@@ -261,12 +310,6 @@
             "http://hl7.org/fhir/us/odh/StructureDefinition/odh-CombatZonePeriod"
           ]
         },
-        extension: [
-          {
-            url: "http://hl7.org/fhir/StructureDefinition/NarrativeLink",
-            valueUri: "urn:uuid:126e7704-b9dc-4559-ad88-138ad7a3f233#HistoryOfOccupation-observation-odh-combat-zone-period-sample"
-          }
-        ],
         status: "final",
         code: {
           coding: [
@@ -285,7 +328,7 @@
           end: "2006-03-31"
         }
       },
-      fullUrl: "observation-odh-combat-zone-period-sample"
+      fullUrl: "urn:uuid:126e7704-b9dc-4559-ad88-138ad7a3f238"
     };
 
     $: {
@@ -319,18 +362,10 @@
                 currentJob.resource.effectivePeriod = period;
             }
             if (jobCurrent) {
-                currentJob.resource.valueCodeableConcept.coding[0] = {
-                    system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH",
-                    code: jobs[jobCurrent],
-                    display: jobCurrent
-                };
+                currentJob.resource.valueCodeableConcept.coding = jobs[jobCurrent];
             }
             if (industryCurrent) {
-                currentJob.resource.component[0].valueCodeableConcept.coding[0] = {
-                    system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH",
-                    code: industries[industryCurrent],
-                    display: industryCurrent
-                };
+                currentJob.resource.component[0].valueCodeableConcept.coding = industries[industryCurrent];
             }
         } else {
             currentJob = undefined;
@@ -349,18 +384,10 @@
                 pastJob.resource.effectivePeriod = period;
             }
             if (jobPast) {
-                pastJob.resource.valueCodeableConcept.coding[0] = {
-                    system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH",
-                    code: jobs[jobPast],
-                    display: jobPast
-                };
+                pastJob.resource.valueCodeableConcept.coding = jobs[jobPast];
             }
             if (industryPast) {
-                pastJob.resource.component[0].valueCodeableConcept.coding[0] = {
-                    system: "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH",
-                    code: industries[industryPast],
-                    display: industryPast
-                };
+                pastJob.resource.component[0].valueCodeableConcept.coding = industries[industryPast];
             }
         } else {
             pastJob = undefined;
@@ -428,7 +455,7 @@
             odhSection.entry = odhSectionResources.map((r) => {
                 let uri = r.fullUrl;
                 return {
-                    reference: `Observation/${uri}`
+                    reference: `${uri}`
                 };
             });
         } else {

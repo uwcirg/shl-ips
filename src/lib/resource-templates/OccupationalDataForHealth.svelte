@@ -37,7 +37,6 @@
         {/if}
     {:else if resource.code.coding[0].code === "11341-5"}
         <strong>Job History</strong>
-        <br>
         {#if resource.effectivePeriod?.start}
             {#if resource.effectivePeriod.end}
                 From {resource.effectivePeriod.start} - {resource.effectivePeriod.end}
@@ -49,29 +48,30 @@
         {/if}
         {#if resource.valueCodeableConcept}
             {#if resource.valueCodeableConcept.coding}
-                <Badge color="primary">{resource.valueCodeableConcept.coding[0].system} : {resource.valueCodeableConcept.coding[0].code}</Badge>
-                <br />
-                {#if resource.valueCodeableConcept.coding[0].display}
-                    {resource.valueCodeableConcept.coding[0].display}
-                {:else if resource.valueCodeableConcept.text}
-                    {resource.valueCodeableConcept.text}
-                {/if}
+                {#each resource.valueCodeableConcept.coding as coding}
+                    <Badge color="primary">{coding.system} : {coding.code}</Badge>
+                    <br />
+                    {#if coding.display}
+                        {coding.display}
+                    {/if}
+                {/each}
             {:else if resource.valueCodeableConcept.text}
                 {resource.valueCodeableConcept.text}
             {/if}
         {/if}
         {#if resource.component}
+            <br>
             {#each resource.component as component}
                 <br>
                 {#if component.valueCodeableConcept}
                     {#if component.valueCodeableConcept.coding}
-                        <Badge color="primary">{component.valueCodeableConcept.coding[0].system} : {component.valueCodeableConcept.coding[0].code}</Badge>
-                        <br />
-                        {#if component.valueCodeableConcept.coding[0].display}
-                            {component.valueCodeableConcept.coding[0].display}
-                        {:else if component.valueCodeableConcept.text}
-                            {component.valueCodeableConcept.text}
-                        {/if}
+                        {#each component.valueCodeableConcept.coding as coding}
+                            <Badge color="primary">{coding.system} : {coding.code}</Badge>
+                            <br />
+                            {#if coding.display}
+                                {coding.display}
+                            {/if}
+                        {/each}
                     {:else if component.valueCodeableConcept.text}
                         {component.valueCodeableConcept.text}
                     {/if}

@@ -354,9 +354,13 @@
                                     ? "primary"
                                     : Object.values(resourcesByType[resourceType])
                                         .filter(resource => resource.include).length
-                                        > 0
-                                        ? "info"
-                                        : "secondary"
+                                        == Object.keys(resourcesByType[resourceType]).length
+                                        ? "primary"
+                                        : Object.values(resourcesByType[resourceType])
+                                            .filter(resource => resource.include).length
+                                            > 0
+                                            ? "info"
+                                            : "secondary"
                             }>
                             {Object.values(resourcesByType[resourceType]).filter(resource => resource.include).length}
                         </Badge>
@@ -365,7 +369,7 @@
                 <FormGroup>
                     {#each Object.keys(resourcesByType[resourceType]) as key}
                         <Label style="width: 100%">
-                            <Card style="width: 100%">
+                            <Card style="width: 100%; max-width: 100%">
                                 <CardHeader>
                                     <span style="font-size:small">{resourceType}</span>
                                 </CardHeader>
@@ -420,7 +424,7 @@
                         {#if injectedResources[section].resources}
                             {#each Object.keys(injectedResources[section].resources) as key}
                                 <Label style="width: 100%">
-                                    <Card style="width: 100%">
+                                    <Card style="width: 100%; max-width: 100%">
                                         <CardHeader>
                                             <span style="font-size:small">{section}</span>
                                         </CardHeader>
