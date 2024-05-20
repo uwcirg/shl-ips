@@ -71,6 +71,10 @@
     section: undefined,
     resources: undefined
   };
+  let adData: {section: any|undefined; resources: any[]|undefined} = {
+    section: undefined,
+    resources: undefined
+  };
   let resourcesToInject: Record<string, {section: any|undefined; resources: {[key: string]: ResourceHelper}}> = {};
   let patientName = "My";
   let patient: any | undefined;
@@ -104,6 +108,22 @@
       resourcesToInject["Occupational Data for Health"] = odhInjection;
     } else {
       delete resourcesToInject["Occupational Data for Health"];
+    }
+  }
+
+  $: {
+    if (adData.resources || adData.section) {
+      let adInjection: {section: any|undefined; resources: {[key: string]: ResourceHelper}}  = {
+        section: adData.section,
+        resources: {}
+      }
+      adData.resources?.forEach((r) => {
+        let rh = new ResourceHelper(r.resource);
+        adInjection.resources[rh.tempId] = rh;
+      });
+      resourcesToInject["Advance Directives"] = adInjection;
+    } else {
+      delete resourcesToInject["Advance Directives"];
     }
   }
 
@@ -350,6 +370,7 @@
       <TabPane class="ad-tab" tabId="ad" style="padding-top:10px">
         <span class="ad-tab" slot="tab">Advance Directive Search</span>
         <FetchAD
+          bind:adSection={adData.section} bind:adSectionResources={adData.resources}
           on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }>
         </FetchAD>
       </TabPane>

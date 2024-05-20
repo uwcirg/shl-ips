@@ -12,6 +12,9 @@
   import type { ResourceRetrieveEvent } from './types';
   import { createEventDispatcher } from 'svelte';
 
+  export let adSection: any | undefined;
+  export let adSectionResources: any[] | undefined;
+
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
 
   let selectedUrl = "https://qa-rr-fhir.maxmddirect.com";
@@ -48,6 +51,41 @@
   let result: ResourceRetrieveEvent = {
     resources: undefined
   };
+
+  let adSectionTemplate = {
+      title: "Advance Directives",
+      code: {
+          coding: [
+          {
+              system: "http://loinc.org",
+              code: "42348-3",
+              display: "Advance Directives"
+          }
+          ]
+      },
+      entry: []
+  };
+
+  function updateAdSection(resources: any[]) {
+    if (adSection === undefined) {
+      adSection = JSON.parse(JSON.stringify(adSectionTemplate));
+    }
+    if (adSectionResources) {
+      adSectionResources = adSectionResources.concat(resources);
+    } else {
+      adSectionResources = resources.map((r, index) => {
+        r.id = `advance-directive-document-${index+1}`;
+        let entry = {resource: r, fullUrl: `urn:uuid:${r.id}`};
+        return entry;
+      });
+    }
+    adSection.entry = adSectionResources.map((r) => {
+      return {
+        reference: r.fullUrl
+      }
+    });
+    console.log(adSectionResources);
+  }
 
   let summaryUrlValidated: URL | undefined = undefined;
   $: {
@@ -114,6 +152,7 @@
 
   function buildPatientSearchQuery() {
     let query = "?";
+    query += 'active=true&';
     query += dob ? `birthdate=${dob}&` : '';
     query += first ? `given=${first}&` : '';
     query += last ? `family=${last}&` : '';
@@ -124,7 +163,7 @@
     query += city ? `address-city=${city}&` : '';
     query += state ? `address-state=${state}&` : '';
     query += zip ? `address-postalcode=${zip}&` : '';
-    query += 'active=true';
+    query = query.substring(0, query.length - 1);
     return query;
   }
 
@@ -186,29 +225,29 @@
       });
   }
 
-async function injectPdfIntoDocRef(url, attachment) {
-  try {
-    const response = await fetch(url);
-    if (response.ok) {
-      const blob = await response.blob();
-      const reader = new FileReader();
-      reader.onloadend = () => {
-  			console.log(reader.result); // Log the full data URL for debugging
-        attachment.data = reader.result.split(',')[1]; // Base64 encoded data
-      };
-      reader.readAsDataURL(blob);
-/**
-          const arrayBuffer = await response.arrayBuffer();
-          const base64String = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-          attachment.data = base64String;
-*/
-    } else {
-      console.error(`Failed to fetch PDF from ${url}`);
+  async function injectPdfIntoDocRef(url, attachment) {
+    try {
+      const response = await fetch(url);
+      if (response.ok) {
+        const blob = await response.blob();
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          console.log(reader.result); // Log the full data URL for debugging
+          attachment.data = reader.result?.split(',')[1]; // Base64 encoded data
+        };
+        reader.readAsDataURL(blob);
+  /**
+            const arrayBuffer = await response.arrayBuffer();
+            const base64String = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+            attachment.data = base64String;
+  */
+      } else {
+        console.error(`Failed to fetch PDF from ${url}`);
+      }
+    } catch (error) {
+      console.error(`Error fetching PDF from ${url}:`, error);
     }
-  } catch (error) {
-    console.error(`Error fetching PDF from ${url}:`, error);
   }
-}
 
   async function prepareIps() {
     fetchError = '';
@@ -245,14 +284,13 @@ async function injectPdfIntoDocRef(url, attachment) {
           }
         }
       });
-
-      resources.unshift(patient);
-
+      updateAdSection(resources);
+      // resources.unshift(patient);
       result = {
-        resources: resources,
+        resources: [patient], // resources,
         source: hostname
       };
-      console.log(resources);
+      console.log([patient, ...resources]);
       resourceDispatch('update-resources', result);
     } catch (e) {
       processing = false;

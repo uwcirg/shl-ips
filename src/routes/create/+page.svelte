@@ -61,6 +61,10 @@
       goto(`/view/${shl.id}`);
     } else {
       const newShl = await newShlFromShc(detail);
+      newShl.files.map(f => {
+        f.contentEncrypted = f.contentEncrypted.slice(0, 200);
+        return f;
+      });
       $shlStore = [...$shlStore, newShl];
       goto(`/view/${newShl.id}`);
     }
