@@ -51,6 +51,7 @@ function updateDisplayMode(displayMode) {
     update(e, (shlContents.length === 1 ? "" : i));
   });
   if (config.show_demo) {
+    $('#ipsInput').val(JSON.stringify(shlContents[0], null, 2));
     updateFromText();
   }
 };
@@ -203,7 +204,8 @@ function prepareSHLContents(contents) {
         addTab("IPS Demo", "Demo");
         $(Sqrl.Render(template, {index: "Demo"}))
           .appendTo('#rendered-ips');
-        loadSample();
+        $('#ipsInput').val(JSON.stringify(shlContents[0]));
+        updateFromText();
         $("#submit").on('click', updateFromText);
         $('#clearSample').on('click', clearData);
         $("#loadSample").on('click', loadSample);
