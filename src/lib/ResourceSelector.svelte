@@ -310,7 +310,7 @@
                             }
                             content.entry.push(entry);
                             injectedResources[section].section.entry.push({
-                                reference: `${injectedResources[section].resources[rkeys[i]].resource.resourceType}/${entry.fullUrl}`
+                                reference: `${entry.fullUrl}`
                             });
                         }
                     }
@@ -318,6 +318,17 @@
                 }
             })
         }
+        content.entry.map(entry => {
+            if (entry.resource.extension) {
+                entry.resource.extension = entry.resource.extension.filter(function(item) {
+                    return item.url !== "http://hl7.org/fhir/StructureDefinition/narrativeLink";
+                })
+                if (entry.resource.extension.length === 0) {
+                    delete entry.resource.extension
+                }
+            }
+            return entry;
+        })
         ipsDispatch('ips-retrieved', { ips: content });
         submitting = false;
     }

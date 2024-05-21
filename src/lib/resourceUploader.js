@@ -31,7 +31,7 @@ export function getResourcesFromIPS(ips) {
     let entries = ips.entry;
     let resources = [];
     entries.forEach((entry) => {
-        if (entry.resource.resourceType == 'Condition') return; // Omit conditions until ips fhir server is upgraded
+        // if (entry.resource.resourceType == 'Condition') return; // Omit conditions until ips fhir server is upgraded
         if (entry.resource.resourceType == 'Composition') return;
 
         entry.resource.id = entry.fullUrl;
