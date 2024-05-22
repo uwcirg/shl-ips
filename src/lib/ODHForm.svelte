@@ -104,17 +104,15 @@
 
     // Top-level ODH section template
     let odhSectionTemplate = {
-        title: "History of Occupation",
-        code: {
-            coding: [
-            {
-                system: "http://loinc.org",
-                code: "11341-5",
-                display: "History of Occupation"
-            }
-          ]
-        },
-        entry: []
+      title: "Social History",
+      code: {
+        "coding" : [{
+          "system" : "http://loinc.org",
+          "code" : "29762-2",
+          "display": "Social history Narrative"
+        }]
+      },
+      entry: []
     };
 
     // Present job resource template

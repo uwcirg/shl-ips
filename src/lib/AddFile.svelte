@@ -105,9 +105,9 @@
         let rh = new ResourceHelper(r.resource);
         odhInjection.resources[rh.tempId] = rh;
       });
-      resourcesToInject["Occupational Data for Health"] = odhInjection;
+      resourcesToInject["Social History"] = odhInjection;
     } else {
-      delete resourcesToInject["Occupational Data for Health"];
+      delete resourcesToInject["Social History"];
     }
   }
 

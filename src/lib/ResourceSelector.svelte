@@ -13,6 +13,8 @@
         Input,
         Label,
         Row } from 'sveltestrap';
+    import { ResourceHelper, type IPSRetrieveEvent } from './types';
+
     import AdvanceDirective from './resource-templates/AdvanceDirective.svelte';
     import AllergyIntolerance from './resource-templates/AllergyIntolerance.svelte';
     import Condition from './resource-templates/Condition.svelte';
@@ -28,8 +30,7 @@
     import Practitioner from './resource-templates/Practitioner.svelte';
     import Problem from './resource-templates/Problem.svelte';
     import Procedure from './resource-templates/Procedure.svelte';
-    import { ResourceHelper, type IPSRetrieveEvent } from './types';
-    import OccupationalDataForHealth from './resource-templates/OccupationalDataForHealth.svelte';
+    import SocialHistory from './resource-templates/SocialHistory.svelte';
 
     export let newResources: Array<any> | undefined;
     export let submitting: boolean;
@@ -53,7 +54,7 @@
         "Practitioner": Practitioner,
         "Problem": Problem,
         "Procedure": Procedure,
-        "Occupational Data for Health": OccupationalDataForHealth,
+        "Social History": SocialHistory,
         "Advance Directives": AdvanceDirective
     };
 
@@ -297,11 +298,22 @@
             }
         });
         content = await contentResponse.json();
+
+        // Add injected resources to existing IPS
         if (content && injectedResources) {
             Object.keys(injectedResources).forEach((section) => {
                 if (injectedResources[section].section) {
                     injectedResources[section].section.entry = [];
                     let rkeys = Object.keys(injectedResources[section].resources);
+                    let sectionToUse = injectedResources[section].section;
+                    let injectingSection = true;
+                    content.entry[0].resource.section.forEach(section => {
+                        if (section.code.coding[0].code === sectionToUse.code.coding[0].code) {
+                            sectionToUse = section;
+                            injectingSection = false;
+                        }
+                    });
+
                     for (let i=0; i < rkeys.length; i++) {
                         if (injectedResources[section].resources[rkeys[i]].include) {
                             let entry = {
@@ -309,12 +321,14 @@
                                 fullUrl: `urn:uuid:${injectedResources[section].resources[rkeys[i]].resource.id}`
                             }
                             content.entry.push(entry);
-                            injectedResources[section].section.entry.push({
+                            sectionToUse.entry.push({
                                 reference: `${entry.fullUrl}`
                             });
                         }
                     }
-                    content.entry[0].resource.section.push(injectedResources[section].section);
+                    if (injectingSection) {
+                        content.entry[0].resource.section.push(sectionToUse);
+                    }
                 }
             })
         }
