@@ -13,6 +13,8 @@
         Input,
         Label,
         Row } from 'sveltestrap';
+    import { ResourceHelper, type IPSRetrieveEvent } from './types';
+
     import AdvanceDirective from './resource-templates/AdvanceDirective.svelte';
     import AllergyIntolerance from './resource-templates/AllergyIntolerance.svelte';
     import Condition from './resource-templates/Condition.svelte';
@@ -28,8 +30,7 @@
     import Practitioner from './resource-templates/Practitioner.svelte';
     import Problem from './resource-templates/Problem.svelte';
     import Procedure from './resource-templates/Procedure.svelte';
-    import { ResourceHelper, type IPSRetrieveEvent } from './types';
-    import OccupationalDataForHealth from './resource-templates/OccupationalDataForHealth.svelte';
+    import SocialHistory from './resource-templates/SocialHistory.svelte';
 
     export let newResources: Array<any> | undefined;
     export let submitting: boolean;
@@ -37,11 +38,11 @@
     export let injectedResources: Record<string, {section: any|undefined; resources: { [key: string]: ResourceHelper }}>;
 
     const components: Record<string, any> = {
-        "DocumentReference": AdvanceDirective,
-        "Consent": AdvanceDirective,
         "AllergyIntolerance": AllergyIntolerance,
         "Condition": Condition,
+        "Consent": AdvanceDirective,
         "DiagnosticReport": DiagnosticReport,
+        "DocumentReference": AdvanceDirective,
         "Immunization": Immunization,
         "Location": Location,
         "Medication": Medication,
@@ -53,7 +54,8 @@
         "Practitioner": Practitioner,
         "Problem": Problem,
         "Procedure": Procedure,
-        "Occupational Data for Health": OccupationalDataForHealth
+        "Social History": SocialHistory,
+        "Advance Directives": AdvanceDirective
     };
 
     const ipsDispatch = createEventDispatcher<{ 'ips-retrieved': IPSRetrieveEvent }>();
@@ -87,7 +89,13 @@
             });
         }
     }
+    $: patientBadgeColor = Object.values(patients).length > 1 ? "danger" : "secondary";
 
+    /**
+     * Adds a resource to the storage of resources. If the resource already exists in the storage, it will not be added again.
+     * @param resource The resource to add.
+     * @param resourceHelperStorage The storage object to add the resource to.
+     */
     function addResource(resource:ResourceHelper, resourceHelperStorage:{[key:string]: ResourceHelper}) {
         if (!(resource.tempId in resourceHelperStorage)) {
             resourceHelperStorage[resource.tempId] = resource;
@@ -98,6 +106,11 @@
         }
     }
 
+    /**
+     * Adds a list of resources to the storage of resources. If a resource already exists in the storage, it will not be added again.
+     * @param resources The list of resources to add.
+     * @param resourceHelperStorage The storage object to add the resources to.
+     */
     function addResources(resources:ResourceHelper[] | undefined, resourceHelperStorage:{[key:string]: ResourceHelper}) {
         if (resources != undefined) {
             let newAndOldResources = Object.values(resourceHelperStorage).concat(resources).sort(sortResources);
@@ -114,6 +127,10 @@
         }
     }
 
+    /**
+     * Updates the selected patient with the new patient resource.
+     * @param newPatient The new patient resource.
+     */
     function updatePatient(newPatient:ResourceHelper) {
         if (patients[newPatient.tempId] == undefined) {
             patients[newPatient.tempId] = newPatient;
@@ -126,6 +143,11 @@
         patientReference = `Patient/${newPatient.resource.id}`;
     }
 
+    /**
+     * Sets the patient reference on each resource in the list of resources.
+     * @param resources The list of resources to set the patient references on.
+     * @returns The list of resources with the patient references set.
+     */
     function setPatientRefs(resources:ResourceHelper[]) {
         return resources.map(r => {
             if (r.resource.subject) {
@@ -137,12 +159,22 @@
         });
     }
 
+    /**
+     * Gets the list of resources that are selected for upload.
+     * @returns The list of selected resources.
+     */
     function getSelectedResources() {
         let selectedPatient = Object.values(patients).filter(patient => patient.include);
         let selectedResources = Object.values(resources).filter(resource => resource.include);
         return selectedPatient.concat(selectedResources);
     }
 
+    /**
+     * Compares two resources and sorts them by resourceType, if the resourceType is the same, it will compare the occurrenceDateTime and vaccineCode.text
+     * @param a The first resource to compare.
+     * @param b The second resource to compare.
+     * @returns -1 if a is less than b, 1 if a is greater than b, and 0 if they are the same.
+     */
     function sortResources(a:ResourceHelper, b:ResourceHelper) {
         let aR = a.resource;
         let bR = b.resource;
@@ -180,10 +212,19 @@
         return 0;
     }
 
+    /**
+     * Updates the {@link newResources} array with the combined resources of all patients and non-patient resources.
+     * This is used to generate the bundle to be exported.
+     */
     function updateResourceExports() {
         newResources = Object.values(patients).map(rh => rh.resource).concat(Object.values(resources).map(rh => rh.resource));
     }
 
+    /**
+     * Adds the new resources to the combined resources of all patients and non-patient resources.
+     * This is used to generate the bundle to be exported.
+     * @param newResources The new resources to add.
+     */
     function addNewResources(newResources:any[]) {
         if (newResources) {
             newResources = newResources.filter(r => {
@@ -217,6 +258,11 @@
         return;
     }
 
+    /**
+     * Sets the patient reference on each resource in the list of resources and returns the list of resources.
+     * @param resources The list of resources to set the patient references on.
+     * @returns The list of resources with the patient references set.
+     */
     function prepareResources(resources:ResourceHelper[]) {
         resources = setPatientRefs(resources);
         return resources.map(rh => {
@@ -224,6 +270,10 @@
         });
     }
 
+    /**
+     * Confirms the IPS content, then uploads the selected resources,
+     * fetches the IPS, and calls the event dispatcher to pass the IPS to the parent component.
+     */
     async function confirm() {
         submitting = true;
         statusDispatch("status-update", "Preparing");
@@ -248,27 +298,51 @@
             }
         });
         content = await contentResponse.json();
+
+        // Add injected resources to existing IPS
         if (content && injectedResources) {
             Object.keys(injectedResources).forEach((section) => {
                 if (injectedResources[section].section) {
                     injectedResources[section].section.entry = [];
                     let rkeys = Object.keys(injectedResources[section].resources);
+                    let sectionToUse = injectedResources[section].section;
+                    let injectingSection = true;
+                    content.entry[0].resource.section.forEach(section => {
+                        if (section.code.coding[0].code === sectionToUse.code.coding[0].code) {
+                            sectionToUse = section;
+                            injectingSection = false;
+                        }
+                    });
+
                     for (let i=0; i < rkeys.length; i++) {
                         if (injectedResources[section].resources[rkeys[i]].include) {
                             let entry = {
                                 resource: injectedResources[section].resources[rkeys[i]].resource,
-                                fullUrl: injectedResources[section].resources[rkeys[i]].resource.id
+                                fullUrl: `urn:uuid:${injectedResources[section].resources[rkeys[i]].resource.id}`
                             }
                             content.entry.push(entry);
-                            injectedResources[section].section.entry.push({
-                                reference: `${injectedResources[section].resources[rkeys[i]].resource.resourceType}/${entry.fullUrl}`
+                            sectionToUse.entry.push({
+                                reference: `${entry.fullUrl}`
                             });
                         }
                     }
-                    content.entry[0].resource.section.push(injectedResources[section].section);
+                    if (injectingSection) {
+                        content.entry[0].resource.section.push(sectionToUse);
+                    }
                 }
             })
         }
+        content.entry.map(entry => {
+            if (entry.resource.extension) {
+                entry.resource.extension = entry.resource.extension.filter(function(item) {
+                    return item.url !== "http://hl7.org/fhir/StructureDefinition/narrativeLink";
+                })
+                if (entry.resource.extension.length === 0) {
+                    delete entry.resource.extension
+                }
+            }
+            return entry;
+        })
         ipsDispatch('ips-retrieved', { ips: content });
         submitting = false;
     }
@@ -289,18 +363,21 @@
     <Label>Select which resources to include in your customized IPS</Label>
     <Accordion>
         {#each Object.keys(resourcesByType) as resourceType}
-            {#if resourceType !== "Patient" || Object.keys(patients).length > 1}
-                <AccordionItem on:toggle={updateBadge(resourceType)}>
-                    <span slot="header">
-                        {#if resourceType === "Patient"}
-                            Patients <Badge color={patientBadgeColor}>{Object.values(patients).length}</Badge>
-                        {:else}
-                            {`${resourceType}s`}
-                            <Badge
-                                positioned
-                                class="mx-1"
-                                color={
-                                    Object.values(resourcesByType[resourceType])
+            <AccordionItem on:toggle={updateBadge(resourceType)}>
+                <span slot="header">
+                    {#if resourceType === "Patient"}
+                        Patients <Badge color={patientBadgeColor}>{Object.values(patients).length}</Badge>
+                    {:else}
+                        {`${resourceType}s`}
+                        <Badge
+                            positioned
+                            class="mx-1"
+                            color={
+                                Object.values(resourcesByType[resourceType])
+                                    .filter(resource => resource.include).length
+                                    == Object.keys(resourcesByType[resourceType]).length
+                                    ? "primary"
+                                    : Object.values(resourcesByType[resourceType])
                                         .filter(resource => resource.include).length
                                         == Object.keys(resourcesByType[resourceType]).length
                                         ? "primary"
@@ -309,44 +386,43 @@
                                             > 0
                                             ? "info"
                                             : "secondary"
-                                }>
-                                {Object.values(resourcesByType[resourceType]).filter(resource => resource.include).length}
-                            </Badge>
-                        {/if}
-                    </span>
-                    <FormGroup>
-                        {#each Object.keys(resourcesByType[resourceType]) as key}
-                            <Label style="width: 100%">
-                                <Card style="width: 100%; max-width: 100%">
-                                    <CardHeader>
-                                        <span style="font-size:small">{resourceType}</span>
-                                    </CardHeader>
-                                    <CardBody>
-                                        <Row>
-                                            <Col xs=auto style="vertical-align:baseline">
-                                                {#if resourceType === "Patient"}
-                                                    <Input id={key} type="radio" bind:group={selectedPatient} value={key} />
-                                                {:else}
-                                                    <Input id={key} type="checkbox" bind:checked={resourcesByType[resourceType][key].include} value={key} />
-                                                {/if}
-                                            </Col>
-                                            <Col>
-                                                {#if resourceType in components}
-                                                    <svelte:component this={components[resourceType]} resource={resourcesByType[resourceType][key].resource} />
-                                                {:else if resourcesByType[resourceType][key].resource.text?.div}
-                                                    {@html resourcesByType[resourceType][key].resource.text?.div}
-                                                {:else}
-                                                    {resourcesByType[resourceType][key].tempId}
-                                                {/if}
-                                            </Col>
-                                        </Row>
-                                    </CardBody>
-                                </Card>
-                            </Label>
-                        {/each}
-                    </FormGroup>
-                </AccordionItem>
-            {/if}
+                            }>
+                            {Object.values(resourcesByType[resourceType]).filter(resource => resource.include).length}
+                        </Badge>
+                    {/if}
+                </span>
+                <FormGroup>
+                    {#each Object.keys(resourcesByType[resourceType]) as key}
+                        <Label style="width: 100%">
+                            <Card style="width: 100%; max-width: 100%">
+                                <CardHeader>
+                                    <span style="font-size:small">{resourceType}</span>
+                                </CardHeader>
+                                <CardBody>
+                                    <Row>
+                                        <Col xs=auto style="vertical-align:baseline">
+                                            {#if resourceType === "Patient"}
+                                                <Input id={key} type="radio" bind:group={selectedPatient} value={key} />
+                                            {:else}
+                                                <Input id={key} type="checkbox" bind:checked={resourcesByType[resourceType][key].include} value={key} />
+                                            {/if}
+                                        </Col>
+                                        <Col>
+                                            {#if resourceType in components}
+                                                <svelte:component this={components[resourceType]} resource={resourcesByType[resourceType][key].resource} />
+                                            {:else if resourcesByType[resourceType][key].resource.text?.div}
+                                                {@html resourcesByType[resourceType][key].resource.text?.div}
+                                            {:else}
+                                                {resourcesByType[resourceType][key].tempId}
+                                            {/if}
+                                        </Col>
+                                    </Row>
+                                </CardBody>
+                            </Card>
+                        </Label>
+                    {/each}
+                </FormGroup>
+            </AccordionItem>
         {/each}
     {#if injectedResources}
         {#each Object.keys(injectedResources) as section}
@@ -407,3 +483,4 @@
     {/if}
     </Accordion>
 </AccordionItem>
+

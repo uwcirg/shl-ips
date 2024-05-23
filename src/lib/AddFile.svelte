@@ -21,6 +21,7 @@
   import FetchUrl from './FetchUrl.svelte';
   import FetchFile from './FetchFile.svelte';
   import FetchSoF from './FetchSoF.svelte';
+  import FetchAD from './FetchAD.svelte';
   import ODHForm from './ODHForm.svelte';
   import ResourceSelector from './ResourceSelector.svelte';
   import { verify } from './shcDecoder.js';
@@ -70,6 +71,10 @@
     section: undefined,
     resources: undefined
   };
+  let adData: {section: any|undefined; resources: any[]|undefined} = {
+    section: undefined,
+    resources: undefined
+  };
   let resourcesToInject: Record<string, {section: any|undefined; resources: {[key: string]: ResourceHelper}}> = {};
   let patientName = "My";
   let patient: any | undefined;
@@ -100,9 +105,25 @@
         let rh = new ResourceHelper(r.resource);
         odhInjection.resources[rh.tempId] = rh;
       });
-      resourcesToInject["Occupational Data for Health"] = odhInjection;
+      resourcesToInject["Social History"] = odhInjection;
     } else {
-      delete resourcesToInject["Occupational Data for Health"];
+      delete resourcesToInject["Social History"];
+    }
+  }
+
+  $: {
+    if (adData.resources || adData.section) {
+      let adInjection: {section: any|undefined; resources: {[key: string]: ResourceHelper}}  = {
+        section: adData.section,
+        resources: {}
+      }
+      adData.resources?.forEach((r) => {
+        let rh = new ResourceHelper(r.resource);
+        adInjection.resources[rh.tempId] = rh;
+      });
+      resourcesToInject["Advance Directives"] = adInjection;
+    } else {
+      delete resourcesToInject["Advance Directives"];
     }
   }
 
@@ -346,10 +367,17 @@
           on:ips-retrieved={ async ({ detail }) => { stageRetrievedIPS(detail) } }>
         </FetchFile>
       </TabPane>
+      <TabPane class="ad-tab" tabId="ad" style="padding-top:10px">
+        <span class="ad-tab" slot="tab">Advance Directive Search</span>
+        <FetchAD
+          bind:adSection={adData.section} bind:adSectionResources={adData.resources}
+          on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }>
+        </FetchAD>
+      </TabPane>
     </TabContent>
   </AccordionItem>
   {#if resourcesToReview.length > 0}
-    <AccordionItem active class="odh-data">
+    <AccordionItem class="odh-data">
       <h5 slot="header" class="my-2">2. Add health-related occupational information</h5>
       <Label>It may be helpful to include information about the work you do in your medical summary</Label>
       <ODHForm bind:odhSection={odhData.section} bind:odhSectionResources={odhData.resources} />

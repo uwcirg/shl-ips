@@ -384,8 +384,8 @@ function update(ips, index) {
               });
             }
           });
-        } else if (section.code.coding[0].code == "11341-5") {
-          console.log('History of Occupation Section');
+        } else if (section.code.coding[0].code == "29762-2") {
+          console.log('Social History Section');
           section.odh = {
             "all": [],
             "status": [],
@@ -419,7 +419,7 @@ function update(ips, index) {
                 break;
             }
           })
-          render("HistoryOfOccupation", section, `HistoryOfOccupation${index}`);
+          render("SocialHistory", section, `SocialHistory${index}`);
         } else {
           render("Other", section, `Other${index}`);
           console.log(`Section with code: ${section.code.coding[0].code} not rendered since no template`);
