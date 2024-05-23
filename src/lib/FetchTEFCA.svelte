@@ -12,19 +12,26 @@
   import type { ResourceRetrieveEvent } from './types';
   import { createEventDispatcher } from 'svelte';
 
-  export let adSection: any | undefined;
-  export let adSectionResources: any[] | undefined;
-
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
 
-  let selectedUrl = "https://qa-rr-fhir.maxmddirect.com";
+  let sources = {
+    Meld: {selected: false, destination: "Meld", url: "https://gw.interop.community/HeliosConnectathonSa/open"},
+    JMCHelios: {selected: false, destination: "JMCHelios", url: "https://gw.interop.community/JMCHeliosSTISandbox/open"},
+    OpenEpic: {selected: false, destination: "OpenEpic", url: ""},
+    CernerHelios: {selected: false, destination: "CernerHelios", url: ""},
+    PublicHapi: {selected: false, destination: "PublicHapi", url: "http://hapi.fhir.org/baseR4"}
+  }
+
+  let baseUrl = "https://concept01.ehealthexchange.org:52780/fhirproxy/r4";
+  let selectedSource = "Meld";
+  let method = 'destination';
   let processing = false;
   let fetchError = '';
 
   let mrn = '';
-  let first = 'Betsy';
-  let last = 'Smith-Johnson';
-  let dob = '1950-11-15';
+  let first = '';
+  let last = '';
+  let dob = '';
   let address1 = '';
   let address2 = '';
   let city = '';
@@ -52,51 +59,47 @@
     resources: undefined
   };
 
-  let adSectionTemplate = {
-      title: "Advance Directives",
-      code: {
-          coding: [
-          {
-              system: "http://loinc.org",
-              code: "42348-3",
-              display: "Advance Directives"
-          }
-          ]
-      },
-      entry: []
-  };
-
-  function updateAdSection(resources: any[]) {
-    if (adSection === undefined) {
-      adSection = JSON.parse(JSON.stringify(adSectionTemplate));
-    }
-    if (adSectionResources) {
-      adSectionResources = adSectionResources.concat(resources);
-    } else {
-      adSectionResources = resources.map((r, index) => {
-        r.id = `advance-directive-document-${index+1}`;
-        let entry = {resource: r, fullUrl: `urn:uuid:${r.id}`};
-        return entry;
-      });
-    }
-    adSection.entry = adSectionResources.map((r) => {
-      return {
-        reference: r.fullUrl
-      }
-    });
-    console.log(adSectionResources);
-  }
-
-  let summaryUrlValidated: URL | undefined = undefined;
   $: {
-    setSummaryUrlValidated(selectedUrl);
-  }
-
-  function setSummaryUrlValidated(url: string) {
-    try {
-      summaryUrlValidated = new URL(url);
-    } catch {
-      summaryUrlValidated = undefined;
+    if (selectedSource) {
+      mrn = '';
+      first = '';
+      last = '';
+      dob = '';
+      address1 = '';
+      address2 = '';
+      city = '';
+      state = '';
+      zip = '';
+      phone = '';
+      gender = '';
+      if (selectedSource === 'Meld') {
+        last = "BLACKSTONE";
+        first = "VERONICA";
+        gender = "Female";
+        dob = "1998-06-18";
+      } else if (selectedSource === 'JMCHelios') {
+        last = "JMC";
+        first = "Chlamydia";
+        gender = "Male";
+        dob = "2001-05-07";
+      } else if (selectedSource === 'OpenEpic') {
+        last = "Lopez";
+        first = "Camila";
+        gender = "Female";
+        dob = "1987-09-12";
+      } else if (selectedSource === 'CernerHelios') {
+        last = "Hill";
+        first = "Cucumber";
+        gender = "Female";
+        dob = "2023-08-29";
+      } else if (selectedSource === 'PublicHapi') {
+        last = "Sanity";
+        first = "TestforPatientR4";
+        gender = "Male";
+        dob = "1919-11-03";
+        city = "Pune";
+        state = "MH";
+      }
     }
   }
 
@@ -146,12 +149,12 @@
         }
       ]
     };
+
     return patient;
   }
 
   function buildPatientSearchQuery() {
     let query = "?";
-    query += 'active=true&';
     query += dob ? `birthdate=${dob}&` : '';
     query += first ? `given=${first}&` : '';
     query += last ? `family=${last}&` : '';
@@ -168,33 +171,48 @@
 
   async function fetchPatient(patient: any) {
     let result;
-    try {
-      result = await fetch(`${selectedUrl}/Patient/$match`, {
-        method: 'POST',
-        headers: { accept: 'application/json' },
-        body: JSON.stringify(patient)
-      }).then(function (response: any) {
-        if (!response.ok) {
-          // make the promise be rejected if we didn't get a 2xx response
-          throw new Error('Unable to fetch patient data', { cause: response });
-        } else {
-          return response;
-        }
-      });
-    } catch (e) {
-      let query = buildPatientSearchQuery();
-      result = await fetch(`${selectedUrl}/Patient${query}`, {
-        method: 'GET',
-        headers: { accept: 'application/json' },
-      }).then(function (response: any) {
-        if (!response.ok) {
-          // make the promise be rejected if we didn't get a 2xx response
-          throw new Error('Unable to fetch patient data', { cause: response });
-        } else {
-          return response;
-        }
-      });
+    
+    let url = baseUrl;
+    let headers = {
+      accept: 'application/json+fhir',
+      'Content-Type': 'application/fhir+json; charset=UTF-8',
+      'prefer': 'return=representation'
+    };
+    if (method === 'url') {
+      url = sources[selectedSource].url;
+    } else if (method === 'destination') {
+      headers['X-Request-Id'] = '5c92758f-79c8-4137-b104-9c0064205407',
+      headers['X-DESTINATION'] = selectedSource,
+      headers['X-POU'] = 'PUBHLTH'
     }
+    
+    result = await fetch(`${url}/Patient/$match`, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(patient)
+    }).then(function (response: any) {
+      if (!response.ok) {
+        // make the promise be rejected if we didn't get a 2xx response
+        throw new Error('Unable to fetch patient data', { cause: response });
+      } else {
+        return response;
+      }
+    }).catch(function (error: any) {
+      console.warn(error);
+      let query = buildPatientSearchQuery();
+      result = fetch(`${url}/Patient${query}`, {
+        method: 'GET',
+        headers: headers
+      }).then(function (response: any) {
+        if (!response.ok) {
+          // make the promise be rejected if we didn't get a 2xx response
+          throw new Error('Unable to fetch patient data', { cause: response });
+        } else {
+          return response;
+        }
+      });
+      return result;
+    });
     let body = await result.json();
     if (body.resourceType == 'Bundle' && (body.total == 0 || body.entry.length === 0)) {
       throw new Error('Unable to find patient');
@@ -203,49 +221,32 @@
     return patient_response;
   }
 
-  function buildAdvanceDirectiveSearchQuery(patient_id: any) {
-    let query = "?";
-    query += patient_id ? `subject=${patient_id}&` : '';
-    return query.substring(0, query.length - 1);
-  }
-
-  async function fetchAdvanceDirective(patient: any) {
-    let query = buildAdvanceDirectiveSearchQuery(patient);
-    return result = await fetch(`${selectedUrl}/DocumentReference${query}`, {
+  async function fetchPatientData(patientId: any) {
+    // let query = buildAdvanceDirectiveSearchQuery(patientId);
+    let url = baseUrl;
+    let headers = {
+      accept: 'application/json+fhir',
+      'Content-Type': 'application/fhir+json; charset=UTF-8',
+      'prefer': 'return=representation'
+    };
+    if (method === 'url') {
+      url = sources[selectedSource].url;
+    } else if (method === 'destination') {
+      headers['X-Request-Id'] = '5c92758f-79c8-4137-b104-9c0064205407',
+      headers['X-DESTINATION'] = selectedSource,
+      headers['X-POU'] = 'PUBHLTH'
+    }
+    return result = await fetch(`${url}/Patient/${patientId}/$everything`, {
         method: 'GET',
-        headers: { accept: 'application/json' }
+        headers: headers
       }).then(function (response: any) {
         if (!response.ok) {
           // make the promise be rejected if we didn't get a 2xx response
-          throw new Error('Unable to fetch advance directive data', { cause: response });
+          throw new Error('Unable to fetch patient data', { cause: response });
         } else {
           return response;
         }
       });
-  }
-
-  async function injectPdfIntoDocRef(url, attachment) {
-    try {
-      const response = await fetch(url);
-      if (response.ok) {
-        const blob = await response.blob();
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          console.log(reader.result); // Log the full data URL for debugging
-          attachment.data = reader.result?.split(',')[1]; // Base64 encoded data
-        };
-        reader.readAsDataURL(blob);
-  /**
-            const arrayBuffer = await response.arrayBuffer();
-            const base64String = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-            attachment.data = base64String;
-  */
-      } else {
-        console.error(`Failed to fetch PDF from ${url}`);
-      }
-    } catch (error) {
-      console.error(`Error fetching PDF from ${url}:`, error);
-    }
   }
 
   async function prepareIps() {
@@ -255,41 +256,22 @@
       let content;
       let hostname;
       const patient = await fetchPatient(constructPatient());
-      const contentResponse = await fetchAdvanceDirective(patient.id);
+      const contentResponse = await fetchPatientData(patient.id);
       content = await contentResponse.json();
-      hostname = selectedUrl;
+      hostname = baseUrl;
       processing = false;
       let resources = content.entry ? content.entry.map((e) => {
         return e.resource;
       }) : [];
       if (resources.length === 0) {
-        console.warn("No advance directives found for patient "+patient.id);
+        console.warn(`No resources found for patient ${patient.id} at ${hostname} for ${selectedSource}`);
       }
 
-      // If resource.category doesn't exist, ignore the DR - DR's w/out that are simply signature DR's.
-      // Lambda function to check if resource.category exists
-      const nonSignatureDR = dr => dr.category !== undefined;
-      // Filter out resources that don't have a category
-      resources = resources.filter(nonSignatureDR);
-
-      // if one of the DR's `content` elements has attachment.contentType = 'application/pdf', download if possible, put base64 of pdf in DR.content.attachment.data
-      const hasPdfContent = dr => dr.content && dr.content.some(content => content.attachment && content.attachment.contentType === 'application/pdf');
-
-      resources.forEach(async dr => {
-        if (hasPdfContent(dr)) {
-          const pdfContent = dr.content.find(content => content.attachment && content.attachment.contentType === 'application/pdf');
-          if (pdfContent && pdfContent.attachment && pdfContent.attachment.url) {
-            await injectPdfIntoDocRef (pdfContent.attachment.url, pdfContent.attachment);
-          }
-        }
-      });
-      updateAdSection(resources);
-      // resources.unshift(patient);
       result = {
-        resources: [patient], // resources,
+        resources: resources,
         source: hostname
       };
-      console.log([patient, ...resources]);
+      console.log(resources);
       resourceDispatch('update-resources', result);
     } catch (e) {
       processing = false;
@@ -302,17 +284,33 @@
 <form on:submit|preventDefault={() => prepareIps()}>
   <FormGroup>
     <Row>
-      <Row class="mx-2">
-        <Input type="radio" bind:group={selectedUrl} value="https://qa-rr-fhir.maxmddirect.com" label="AD Vault" />
-      </Row>
-      <Row class="mx-2">
-        <Input type="radio" bind:group={selectedUrl} value="https://fhir.ips-demo.dev.cirg.uw.edu/fhir" label="WA Verify+ Demo Server" />
-      </Row>
+      <Col>
+        {#each Object.keys(sources) as source}
+          <Row class="mx-2">
+            <Input type="radio" bind:group={selectedSource} value={sources[source].destination} label={source} />
+          </Row>
+        {/each}
+      </Col>
+      <Col>
+        <FormGroup style="font-size:small" class="text-secondary" label="Method">
+          <Input type="select" bind:value={method}>
+            <option value='destination' style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
+              TEFCA Proxy Query
+            </option>
+            <option value='url' style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
+              Direct Query
+            </option>
+          </Input>
+        </FormGroup>
+        {#if method === 'destination'}
+        <p style="font-size:small" class="text-danger">Please <a href="https://concept01.ehealthexchange.org:52780/" target="_blank" rel="noreferrer">click here</a> and trust the site in your browser to perform this proxied query</p>
+        {/if}
+      </Col>
     </Row>
   </FormGroup>
-  {#if selectedUrl}
+  {#if selectedSource}
   <FormGroup>
-    <Label>Enter your information to fetch an advance directive</Label>
+    <Label>Enter your information to locate your data</Label>
     <p class="text-secondary"><em>WA Verify+ does not save this information</em></p>
     <Row cols={{ md: 2, sm: 1 }}>
       <Col>
