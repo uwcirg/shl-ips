@@ -24,7 +24,7 @@
 
   let baseUrl = "https://concept01.ehealthexchange.org:52780/fhirproxy/r4";
   let selectedSource = "Meld";
-  let method = 'destination';
+  let method = 'destination'; // url or destination
   let processing = false;
   let fetchError = '';
 
@@ -282,6 +282,7 @@
 </script>
 
 <form on:submit|preventDefault={() => prepareIps()}>
+  <Label>Fetch US Core data via TEFCA query</Label>
   <FormGroup>
     <Row>
       <Col>

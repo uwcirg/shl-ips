@@ -17,14 +17,18 @@
 
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
 
-  let selectedUrl = "https://qa-rr-fhir.maxmddirect.com";
+  let sources = {
+    "AD Vault": {selected: false, url: "https://qa-rr-fhir.maxmddirect.com"},
+    "WA Verify+ Demo Server": {selected: false, url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir"}
+  }
+  let selectedSource = "AD Vault";
   let processing = false;
   let fetchError = '';
 
   let mrn = '';
-  let first = 'Betsy';
-  let last = 'Smith-Johnson';
-  let dob = '1950-11-15';
+  let first = '';
+  let last = '';
+  let dob = '';
   let address1 = '';
   let address2 = '';
   let city = '';
@@ -66,18 +70,46 @@
       entry: []
   };
 
+  $: {
+    if (selectedSource) {
+      mrn = '';
+      first = '';
+      last = '';
+      dob = '';
+      address1 = '';
+      address2 = '';
+      city = '';
+      state = '';
+      zip = '';
+      phone = '';
+      gender = '';
+      if (selectedSource === 'AD Vault') {
+        last = "Smith-Johnson";
+        first = "Betsy";
+        gender = "Female";
+        dob = "1950-11-15";
+      } else if (selectedSource === 'WA Verify+ Demo Server') {
+        last = "deBronkartTest";
+        first = "DaveTest";
+        gender = "Male";
+        dob = "1951-01-20";
+      }
+    }
+  }
+
   function updateAdSection(resources: any[]) {
     if (adSection === undefined) {
       adSection = JSON.parse(JSON.stringify(adSectionTemplate));
     }
-    if (adSectionResources) {
-      adSectionResources = adSectionResources.concat(resources);
-    } else {
-      adSectionResources = resources.map((r, index) => {
+    let resourcesAsEntries = resources.map((r, index) => {
         r.id = `advance-directive-document-${index+1}`;
         let entry = {resource: r, fullUrl: `urn:uuid:${r.id}`};
         return entry;
       });
+    if (adSectionResources) {
+      adSectionResources = adSectionResources.concat(resourcesAsEntries);
+    } else {
+      adSectionResources = resourcesAsEntries;
     }
     adSection.entry = adSectionResources.map((r) => {
       return {
@@ -89,12 +121,12 @@
 
   let summaryUrlValidated: URL | undefined = undefined;
   $: {
-    setSummaryUrlValidated(selectedUrl);
+    setSummaryUrlValidated(selectedSource);
   }
 
-  function setSummaryUrlValidated(url: string) {
+  function setSummaryUrlValidated(source: string) {
     try {
-      summaryUrlValidated = new URL(url);
+      summaryUrlValidated = new URL(sources[source].url);
     } catch {
       summaryUrlValidated = undefined;
     }
@@ -151,7 +183,9 @@
 
   function buildPatientSearchQuery() {
     let query = "?";
-    query += 'active=true&';
+    if (selectedSource === 'AD Vault') {
+      query += 'active=true&'; 
+    }
     query += dob ? `birthdate=${dob}&` : '';
     query += first ? `given=${first}&` : '';
     query += last ? `family=${last}&` : '';
@@ -169,7 +203,7 @@
   async function fetchPatient(patient: any) {
     let result;
     try {
-      result = await fetch(`${selectedUrl}/Patient/$match`, {
+      result = await fetch(`${sources[selectedSource].url}/Patient/$match`, {
         method: 'POST',
         headers: { accept: 'application/json' },
         body: JSON.stringify(patient)
@@ -183,7 +217,7 @@
       });
     } catch (e) {
       let query = buildPatientSearchQuery();
-      result = await fetch(`${selectedUrl}/Patient${query}`, {
+      result = await fetch(`${sources[selectedSource].url}/Patient${query}`, {
         method: 'GET',
         headers: { accept: 'application/json' },
       }).then(function (response: any) {
@@ -211,7 +245,7 @@
 
   async function fetchAdvanceDirective(patient: any) {
     let query = buildAdvanceDirectiveSearchQuery(patient);
-    return result = await fetch(`${selectedUrl}/DocumentReference${query}`, {
+    return result = await fetch(`${sources[selectedSource].url}/DocumentReference${query}`, {
         method: 'GET',
         headers: { accept: 'application/json' }
       }).then(function (response: any) {
@@ -257,7 +291,7 @@
       const patient = await fetchPatient(constructPatient());
       const contentResponse = await fetchAdvanceDirective(patient.id);
       content = await contentResponse.json();
-      hostname = selectedUrl;
+      hostname = sources[selectedSource].url;
       processing = false;
       let resources = content.entry ? content.entry.map((e) => {
         return e.resource;
@@ -273,7 +307,7 @@
       resources = resources.filter(nonSignatureDR);
 
       // if one of the DR's `content` elements has attachment.contentType = 'application/pdf', download if possible, put base64 of pdf in DR.content.attachment.data
-      const hasPdfContent = dr => dr.content && dr.content.some(content => content.attachment && content.attachment.contentType === 'application/pdf');
+      const hasPdfContent = dr => dr.content && dr.content.some(content => content.attachment && content.attachment.contentType === 'application/pdf' && !content.attachment.data);
 
       resources.forEach(async dr => {
         if (hasPdfContent(dr)) {
@@ -300,19 +334,20 @@
 </script>
 
 <form on:submit|preventDefault={() => prepareIps()}>
+  <Label>Fetch Advance Directives to include in your summary</Label><br>
+  <Label>Select a source to search:</Label>
   <FormGroup>
     <Row>
-      <Row class="mx-2">
-        <Input type="radio" bind:group={selectedUrl} value="https://qa-rr-fhir.maxmddirect.com" label="AD Vault" />
-      </Row>
-      <Row class="mx-2">
-        <Input type="radio" bind:group={selectedUrl} value="https://fhir.ips-demo.dev.cirg.uw.edu/fhir" label="WA Verify+ Demo Server" />
-      </Row>
+      {#each Object.keys(sources) as source}
+        <Row class="mx-2">
+          <Input type="radio" bind:group={selectedSource} value={source} label={source} />
+        </Row>
+      {/each}
     </Row>
   </FormGroup>
-  {#if selectedUrl}
+  {#if selectedSource}
   <FormGroup>
-    <Label>Enter your information to fetch an advance directive</Label>
+    <Label>Enter your information to fetch related advance directives</Label>
     <p class="text-secondary"><em>WA Verify+ does not save this information</em></p>
     <Row cols={{ md: 2, sm: 1 }}>
       <Col>

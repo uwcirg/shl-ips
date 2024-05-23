@@ -370,14 +370,14 @@
         </FetchFile>
       </TabPane>
       <TabPane class="ad-tab" tabId="ad" style="padding-top:10px">
-        <span class="ad-tab" slot="tab">Advance Directive Search</span>
+        <span class="ad-tab" slot="tab">Advance Directives</span>
         <FetchAD
           bind:adSection={adData.section} bind:adSectionResources={adData.resources}
           on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }>
         </FetchAD>
       </TabPane>
       <TabPane class="tefca-tab" tabId="tefca" style="padding-top:10px">
-        <span class="tefca-tab" slot="tab">TEFCA Search</span>
+        <span class="tefca-tab" slot="tab">TEFCA Query</span>
         <FetchTEFCA
           on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }>
         </FetchTEFCA>
