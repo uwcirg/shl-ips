@@ -93,6 +93,8 @@
     location.reload();
   }
 
+  let defaultBtnStyle = "max-width: 120px;";
+  let selectedBtnStyle = "max-width: 120px; background-color: var(--highlight-dark-color) !important";
   function updateInstructions(event) {
     if (instructions && event.target.id.includes(instructions)) {
       instructions = "";
@@ -140,7 +142,7 @@
     </Row>
     <Row class="px-3 my-2">
       <Card style="max-width: 100%">
-        <CardBody class="p-1 px-2">
+        <CardBody class="p-2">
           <span><em>{href}</em></span>
         </CardBody>
       </Card>
@@ -151,9 +153,8 @@
       <Button
         id="email-button"
         size="lg"
-        color={instructions === 'email' ? 'primary' : 'secondary'}
         class="mx-2"
-        style="max-width: 120px"
+        style={instructions === 'email' ? selectedBtnStyle : defaultBtnStyle}
         on:click={updateInstructions}
       >
         <strong id="email-label">Email</strong>
@@ -161,9 +162,8 @@
       <Button
         id="text-button"
         size="lg"
-        color={instructions === 'text' ? 'primary' : 'secondary'}
         class="mx-2"
-        style="max-width: 120px"
+        style={instructions === 'text' ? selectedBtnStyle : defaultBtnStyle}
         on:click={updateInstructions}
       >
         <strong id="text-label">Text</strong>
@@ -171,9 +171,8 @@
       <Button
         id="qr-button"
         size="lg"
-        color={instructions === 'qr' ? 'primary' : 'secondary'}
         class="mx-2"
-        style="max-width: 120px"
+        style={instructions === 'qr' ? selectedBtnStyle : defaultBtnStyle}
         on:click={updateInstructions}
       >
         <strong id="qr-label">QR Code</strong>
