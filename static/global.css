@@ -318,6 +318,27 @@ table.responses {
         }
     }
 }
+.btn-secondary {
+    background-image: none !important;
+    background-color: var(--primary-color) !important;
+    color: var(--btn-bg-color) !important;
+    border: 0 !important;
+    transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,border 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms !important;
+
+    i {
+        color: var(--btn-bg-color) !important;
+    }
+    &:hover, &:active {
+        background-image: none !important;
+        color: var(--btn-bg-color) !important;
+        background-color: var(--primary-color-light) !important;
+        border-color: var(--primary-color-light) !important;
+        outline: none !important;
+        i {
+            color:  var(--btn-bg-color) !important;
+        }
+    }
+}
 button.accordion-button {
     padding: 10px;
     background-color: var(--primary-color);
