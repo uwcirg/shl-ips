@@ -23,6 +23,7 @@
     ModalFooter,
     Row
   } from 'sveltestrap';
+  import mergeImages from 'merge-images';
   import CopyButton from './CopyButton.svelte';
   import { fade } from 'svelte/transition';
   import type { Writable } from 'svelte/store';
@@ -49,7 +50,11 @@
   }
 
   $: {
-    qrCode = href.then((r) => QRCode.toDataURL(r, { errorCorrectionLevel: 'M' }))
+    qrCode = href.then(
+      r => QRCode.toDataURL(r, { errorCorrectionLevel: 'M' })
+    ).then(
+      qrCode => mergeImages([qrCode, {src: '/img/ltt-logo-qr.png', x:0, y:4}])
+    );
   }
 
   $: {
@@ -153,7 +158,7 @@
       <Button
         id="email-button"
         size="lg"
-        class="mx-2"
+        class="mx-2 mb-2"
         style={instructions === 'email' ? selectedBtnStyle : defaultBtnStyle}
         on:click={updateInstructions}
       >
@@ -162,7 +167,7 @@
       <Button
         id="text-button"
         size="lg"
-        class="mx-2"
+        class="mx-2 mb-2"
         style={instructions === 'text' ? selectedBtnStyle : defaultBtnStyle}
         on:click={updateInstructions}
       >
@@ -171,14 +176,14 @@
       <Button
         id="qr-button"
         size="lg"
-        class="mx-2"
+        class="mx-2 mb-2"
         style={instructions === 'qr' ? selectedBtnStyle : defaultBtnStyle}
         on:click={updateInstructions}
       >
         <strong id="qr-label">QR Code</strong>
       </Button>
     </Row>
-    <Row class="py-3" style="border-bottom: 2px solid rgb(190, 190, 190);">
+    <Row class="pt-2 pb-3" style="border-bottom: 2px solid rgb(190, 190, 190);">
     {#if instructions === 'email'}
       <Card style="max-width: 100%">
         <CardBody class="p-3">
@@ -231,10 +236,12 @@
       </Card>
     {:else if instructions === 'qr'}
       <Card style="max-width: 100%">
-        <CardBody class="p-3">
-          <h3>Share a QR Code</h3>
-          <p><strong>Share a QR code.</strong> Show this QR code to the person you want to share your report with. They can scan it to see your report.</p>
-          <Row class="justify-content-center mx-4">
+        <CardBody>
+          <Row>
+            <h3>Share a QR Code</h3>
+            <p><strong>Share a QR code.</strong> Show this QR code to the person you want to share your report with. They can scan it to see your report.</p>
+          </Row>
+          <Row class="justify-content-center">
             <Col>
               <Row class="justify-content-center">
                 <Card class="my-2 p-0">
@@ -242,19 +249,6 @@
                     <CardText>
                       {#await qrCode then qrImage}
                         <CardImg class="img-fluid" alt="QR Code for SHL" src={qrImage} />
-                        <CardImg
-                          style="position: absolute;
-                            background: #325c33;
-                            width: 130px;
-                            height: 30px;
-                            left: calc(50% - 65px);
-                            top: calc(50% - 15px);
-                            border: 5px solid #325c33;
-                            box-sizing: border-box;"
-                          class="logo"
-                          alt="Let's Talk Tech Logo"
-                          src="/img/ltt-logo.svg"
-                        />
                       {/await}
                     </CardText>
                   </CardBody>
