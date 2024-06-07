@@ -19,6 +19,7 @@
     import AllergyIntolerance from './resource-templates/AllergyIntolerance.svelte';
     import Condition from './resource-templates/Condition.svelte';
     import DiagnosticReport from './resource-templates/DiagnosticReport.svelte';
+    import Encounter from './resource-templates/Encounter.svelte';
     import Immunization from './resource-templates/Immunization.svelte';
     import Location from './resource-templates/Location.svelte';
     import Medication from './resource-templates/Medication.svelte';
@@ -43,6 +44,7 @@
         "Consent": AdvanceDirective,
         "DiagnosticReport": DiagnosticReport,
         "DocumentReference": AdvanceDirective,
+        "Encounter": Encounter,
         "Immunization": Immunization,
         "Location": Location,
         "Medication": Medication,
@@ -306,11 +308,11 @@
                     injectedResources[section].section.entry = [];
                     let rkeys = Object.keys(injectedResources[section].resources);
                     let sectionToUse = injectedResources[section].section;
-                    let injectingSection = true;
+                    let injectingSectionIntoComposition = true;
                     content.entry[0].resource.section.forEach(section => {
                         if (section.code.coding[0].code === sectionToUse.code.coding[0].code) {
                             sectionToUse = section;
-                            injectingSection = false;
+                            injectingSectionIntoComposition = false;
                         }
                     });
 
@@ -326,7 +328,7 @@
                             });
                         }
                     }
-                    if (injectingSection) {
+                    if (injectingSectionIntoComposition) {
                         content.entry[0].resource.section.push(sectionToUse);
                     }
                 }
@@ -362,70 +364,74 @@
     <h5 slot="header" class="my-2">3. Directly edit your health summary content</h5>
     <Label>Select which resources to include in your customized IPS</Label>
     <Accordion>
-        {#each Object.keys(resourcesByType) as resourceType}
-            <AccordionItem on:toggle={updateBadge(resourceType)}>
-                <span slot="header">
-                    {#if resourceType === "Patient"}
-                        Patients <Badge color={patientBadgeColor}>{Object.values(patients).length}</Badge>
-                    {:else}
-                        {`${resourceType}s`}
-                        <Badge
-                            positioned
-                            class="mx-1"
-                            color={
-                                Object.values(resourcesByType[resourceType])
-                                    .filter(resource => resource.include).length
-                                    == Object.keys(resourcesByType[resourceType]).length
-                                    ? "primary"
-                                    : Object.values(resourcesByType[resourceType])
+        {#if Object.keys(resourcesByType).length > 0}
+            {#each Object.keys(resourcesByType) as resourceType}
+                <AccordionItem on:toggle={updateBadge(resourceType)}>
+                    <span slot="header">
+                        {#if resourceType === "Patient"}
+                            Patients <Badge color={patientBadgeColor}>{Object.values(patients).length}</Badge>
+                        {:else}
+                            {`${resourceType}s`}
+                            <Badge
+                                positioned
+                                class="mx-1"
+                                color={
+                                    Object.values(resourcesByType[resourceType])
                                         .filter(resource => resource.include).length
                                         == Object.keys(resourcesByType[resourceType]).length
                                         ? "primary"
                                         : Object.values(resourcesByType[resourceType])
                                             .filter(resource => resource.include).length
-                                            > 0
-                                            ? "info"
-                                            : "secondary"
-                            }>
-                            {Object.values(resourcesByType[resourceType]).filter(resource => resource.include).length}
-                        </Badge>
-                    {/if}
-                </span>
-                <FormGroup>
-                    {#each Object.keys(resourcesByType[resourceType]) as key}
-                        <Label style="width: 100%">
-                            <Card style="width: 100%; max-width: 100%">
-                                <CardHeader>
-                                    <span style="font-size:small">{resourceType}</span>
-                                </CardHeader>
-                                <CardBody>
-                                    <Row>
-                                        <Col xs=auto style="vertical-align:baseline">
-                                            {#if resourceType === "Patient"}
-                                                <Input id={key} type="radio" bind:group={selectedPatient} value={key} />
-                                            {:else}
-                                                <Input id={key} type="checkbox" bind:checked={resourcesByType[resourceType][key].include} value={key} />
-                                            {/if}
-                                        </Col>
-                                        <Col>
-                                            {#if resourceType in components}
-                                                <svelte:component this={components[resourceType]} resource={resourcesByType[resourceType][key].resource} />
-                                            {:else if resourcesByType[resourceType][key].resource.text?.div}
-                                                {@html resourcesByType[resourceType][key].resource.text?.div}
-                                            {:else}
-                                                {resourcesByType[resourceType][key].tempId}
-                                            {/if}
-                                        </Col>
-                                    </Row>
-                                </CardBody>
-                            </Card>
-                        </Label>
-                    {/each}
-                </FormGroup>
-            </AccordionItem>
-        {/each}
-    {#if injectedResources}
-        {#each Object.keys(injectedResources) as section}
+                                            == Object.keys(resourcesByType[resourceType]).length
+                                            ? "primary"
+                                            : Object.values(resourcesByType[resourceType])
+                                                .filter(resource => resource.include).length
+                                                > 0
+                                                ? "info"
+                                                : "secondary"
+                                }>
+                                {Object.values(resourcesByType[resourceType]).filter(resource => resource.include).length}
+                            </Badge>
+                        {/if}
+                    </span>
+                    <FormGroup>
+                        {#each Object.keys(resourcesByType[resourceType]) as key}
+                            <Label style="width: 100%">
+                                <Card style="width: 100%; max-width: 100%">
+                                    <CardHeader>
+                                        <span style="font-size:small">{resourceType}</span>
+                                    </CardHeader>
+                                    <CardBody>
+                                        <Row>
+                                            <Col xs=auto style="vertical-align:baseline">
+                                                {#if resourceType === "Patient"}
+                                                    <Input id={key} type="radio" bind:group={selectedPatient} value={key} />
+                                                {:else}
+                                                    <Input id={key} type="checkbox" bind:checked={resourcesByType[resourceType][key].include} value={key} />
+                                                {/if}
+                                            </Col>
+                                            <Col>
+                                                {#if resourceType in components}
+                                                    <svelte:component this={components[resourceType]} resource={resourcesByType[resourceType][key].resource} />
+                                                    <!-- ResourceType: {resourceType}
+                                                    Resource: {JSON.stringify(resourcesByType[resourceType][key].resource)} -->
+                                                {:else if resourcesByType[resourceType][key].resource.text?.div}
+                                                    {@html resourcesByType[resourceType][key].resource.text?.div}
+                                                {:else}
+                                                    {resourcesByType[resourceType][key].tempId}
+                                                {/if}
+                                            </Col>
+                                        </Row>
+                                    </CardBody>
+                                </Card>
+                            </Label>
+                        {/each}
+                    </FormGroup>
+                </AccordionItem>
+            {/each}
+        {/if}
+        {#if injectedResources}
+            {#each Object.keys(injectedResources) as section}
                 <AccordionItem on:toggle={updateBadge(section)}>
                     <span slot="header">
                             {section}
@@ -479,8 +485,8 @@
                         {/if}
                     </FormGroup>
                 </AccordionItem>
-        {/each}
-    {/if}
+            {/each}
+        {/if}
     </Accordion>
 </AccordionItem>
 

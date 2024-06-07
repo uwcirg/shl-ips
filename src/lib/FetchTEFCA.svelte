@@ -11,15 +11,17 @@
 
   import type { ResourceRetrieveEvent } from './types';
   import { createEventDispatcher } from 'svelte';
+  import { constructResourceUrl } from './sofClient';
+  import { SOF_PATIENT_RESOURCES } from './config';
 
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
 
   let sources = {
     Meld: {selected: false, destination: "Meld", url: "https://gw.interop.community/HeliosConnectathonSa/open"},
     JMCHelios: {selected: false, destination: "JMCHelios", url: "https://gw.interop.community/JMCHeliosSTISandbox/open"},
+    PublicHapi: {selected: false, destination: "PublicHapi", url: "http://hapi.fhir.org/baseR4"},
     OpenEpic: {selected: false, destination: "OpenEpic", url: ""},
-    CernerHelios: {selected: false, destination: "CernerHelios", url: ""},
-    PublicHapi: {selected: false, destination: "PublicHapi", url: "http://hapi.fhir.org/baseR4"}
+    CernerHelios: {selected: false, destination: "CernerHelios", url: ""}
   }
 
   let baseUrl = "https://concept01.ehealthexchange.org:52780/fhirproxy/r4";
@@ -99,6 +101,14 @@
         dob = "1919-11-03";
         city = "Pune";
         state = "MH";
+      }
+    }
+  }
+
+  $: {
+    if (method) {
+      if (method === 'url' && selectedSource &&sources[selectedSource].url === "") {
+        selectedSource = "";
       }
     }
   }
@@ -186,10 +196,10 @@
       headers['X-POU'] = 'PUBHLTH'
     }
     
-    result = await fetch(`${url}/Patient/$match`, {
-      method: 'POST',
-      headers: headers,
-      body: JSON.stringify(patient)
+    let query = buildPatientSearchQuery();
+    result = await fetch(`${url}/Patient${query}`, {
+      method: 'GET',
+      headers: headers
     }).then(function (response: any) {
       if (!response.ok) {
         // make the promise be rejected if we didn't get a 2xx response
@@ -197,21 +207,6 @@
       } else {
         return response;
       }
-    }).catch(function (error: any) {
-      console.warn(error);
-      let query = buildPatientSearchQuery();
-      result = fetch(`${url}/Patient${query}`, {
-        method: 'GET',
-        headers: headers
-      }).then(function (response: any) {
-        if (!response.ok) {
-          // make the promise be rejected if we didn't get a 2xx response
-          throw new Error('Unable to fetch patient data', { cause: response });
-        } else {
-          return response;
-        }
-      });
-      return result;
     });
     let body = await result.json();
     if (body.resourceType == 'Bundle' && (body.total == 0 || body.entry.length === 0)) {
@@ -225,7 +220,7 @@
     // let query = buildAdvanceDirectiveSearchQuery(patientId);
     let url = baseUrl;
     let headers = {
-      accept: 'application/json+fhir',
+      'Accept': 'application/json+fhir',
       'Content-Type': 'application/fhir+json; charset=UTF-8',
       'prefer': 'return=representation'
     };
@@ -236,17 +231,45 @@
       headers['X-DESTINATION'] = selectedSource,
       headers['X-POU'] = 'PUBHLTH'
     }
-    return result = await fetch(`${url}/Patient/${patientId}/$everything`, {
-        method: 'GET',
-        headers: headers
-      }).then(function (response: any) {
-        if (!response.ok) {
-          // make the promise be rejected if we didn't get a 2xx response
-          throw new Error('Unable to fetch patient data', { cause: response });
-        } else {
-          return response;
+
+    let results = await Promise.allSettled(
+      SOF_PATIENT_RESOURCES.map(
+        function(resourceType: string) {
+          let query = constructResourceUrl(resourceType, patientId, url);
+          let result = fetch(
+            query,
+            {
+              method: 'GET',
+              headers: headers
+            }
+          ).then(
+            function(response: any) {
+              if (!response.ok) {
+                // make the promise be rejected if we didn't get a 2xx response
+                throw new Error('Unable to fetch patient data', { cause: response });
+              }
+              return response;
+            }
+          );
+          return result;
         }
-      });
+      )
+    );
+    let resultJson = await Promise.allSettled(results.filter(x => x.status == "fulfilled").map(x => x.value.json()));
+    let resources = resultJson.filter(x => x.status == "fulfilled").map(x => x.value);
+    resources = resources.map((r) => {
+        if (r.resourceType === "Bundle") {
+          if (r.total == 0) {
+            return [];
+          } else {
+            return r.entry.map(e => e.resource);
+          }
+        } else {
+          return [r];
+        }
+    });
+    resources = [].concat(...resources);
+    return resources;
   }
 
   async function prepareIps() {
@@ -256,13 +279,9 @@
       let content;
       let hostname;
       const patient = await fetchPatient(constructPatient());
-      const contentResponse = await fetchPatientData(patient.id);
-      content = await contentResponse.json();
+      const resources = await fetchPatientData(patient.id);
       hostname = baseUrl;
       processing = false;
-      let resources = content.entry ? content.entry.map((e) => {
-        return e.resource;
-      }) : [];
       if (resources.length === 0) {
         console.warn(`No resources found for patient ${patient.id} at ${hostname} for ${selectedSource}`);
       }
@@ -288,7 +307,13 @@
       <Col>
         {#each Object.keys(sources) as source}
           <Row class="mx-2">
-            <Input type="radio" bind:group={selectedSource} value={sources[source].destination} label={source} />
+            <Input
+              type="radio"
+              disabled={method === 'url' && sources[source].url === ""}
+              bind:group={selectedSource}
+              value={sources[source].destination}
+              label={source}
+            />
           </Row>
         {/each}
       </Col>

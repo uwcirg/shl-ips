@@ -50,9 +50,11 @@
           <tr>
           <td>{address.use ?? ""}</td>
           <td>
-              {#each address.line as line}
-                  {line}<br />
-              {/each}
+              {#if address.line}
+                {#each address.line as line}
+                    {line}<br />
+                {/each}
+              {/if}
               {address.city ?? "[Unknown City]"}{
                   address.state
                       ? `, ${address.state}`
