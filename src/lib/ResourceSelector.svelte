@@ -369,7 +369,14 @@
                 <AccordionItem on:toggle={updateBadge(resourceType)}>
                     <span slot="header">
                         {#if resourceType === "Patient"}
-                            Patients <Badge color={patientBadgeColor}>{Object.values(patients).length}</Badge>
+                            Patients
+                            <Badge
+                                positioned
+                                class="mx-1"
+                                color={patientBadgeColor}
+                            >
+                                {Object.values(patients).length}
+                            </Badge>
                         {:else}
                             {`${resourceType}s`}
                             <Badge
