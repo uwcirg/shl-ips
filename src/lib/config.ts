@@ -71,6 +71,7 @@ export const SOF_PATIENT_RESOURCES = [
   'MedicationRequest',
   // 'Medication', // can't search by patient; "Only an _ID search is allowed."
   'Condition',
+  'Encounter',
   // 'Observation', // "Must have either code or category."
   // 'Organization', // can't search by patient; "Only an _ID search is allowed."
   'Immunization',

@@ -1,7 +1,7 @@
 import FHIR from 'fhirclient';
 import { SOF_REDIRECT_URI, SOF_PATIENT_RESOURCES, SOF_RESOURCES } from './config';
 
-export { authorize, getResources, getResourcesWithReferences, activePatient };
+export { authorize, getResources, getResourcesWithReferences, activePatient, constructResourceUrl };
 
 const patientResourceScope = SOF_PATIENT_RESOURCES.map(resourceType => `patient/${resourceType}.read`);
 const resourceScope = patientResourceScope.join(" ");
@@ -44,8 +44,15 @@ function getReferences(obj, references) {
     return references;
   }
 
+function constructResourceUrl(resourceType, patientId, endpoint='') {
+    if (endpoint) {
+        endpoint = `${endpoint}/`;
+    }
+    return `${endpoint}${resourceType == 'Patient' ? 'Patient/' : `${resourceType}?patient=`}${patientId}`;
+}
+
 async function requestResources(client, resourceType) {
-    let endpoint = (resourceType == 'Patient' ? 'Patient/' : `${resourceType}?patient=`) + client.getPatientId();
+    let endpoint = constructResourceUrl(resourceType, client.getPatientId());
     return client.request(endpoint, { flat: true }).then((result) => {
         let resourcesToPass = [];
         if (Array.isArray(result)) {
