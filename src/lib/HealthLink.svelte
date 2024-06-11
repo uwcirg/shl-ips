@@ -56,7 +56,7 @@
   $: {
     qrCode = href
       .then((r) => QRCode.toDataURL(r, { errorCorrectionLevel: 'M' }))
-      .then(qrCode => mergeImages([qrCode, {src: '/img/qrcode-logo.png', x:0, y:4}]));
+      // .then(qrCode => mergeImages([qrCode, {src: '/img/qrcode-logo.png', x:0, y:4}]));
   }
 
   let canShare = navigator?.canShare?.({ url: 'https://example.com', title: 'Title' });
@@ -142,7 +142,9 @@
         {/if}
         <CardText>
           {#await qrCode then dataUrl}
+            <CardImg class="img-fluid" alt="QR Code for SHL" src="/img/qr-banner-top.png" />
             <CardImg class="img-fluid" alt="QR Code for SHL" src={dataUrl} />
+            <CardImg class="img-fluid" alt="QR Code for SHL" src="/img/qr-banner-bottom.png" />
           {/await}
         </CardText>
       </CardBody>
