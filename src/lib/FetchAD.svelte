@@ -416,7 +416,7 @@
     <Col xs="auto">
       <Button color="primary" style="width:fit-content" disabled={processing} type="submit">
         {#if !processing}
-          Fetch Data
+          Add advance directives to Summary
         {:else}
           Fetching...
         {/if}

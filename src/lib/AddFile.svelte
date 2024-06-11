@@ -365,13 +365,6 @@
           on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }>
         </FetchSoF>
       </TabPane>
-      <TabPane class="ad-tab" tabId="ad" style="padding-top:10px">
-        <span class="ad-tab" slot="tab">Advance Directives</span>
-        <FetchAD
-          bind:adSection={adData.section} bind:adSectionResources={adData.resources}
-          on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }>
-        </FetchAD>
-      </TabPane>
       {#if $mode === "advanced"}
         <TabPane class="url-tab" tabId="url" style="padding-top:10px">
           <span class="url-tab" slot="tab">*FHIR URL</span>
@@ -402,6 +395,11 @@
       <Label>It may be helpful to include information about the work you do in your medical summary</Label>
       <ODHForm bind:odhSection={odhData.section} bind:odhSectionResources={odhData.resources} />
     </AccordionItem>
+    <AccordionItem class="ad-data">
+      <h5 slot="header" class="my-2">3. Add advance directives</h5>
+      <Label>Advance directives help providers know more about your medical preferences</Label>
+      <FetchAD bind:adSection={adData.section} bind:adSectionResources={adData.resources}></FetchAD>
+    </AccordionItem>
     <ResourceSelector
       bind:newResources={resourcesToReview}
       bind:patient={patient}
@@ -416,7 +414,7 @@
 {#if resourcesToReview.length > 0}
   {#if shlIdParam == null}
     <Row class="mt-4">
-      <h5>4. Save and create your SMART Health Link</h5>
+      <h5>5. Save and create your SMART Health Link</h5>
     </Row>
     <Row class="mx-2">
       <Label>Save your summary and generate a secure link to it that you can share.</Label>
