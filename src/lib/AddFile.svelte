@@ -362,6 +362,7 @@
           on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
           on:sof-auth-fail={ async ({ detail }) => { revertPreAuth(detail) }}
           on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
+          on:ips-retrieved={ async ({ detail }) => { stageRetrievedIPS(detail) } }
           on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }>
         </FetchSoF>
       </TabPane>

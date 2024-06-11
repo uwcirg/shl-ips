@@ -40,6 +40,7 @@
 
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
   let shlClient: SHLClient = getContext('shlClient');
+  let mode: Writable<string> = getContext('mode');
 
   let copyNotice = '';
 
@@ -290,53 +291,55 @@
     </FormGroup>
   </Col>
 </Row>
-<Row>
-  <h3>Contents</h3>
-  <Label>Add or remove summaries shared by this link.</Label>
-</Row>
-{#if shl.files.length == 0}
-<Row>
-  <p><em>No Summaries found</em></p>
-</Row>
+{#if $mode === 'advanced'}
+  <Row>
+    <h3>Contents</h3>
+    <Label>Add or remove summaries shared by this link.</Label>
+  </Row>
+  {#if shl.files.length == 0}
+  <Row>
+    <p><em>No Summaries found</em></p>
+  </Row>
+  {/if}
+  {#each shl.files as file (file.contentEncrypted)}
+  <Row>
+    <Col>
+      <Card class="mb-3" color="light">
+        <CardHeader>
+          <Row class="align-items-center">
+            <Col xs=6 class="align-items-center">
+              {#if file.date}
+                <strong><Icon name="calendar"></Icon> {file.date}</strong>
+              {/if}
+            </Col>
+            <Col xs=6>
+              <Row class="justify-content-end">
+                <Button size="sm" color="danger" style="width: fit-content" on:click={(e) => {
+                  deleteFile(file.contentEncrypted);
+                }}>
+                  <Icon name="trash3" />
+                </Button>
+              </Row>
+            </Col>
+          </Row>
+        </CardHeader>
+        <CardBody>
+          {#if file.contentType}
+          <CardText color="light" style="overflow: hidden; text-overflow: ellipsis">
+            <Icon name="file-earmark-text" /> {file.label ?? file.contentType}
+          </CardText>
+          {/if}
+        </CardBody>
+      </Card>
+    </Col>
+  </Row>
+  {/each}
+  <Row>
+    <Col>
+      <Button class="mb-3" color="primary" on:click={addFile}><Icon name="file-earmark-plus" /> Add {shl.files.length == 0 ? "a" : "another"} Summary</Button>
+    </Col>
+  </Row>
 {/if}
-{#each shl.files as file (file.contentEncrypted)}
-<Row>
-  <Col>
-    <Card class="mb-3" color="light">
-      <CardHeader>
-        <Row class="align-items-center">
-          <Col xs=6 class="align-items-center">
-            {#if file.date}
-              <strong><Icon name="calendar"></Icon> {file.date}</strong>
-            {/if}
-          </Col>
-          <Col xs=6>
-            <Row class="justify-content-end">
-              <Button size="sm" color="danger" style="width: fit-content" on:click={(e) => {
-                deleteFile(file.contentEncrypted);
-              }}>
-                <Icon name="trash3" />
-              </Button>
-            </Row>
-          </Col>
-        </Row>
-      </CardHeader>
-      <CardBody>
-        {#if file.contentType}
-        <CardText color="light" style="overflow: hidden; text-overflow: ellipsis">
-          <Icon name="file-earmark-text" /> {file.label ?? file.contentType}
-        </CardText>
-        {/if}
-      </CardBody>
-    </Card>
-  </Col>
-</Row>
-{/each}
-<Row>
-  <Col>
-    <Button class="mb-3" color="primary" on:click={addFile}><Icon name="file-earmark-plus" /> Add {shl.files.length == 0 ? "a" : "another"} Summary</Button>
-  </Col>
-</Row>
 
 <style>
   img.qr {

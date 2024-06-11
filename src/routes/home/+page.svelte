@@ -1,6 +1,8 @@
 <script lang="ts">
   import HealthLinkOverview from '$lib/HealthLinkOverview.svelte';
   import {
+      Accordion,
+      AccordionItem,
     Col,
     Row,
     Styles,
@@ -14,18 +16,20 @@
 
 <div style="padding-left: 17px">
   <span style="font-size: 16px; font-weight: 200; font-family: Verdana, sans-serif; margin: 50px 0px;">
-    <p class="text-danger">Demonstration/Test System - do not enter protected health information</p>
+    <p class="text-danger">Demonstration/Test System - do not use with real health information</p>
 
-    <p>WA Verify<sup>+</sup> lets people obtain and personally control the sharing of their health information.</p>
+    <p>WA Verify<sup>+</sup> lets people obtain and personally control the sharing of their health information, with any health care provider, family member or other individuals of their choosing, using a simple web link or scalable QR code.</p>
     
-    <p>Using the SMART Health Links and International Patient Summary standards, combined with the right of all people in the U.S. to obtain an online computer-readable copy of their health records under the U.S. government’s 21st Century Cures Act, the WA Verify<sup>+</sup> system builds on the ideas and technologies in the WA Verify COVID-19 vaccination verification system which was used by almost two million people from 2021-2023.</p>
+    <p>We use the SMART Health Links and International Patient Summary standards to make this feasible, verifiable, and secure. In the U.S., the federal 21st Century Cures Act gives all residents the right to an electronic copy of their health information. WA Verify<sup>+</sup> lets you access that information and share it as you see fit, building on the ideas and technologies of the WA Verify COVID-19 vaccination verification system, which was used by almost two million people from 2021-2023.</p>
   </span>
   <Row>
     <Col>
       <HealthLinkOverview />
     </Col>
   </Row>
-  <h3>About WA Verify<sup>+</sup></h3>
+  <Accordion>
+    <AccordionItem>
+  <h5 slot="header">More About WA Verify<sup>+</sup></h5>
   <span style="font-size: 16px; font-weight: 200; font-family: Verdana, sans-serif; margin: 50px 0px;">
     <p>Since 2021, WA Verify has made it easy for people receiving COVID-19 vaccinations in Washington State to access and share that information using SMART Health Card QR codes.</p>
       
@@ -38,4 +42,6 @@
     <p>This system generates QR codes and links that demonstrate the ability of WA Verify<sup>+</sup> to facilitate personally-controlled sharing of health records. On this page, you can view listed SHLs previously generated <em>on this device</em>, and you can generate a new SHL.</p>
 
   </span>
+</AccordionItem>
+</Accordion>
 </div>
