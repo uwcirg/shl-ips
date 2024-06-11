@@ -26,6 +26,12 @@
     import type { SHLAdminParams, SHLClient } from './managementClient';
 
     let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
+    let mode: Writable<string> = getContext('mode');
+
+    let title: string;
+    $: {
+        title = ($mode === 'advanced' ? 'Summaries created and stored on this device' : 'Summaries you have created');
+    }
 </script>
 <Styles />
 <h4 style="padding-bottom: 5px; border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 10px;">Create a new shareable health summary</h4>
@@ -40,7 +46,9 @@
 {#if $shlStore.length > 0}
 <Row>
     <Col>
-        <h4 style="padding-left: 0; padding-bottom: 5px; border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 0px;">Summaries created and stored on this device</h4>
+        <h4 style="padding-left: 0; padding-bottom: 5px; border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 0px;">
+            {title}
+        </h4>
     </Col>
 </Row>
 {#each $shlStore as shl, i}

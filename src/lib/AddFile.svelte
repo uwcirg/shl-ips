@@ -39,7 +39,8 @@
   import { page } from '$app/stores';
   import { getResourcesFromIPS } from './resourceUploader.js';
   import { goto } from '$app/navigation';
-    import FetchTefca from './FetchTEFCA.svelte';
+  import { getContext } from 'svelte';
+  import type { Writable } from 'svelte/store';
 
   export let status = "";
   
@@ -55,6 +56,8 @@
   let addDataHeader = emptyResourceListHeader;
   let addDataOpen = true;
   let successMessage = false;
+  
+  let mode: Writable<string> = getContext('mode');
 
   let resourceResult: ResourceRetrieveEvent = {
     resources: undefined
@@ -95,6 +98,13 @@
     }
     if (patientName) {
       label = (patientName !== undefined ? patientName.charAt(0).toUpperCase() + patientName.slice(1).toLowerCase() + "'s" : "My")+ " Summary Link " + new Date().toISOString().slice(0, 10);
+    }
+  }
+  $: {
+    if($mode === 'normal') {
+      if (currentTab !== "smart" && currentTab !== "ad") {
+        setTimeout(() => document.querySelector(`span.smart-tab`)?.parentElement?.click(), 1); 
+      }
     }
   }
   $: {
@@ -355,20 +365,6 @@
           on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }>
         </FetchSoF>
       </TabPane>
-      <TabPane class="url-tab" tabId="url" style="padding-top:10px">
-        <span class="url-tab" slot="tab" >FHIR URL</span>
-        <FetchUrl
-          on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }
-          on:ips-retrieved={ async ({ detail }) => { stageRetrievedIPS(detail) } }>
-        </FetchUrl>
-      </TabPane>
-      <TabPane class="file-tab" tabId="file" style="padding-top:10px">
-        <span class="file-tab" slot="tab">File Upload</span>
-        <FetchFile
-          on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }
-          on:ips-retrieved={ async ({ detail }) => { stageRetrievedIPS(detail) } }>
-        </FetchFile>
-      </TabPane>
       <TabPane class="ad-tab" tabId="ad" style="padding-top:10px">
         <span class="ad-tab" slot="tab">Advance Directives</span>
         <FetchAD
@@ -376,12 +372,28 @@
           on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }>
         </FetchAD>
       </TabPane>
-      <TabPane class="tefca-tab" tabId="tefca" style="padding-top:10px">
-        <span class="tefca-tab" slot="tab">TEFCA Query</span>
-        <FetchTEFCA
-          on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }>
-        </FetchTEFCA>
+      {#if $mode === "advanced"}
+        <TabPane class="url-tab" tabId="url" style="padding-top:10px">
+          <span class="url-tab" slot="tab">*FHIR URL</span>
+          <FetchUrl
+            on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }
+            on:ips-retrieved={ async ({ detail }) => { stageRetrievedIPS(detail) } }>
+          </FetchUrl>
+        </TabPane>
+        <TabPane class="file-tab" tabId="file" style="padding-top:10px">
+          <span class="file-tab" slot="tab">*File Upload</span>
+          <FetchFile
+            on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }
+            on:ips-retrieved={ async ({ detail }) => { stageRetrievedIPS(detail) } }>
+          </FetchFile>
+        </TabPane>
+        <TabPane class="tefca-tab" tabId="tefca" style="padding-top:10px">
+          <span class="tefca-tab" slot="tab">*TEFCA Query</span>
+          <FetchTEFCA
+            on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }>
+          </FetchTEFCA>
       </TabPane>
+      {/if}
     </TabContent>
   </AccordionItem>
   {#if resourcesToReview.length > 0}
@@ -466,35 +478,35 @@
       </form>
     </Row>
   {:else}
-  <Row class="mt-4">
-    <h5>4. Add this summary to your SMART Health Link</h5>
-  </Row>
-  <Row class="mx-2">
-    <Label>It will be shared alongside any other contents of the link.</Label>
-  </Row>
-  <Row class="mx-2">
-    <form on:submit|preventDefault={confirmContent}>
-      <Row>
-        <Col xs="auto">
-        <Button color="primary" style="width:fit-content" disabled={submitting} type="submit">
-            {#if !submitting}
-            Add Summary
-            {:else}
-            Adding...
-            {/if}
-        </Button>
-        </Col>
-        {#if submitting}
-        <Col xs="auto" class="d-flex align-items-center px-0">
-          <Spinner color="primary" type="border" size="md"/>
-        </Col>
-        <Col xs="auto" class="d-flex align-items-center">
-          <span class="text-secondary">{status}</span>
-        </Col>
-        {/if}
-      </Row>
-    </form>
-  </Row>
+    <Row class="mt-4">
+      <h5>4. Add this summary to your SMART Health Link</h5>
+    </Row>
+    <Row class="mx-2">
+      <Label>It will be shared alongside any other contents of the link.</Label>
+    </Row>
+    <Row class="mx-2">
+      <form on:submit|preventDefault={confirmContent}>
+        <Row>
+          <Col xs="auto">
+          <Button color="primary" style="width:fit-content" disabled={submitting} type="submit">
+              {#if !submitting}
+              Add Summary
+              {:else}
+              Adding...
+              {/if}
+          </Button>
+          </Col>
+          {#if submitting}
+          <Col xs="auto" class="d-flex align-items-center px-0">
+            <Spinner color="primary" type="border" size="md"/>
+          </Col>
+          <Col xs="auto" class="d-flex align-items-center">
+            <span class="text-secondary">{status}</span>
+          </Col>
+          {/if}
+        </Row>
+      </form>
+    </Row>
   {/if}
   <span class="text-danger">{fetchError}</span>
   {#if resourcesToReview.length > 0}
@@ -532,4 +544,9 @@
       <br/>
     {/if}
   {/if}
+{/if}
+{#if $mode === "advanced"}
+<br>
+<em class="text-secondary">* Advanced features for demo purposes only</em>
+<br>
 {/if}
