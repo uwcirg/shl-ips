@@ -18,7 +18,7 @@
   <span style="font-size: 16px; font-weight: 200; font-family: Verdana, sans-serif; margin: 50px 0px;">
     <p class="text-danger">Demonstration/Test System - do not use with real health information</p>
 
-    <p>WA Verify<sup>+</sup> lets people obtain and personally control the sharing of their health information, with any health care provider, family member or other individuals of their choosing, using a simple web link or scalable QR code.</p>
+    <p>WA Verify<sup>+</sup> lets people obtain and personally control the sharing of their health information, with any health care provider, family member or other individuals of their choosing, using a simple web link or QR code.</p>
     
     <p>We use the SMART Health Links and International Patient Summary standards to make this feasible, verifiable, and secure. In the U.S., the federal 21st Century Cures Act gives all residents the right to an electronic copy of their health information. WA Verify<sup>+</sup> lets you access that information and share it as you see fit, building on the ideas and technologies of the WA Verify COVID-19 vaccination verification system, which was used by almost two million people from 2021-2023.</p>
   </span>
