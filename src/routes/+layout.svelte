@@ -122,7 +122,7 @@
                 $mode = ($mode === 'advanced' ? 'normal' : 'advanced');
             }}>
               <Row>
-                <Col>Show Advanced Features</Col>
+                <Col>{$mode === "advanced" ? "Hide" : "Show"} Advanced Features</Col>
                 <Col class="d-flex justify-content-end">
                   {#if $mode == 'advanced'}
                   <Icon class="text-primary" name="toggle-on"></Icon>
