@@ -135,6 +135,16 @@
           }
         ],
         status: "final",
+        category: [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "social-history"
+              }
+            ]
+          }
+        ],
         code: {
           coding: [
             {
@@ -184,6 +194,16 @@
           ]
         },
         status: "final",
+        category: [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "social-history"
+              }
+            ]
+          }
+        ],
         code: {
           coding: [
             {
@@ -229,6 +249,16 @@
           }
         ],
         status: "final",
+        category: [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "social-history"
+              }
+            ]
+          }
+        ],
         code: {
           coding: [
             {
@@ -278,6 +308,16 @@
           ]
         },
         status: "final",
+        category: [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "social-history"
+              }
+            ]
+          }
+        ],
         code: {
           coding: [
             {
@@ -309,6 +349,16 @@
           ]
         },
         status: "final",
+        category: [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "social-history"
+              }
+            ]
+          }
+        ],
         code: {
           coding: [
             {
