@@ -23,6 +23,8 @@
     ModalFooter,
     Row
   } from 'sveltestrap';
+  import mergeImages from 'merge-images';
+  import CopyButton from './CopyButton.svelte';
   import { fade } from 'svelte/transition';
   import type { Writable } from 'svelte/store';
   import type { SHLAdminParams, SHLClient } from './managementClient';
@@ -41,12 +43,18 @@
   let today: Date;
   let expDisplay: string;
 
+  let instructions = "";
+
   $: {
     href = getUrl($shlStore);
   }
 
   $: {
-    qrCode = href.then((r) => QRCode.toDataURL(r, { errorCorrectionLevel: 'M' }))
+    qrCode = href.then(
+      r => QRCode.toDataURL(r, { errorCorrectionLevel: 'M' })
+    ).then(
+      qrCode => mergeImages([qrCode, {src: '/img/ltt-logo-qr.png', x:0, y:4}])
+    );
   }
 
   $: {
@@ -90,30 +98,14 @@
     location.reload();
   }
 
-  let openedHeader = "Click here to close"
-  let closedHeader = "Click here to see how on your";
-  let computerHeader = `${closedHeader} computer`;
-  let phoneHeader = `${closedHeader} phone`;
-  function updateComputerHeader({ detail }) {
-    computerHeader = updateHeader(detail, 'computer');
-    if (detail) {
-      phoneHeader = updateHeader(!detail, 'phone');
+  let defaultBtnStyle = "max-width: 120px;";
+  let selectedBtnStyle = "max-width: 120px; background-color: var(--highlight-dark-color) !important";
+  function updateInstructions(event) {
+    if (instructions && event.target.id.includes(instructions)) {
+      instructions = "";
+    } else {
+      instructions = event.target.id.split('-')[0];
     }
-  }
-  function updatePhoneHeader({ detail }) {
-    phoneHeader = updateHeader(detail, 'phone');
-    if (detail) {
-      computerHeader = updateHeader(!detail, 'computer');
-    }
-  }
-  function updateHeader(detail, device: string) {
-    return detail ? openedHeader : `${closedHeader} ${device}`
-  }
-
-  let qrHeaderClosed = "Click here to see how to scan a QR code";
-  let qrHeader = qrHeaderClosed;
-  function updateQRHeader({ detail }) {
-    qrHeader = detail ? openedHeader : qrHeaderClosed;
   }
 </script>
 <div transition:fade>
@@ -130,12 +122,12 @@
         </Col>
         <Col>
           <Row>
-            <Col class="d-flex align-itmes-center">
+            <Col class="d-flex align-items-center">
               Click here to create a new link:
             </Col>
           </Row>
           <Row>
-            <Col class="d-flex align-itmes-center">
+            <Col class="d-flex align-items-center">
               <Button size="sm" style="width:100%" on:click={toggle} color="primary">
                 <Icon name="arrow-repeat"></Icon> Create New Report Link
               </Button>
@@ -146,96 +138,124 @@
     </Alert>
     {/if}
     <h3>Share Report</h3>
-    <p>There are 2 ways to share this electronically.</p>
-    <ol>
-      <li>
-        <strong>Email or text it:</strong> You can copy a link and paste it into an email to send. If you are using your phone, you could also paste the link into a text message.
-      </li>
-      <Row class="justify-content-center mt-2">
-        <Col xs="auto" class="mb-2">
-          <Button size="sm" color="primary" style="width:130px !important" on:click={copyShl} disabled={!!copyNotice}>
-            <Icon name="clipboard" />
-            {#if copyNotice}
-              {copyNotice}
-            {:else}
-              Copy Link
-            {/if}
-          </Button>
-        </Col>
-        <Col xs="auto">
+    {#await href then href}
+    <p>Here is the link to your Report that you can copy and share with others:</p>
+    <Row class="justify-content-center mt-2">
+      <Col xs="auto" class="mb-2">
+        <CopyButton href={href} />
+      </Col>
+    </Row>
+    <Row class="px-3 my-2">
+      <Card style="max-width: 100%">
+        <CardBody class="p-2">
+          <span><em>{href}</em></span>
+        </CardBody>
+      </Card>
+    </Row>
+    {/await}
+    <p>Select the way you want to share your Report to see how:</p>
+    <Row class="d-flex justify-content-center">
+      <Button
+        id="email-button"
+        size="lg"
+        class="mx-2 mb-2"
+        style={instructions === 'email' ? selectedBtnStyle : defaultBtnStyle}
+        on:click={updateInstructions}
+      >
+        <strong id="email-label">Email</strong>
+      </Button>
+      <Button
+        id="text-button"
+        size="lg"
+        class="mx-2 mb-2"
+        style={instructions === 'text' ? selectedBtnStyle : defaultBtnStyle}
+        on:click={updateInstructions}
+      >
+        <strong id="text-label">Text</strong>
+      </Button>
+      <Button
+        id="qr-button"
+        size="lg"
+        class="mx-2 mb-2"
+        style={instructions === 'qr' ? selectedBtnStyle : defaultBtnStyle}
+        on:click={updateInstructions}
+      >
+        <strong id="qr-label">QR Code</strong>
+      </Button>
+    </Row>
+    <Row class="pt-2 pb-3" style="border-bottom: 2px solid rgb(190, 190, 190);">
+    {#if instructions === 'email'}
+      <Card style="max-width: 100%">
+        <CardBody class="p-3">
+          <h3>Email</h3>
+          <p><strong>Email it.</strong> You can copy a link and paste it into an email to send.</p>
           {#await href then href}
-          <Button size="sm" color="primary" style="width:130px !important" {href} target="_blank">
-            <Icon name="box-arrow-up-right" /> Open Report
-          </Button>
+            <Row class="justify-content-center">
+              <Col xs="auto" class="mb-2">
+                <CopyButton href={href} />
+              </Col>
+            </Row>
           {/await}
-        </Col>
-      </Row>
-      <Accordion class="mt-1 mb-4">
-        <AccordionItem on:toggle={updateComputerHeader}>
-          <h6 slot="header" class="my-2">{computerHeader}</h6>
-          <p><strong>Here's how on your computer:</strong></p>
           <ul>
-            <li>First, to copy the link, click the "Copy Link" button above.</li>
+            <li>First, click the Copy button above.</li>
             <li>Then, open your email and start a new message to the person you want to send it to.</li>
             <li>Paste the link into the body of the email.</li>
-            <p class="mb-0">To Paste:</p>
+            <p class="mb-0">Here's how to paste on your computer:</p>
             <ul style="list-style-type: circle">
-              <li>After you have clicked the copy button above, control-click (or right-click), then choose "Paste" from the pop-up menu.</li>
+              <li>After you have clicked the Copy button above, control-click (or right-click), then choose "Paste" from the pop-up menu.</li>
               <li>Or, if you're using a PC, press the Ctrl and V buttons at the same time.</li>
               <li>On a Mac, press Command and V at the same time.</li>
             </ul>
-            <li>Send the email. The person you send it to will receive the link to be able to see your saved Choices Report.</li>
+            <li>Send the email. The person you send it to will receive the link to your saved Choices Report.</li>
           </ul>
-        </AccordionItem>
-        <AccordionItem on:toggle={updatePhoneHeader}>
-          <h6 slot="header" class="my-2">{phoneHeader}</h6>
-          <p><strong>Here's how on your phone:</strong></p>
+        </CardBody>
+      </Card>
+    {:else if instructions === 'text'}
+      <Card style="max-width: 100%">
+        <CardBody class="p-3">
+          <h3>Text</h3>
+          <p><strong>Text it.</strong> If you are using Let's Talk Tech on your phone, you can copy a link and paste it into a text message.</p>
+          {#await href then href}
+            <Row class="justify-content-center">
+              <Col xs="auto" class="mb-2">
+                <CopyButton href={href} />
+              </Col>
+            </Row>
+          {/await}
           <ul>
-            <li>First, to copy the link, click the "Copy Link" button above.</li>
-            <li>Then, open your email or text message app and start a new message to the person you want to send it to.</li>
+            <li>First, click the Copy button above.</li>
+            <li>Then, open your text message app and start a new message to the person you want to send it to.</li>
             <li>Paste the link into the body of the message.</li>
-            <p class="mb-0">To Paste:</p>
+            <p class="mb-0">Here's how to paste on your phone:</p>
             <ul style="list-style-type: circle">
-              <li>Tap where you want to add or edit text. Tap again, then tap the "Paste" button.</li>
+              <li>Tap where you want to add or edit text. Tap again, then tap the Paste button.</li>
             </ul>
-            <li>Send the message. The person you send it to will receive the link to be able to see your saved Choices Report.</li>
+            <li>Send the message. The person you send it to will receive the link to your saved Choices Report.</li>
           </ul>
-        </AccordionItem>
-      </Accordion>
-      <li>
-        <strong>Share a QR code:</strong> Show this QR code to the person you want to share your report with. They can scan it to see your report.
-      </li>
-      <Row class="justify-content-center mx-4">
-        <Col>
-          <Row class="justify-content-center">
-            <Card class="my-2 p-0">
-              <CardBody class="p-0">
-                <CardText>
-                  {#await qrCode then qrImage}
-                    <CardImg class="img-fluid" alt="QR Code for SHL" src={qrImage} />
-                    <CardImg
-                      style="position: absolute;
-                background: #325c33;
-                width: 130px;
-                height: 30px;
-                left: calc(50% - 65px);
-                top: calc(50% - 15px);
-                border: 5px solid #325c33;
-                box-sizing: border-box;"
-                      class="logo"
-                      alt="Let's Talk Tech Logo"
-                      src="/img/ltt-logo.svg"
-                    />
-                  {/await}
-                </CardText>
-              </CardBody>
-            </Card>
+        </CardBody>
+      </Card>
+    {:else if instructions === 'qr'}
+      <Card style="max-width: 100%">
+        <CardBody>
+          <Row>
+            <h3>Share a QR Code</h3>
+            <p><strong>Share a QR code.</strong> Show this QR code to the person you want to share your report with. They can scan it to see your report.</p>
           </Row>
-        </Col>
-      </Row>
-      <Accordion class="my-2">
-        <AccordionItem on:toggle={updateQRHeader}>
-          <h6 slot="header" class="my-2">{qrHeader}</h6>
+          <Row class="justify-content-center">
+            <Col>
+              <Row class="justify-content-center">
+                <Card class="my-2 p-0">
+                  <CardBody class="p-0">
+                    <CardText>
+                      {#await qrCode then qrImage}
+                        <CardImg class="img-fluid" alt="QR Code for SHL" src={qrImage} />
+                      {/await}
+                    </CardText>
+                  </CardBody>
+                </Card>
+              </Row>
+            </Col>
+          </Row>
           <Row>
             <Col xs=12 md=6>
               <p><strong>Here's how to scan a QR code:</strong></p>
@@ -255,14 +275,15 @@
             </Col>
             <Col xs=12 md=6 style="padding-left: 0px">
               <Col class="d-flex justify-content-center mt-2">
-                <img src="/img/qrphone.png" alt="Scan a QR Code"/>
+                <img src="/img/qrphone.png" alt="Scan a QR Code" style="max-height: 300px"/>
               </Col>
             </Col>
           </Row>
-        </AccordionItem>
-      </Accordion>
-    </ol>
-    <Row style="margin-bottom: 10px; border-bottom: 1px solid rgb(204, 204, 204);">
+        </CardBody>
+      </Card>
+    {/if}
+    </Row>
+    <Row style="margin-bottom: 10px">
       <h3 class="mt-4">Frequently Asked Questions</h3>
     </Row>
     <h5><u>Does this link expire?</u></h5>
@@ -288,7 +309,7 @@
     </p>
     <h5><u>What if I change my mind about who I shared the Report with?</u></h5>
     <p>
-      You can deactivate the link you shared earlier than the expiration date by clicking the <strong>Create New Report Link</strong> button below. No one you shared it with can access the Report unless you share the new link with them. The old link will no longer connect to your Report.
+      You can deactivate the link you shared earlier than the expiration date by clicking the <strong>Create New Report Link</strong> button below. The old link will no longer connect to your Report. No one you shared it with can access the Report unless you share the new link with them.
     </p>
     <h5><u>What if I want to share an updated Report?</u></h5>
     <p>
