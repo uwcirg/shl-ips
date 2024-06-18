@@ -16,11 +16,11 @@
         copyNotice = 'Copied!';
         setTimeout(() => {
             copyNotice = copyNoticePrev;
-        }, 1500);
+        }, 8000);
     }
 </script>
 {#if copyNotice}
-    <Button size="lg" color="success" class="p-3" disabled>
+    <Button size="lg" color="secondary" class="p-3" disabled>
         <Icon name="clipboard" />
         {copyNotice}
     </Button>
