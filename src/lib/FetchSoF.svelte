@@ -153,22 +153,20 @@
       {/if}
     </Button>
     </Col>
-    {#if $mode !== 'advanced'}
-      <Col xs="auto">
-        <Button
-        color="secondary"
-        style="width:fit-content"
-        disabled={processing || loadingSample}
-        type="button"
-        on:click={() => quickLoad()}>
-          {#if !loadingSample}
-            Quick Sample
-          {:else}
-            Loading...
-          {/if}
-        </Button>
-      </Col>
-    {/if}
+    <Col xs="auto">
+      <Button
+      color="secondary"
+      style="width:fit-content"
+      disabled={processing || loadingSample}
+      type="button"
+      on:click={() => quickLoad()}>
+        {#if !loadingSample}
+          Quick Sample
+        {:else}
+          Loading...
+        {/if}
+      </Button>
+    </Col>
   {#if processing || loadingSample}
     <Col xs="auto" class="d-flex align-items-center px-0">
       <Spinner color="primary" type="border" size="md"/>
