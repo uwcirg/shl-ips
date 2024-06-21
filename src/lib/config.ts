@@ -40,6 +40,13 @@ export const SOF_HOSTS = [
     url: "https://launch.smarthealthit.org/v/r4/sim/WzMsIiIsIiIsIkFVVE8iLDAsMCwwLCIiLCIiLCIiLCIiLCIiLCIiLCIiLDAsMF0/fhir",
     clientId: "<no client id>",
     note: "Credentials provided"
+  },
+  {
+    id: "c4bb",
+    name: "CARIN Blue Button",
+    url: "https://chpmd-api-sita.carefirst.com/v1/fhir/patientaccess",
+    clientId: "0oaf5w78xfWspNqeA1d7",
+    note: "Credentials provided"
   }
 ];
 export const SOF_REDIRECT_URI = '/create';
