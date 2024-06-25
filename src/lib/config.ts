@@ -41,13 +41,18 @@ export const SOF_HOSTS = [
     clientId: "<no client id>",
     note: "Credentials provided"
   },
-  {
-    id: "c4bb",
-    name: "CARIN Blue Button",
-    url: "https://chpmd-api-sita.carefirst.com/v1/fhir/patientaccess",
-    clientId: "0oaf5w78xfWspNqeA1d7",
-    note: "Credentials provided"
-  }
+  // {
+  //   id: "c4bb",
+  //   name: "CARIN Blue Button",
+  //   // url: "https://chpdc-api-sita.carefirst.com/v1/fhir/patientaccess",
+  //   // url: "https://chpmd-api-sita.carefirst.com/v1/fhir/patientaccess",
+  //   // url: "https://dsnp-api-sita.carefirst.com/v1/fhir/patientaccess",
+  //   // url: "https://mapd-api-sita.carefirst.com/v1/fhir/patientaccess",
+  //   // url: "https://mhbe-api-sita.carefirst.com/v1/fhir/patientaccess",
+  //   url: "https://egwp-api-sita.carefirst.com/v1/fhir/patientaccess",
+  //   clientId: "0oaf5w78xfWspNqeA1d7",
+  //   note: "Credentials provided"
+  // }
 ];
 export const SOF_REDIRECT_URI = '/create';
 export const SOF_RESOURCES = [
