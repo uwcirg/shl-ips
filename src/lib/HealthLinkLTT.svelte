@@ -138,21 +138,6 @@
     </Alert>
     {/if}
     <h3>Share Report</h3>
-    {#await href then href}
-    <p>Here is the link to your Report that you can copy and share with others:</p>
-    <Row class="justify-content-center mt-2">
-      <Col xs="auto" class="mb-2">
-        <CopyButton href={href} />
-      </Col>
-    </Row>
-    <Row class="px-3 my-2">
-      <Card style="max-width: 100%">
-        <CardBody class="p-2">
-          <span><em>{href}</em></span>
-        </CardBody>
-      </Card>
-    </Row>
-    {/await}
     <p>Select the way you want to share your Report to see how:</p>
     <Row class="d-flex justify-content-center">
       <Button
@@ -183,7 +168,8 @@
         <strong id="qr-label">QR Code</strong>
       </Button>
     </Row>
-    <Row class="pt-2 pb-3" style="border-bottom: 2px solid rgb(190, 190, 190);">
+    {#if instructions === 'email' || instructions === 'text' || instructions === 'qr'}
+    <Row class="pt-2 pb-3">
     {#if instructions === 'email'}
       <Card style="max-width: 100%">
         <CardBody class="p-3">
@@ -283,6 +269,18 @@
       </Card>
     {/if}
     </Row>
+    {/if}
+    {#await href then href}
+    <Row class="mt-1">
+      <p>Here is the link to your Report that you can copy and share with others:</p>
+    </Row>
+    <Row class="justify-content-center">
+      <Col xs="auto" class="mb-2">
+        <CopyButton href={href} />
+      </Col>
+    </Row>
+    {/await}
+
     <Row style="margin-bottom: 10px">
       <h3 class="mt-4">Frequently Asked Questions</h3>
     </Row>
