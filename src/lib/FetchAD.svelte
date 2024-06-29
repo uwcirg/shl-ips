@@ -418,7 +418,7 @@
         {#if !processing}
           Add advance directives to Summary
         {:else}
-          Fetching...
+          Adding...
         {/if}
       </Button>
     </Col>
