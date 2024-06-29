@@ -28,10 +28,21 @@
     window.localStorage[LOCAL_STORAGE_KEY] ? JSON.parse(window.localStorage[LOCAL_STORAGE_KEY]) : []
   );
 
+  const MODE_KEY = 'demo_mode';
+  let mode = writable('normal');
+  window.localStorage[MODE_KEY] ? mode.set(JSON.parse(window.localStorage[MODE_KEY])) : mode.set('normal');
+
   $: {
     if ($shlStore) window.localStorage[LOCAL_STORAGE_KEY] = JSON.stringify($shlStore);
   }
+
+  $: {
+    if ($mode) window.localStorage[MODE_KEY] = JSON.stringify($mode);
+  }
+  
   setContext('shlStore', shlStore);
+  
+  setContext('mode', mode);
 
   let shlClient = new SHLClient();
   setContext('shlClient', shlClient);
@@ -105,6 +116,22 @@
               $shlStore = [];
               goto('/');
             }}>Reset Demo</DropdownItem>
+            <DropdownItem divider />
+            <DropdownItem
+              on:click={() => {
+                $mode = ($mode === 'advanced' ? 'normal' : 'advanced');
+            }}>
+              <Row>
+                <Col>{$mode === "advanced" ? "Hide" : "Show"} Advanced Features</Col>
+                <Col class="d-flex justify-content-end">
+                  {#if $mode == 'advanced'}
+                  <Icon class="text-primary" name="toggle-on"></Icon>
+                  {:else}
+                  <Icon class="text-secondary" name="toggle-off"></Icon>
+                  {/if}
+                </Col>
+              </Row>
+            </DropdownItem>
           {#if $shlStore.length > 0}
             <DropdownItem divider />
             <DropdownItem header>View Stored SHLinks</DropdownItem>

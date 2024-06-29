@@ -49,7 +49,7 @@ function updateDisplayMode(displayMode) {
     dropdown.html(newText);
   }
   shlContents.forEach((e, i) => {
-    update(e, (shlContents.length === 1 ? "" : i));
+    update(e, i);
   });
   if (config.show_demo) {
     $('#ipsInput').val(JSON.stringify(originalShlContents[0], null, 2));

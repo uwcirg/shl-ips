@@ -16,6 +16,7 @@
   const authDispatch = createEventDispatcher<{'sof-auth-init': SOFAuthEvent; 'sof-auth-fail': SOFAuthEvent}>();
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
   let processing = false;
+  let loadingSample = false;
   let fetchError = "";
   let result: ResourceRetrieveEvent = {
     resources: undefined
@@ -87,6 +88,44 @@
     }
   }
 
+  // Demo quick sample loader
+  import { EXAMPLE_IPS, IPS_DEFAULT } from './config';
+  import type { IPSRetrieveEvent } from './types';
+  let defaultUrl = EXAMPLE_IPS[IPS_DEFAULT];
+  const ipsDispatch = createEventDispatcher<{'ips-retrieved': IPSRetrieveEvent}>();
+  let ipsResult: IPSRetrieveEvent = {
+    ips: undefined
+  };
+  async function quickLoad() {
+    fetchError = "";
+    loadingSample = true;
+    try {
+      let content;
+      let hostname;
+      const contentResponse = await fetch(defaultUrl!, {
+      headers: { accept: 'application/fhir+json' }
+      }).then(function(response) {
+        if (!response.ok) {
+          // make the promise be rejected if we didn't get a 2xx response
+          throw new Error("Unable to fetch IPS", {cause: response});
+        } else {
+          return response;
+        }
+      });
+      content = await contentResponse.json();
+      hostname = defaultUrl?.hostname;
+      loadingSample = false
+      ipsResult = {
+        ips: content,
+        source: hostname
+      };
+      ipsDispatch('ips-retrieved', ipsResult);
+    } catch (e) {
+      loadingSample = false;
+      console.log('Failed', e);
+      fetchError = "Error preparing IPS";
+    }
+  }
 </script>
 <form on:submit|preventDefault={() => prepareIps()}>
   <FormGroup>
@@ -103,7 +142,7 @@
 
   <Row>
     <Col xs="auto">
-    <Button color="primary" style="width:fit-content" disabled={processing} type="submit">
+    <Button color="primary" style="width:fit-content" disabled={processing || loadingSample} type="submit">
       {#if !processing}
         Fetch Data
       {:else}
@@ -111,7 +150,21 @@
       {/if}
     </Button>
     </Col>
-  {#if processing}
+    <Col xs="auto">
+      <Button
+      color="secondary"
+      style="width:fit-content"
+      disabled={processing || loadingSample}
+      type="button"
+      on:click={() => quickLoad()}>
+        {#if !loadingSample}
+          Quick Sample
+        {:else}
+          Loading...
+        {/if}
+      </Button>
+    </Col>
+  {#if processing || loadingSample}
     <Col xs="auto" class="d-flex align-items-center px-0">
       <Spinner color="primary" type="border" size="md"/>
     </Col>
