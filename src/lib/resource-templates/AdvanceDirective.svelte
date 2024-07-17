@@ -1,4 +1,5 @@
 <script>
+  import { base64toBlob } from '$lib/util';
   export let resource; // Define a prop to pass the data to the component
 </script>
 
@@ -69,8 +70,10 @@ Text:
 <br/>
 {#if resource.content}
   {#each resource.content as content}
-    {#if content.attachment && content.attachment.data}
-      <b>PDF present:</b> <a href={"data:application/pdf;base64," + content.attachment.data} target="_blank" rel="noopener noreferrer">View</a>
+    {#if content.attachment && content.attachment.contentType === "application/pdf" && content.attachment.data}
+      {#await base64toBlob(content.attachment.data, content.attachment.contentType) then url}
+        <b>PDF present:</b> <a href={url} target="_blank" rel="noopener noreferrer">View</a>
+      {/await}
     {/if}
   {/each}
 {/if}
