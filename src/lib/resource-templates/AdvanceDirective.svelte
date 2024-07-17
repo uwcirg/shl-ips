@@ -46,14 +46,18 @@ Text:
 <br />
 <b>Version number:</b>
 {#if resource.extension && resource.extension[0] && resource.extension[0].url && resource.extension[0].url == 'http://hl7.org/fhir/us/ccda/StructureDefinition/VersionNumber'}
-  {resource.extension[0].valueInteger}
+<!--  As a generic value (current IG): {resource.extension[0]}
+  As a generic value (current IG): {resource.extension[0].value} -->
+  As an integer (prior IG): {resource.extension[0].valueInteger}
 {/if}
 <br />
+<!-- This is the date that the DocumentReference resource was created, not of interest.
 <b>Date:</b>
 {#if resource.date}
   {resource.date}
 {/if}
 <br />
+-->
 <b>Status:</b>
 {#if resource.status}
   {resource.status}
@@ -73,6 +77,9 @@ Text:
     {#if content.attachment && content.attachment.contentType === "application/pdf" && content.attachment.data}
       {#await base64toBlob(content.attachment.data, content.attachment.contentType) then url}
         <b>PDF present:</b> <a href={url} target="_blank" rel="noopener noreferrer">View</a>
+        {#if content.attachment && content.attachment.creation}
+          Date of PDF creation: {new Date(content.attachment.creation).toISOString().slice(0,10)}.  
+        {/if}
       {/await}
     {/if}
   {/each}
