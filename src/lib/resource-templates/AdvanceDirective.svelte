@@ -46,9 +46,8 @@ Text:
 <br />
 <b>Version number:</b>
 {#if resource.extension && resource.extension[0] && resource.extension[0].url && resource.extension[0].url == 'http://hl7.org/fhir/us/ccda/StructureDefinition/VersionNumber'}
-<!--  As a generic value (current IG): {resource.extension[0]}
-  As a generic value (current IG): {resource.extension[0].value} -->
-  As an integer (prior IG): {resource.extension[0].valueInteger}
+  <!-- As of the July '24 this is now a unix time stamp --> 
+  {resource.extension[0].valueInteger}
 {/if}
 <br />
 <!-- This is the date that the DocumentReference resource was created, not of interest.
