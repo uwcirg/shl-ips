@@ -308,10 +308,24 @@
       // Filter out signature resources
       resources = resources.filter(nonSupersededDR);
 
-      // TODO iterate over DR's that are for signatures.
+      // Iterate over DR's that are for signatures.
       // Get the date from when it was signed, and show that in the card for the DocumentReference
       // that it applies to.
       // That date will be in content.attachment.creation (Lisa to add the evening of 2024-07-17).
+      resources.forEach(dr => {
+        if (dr.relatesTo && dr.relatesTo[0] && dr.relatesTo[0].code && dr.relatesTo[0].code == 'signs'
+          && dr.relatesTo[0].target && dr.relatesTo[0].target.reference) {
+          // e.g. "DocumentReference/9fad9465-5c95-49cf-a8ff-c3b8d782894d"
+          let target = dr.relatesTo[0].target.reference;
+          target = target.substring(18);
+          let pdfSignDate = '(missing from content.attachment.creation in signature DocumentReference)'; // placeholder until Lisa's change
+          if (dr.content && dr.content.attachment && dr.content.attachment){
+            pdfSignDate = dr.content.attachment;
+          }
+          let resourceSigned = resources.find((item) => item.id == target);
+          resourceSigned.pdfSignedDate = pdfSignDate;
+        }
+      });
 
       // July '24: unlike the May '24 connectathon, signature DR's now have resource.category defined.
       // The ADI team is planning to add a code for these later, but for the time being they suggest

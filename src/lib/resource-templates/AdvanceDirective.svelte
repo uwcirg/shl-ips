@@ -79,6 +79,10 @@ Text:
         {#if content.attachment && content.attachment.creation}
           Date of PDF creation: {new Date(content.attachment.creation).toISOString().slice(0,10)}.  
         {/if}
+        {#if resource.pdfSignedDate}
+          <!-- Date PDF was signed: {new Date(content.attachment.creation).toISOString().slice(0,10)}.-->
+          Date PDF was signed: {resource.pdfSignedDate}.
+        {/if}
       {/await}
     {/if}
   {/each}
