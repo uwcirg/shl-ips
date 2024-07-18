@@ -323,7 +323,7 @@
             pdfSignDate = dr.content.attachment;
           }
           let resourceSigned = resources.find((item) => item.id == target);
-          resourceSigned.pdfSignedDate = pdfSignDate;
+          resourceSigned.pdfSignedDate = pdfSignDate; // pdfSignedDate is an ad-hoc property name
         }
       });
 
