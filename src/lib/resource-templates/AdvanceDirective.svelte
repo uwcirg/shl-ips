@@ -72,17 +72,20 @@ Text:
 {/if}
 <br/>
 {#if resource.content}
+<!-- FIXME This iteration not ideal - should iterate whether pdf present or not, as created & pdfSignedDate (ill-named) actually refer to the larget context of the DR, not the pdf... as it stands the Personal Advance Care Plan Document won't show created/signed (bug), tho we don't care so much about that one in IPS. 
+-->
   {#each resource.content as content}
     {#if content.attachment && content.attachment.contentType === "application/pdf" && content.attachment.data}
       {#await base64toBlob(content.attachment.data, content.attachment.contentType) then url}
-        <b>PDF present:</b> 
         {#if content.attachment && content.attachment.creation}
-          PDF created: {new Date(content.attachment.creation).toISOString().slice(0,10)}.  
+          <b>Created:</b> {new Date(content.attachment.creation).toISOString().slice(0,10)}
+					<br/>
         {/if}
         {#if resource.pdfSignedDate}
-          <!-- Date PDF was signed: {new Date(content.attachment.creation).toISOString().slice(0,10)}.-->
-          PDF signed: {new Date(resource.pdfSignedDate).toISOString().slice(0,10)}.
+          <b>Digitally signed:</b> {new Date(resource.pdfSignedDate).toISOString().slice(0,10)}
+					<br/>
         {/if}
+        <b>PDF present:</b> 
       <a href={url} target="_blank" rel="noopener noreferrer">View</a>
       {/await}
     {/if}
