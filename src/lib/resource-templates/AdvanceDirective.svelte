@@ -77,11 +77,11 @@ Text:
       {#await base64toBlob(content.attachment.data, content.attachment.contentType) then url}
         <b>PDF present:</b> 
         {#if content.attachment && content.attachment.creation}
-          Date PDF created: {new Date(content.attachment.creation).toISOString().slice(0,10)}.  
+          PDF created: {new Date(content.attachment.creation).toISOString().slice(0,10)}.  
         {/if}
         {#if resource.pdfSignedDate}
           <!-- Date PDF was signed: {new Date(content.attachment.creation).toISOString().slice(0,10)}.-->
-          Date PDF signed: {new Date(resource.pdfSignedDate).toISOString().slice(0,10)}.
+          PDF signed: {new Date(resource.pdfSignedDate).toISOString().slice(0,10)}.
         {/if}
       <a href={url} target="_blank" rel="noopener noreferrer">View</a>
       {/await}
