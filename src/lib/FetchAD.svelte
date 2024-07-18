@@ -319,8 +319,8 @@
           let target = dr.relatesTo[0].target.reference;
           target = target.substring(18);
           let pdfSignDate = '(missing from content.attachment.creation in signature DocumentReference)'; // placeholder until Lisa's change
-          if (dr.content && dr.content.attachment && dr.content.attachment){
-            pdfSignDate = dr.content.attachment;
+          if (dr.content && dr.content[0] && dr.content[0].attachment && dr.content[0].attachment.creation){
+            pdfSignDate = dr.content[0].attachment.creation;
           }
           let resourceSigned = resources.find((item) => item.id == target);
           resourceSigned.pdfSignedDate = pdfSignDate; // pdfSignedDate is an ad-hoc property name
