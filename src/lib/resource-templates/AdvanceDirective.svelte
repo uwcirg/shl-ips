@@ -75,7 +75,7 @@ Text:
   {#each resource.content as content}
     {#if content.attachment && content.attachment.contentType === "application/pdf" && content.attachment.data}
       {#await base64toBlob(content.attachment.data, content.attachment.contentType) then url}
-        <b>PDF present:</b> <a href={url} target="_blank" rel="noopener noreferrer">View</a>
+        <b>PDF present:</b> 
         {#if content.attachment && content.attachment.creation}
           Date PDF created: {new Date(content.attachment.creation).toISOString().slice(0,10)}.  
         {/if}
@@ -83,6 +83,7 @@ Text:
           <!-- Date PDF was signed: {new Date(content.attachment.creation).toISOString().slice(0,10)}.-->
           Date PDF signed: {new Date(resource.pdfSignedDate).toISOString().slice(0,10)}.
         {/if}
+      <a href={url} target="_blank" rel="noopener noreferrer">View</a>
       {/await}
     {/if}
   {/each}
