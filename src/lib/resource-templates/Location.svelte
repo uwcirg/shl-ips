@@ -1,5 +1,7 @@
-<script>
-    export let resource; // Define a prop to pass the data to the component
+<script lang="ts">
+  import type { Location } from "fhir/r4";
+  
+  export let resource: Location; // Define a prop to pass the data to the component
 </script>
   
 <strong>{resource.name ?? ""}</strong>
@@ -10,9 +12,11 @@
           <tr><th colspan="3">Contact Information</th></tr>
       </thead>
         <tr>
-            <td>{resource.telecom.system ?? ""}</td>
-            <td>{resource.telecom.use ?? ""}</td>
-            <td>{resource.telecom.value ?? ""}</td>
+          {#each resource.telecom as telecom}
+            <td>{telecom.system ?? ""}</td>
+            <td>{telecom.use ?? ""}</td>
+            <td>{telecom.value ?? ""}</td>
+          {/each}
         </tr>
   </table>
 {/if}

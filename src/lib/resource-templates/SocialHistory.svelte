@@ -1,6 +1,8 @@
-<script>
+<script lang="ts">
     import { Badge } from 'sveltestrap';
-    export let resource; // Define a prop to pass the data to the component
+    import type { Observation } from "fhir/r4";
+    
+    export let resource: Observation; // Define a prop to pass the data to the component
   </script>
 
   {#if resource.code && resource.code.coding && resource.code.coding[0].code}
@@ -76,7 +78,7 @@
                         {component.valueCodeableConcept.text}
                     {/if}
                 {/if}
-                {#if component.valueQuantity}
+                {#if component.valueQuantity && component.code?.coding}
                     {component.valueQuantity.value}{
                         component.valueQuantity.unit ?? ""
                     }{component.code.coding[0].code === "74160-3"
@@ -85,7 +87,7 @@
                             ? "/day"
                             : "")}
                 {/if}
-                {#if component.valueString}
+                {#if component.valueString && component.code?.coding}
                     {component.code.coding[0].code === "87729-0"
                         ? "Hazard:"
                         : ""

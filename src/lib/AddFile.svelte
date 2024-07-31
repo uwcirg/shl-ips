@@ -2,6 +2,11 @@
   import * as jose from 'jose';
   import * as pako from 'pako';
   import { createEventDispatcher, onMount } from 'svelte';
+  import { page } from '$app/stores';
+  import { getResourcesFromIPS } from './resourceUploader.js';
+  import { goto } from '$app/navigation';
+  import { getContext } from 'svelte';
+  import type { Writable } from 'svelte/store';
   import {
     Accordion,
     AccordionItem,
@@ -26,7 +31,6 @@
   import ODHForm from './ODHForm.svelte';
   import ResourceSelector from './ResourceSelector.svelte';
   import { verify } from './shcDecoder.js';
-
   import issuerKeys from './issuer.private.jwks.json';
   import { type SHCFile,
     type Bundle,
@@ -34,14 +38,9 @@
     type ResourceRetrieveEvent,
     type IPSRetrieveEvent,
     type SHLSubmitEvent, 
-    type SOFAuthEvent,
-    ResourceHelper} from './types';
-  import { page } from '$app/stores';
-  import { getResourcesFromIPS } from './resourceUploader.js';
-  import { goto } from '$app/navigation';
-  import { getContext } from 'svelte';
-  import type { Writable } from 'svelte/store';
-
+    type SOFAuthEvent } from './types';
+  import type { Patient } from 'fhir/r4';
+ 
   export let status = "";
   
   let shlIdParam = $page.url.searchParams.get('shlid');
@@ -82,7 +81,7 @@
   };
   let resourcesToInject: Record<string, {section: any|undefined; resources: {[key: string]: ResourceHelper}}> = {};
   let patientName = "My";
-  let patient: any | undefined;
+  let patient: Patient | undefined;
 
   let label = 'Health Summary ' + new Date().toISOString().slice(0, 10);
   let expiration: number | null = -1;
@@ -93,7 +92,7 @@
   $: icon = showPassword ? 'eye-fill' : 'eye-slash-fill';
   $: addDataHeader = resourcesToReview.length == 0 ? emptyResourceListHeader : fullResourceListHeader;
   $: {
-    if (patient) {
+    if (patient?.name?.[0].given) {
       patientName = patient.name[0]?.given[0];
     }
     if (patientName) {

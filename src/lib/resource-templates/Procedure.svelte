@@ -1,6 +1,8 @@
-<script>
+<script lang="ts">
   import { Badge } from 'sveltestrap';
-  export let resource; // Define a prop to pass the data to the component
+  import type { Procedure } from "fhir/r4";
+  
+  export let resource: Procedure; // Define a prop to pass the data to the component
 </script>
 
 {#if resource.code}
@@ -16,4 +18,14 @@
     <strong>{resource.code.text}</strong><br>
   {/if}
 {/if}
-{resource.onsetDateTime ? `Date: ${resource.onsetDateTime.split("T")[0]}` : ''}
+{#if resource.performedDateTime}
+  Performed {resource.performedDateTime.split("T")[0]}
+{:else if resource.performedPeriod}
+  Performed {resource.performedPeriod}
+{:else if resource.performedString}
+  Performed {resource.performedString}
+{:else if resource.performedAge}
+  Performed age {resource.performedAge}
+{:else if resource.performedRange}
+  Performed age {resource.performedRange}
+{/if}

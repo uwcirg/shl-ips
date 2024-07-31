@@ -1,6 +1,8 @@
-<script>
+<script lang="ts">
   import { base64toBlob } from '$lib/util';
-  export let resource; // Define a prop to pass the data to the component
+  import type { DocumentReference, Consent } from 'fhir/r4';
+
+  export let resource: DocumentReference; // Define a prop to pass the data to the component
 </script>
 
 <!--
@@ -63,9 +65,9 @@ Text:
 {#if resource.docStatus}
   {resource.docStatus}
 {/if}
-{#if resource.description && resource.description.text}
+{#if resource.description}
   <br />
-  {resource.description.text}
+  {resource.description}
 {/if}
 <br/>
 {#if resource.content}
