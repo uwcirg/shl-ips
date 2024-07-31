@@ -142,9 +142,9 @@
         {/if}
         <CardText>
           {#await qrCode then dataUrl}
-            <CardImg class="img-fluid" alt="QR Code for SHL" src="/img/qr-banner-top.png" />
-            <CardImg class="img-fluid" alt="QR Code for SHL" src={dataUrl} />
-            <CardImg class="img-fluid" alt="QR Code for SHL" src="/img/qr-banner-bottom.png" />
+            <CardImg class="img-fluid" alt="QR Code for SHL" src="/img/qr-banner-top-simple.png" />
+            <CardImg class="img-fluid" style="margin-bottom: -5px" alt="QR Code for SHL" src={dataUrl} />
+            <CardImg class="img-fluid" alt="QR Code for SHL" src="/img/qr-banner-bottom-simple.png" />
           {/await}
         </CardText>
       </CardBody>
