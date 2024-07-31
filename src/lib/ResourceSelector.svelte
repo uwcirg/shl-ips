@@ -13,7 +13,8 @@
         Input,
         Label,
         Row } from 'sveltestrap';
-    import { ResourceHelper, type IPSRetrieveEvent } from './types';
+    import { ResourceHelper } from './ResourceHelper.js';
+    import { IPSRetrieveEvent } from './types';
 
     import AdvanceDirective from './resource-templates/AdvanceDirective.svelte';
     import AllergyIntolerance from './resource-templates/AllergyIntolerance.svelte';

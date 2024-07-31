@@ -32,6 +32,7 @@
   import ResourceSelector from './ResourceSelector.svelte';
   import { verify } from './shcDecoder.js';
   import issuerKeys from './issuer.private.jwks.json';
+  import { ResourceHelper } from './ResourceHelper';
   import { type SHCFile,
     type Bundle,
     type SHCRetrieveEvent,
