@@ -1,4 +1,4 @@
-import { Resource } from 'fhir/r4.js';
+import type { Resource } from 'fhir/r4';
 
 export class ResourceHelper {
     tempId: string;
