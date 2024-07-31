@@ -29,10 +29,10 @@
     import Organization from './resource-templates/Organization.svelte';
     import Patient from './resource-templates/Patient.svelte';
     import Practitioner from './resource-templates/Practitioner.svelte';
-    import Problem from './resource-templates/Problem.svelte';
     import Procedure from './resource-templates/Procedure.svelte';
     import SocialHistory from './resource-templates/SocialHistory.svelte';
-    import { Resource } from 'fhir/r4.js';
+    
+    import type { Resource } from 'fhir/r4';
 
     export let newResources: Array<Resource> | undefined;
     export let submitting: boolean;
@@ -55,7 +55,6 @@
         "Organization": Organization,
         "Patient": Patient,
         "Practitioner": Practitioner,
-        "Problem": Problem,
         "Procedure": Procedure,
         "Social History": SocialHistory,
         "Advance Directives": AdvanceDirective
