@@ -1,6 +1,8 @@
-<script>
+<script lang="ts">
   import { Badge } from 'sveltestrap';
-  export let resource; // Define a prop to pass the data to the component
+  import type { Immunization } from 'fhir/r4';
+
+  export let resource: Immunization; // Define a prop to pass the data to the component
 </script>
 {#if resource.vaccineCode}
   {#if resource.vaccineCode.coding}
@@ -20,6 +22,4 @@
   Date: {resource.occurrenceDateTime.split("T")[0]}
 {:else if resource.occurrenceString}
   Date: {resource.occurrenceString}
-{:else if resource.date}
-  Date: {resource.date}
 {/if}

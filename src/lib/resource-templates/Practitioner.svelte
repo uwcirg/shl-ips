@@ -1,5 +1,7 @@
-<script>
-    export let resource;
+<script lang="ts">
+    import type { Practitioner } from "fhir/r4";
+
+    export let resource: Practitioner; // Define a prop to pass the data to the component
 </script>
   
 {#if resource.name}
@@ -14,10 +16,12 @@
             {:else if resource.name[0].text}
                 {resource.name[0].text}
             {/if}
+        <!-- TODO: This doesn't pass type checking, but may be necessary for some example data
         {:else}
             {resource.name.prefix ?? ""}
             {resource.name.given ? resource.name.given.join(' ') : ""}
             {resource.name.family ?? ""}
+        -->
         {/if}
     </strong>
     <br>
@@ -38,17 +42,19 @@
           <tr>
           <td>{address.use ?? ""}</td>
           <td>
-              {#each address.line as line}
-                  {line}<br />
-              {/each}
-              {address.city ?? "[Unknown City]"}{
-                  address.state
-                      ? `, ${address.state}`
-                      : ''
-              }{address.country
-                  ? `, ${address.country}`
-                  : ''}
-              {address.postalCode ?? ""}
+            {#if address.line}
+                {#each address.line as line}
+                    {line}<br />
+                {/each}
+            {/if}
+            {address.city ?? "[Unknown City]"}{
+                address.state
+                    ? `, ${address.state}`
+                    : ''
+            }{address.country
+                ? `, ${address.country}`
+                : ''}
+            {address.postalCode ?? ""}
           </td>
           </tr>
       {/each}
