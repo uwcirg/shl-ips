@@ -138,7 +138,7 @@
     </Alert>
     {/if}
     <h3>Share Report</h3>
-    <p>Select the way you want to share your Report to see how:</p>
+    <p>Select the way you want to share your report. The steps for how to share it will appear.</p>
     <Row class="d-flex justify-content-center">
       <Button
         id="email-button"
