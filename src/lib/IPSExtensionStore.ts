@@ -6,13 +6,14 @@ export interface IPSExtensionStore {
 	addResource(resource: Resource): void;
 	addResources(resources:Resource[]): void;
     extendIPS(ips: Bundle): void;
+	getName(): string;
 	self(): object;
 	setSection(section: CompositionSection): void;
 	subscribe(v: any): any;
 }
 
-export function newIPSExtensionStore() {
-	let store = writable(new IPSExtension());
+export function newIPSExtensionStore(name: string) {
+	let store = writable(new IPSExtension(name));
 	return {
 		addResource: (resource: Resource) => {
 			let s = get(store);
@@ -24,13 +25,14 @@ export function newIPSExtensionStore() {
 			s.addResources(resources);
 			store.set(s);
 		},
-        extendIPS(ips: Bundle) {
-            let s = get(store);
-            s.extendIPS(ips);
-            store.set(s);
+        extendIPS: (ips: Bundle) => {
+            return get(store).extendIPS(ips);
         },
+		getName: () => {
+			return get(store).getName();
+		},
 		self: () => get(store),
-        setResources(resources: Resource[]) {
+        setResources: (resources: Resource[]) => {
             let s = get(store);
             s.setResources(resources);
             store.set(s);

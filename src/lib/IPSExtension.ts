@@ -2,18 +2,21 @@ import { ResourceHelper } from "./ResourceHelper";
 import type { Bundle, Composition, CompositionSection, FhirResource, Resource } from "fhir/r4";
 
 export interface IPSExtensionInterface {
+    name: string;
     section: CompositionSection;
     resources: { [key: string]: ResourceHelper };
 }
 
 export class IPSExtension implements IPSExtensionInterface {
+    name: string;
     section: CompositionSection = {entry: []} as CompositionSection;
     resources: { [key: string]: ResourceHelper } = {};
 
-    constructor();
-    constructor(resource: Resource);
-    constructor(resource: Resource[]);
-    constructor(resource: Resource | Resource[] | null = null, section: CompositionSection | null = null) {
+    constructor(name: string);
+    constructor(name: string, resource: Resource);
+    constructor(name: string, resource: Resource[]);
+    constructor(name: string, resource: Resource | Resource[] | null = null, section: CompositionSection | null = null) {
+        this.name = name;
         if (resource) {
             if (Array.isArray(resource)) {
                 this.addResources(resource);
@@ -35,6 +38,10 @@ export class IPSExtension implements IPSExtensionInterface {
 
     addResources(resources:Resource[]) {
         resources.forEach(r => this.addResource(r));
+    }
+
+    getName() {
+        return this.name;
     }
 
     setResources(resources: Resource[]) {
