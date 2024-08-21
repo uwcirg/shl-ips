@@ -1,4 +1,4 @@
-export type Bundle = any;
+import type { Bundle } from 'fhir/r4';
 export interface SHLSubmitEvent {
   shcs: SHCFile[];
   label?: string;
