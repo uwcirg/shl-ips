@@ -1,5 +1,5 @@
 <script lang='ts'>
-    import { uploadResources, checkResource } from './resourceUploader.js';
+    import { uploadResources } from './resourceUploader.js';
     import { createEventDispatcher } from 'svelte';
     import {
         Accordion,
@@ -14,7 +14,7 @@
         Label,
         Row } from 'sveltestrap';
     import { ResourceHelper } from './ResourceHelper.js';
-    import { IPSRetrieveEvent } from './types';
+    import type { IPSRetrieveEvent } from './types';
 
     import AdvanceDirective from './resource-templates/AdvanceDirective.svelte';
     import AllergyIntolerance from './resource-templates/AllergyIntolerance.svelte';
@@ -230,13 +230,6 @@
      */
     function addNewResources(newResources:any[]) {
         if (newResources) {
-            newResources = newResources.filter(r => {
-                if (checkResource(r) == null) {
-                    // console.warn("Invalid resource: " + JSON.stringify(r));
-                    return false;
-                }
-                return true;
-            })
             newResources = newResources.map(resource => {
                 return new ResourceHelper(resource);
             });
