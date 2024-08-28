@@ -225,7 +225,7 @@
         <CardBody>
           <Row>
             <h3>Share a QR Code</h3>
-            <p><strong>Share a QR code.</strong> Show this QR code to the person you want to share your report with. They can scan it to see your report.</p>
+            <p><strong>Share a QR code.</strong> Show this QR code to the person you want to share your Report with. They can scan it to see your Report.</p>
           </Row>
           <Row class="justify-content-center">
             <Col>
