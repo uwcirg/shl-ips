@@ -8,19 +8,16 @@
     Row,
     Spinner
   } from 'sveltestrap';
-
+  import type { IPSExtensionStore } from './IPSExtensionStore';
   import type { ResourceRetrieveEvent } from './types';
-  import { createEventDispatcher } from 'svelte';
+  import type { Attachment, DocumentReference } from 'fhir/r4';
 
-  export let adSection: any | undefined;
-  export let adSectionResources: any[] | undefined;
+  export let extensionStore: IPSExtensionStore;
 
-  const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
-
-  let sources = {
+  let sources: Record<string, {selected: Boolean; url: string}> = {
     "AD Vault": {selected: false, url: "https://qa-rr-fhir.maxmddirect.com"},
     "WA Verify+ Demo Server": {selected: false, url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir"}
-  }
+  };
   let selectedSource = "AD Vault";
   let processing = false;
   let fetchError = '';
@@ -95,28 +92,6 @@
         dob = "1951-01-20";
       }
     }
-  }
-
-  function updateAdSection(resources: any[]) {
-    if (adSection === undefined) {
-      adSection = JSON.parse(JSON.stringify(adSectionTemplate));
-    }
-    let resourcesAsEntries = resources.map((r, index) => {
-        r.id = `advance-directive-document-${index+1}`;
-        let entry = {resource: r, fullUrl: `urn:uuid:${r.id}`};
-        return entry;
-      });
-    if (adSectionResources) {
-      adSectionResources = adSectionResources.concat(resourcesAsEntries);
-    } else {
-      adSectionResources = resourcesAsEntries;
-    }
-    adSection.entry = adSectionResources.map((r) => {
-      return {
-        reference: r.fullUrl
-      }
-    });
-    console.log(adSectionResources);
   }
 
   let summaryUrlValidated: URL | undefined = undefined;
@@ -258,7 +233,7 @@
       });
   }
 
-  async function injectPdfIntoDocRef(url, attachment) {
+  async function injectPdfIntoDocRef(url:string, attachment: Attachment) {
     try {
       const response = await fetch(url);
       if (response.ok) {
@@ -266,9 +241,12 @@
         const reader = new FileReader();
         reader.onloadend = () => {
           console.log(reader.result); // Log the full data URL for debugging
-          attachment.data = reader.result?.split(',')[1]; // Base64 encoded data
+          if (reader.result) {
+            // Get base64 encoded data from Data URL
+            attachment.data = (reader.result as String).split(',')[1];
+          }
         };
-        reader.readAsDataURL(blob);
+        reader.readAsDataURL(blob); // Result is a string like "data:application/pdf;base64,<data>"
   /**
             const arrayBuffer = await response.arrayBuffer();
             const base64String = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
@@ -280,6 +258,20 @@
     } catch (error) {
       console.error(`Error fetching PDF from ${url}:`, error);
     }
+  }
+
+  function updateAdSection(resources: any[]) {
+    // Add section if one hasn't already been created or doesn't exist
+    extensionStore.setSection(JSON.parse(JSON.stringify(adSectionTemplate)));
+    let resourceCount = extensionStore.getResourceCount();
+
+    // Set resource id for bundle reference use later
+    resources = resources.map((r, index) => {
+      r.id = `advance-directive-document-${index + resourceCount + 1}`;
+    });
+
+    // Concatenate or set new resources
+    extensionStore.addResources(resources);
   }
 
   async function prepareIps() {
@@ -302,14 +294,14 @@
 
       // If resource.category doesn't exist, ignore the DR - DR's w/out that are simply signature DR's.
       // Lambda function to check if resource.category exists
-      const nonSignatureDR = dr => dr.category !== undefined;
+      const nonSignatureDR = (dr: DocumentReference) => dr.category !== undefined;
       // Filter out resources that don't have a category
       resources = resources.filter(nonSignatureDR);
 
       // if one of the DR's `content` elements has attachment.contentType = 'application/pdf', download if possible, put base64 of pdf in DR.content.attachment.data
-      const hasPdfContent = dr => dr.content && dr.content.some(content => content.attachment && content.attachment.contentType === 'application/pdf' && !content.attachment.data);
+      const hasPdfContent = (dr: DocumentReference) => dr.content && dr.content.some(content => content.attachment && content.attachment.contentType === 'application/pdf' && !content.attachment.data);
 
-      resources.forEach(async dr => {
+      resources.forEach(async (dr: DocumentReference) => {
         if (hasPdfContent(dr)) {
           const pdfContent = dr.content.find(content => content.attachment && content.attachment.contentType === 'application/pdf');
           if (pdfContent && pdfContent.attachment && pdfContent.attachment.url) {
@@ -318,13 +310,7 @@
         }
       });
       updateAdSection(resources);
-      // resources.unshift(patient);
-      result = {
-        resources: [patient], // resources,
-        source: hostname
-      };
       console.log([patient, ...resources]);
-      resourceDispatch('update-resources', result);
     } catch (e) {
       processing = false;
       console.log('Failed', e);

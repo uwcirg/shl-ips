@@ -40,19 +40,6 @@ export class IPSExtension implements IPSExtensionInterface {
         resources.forEach(r => this.addResource(r));
     }
 
-    getName() {
-        return this.name;
-    }
-
-    setResources(resources: Resource[]) {
-        this.resources = {};
-        this.addResources(resources);
-    }
-
-    setSection(section: CompositionSection) {
-        this.section = section;
-    }
-
     extendIPS(ips: Bundle) {
         if (!ips.entry) {
             ips.entry = [];
@@ -90,5 +77,26 @@ export class IPSExtension implements IPSExtensionInterface {
         }
 
         return ips;
+    }
+
+    getName() {
+        return this.name;
+    }
+
+    getResourceCount() {
+        return Object.keys(this.resources).length;
+    }
+
+    getSection() {
+        return this.section;
+    }
+
+    setResources(resources: Resource[]) {
+        this.resources = {};
+        this.addResources(resources);
+    }
+
+    setSection(section: CompositionSection) {
+        this.section = section;
     }
 }

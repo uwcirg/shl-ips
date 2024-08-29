@@ -33,24 +33,33 @@
   import { verify } from './shcDecoder.js';
   import issuerKeys from './issuer.private.jwks.json';
   import { ResourceHelper } from './ResourceHelper';
-  import { type SHCFile,
-    type Bundle,
-    type SHCRetrieveEvent,
-    type ResourceRetrieveEvent,
-    type IPSRetrieveEvent,
-    type SHLSubmitEvent, 
-    type SOFAuthEvent } from './types';
-  import type { Patient } from 'fhir/r4';
+  import type { SHCFile,
+    SHCRetrieveEvent,
+    ResourceRetrieveEvent,
+    IPSRetrieveEvent,
+    SHLSubmitEvent, 
+    SOFAuthEvent } from './types';
+  import type { Patient, Bundle } from 'fhir/r4';
+  import { IPSResourceCollectionStore, newIPSResourceCollection } from './IPSResourceCollectionStore.js';
+  import { IPSExtensionStore, newIPSExtensionStore } from './IPSExtensionStore.js';
  
   export let status = "";
   
   let shlIdParam = $page.url.searchParams.get('shlid');
 
+  let resourceStore: IPSResourceCollectionStore = newIPSResourceCollection();
+
+  let adExtensionStore: IPSExtensionStore = newIPSExtensionStore('Advance Directives');
+  let odhExtensionStore: IPSExtensionStore = newIPSExtensionStore('Occupation Data');
+  let extensionStores: {[key: string]: IPSExtensionStore} = {
+    'Advance Directives': adExtensionStore,
+    'Occupation Data': odhExtensionStore
+  };
+
   const shlDispatch = createEventDispatcher<{ 'shl-submitted': SHLSubmitEvent }>();
   let submitting = false;
   let fetchError = "";
-  let currentTab: string | number;
-  currentTab = 'url';
+  let currentTab: string | number = 'url';
   let emptyResourceListHeader = "Retrieve Your Health Data";
   let fullResourceListHeader = "1. Add data from another provider"
   let addDataHeader = emptyResourceListHeader;
@@ -101,7 +110,7 @@
     }
   }
   $: {
-    if($mode === 'normal') {
+    if ($mode === 'normal') {
       if (currentTab !== "smart" && currentTab !== "ad") {
         setTimeout(() => document.querySelector(`span.smart-tab`)?.parentElement?.click(), 1); 
       }
@@ -181,6 +190,7 @@
           handleAddDataAccordion({ event: true });
           // Trigger update in ResourceSelector
           resourcesToReview = resourceResult.resources;
+          $resourceStore.addResources(resourceResult.resources);
           showSuccessMessage();
         }
       } catch (e) {
@@ -399,7 +409,7 @@
     <AccordionItem class="ad-data">
       <h5 slot="header" class="my-2">3. Add advance directives</h5>
       <Label>Advance directives help providers know more about your medical preferences</Label>
-      <FetchAD bind:adSection={adData.section} bind:adSectionResources={adData.resources}></FetchAD>
+      <FetchAD bind:extensionStore={adExtensionStore}></FetchAD>
     </AccordionItem>
     <ResourceSelector
       bind:newResources={resourcesToReview}
