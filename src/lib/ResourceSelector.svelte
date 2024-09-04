@@ -29,14 +29,15 @@
     import Organization from './resource-templates/Organization.svelte';
     import Patient from './resource-templates/Patient.svelte';
     import Practitioner from './resource-templates/Practitioner.svelte';
-    import Problem from './resource-templates/Problem.svelte';
     import Procedure from './resource-templates/Procedure.svelte';
     import SocialHistory from './resource-templates/SocialHistory.svelte';
+    
+    import type { Resource } from 'fhir/r4';
 
-    export let newResources: Array<any> | undefined;
+    export let newResources: Array<Resource> | undefined;
     export let submitting: boolean;
-    export let patient: any | undefined;
-    export let injectedResources: Record<string, {section: any|undefined; resources: { [key: string]: ResourceHelper }}>;
+    export let patient: Resource | undefined;
+    export let injectedResources: Record<string, {section: string | undefined; resources: { [key: string]: ResourceHelper }}>;
 
     const components: Record<string, any> = {
         "AllergyIntolerance": AllergyIntolerance,
@@ -54,7 +55,6 @@
         "Organization": Organization,
         "Patient": Patient,
         "Practitioner": Practitioner,
-        "Problem": Problem,
         "Procedure": Procedure,
         "Social History": SocialHistory,
         "Advance Directives": AdvanceDirective
@@ -63,8 +63,8 @@
     const ipsDispatch = createEventDispatcher<{ 'ips-retrieved': IPSRetrieveEvent }>();
     const statusDispatch = createEventDispatcher<{ 'status-update': string }>();
     const errorDispatch = createEventDispatcher<{ 'error': string }>();
-    let resources:{ [key: string]: ResourceHelper } = {};
-    let resourcesByType:{ [key: string]: { [key: string]: ResourceHelper} } = {};
+    let resources: { [key: string]: ResourceHelper } = {};
+    let resourcesByType: { [key: string]: { [key: string]: ResourceHelper} } = {};
     let reference: string;
     let patientReference: string;
     let patients: {[key: string]: ResourceHelper} = {};
