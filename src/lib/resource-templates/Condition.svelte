@@ -1,8 +1,10 @@
-<script>
+<script lang="ts">
   import { Badge } from 'sveltestrap';
-  export let resource; // Define a prop to pass the data to the component
+  import type { Condition } from 'fhir/r4';
 
-  function badgeColor(severity) {
+  export let resource : Condition; // Define a prop to pass the data to the component
+
+  function badgeColor(severity: string) {
     if (severity) {
       if (severity == 'Severe') {
         return 'danger';
@@ -17,15 +19,19 @@
 
 {#if resource.clinicalStatus || resource.verificationStatus}
   <Badge color="primary">
-    {resource.clinicalStatus?.coding[0].code ?? ''}
+    {#if resource.clinicalStatus?.coding}
+      {resource.clinicalStatus?.coding[0].code ?? ''}
+    {/if}
     {resource.clinicalStatus &&
       resource.verificationStatus
         ? '/'
         : ''}
-    {resource.verificationStatus?.coding[0].code ?? ''}
+    {#if resource.verificationStatus?.coding}
+      {resource.verificationStatus?.coding[0].code ?? ''}
+    {/if}
   </Badge>
 {/if}
-<Badge color={badgeColor(resource.severity ?? '')}>severity: {resource.severity ?? 'unknown'}</Badge>
+<Badge color={badgeColor(resource.severity?.text ?? '')}>severity: {resource.severity?.text ?? 'unknown'}</Badge>
 <br>
 {#if resource.category && resource.category[0]}
   {#if resource.category[0].coding}
@@ -59,6 +65,6 @@
 {#if resource.bodySite}
   Site: {resource.bodySite}<br>
 {/if}
-{#if resource.bodySite}
+{#if resource.bodySite && resource.onsetDateTime}
   Since {resource.onsetDateTime.split("T")[0]}<br>
 {/if}
