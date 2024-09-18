@@ -1,5 +1,6 @@
 import { writable, get } from 'svelte/store';
 import { IPSExtension } from './IPSExtension';
+import { ResourceHelper } from './ResourceHelper';
 import type { Bundle, CompositionSection, Resource } from 'fhir/r4';
 
 export interface IPSExtensionStore {
@@ -7,6 +8,7 @@ export interface IPSExtensionStore {
     addResources(resources: Resource[]): void;
     extendIPS(ips: Bundle): void;
     getName(): string;
+    getResources(): Record<string, ResourceHelper>;
     getResourceCount(): number;
     getSection(): CompositionSection;
     self(): object;
@@ -33,6 +35,9 @@ export function newIPSExtensionStore(name: string) {
         },
         getName: () => {
             return get(store).getName();
+        },
+        getResources: () => {
+            return get(store).getResources();
         },
         getResourceCount: () => {
             return get(store).getResourceCount();

@@ -7,6 +7,10 @@
       FormGroup,
       Input,
       Row } from 'sveltestrap';
+    import { createEventDispatcher } from 'svelte';
+    import type { ResourceRetrieveEvent } from './types';
+
+    const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
     
     export let odhSection: any | undefined;
     export let odhSectionResources: any[] | undefined;
@@ -506,6 +510,7 @@
                     reference: `${uri}`
                 };
             });
+            resourceDispatch('update-resources', { resources: odhSectionResources.map((r) => r.resource) });
         } else {
             odhSection = undefined;
         }

@@ -10,7 +10,7 @@ export interface IPSExtensionInterface {
 export class IPSExtension implements IPSExtensionInterface {
     name: string;
     section: CompositionSection = {entry: []} as CompositionSection;
-    resources: { [key: string]: ResourceHelper } = {};
+    resources: Record<string, ResourceHelper> = {};
 
     constructor(name: string);
     constructor(name: string, resource: Resource);
@@ -81,6 +81,10 @@ export class IPSExtension implements IPSExtensionInterface {
 
     getName() {
         return this.name;
+    }
+
+    getResources() {
+        return this.resources;
     }
 
     getResourceCount() {

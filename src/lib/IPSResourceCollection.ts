@@ -36,17 +36,17 @@ const allowableResourceTypes = [
 ];
 
 export interface IPSResourceCollectionInterface {
-    resources: { [key: string]: ResourceHelper };
-    resourcesByType: { [key: string]: { [key: string]: ResourceHelper} };
-    patients: {[key: string]: ResourceHelper};
+    resources: Record<string, ResourceHelper>;
+    resourcesByType: Record<string, Record<string, ResourceHelper>>;
+    patients: Record<string, ResourceHelper>;
     selectedPatient: string;
     patientReference: string;
 }
 
 export class IPSResourceCollection implements IPSResourceCollectionInterface {
-    resources: { [key: string]: ResourceHelper } = {};
-    resourcesByType: { [key: string]: { [key: string]: ResourceHelper} } = {};
-    patients: {[key: string]: ResourceHelper} = {};
+    resources: Record<string, ResourceHelper> = {};
+    resourcesByType: Record<string, Record<string, ResourceHelper>> = {};
+    patients: Record<string, ResourceHelper> = {};
     selectedPatient: string = "";
     patientReference: string = "";
 
@@ -155,6 +155,10 @@ export class IPSResourceCollection implements IPSResourceCollectionInterface {
         this.selectedPatient = p;
         this.patientReference = `Patient/${this.patients[this.selectedPatient].resource.id}`;
         this._updatePatientRefs();
+    }
+
+    getResourcesByType() {
+        return this.resourcesByType;
     }
 
     /**

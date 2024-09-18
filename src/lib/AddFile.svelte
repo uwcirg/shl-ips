@@ -6,7 +6,7 @@
   import { getResourcesFromIPS } from './resourceUploader.js';
   import { goto } from '$app/navigation';
   import { getContext } from 'svelte';
-  import type { Writable } from 'svelte/store';
+  import { writable } from 'svelte/store';
   import {
     Accordion,
     AccordionItem,
@@ -40,8 +40,9 @@
     SHLSubmitEvent, 
     SOFAuthEvent } from './types';
   import type { Patient, Bundle } from 'fhir/r4';
-  import { IPSResourceCollectionStore, newIPSResourceCollection } from './IPSResourceCollectionStore.js';
-  import { IPSExtensionStore, newIPSExtensionStore } from './IPSExtensionStore.js';
+  import { type IPSResourceCollectionStore, newIPSResourceCollection } from './IPSResourceCollectionStore.js';
+  import { type IPSExtensionStore, newIPSExtensionStore } from './IPSExtensionStore.js';
+  // import ResourceSelectorStores from './ResourceSelectorStores.svelte';
  
   export let status = "";
   
@@ -51,10 +52,10 @@
 
   let adExtensionStore: IPSExtensionStore = newIPSExtensionStore('Advance Directives');
   let odhExtensionStore: IPSExtensionStore = newIPSExtensionStore('Occupation Data');
-  let extensionStores: {[key: string]: IPSExtensionStore} = {
+  let extensionStores = writable({
     'Advance Directives': adExtensionStore,
     'Occupation Data': odhExtensionStore
-  };
+  });
 
   const shlDispatch = createEventDispatcher<{ 'shl-submitted': SHLSubmitEvent }>();
   let submitting = false;
@@ -404,7 +405,11 @@
     <AccordionItem class="odh-data">
       <h5 slot="header" class="my-2">2. Add health-related occupational information</h5>
       <Label>It may be helpful to include information about the work you do in your medical summary</Label>
-      <ODHForm bind:odhSection={odhData.section} bind:odhSectionResources={odhData.resources} />
+      <ODHForm
+        bind:odhSection={odhData.section}
+        bind:odhSectionResources={odhData.resources}
+        on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
+      />
     </AccordionItem>
     <AccordionItem class="ad-data">
       <h5 slot="header" class="my-2">3. Add advance directives</h5>
@@ -420,6 +425,14 @@
       on:status-update={ ({ detail }) => { updateStatus(detail) } }
       on:error={ ({ detail }) => { showError(detail) } }
     />
+    <!-- <ResourceSelectorStores
+      bind:resourceStore={resourceStore}  
+      bind:extensionStores={extensionStores}
+      bind:submitting={submitting}
+      on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }
+      on:status-update={ ({ detail }) => { updateStatus(detail) } }
+      on:error={ ({ detail }) => { showError(detail) } }
+    /> -->
   {/if}
 </Accordion>
 {#if resourcesToReview.length > 0}
