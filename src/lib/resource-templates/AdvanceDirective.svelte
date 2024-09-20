@@ -62,6 +62,17 @@ Text:
   {resource.status}
 {/if}
 <br />
+
+<!-- Revoke Status -->
+{#if resource.extension}
+  {#each resource.extension as ext}
+    {#if ext.url == 'http://hl7.org/fhir/us/pacio-adi/StructureDefinition/adi-document-revoke-status-extension'}
+      <b>Revoke Status:</b> {ext.valueCoding.code}
+      <br />
+    {/if}
+  {/each}
+{/if}
+
 <b>docStatus:</b>
 {#if resource.docStatus}
   {resource.docStatus}
