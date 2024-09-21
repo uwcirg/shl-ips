@@ -11,9 +11,6 @@
     import type { ResourceRetrieveEvent } from './types';
 
     const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
-    
-    export let odhSection: any | undefined;
-    export let odhSectionResources: any[] | undefined;
 
     let canShare = navigator?.canShare?.({ url: 'https://example.com', title: 'Title' }); // True for Chrome
 
@@ -496,25 +493,14 @@
         buttonText = "Added!";
         buttonDisabled = true;
         setTimeout(() => {
-          buttonText = odhSection ? "Update occupation" : "Add occupation to Summary";
           buttonDisabled = false;
+          buttonText = "Add occupation to summary";
         }, 1000);
         if (employmentStatus || currentJob || pastJob || retirementDate || combatPeriod) {
-            if (odhSection === undefined) {
-                odhSection = JSON.parse(JSON.stringify(odhSectionTemplate));
-            }
-            odhSectionResources = [employmentStatus, currentJob, pastJob, retirementDate, combatPeriod].filter((r) => r !== undefined);
-            odhSection.entry = odhSectionResources.map((r) => {
-                let uri = r.fullUrl;
-                return {
-                    reference: `${uri}`
-                };
-            });
-            resourceDispatch('update-resources', { resources: odhSectionResources.map((r) => r.resource) });
-        } else {
-            odhSection = undefined;
+          let odhSectionResources = [employmentStatus, currentJob, pastJob, retirementDate, combatPeriod].filter((r) => r !== undefined);
+          resourceDispatch('update-resources', { resources: odhSectionResources.map((r) => r.resource) });
+          console.log(odhSectionResources);
         }
-        console.log(odhSectionResources);
     }
 </script>
 
