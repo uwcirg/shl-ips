@@ -368,31 +368,27 @@
       // if one of the DR's `content` elements has attachment.contentType = 'application/pdf', download if possible, put base64 of pdf in DR.content.attachment.data
       const hasPdfContent = dr => dr.content && dr.content.some(content => content.attachment && content.attachment.contentType === 'application/pdf' && !content.attachment.data);
 
-      // if one of the DR's 
+      // if one of the DR's
       const isPolst = dr => dr.type && dr.type.coding && dr.type.coding.some(coding => coding.system === 'http://loinc.org' && coding.code === '100821-8');
 
-      resources.forEach(async dr => {
-        if (hasPdfContent(dr)) {
-          const pdfContent = dr.content.find(content => content.attachment && content.attachment.contentType === 'application/pdf');
-          if (pdfContent && pdfContent.attachment && pdfContent.attachment.url) {
-            await injectPdfIntoDocRef (pdfContent.attachment.url, pdfContent.attachment);
-          }
-        }
-      });
       resources.forEach(async dr => {
         // If this DR is a POLST, add the following chain of queries:
         if (isPolst(dr)){
           // In the POLST find the content[] with format.code = "urn:hl7-org:pe:adipmo-structuredBody:1.1" (ADIPMO Structured Body Bundle),
-          const contentAdipmoBundleRef = dr.content.find(content => content.format && content.format.code && content.format.code === 'urn:hl7-org:pe:adipmo-structuredBody:1.1');
+          const contentAdipmoBundleRef = dr.content.find(content => content.format && content.format.code && content.format.code === 'urn:hl7-org:pe:adipmo-structuredBody:1.1' && content.attachment && content.attachment.url && content.attachment.url.includes('Bundle'));
           if (contentAdipmoBundleRef) {
             // look in that content's attachment.url, that will point at a Bundle (e.g. https://qa-rr-fhir2.maxmddirect.com/Bundle/10f4ff31-2c24-414d-8d70-de3a86bed808?_format=json)
             const adipmoBundleUrl = contentAdipmoBundleRef.attachment.url;
             // Pull that Bundle.
-            let adipmoBundle;
-            adipmoBundle = await fetchResourceByUrl(adipmoBundleUrl);
-            let adipmoBundleJson;
-            //adipmoBundleJson = await adipmoBundle.json();
-            adipmoBundleJson = adipmoBundle.json();
+            //let adipmoBundle;
+            /**adipmoBundle = await Promise.all([
+              fetchResourceByUrl(adipmoBundleUrl)
+            ]);*/
+            let adipmoBundle = await fetchResourceByUrl(adipmoBundleUrl);
+            //if (adipmoBundle.json() != undefined){
+            let adipmoBundleJson = await adipmoBundle.json();
+            //adipmoBundleJson = adipmoBundle.json();
+            //adipmoBundleJson = adipmoBundle;
             //   That bundle will include ServiceRequest resources.
             const serviceRequest = adipmoBundleJson.entry.find(entry => entry.resource && entry.resource.resourceType === 'ServiceRequest' && entry.category[0].coding[0].code === '100822-6');
             //serviceRequests.forEach( serviceRequest => {
@@ -402,6 +398,15 @@
             dr.isCpr = isCpr;
             dr.doNotPerform = doNotPerform;
             //});
+          //}
+          }
+        }
+      });
+      resources.forEach(async dr => {
+        if (hasPdfContent(dr)) {
+          const pdfContent = dr.content.find(content => content.attachment && content.attachment.contentType === 'application/pdf');
+          if (pdfContent && pdfContent.attachment && pdfContent.attachment.url) {
+            await injectPdfIntoDocRef (pdfContent.attachment.url, pdfContent.attachment);
           }
         }
       });
