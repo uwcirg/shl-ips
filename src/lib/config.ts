@@ -40,7 +40,26 @@ export const SOF_HOSTS = [
     url: "https://launch.smarthealthit.org/v/r4/sim/WzMsIiIsIiIsIkFVVE8iLDAsMCwwLCIiLCIiLCIiLCIiLCIiLCIiLCIiLDAsMF0/fhir",
     clientId: "<no client id>",
     note: "Credentials provided"
-  }
+  },
+  {
+    id: "aetna",
+    name: "AETNA Insurance Sandbox",
+    url: "https://vteapif1.aetna.com/fhirdemo/v1/patientaccess",
+    clientId: import.meta.env.VITE_AETNA_CLIENT_ID,
+    note: "VTETestUser01 / FHIRdemo2020"
+  },
+  {
+    id: "carefirst",
+    name: "CareFirst",
+    url: "https://chpdc-api-sita.carefirst.com/v1/fhir/patientaccess",
+    // url: "https://chpmd-api-sita.carefirst.com/v1/fhir/patientaccess",
+    // url: "https://dsnp-api-sita.carefirst.com/v1/fhir/patientaccess",
+    // url: "https://mapd-api-sita.carefirst.com/v1/fhir/patientaccess",
+    // url: "https://mhbe-api-sita.carefirst.com/v1/fhir/patientaccess",
+    // url: "https://egwp-api-sita.carefirst.com/v1/fhir/patientaccess",
+    clientId: import.meta.env.VITE_CAREFIRST_CLIENT_ID,
+    note: "Credentials provided"
+  },
 ];
 export const SOF_REDIRECT_URI = '/create';
 export const SOF_RESOURCES = [
@@ -69,19 +88,19 @@ export const SOF_PATIENT_RESOURCES = [
   'AllergyIntolerance',
   // 'MedicationStatement', // Not in EPIC USCDI R4
   'MedicationRequest',
-  // 'Medication', // can't search by patient; "Only an _ID search is allowed."
+  // 'Medication', // Pulled in via references - can't search by patient; "Only an _ID search is allowed."
   'Condition',
   'Encounter',
-  // 'Observation', // "Must have either code or category."
-  // 'Organization', // can't search by patient; "Only an _ID search is allowed."
+  // 'Observation', // Handle specially for IPS codes - "Must have either code or category."
+  // 'Organization', // Pulled in via references - can't search by patient; "Only an _ID search is allowed."
   'Immunization',
   // 'Device',
   // 'DeviceUseStatement', // Not in EPIC USCDI R4
   'DiagnosticReport', // TODO change to subject
   // 'ImagingStudy', // Not in EPIC USCDI R4
   // 'Media', // Not in EPIC USCDI R4
-  // 'Practitioner', // can't search by patient; "Either name, family, or identifier is a required parameter."
-  // 'PractitionerRole',  // can't search by patient; "An identifier, practitioner, organization, location, or specialty parameter is required."
+  // 'Practitioner', // Pulled in via references - can't search by patient; "Either name, family, or identifier is a required parameter."
+  // 'PractitionerRole',  // Pulled in via references - can't search by patient; "An identifier, practitioner, organization, location, or specialty parameter is required."
   'Procedure', // TODO change to subject
   // 'Specimen', // Not in EPIC USCDI R4
 ];

@@ -10,7 +10,7 @@
 
   import { SOF_HOSTS } from './config';
   import type { ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from './types';
-  import { authorize, getResourcesWithReferences } from './sofClient.js';
+  import { authorize, getResourcesWithReferences, activePatient } from './sofClient.js';
   import { createEventDispatcher, onMount } from 'svelte';
   
   const authDispatch = createEventDispatcher<{'sof-auth-init': SOFAuthEvent; 'sof-auth-fail': SOFAuthEvent}>();
@@ -36,10 +36,10 @@
     try {
       if (sofHost) {
         try {
-          authorize(sofHost.url, sofHost.clientId);
-          authDispatch('sof-auth-init');
+          authorize(sofHost.url, sofHost.clientId);// , sofHost.clientSecret);
+          authDispatch('sof-auth-init', { data: true });
         } catch (e) {
-          authDispatch('sof-auth-fail')
+          authDispatch('sof-auth-fail', { data: false });
         }
       }
     } catch (e) {
@@ -82,7 +82,9 @@
       console.log(resources)
       processing = false;
       return resourceDispatch('update-resources', result);
-    } catch (e) {
+    } catch (e: any) {
+      console.log(e.message);
+      fetchError = e.message;
       processing = false;
       endSession();
     }
