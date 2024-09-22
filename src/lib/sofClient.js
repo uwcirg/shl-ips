@@ -7,7 +7,8 @@ const patientResourceScope = SOF_PATIENT_RESOURCES.map(resourceType => `patient/
 const resourceScope = patientResourceScope.join(" ");
 const config = {
         clientId: '(ehr client id, populated later)', // clientId() is ignored at smit
-        scope: `openid fhirUser launch/patient ${resourceScope}`,
+        // scope: `openid fhirUser launch/patient ${resourceScope}`,
+        scope: `launch/patient patient/*.read`,
         iss: '(authorization url, populated later)',
         redirect_uri: SOF_REDIRECT_URI
     };
@@ -70,9 +71,8 @@ async function requestResources(client, resourceType) {
 async function activePatient() {
     if (client === undefined) {
         client = await FHIR.oauth2.ready();
-        return client.getPatientId();
     }
-    return null
+    return client.getPatientId() ?? undefined;
 }
 
 async function getResources() {
@@ -85,6 +85,7 @@ async function getResources() {
     // Establish resource display methods
     let resources;
     if (client.state.clientId === "XfubBaEQzzHCOvgeB9Q7qZbg4QcK3Jro_65w5VWFRP8") {
+        // Minimum required requests for eClinicalWorks HIMSS 2024 demo
         resources = (await Promise.allSettled(['Patient', 'Immunization'].map((resourceType) => {
             return requestResources(client, resourceType);
         }))).filter(x => x.status == "fulfilled").map(x => x.value);

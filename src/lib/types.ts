@@ -32,6 +32,7 @@ export interface SOFHost {
   name:string;
   url:string;
   clientId:string;
+  clientSecret?: string;
   note:string | undefined;
 }
 

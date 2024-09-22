@@ -10,7 +10,7 @@
 
   import { SOF_HOSTS } from './config';
   import type { ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from './types';
-  import { authorize, getResourcesWithReferences } from './sofClient.js';
+  import { authorize, getResourcesWithReferences, activePatient } from './sofClient.js';
   import { createEventDispatcher, onMount } from 'svelte';
   import { getContext } from 'svelte';
   import type { Writable } from 'svelte/store';
@@ -38,7 +38,7 @@
     try {
       if (sofHost) {
         try {
-          authorize(sofHost.url, sofHost.clientId);
+          authorize(sofHost.url, sofHost.clientId, sofHost.clientSecret ?? undefined);
           authDispatch('sof-auth-init');
         } catch (e) {
           authDispatch('sof-auth-fail')
