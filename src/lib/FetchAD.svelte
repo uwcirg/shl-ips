@@ -300,10 +300,39 @@
         console.warn("No advance directives found for patient "+patient.id);
       }
 
-      // If resource.category doesn't exist, ignore the DR - DR's w/out that are simply signature DR's.
-      // Lambda function to check if resource.category exists
-      const nonSignatureDR = dr => dr.category !== undefined;
-      // Filter out resources that don't have a category
+      // Filter out DR's with 'status' == 'superseded'. In May '24 we included these,
+      // but they are just noise since IPS doesn't want to address the complexity of
+      // showing these in the UI behind something like a "history" element.
+      // Lambda function to check this:
+      const nonSupersededDR = dr => dr.status !== 'superseded';
+      // Filter out signature resources
+      resources = resources.filter(nonSupersededDR);
+
+      // Iterate over DR's that are for signatures.
+      // Get the date from when it was signed, and show that in the card for the DocumentReference
+      // that it applies to.
+      // That date will be in content.attachment.creation (Lisa to add the evening of 2024-07-17).
+      resources.forEach(dr => {
+        if (dr.relatesTo && dr.relatesTo[0] && dr.relatesTo[0].code && dr.relatesTo[0].code == 'signs'
+          && dr.relatesTo[0].target && dr.relatesTo[0].target.reference) {
+          // e.g. "DocumentReference/9fad9465-5c95-49cf-a8ff-c3b8d782894d"
+          let target = dr.relatesTo[0].target.reference;
+          target = target.substring(18);
+          let pdfSignDate = '(missing from content.attachment.creation in signature DocumentReference)'; // placeholder until Lisa's change
+          if (dr.content && dr.content[0] && dr.content[0].attachment && dr.content[0].attachment.creation){
+            pdfSignDate = dr.content[0].attachment.creation;
+          }
+          let resourceSigned = resources.find((item) => item.id == target);
+          resourceSigned.pdfSignedDate = pdfSignDate; // pdfSignedDate is an ad-hoc property name
+        }
+      });
+
+      // July '24: unlike the May '24 connectathon, signature DR's now have resource.category defined.
+      // The ADI team is planning to add a code for these later, but for the time being they suggest
+      // that we identify these by: "description": "JWS of the FHIR Document",
+      // FIXME may be better to do this when we iterate for the TODO above.
+      const nonSignatureDR = dr => dr.description !== 'JWS of the FHIR Document';
+      // Filter out signature resources
       resources = resources.filter(nonSignatureDR);
 
       // if one of the DR's `content` elements has attachment.contentType = 'application/pdf', download if possible, put base64 of pdf in DR.content.attachment.data
@@ -418,7 +447,7 @@
         {#if !processing}
           Add advance directives to Summary
         {:else}
-          Fetching...
+          Adding...
         {/if}
       </Button>
     </Col>

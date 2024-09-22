@@ -12,8 +12,6 @@
   import type { ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from './types';
   import { authorize, getResourcesWithReferences, activePatient } from './sofClient.js';
   import { createEventDispatcher, onMount } from 'svelte';
-  import { getContext } from 'svelte';
-  import type { Writable } from 'svelte/store';
   
   const authDispatch = createEventDispatcher<{'sof-auth-init': SOFAuthEvent; 'sof-auth-fail': SOFAuthEvent}>();
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
@@ -94,7 +92,6 @@
   import { EXAMPLE_IPS, IPS_DEFAULT } from './config';
   import type { IPSRetrieveEvent } from './types';
   let defaultUrl = EXAMPLE_IPS[IPS_DEFAULT];
-  let mode: Writable<string> = getContext('mode');
   const ipsDispatch = createEventDispatcher<{'ips-retrieved': IPSRetrieveEvent}>();
   let ipsResult: IPSRetrieveEvent = {
     ips: undefined

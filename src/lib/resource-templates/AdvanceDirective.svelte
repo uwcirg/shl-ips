@@ -1,4 +1,5 @@
 <script>
+  import { base64toBlob } from '$lib/util';
   export let resource; // Define a prop to pass the data to the component
 </script>
 
@@ -45,14 +46,17 @@ Text:
 <br />
 <b>Version number:</b>
 {#if resource.extension && resource.extension[0] && resource.extension[0].url && resource.extension[0].url == 'http://hl7.org/fhir/us/ccda/StructureDefinition/VersionNumber'}
+  <!-- As of the July '24 this is now a unix time stamp --> 
   {resource.extension[0].valueInteger}
 {/if}
 <br />
+<!-- This is the date that the DocumentReference resource was created, not of interest.
 <b>Date:</b>
 {#if resource.date}
   {resource.date}
 {/if}
 <br />
+-->
 <b>Status:</b>
 {#if resource.status}
   {resource.status}
@@ -68,9 +72,22 @@ Text:
 {/if}
 <br/>
 {#if resource.content}
+<!-- FIXME This iteration not ideal - should iterate whether pdf present or not, as created & pdfSignedDate (ill-named) actually refer to the larget context of the DR, not the pdf... as it stands the Personal Advance Care Plan Document won't show created/signed (bug), tho we don't care so much about that one in IPS. 
+-->
   {#each resource.content as content}
-    {#if content.attachment && content.attachment.data}
-      <b>PDF present:</b> <a href={"data:application/pdf;base64," + content.attachment.data} target="_blank" rel="noopener noreferrer">View</a>
+    {#if content.attachment && content.attachment.contentType === "application/pdf" && content.attachment.data}
+      {#await base64toBlob(content.attachment.data, content.attachment.contentType) then url}
+        {#if content.attachment && content.attachment.creation}
+          <b>Created:</b> {new Date(content.attachment.creation).toISOString().slice(0,10)}
+					<br/>
+        {/if}
+        {#if resource.pdfSignedDate}
+          <b>Digitally signed:</b> {new Date(resource.pdfSignedDate).toISOString().slice(0,10)}
+					<br/>
+        {/if}
+        <b>PDF present:</b> 
+      <a href={url} target="_blank" rel="noopener noreferrer">View</a>
+      {/await}
     {/if}
   {/each}
 {/if}
