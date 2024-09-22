@@ -169,7 +169,7 @@
 <Row style="padding:0px 12px">
   <Col style="padding:0; margin-bottom: 20px; border-bottom: 1px solid rgb(204, 204, 204);">
     <Image alt="WA Verify Logo" width="200" src="/img/waverifypluslogo.png" style="align-self: center" />
-    <div style="vertical-align: middle; font-size: 18px; display: inline-block; padding-left: 17px; font-family: Verdana, sans-serif; color: rgb(34, 72, 156);">International Patient Summary</div>
+    <div style="vertical-align: middle; font-size: 18px; display: inline-block; padding-left: 17px; font-family: Verdana, sans-serif; color: rgb(34, 72, 156);">International Patient Summary Prototype</div>
   </Col>
 </Row>
 <Row class="main-row">
