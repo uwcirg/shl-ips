@@ -42,6 +42,10 @@ export const SOF_HOSTS = [
     note: "Credentials provided"
   }
 ];
+
+export const BEARER_AUTHORIZATION = {
+  'Meditech': import.meta.env.VITE_MEDITECH_BEARER_TOKEN
+}
 export const SOF_REDIRECT_URI = '/create';
 export const SOF_RESOURCES = [
   'Patient',
@@ -97,7 +101,8 @@ export const PATIENT_IPS = {
 export const EXAMPLE_IPS = {
   'Maria SEATTLE Gravitate': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/14599/$summary',
   'Martha Mum': 'https://hl7-ips-server.hl7.org/fhir/Patient/15/$summary',
-  'Peter Keith Jones': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/11013/$summary',
+  'Meditech 1': 'https://dev-mtx-interop.meditech.com:443/v2/ips/STU1/Patient/f3b430be-1f8a-53d3-8261-4ffbafa05a61/$summary',
+  // 'Meditech 2': 'https://dev-mtx-interop.meditech.com:443/v2/ips/STU1/Patient/9bad7dc5-47ad-5022-82e7-0cb0aab13ee9/$summary', // Error returned
   'Angela Roster': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/10965/$summary',
   'Horace Skelly': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/11142/$summary',
   'Anonymous': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/10999/$summary',
