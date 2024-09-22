@@ -60,18 +60,17 @@ export class IPSExtension implements IPSExtensionInterface {
             sectionToUse.entry = [];
         }
         let rkeys = Object.keys(this.resources);
-        for (let i=0; i < rkeys.length; i++) {
-            if (this.resources[rkeys[i]].include) {
-                let entry = {
-                    resource: this.resources[rkeys[i]].resource as FhirResource,
-                    fullUrl: `urn:uuid:${this.resources[rkeys[i]].resource.id}`
-                }
-                ips.entry.push(entry);
-                sectionToUse.entry.push({
-                    reference: `${entry.fullUrl}`
-                });
+        let selected = this.getSelectedResources();
+        selected.forEach((rh:ResourceHelper) => {
+            let entry = {
+                resource: rh.resource as FhirResource,
+                fullUrl: `urn:uuid:${rh.resource.id}`
             }
-        }
+            ips.entry?.push(entry);
+            sectionToUse.entry?.push({
+                reference: `${entry.fullUrl}`
+            });
+        });
         if (addingNewSection) {
             composition.section?.push(sectionToUse);
         }
@@ -93,6 +92,11 @@ export class IPSExtension implements IPSExtensionInterface {
 
     getSection() {
         return this.section;
+    }
+
+    getSelectedResources() {
+        let selectedResources = Object.values(this.resources).filter(resource => resource.include);
+        return selectedResources;
     }
 
     setResources(resources: Resource[]) {

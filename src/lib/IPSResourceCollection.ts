@@ -134,6 +134,11 @@ export class IPSResourceCollection implements IPSResourceCollectionInterface {
             return true;
         });
         resources.forEach(r => this.addResource(r));
+        if (this.selectedPatient) {
+            this.setSelectedPatient(this.selectedPatient);
+        } else {
+            this.setSelectedPatient(Object.keys(this.patients)[0]);
+        }
         // TODO: Test if this triggers reactive updates
         // let newAndOldResources = Object.values(resourceHelperStorage).concat(resources).sort(sortResources);
 
@@ -159,6 +164,10 @@ export class IPSResourceCollection implements IPSResourceCollectionInterface {
 
     getResourcesByType() {
         return this.resourcesByType;
+    }
+
+    getSelectedPatient() {
+        return this.patients[this.selectedPatient];
     }
 
     /**

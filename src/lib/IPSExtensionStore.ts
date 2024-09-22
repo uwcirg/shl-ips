@@ -11,6 +11,7 @@ export interface IPSExtensionStore {
     getResources(): Record<string, ResourceHelper>;
     getResourceCount(): number;
     getSection(): CompositionSection;
+    getSelectedResources(): ResourceHelper[];
     self(): object;
     setResources(resources: Resource[]): void;
     setSection(section: CompositionSection): void;
@@ -44,6 +45,9 @@ export function newIPSExtensionStore(name: string) {
         },
         getSection: () => {
             return get(store).getSection();
+        },
+        getSelectedResources: () => {
+            return get(store).getSelectedResources();
         },
         self: () => get(store),
         setResources: (resources: Resource[]) => {

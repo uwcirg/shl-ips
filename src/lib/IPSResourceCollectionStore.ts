@@ -1,11 +1,13 @@
 import { writable, get } from 'svelte/store';
 import { IPSResourceCollection } from './IPSResourceCollection';
 import type { Resource } from 'fhir/r4';
+import { ResourceHelper } from './ResourceHelper';
 
 export interface IPSResourceCollectionStore {
 	addResource(resource: Resource): void;
 	addResources(resources:Resource[]): void;
-	getSelectedResources(): void;
+	getSelectedPatient(): ResourceHelper;
+	getSelectedResources(): ResourceHelper[];
 	self(): object;
 	setSelectedPatient(p: string): void;
 	subscribe(v: any): any;
@@ -24,6 +26,10 @@ export function newIPSResourceCollection() {
 			let s = get(store);
 			s.addResources(resources);
 			store.set(s);
+		},
+		getSelectedPatient() {
+			let s = get(store);
+			return s.getSelectedPatient();
 		},
 		getSelectedResources: () => {
 			let s = get(store);

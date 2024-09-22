@@ -82,15 +82,6 @@
   let resourcesToReview: any[] = [];
   let shcsToAdd: SHCFile[] = [];
   let singleIPS = true;
-  let odhData: {section: any|undefined; resources: any[]|undefined} = {
-    section: undefined,
-    resources: undefined
-  };
-  let adData: {section: any|undefined; resources: any[]|undefined} = {
-    section: undefined,
-    resources: undefined
-  };
-  let resourcesToInject: Record<string, {section: any|undefined; resources: {[key: string]: ResourceHelper}}> = {};
   let patientName = "My";
   let patient: Patient | undefined;
 
@@ -102,50 +93,25 @@
   $: type = showPassword ? 'text' : 'password';
   $: icon = showPassword ? 'eye-fill' : 'eye-slash-fill';
   $: addDataHeader = resourcesToReview.length == 0 ? emptyResourceListHeader : fullResourceListHeader;
+  $: patient = $resourceStore.selectedPatient?.resource;
   $: {
     if (patient?.name?.[0].given) {
       patientName = patient.name[0]?.given[0];
     }
+  }
+  $: {
     if (patientName) {
-      label = (patientName !== undefined ? patientName.charAt(0).toUpperCase() + patientName.slice(1).toLowerCase() + "'s" : "My")+ " Summary Link " + new Date().toISOString().slice(0, 10);
+      label = patientName.charAt(0).toUpperCase() + patientName.slice(1).toLowerCase() + "'s";
+    } else {
+      label = "My";
     }
+    label = label + " Summary Link " + new Date().toISOString().slice(0, 10);
   }
   $: {
     if ($mode === 'normal') {
       if (currentTab !== "smart" && currentTab !== "ad") {
         setTimeout(() => document.querySelector(`span.smart-tab`)?.parentElement?.click(), 1); 
       }
-    }
-  }
-  $: {
-    if (odhData.resources || odhData.section) {
-      let odhInjection: {section: any|undefined; resources: {[key: string]: ResourceHelper}}  = {
-        section: odhData.section,
-        resources: {}
-      }
-      odhData.resources?.forEach((r) => {
-        let rh = new ResourceHelper(r.resource);
-        odhInjection.resources[rh.tempId] = rh;
-      });
-      resourcesToInject["Social History"] = odhInjection;
-    } else {
-      delete resourcesToInject["Social History"];
-    }
-  }
-
-  $: {
-    if (adData.resources || adData.section) {
-      let adInjection: {section: any|undefined; resources: {[key: string]: ResourceHelper}}  = {
-        section: adData.section,
-        resources: {}
-      }
-      adData.resources?.forEach((r) => {
-        let rh = new ResourceHelper(r.resource);
-        adInjection.resources[rh.tempId] = rh;
-      });
-      resourcesToInject["Advance Directives"] = adInjection;
-    } else {
-      delete resourcesToInject["Advance Directives"];
     }
   }
 
@@ -406,8 +372,6 @@
       <h5 slot="header" class="my-2">2. Add health-related occupational information</h5>
       <Label>It may be helpful to include information about the work you do in your medical summary</Label>
       <ODHForm
-        bind:odhSection={odhData.section}
-        bind:odhSectionResources={odhData.resources}
         on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
       />
     </AccordionItem>
@@ -416,23 +380,14 @@
       <Label>Advance directives help providers know more about your medical preferences</Label>
       <FetchAD bind:extensionStore={adExtensionStore}></FetchAD>
     </AccordionItem>
-    <ResourceSelector
-      bind:newResources={resourcesToReview}
-      bind:patient={patient}
-      bind:submitting={submitting}
-      bind:injectedResources={resourcesToInject}
-      on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }
-      on:status-update={ ({ detail }) => { updateStatus(detail) } }
-      on:error={ ({ detail }) => { showError(detail) } }
-    />
-    <!-- <ResourceSelectorStores
-      bind:resourceStore={resourceStore}  
+    <ResourceSelectorStores
+      bind:resourceStore={$resourceStore}
       bind:extensionStores={extensionStores}
       bind:submitting={submitting}
       on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }
       on:status-update={ ({ detail }) => { updateStatus(detail) } }
       on:error={ ({ detail }) => { showError(detail) } }
-    /> -->
+    />
   {/if}
 </Accordion>
 {#if resourcesToReview.length > 0}
