@@ -84,15 +84,57 @@ Text:
 <br/>
 
 {#if resource.isPolst}
-{#if resource.isCpr}
-{#if resource.doNotPerform}
-  <b>This includes a directive to NOT perform CPR.</b>
+<br/>
+  <b>
+  POLST Details:
+<br/>
+    <ul>
+      {#if resource.isCpr}
+        <ol>
+{#if resource.doNotPerformCpr}
+  This includes a directive to NOT perform CPR.
 {:else}
-  <b>This includes a directive to perform CPR.</b>
+  This includes a directive to perform CPR.
 {/if}
-{/if}
+        </ol>
 {/if}
 <br/>
+
+{#if resource.isComfortTreatments}
+        <ol>
+{#if resource.doNotPerformComfortTreatments}
+  This includes a directive to NOT perform comfort-focused treatments: {@html resource.detailComfortTreatments}
+{:else}
+  This includes a directive to perform comfort-focused treatments: {@html resource.detailComfortTreatments}
+{/if}
+        </ol>
+{/if}
+<br/>
+
+{#if resource.isAdditionalTx}
+        <ol>
+{#if resource.doNotPerformAdditionalTx}
+  This includes a directive to NOT perform additional treatments: {@html resource.detailAdditionalTx}
+{:else}
+  This includes a directive to perform additional treatments: {@html resource.detailAdditionalTx}
+{/if}
+        </ol>
+{/if}
+<br/>
+
+{#if resource.isMedicallyAssisted}
+        <ol>
+{#if resource.doNotPerformMedicallyAssisted}
+  This includes a directive to NOT perform medically assisted nutrition: {@html resource.detailMedicallyAssisted}
+{:else}
+  This includes a directive to perform medically assisted nutrition: {@html resource.detailMedicallyAssisted}
+{/if}
+        </ol>
+{/if}
+</ul>
+</b>
+<br/>
+{/if}
 
 {#if resource.content}
 <!-- FIXME This iteration not ideal - should iterate whether pdf present or not, as created & pdfSignedDate (ill-named) actually refer to the larget context of the DR, not the pdf... as it stands the Personal Advance Care Plan Document won't show created/signed (bug), tho we don't care so much about that one in IPS. 

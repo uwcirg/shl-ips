@@ -383,14 +383,46 @@
             // Pull that Bundle.
             let adipmoBundle = await fetchResourceByUrl(adipmoBundleUrl);
             let adipmoBundleJson = await adipmoBundle.json();
-            //   That bundle will include ServiceRequest resources; look for the one for CPR (loinc 100822-6) 
-            const serviceRequest = adipmoBundleJson.entry.find(
+
+            // TODO The next 4 sections should be generalized into an iteration, just need carve out for "detail" for 2.
+
+            // That bundle will include ServiceRequest resources; look for the one for CPR (loinc 100822-6) 
+            const serviceRequestCpr = adipmoBundleJson.entry.find(
               entry => entry.resource && entry.resource.resourceType === 'ServiceRequest'
               && entry.resource.category && entry.resource.category[0].coding[0].code === '100822-6');
             dr.isCpr = false;
-            if (serviceRequest !== undefined) dr.isCpr = true;
+            if (serviceRequestCpr !== undefined) dr.isCpr = true;
+            dr.doNotPerformCpr = serviceRequestCpr.resource.doNotPerform && serviceRequestCpr.resource.doNotPerform == true;
 
-            dr.doNotPerform = serviceRequest.resource.doNotPerform && serviceRequest.resource.doNotPerform == true;
+            // That bundle will include ServiceRequest resources; look for the one for "Initial portable medical treatment orders" (loinc 100823-4) aka Comfort Treatments
+            const serviceRequestComfortTreatments = adipmoBundleJson.entry.find(
+              entry => entry.resource && entry.resource.resourceType === 'ServiceRequest'
+              && entry.resource.category && entry.resource.category[0].coding[0].code === '100823-4');
+            dr.isComfortTreatments = false;
+            if (serviceRequestComfortTreatments !== undefined) dr.isComfortTreatments = true;
+            dr.doNotPerformComfortTreatments = serviceRequestComfortTreatments.resource.doNotPerform && serviceRequestComfortTreatments.resource.doNotPerform == true;
+
+            dr.detailComfortTreatments = serviceRequestComfortTreatments.resource.note[0].text;
+
+            // That bundle will include ServiceRequest resources; look for the one for "Additional..." (loinc 100824-2)
+            const serviceRequestAdditionalTx = adipmoBundleJson.entry.find(
+              entry => entry.resource && entry.resource.resourceType === 'ServiceRequest'
+              && entry.resource.category && entry.resource.category[0].coding[0].code === '100824-2');
+            dr.isAdditionalTx = false;
+            if (serviceRequestAdditionalTx !== undefined) dr.isAdditionalTx = true;
+            dr.doNotPerformAdditionalTx = serviceRequestAdditionalTx.resource.doNotPerform && serviceRequestAdditionalTx.resource.doNotPerform == true;
+
+            dr.detailAdditionalTx = serviceRequestAdditionalTx.resource.orderDetail[0].text;
+
+            // That bundle will include ServiceRequest resources; look for the one for "Medically assisted nutrition orders" (loinc 100825-9)
+            const serviceRequestMedicallyAssisted = adipmoBundleJson.entry.find(
+              entry => entry.resource && entry.resource.resourceType === 'ServiceRequest'
+              && entry.resource.category && entry.resource.category[0].coding[0].code === '100825-9');
+            dr.isMedicallyAssisted = false;
+            if (serviceRequestMedicallyAssisted !== undefined) dr.isMedicallyAssisted = true;
+            dr.doNotPerformMedicallyAssisted = serviceRequestMedicallyAssisted.resource.doNotPerform && serviceRequestMedicallyAssisted.resource.doNotPerform == true;
+
+            dr.detailMedicallyAssisted = serviceRequestMedicallyAssisted.resource.orderDetail[0].text;
           }
         }
       });
