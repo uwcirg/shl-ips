@@ -88,6 +88,7 @@ Text:
   <b>
   POLST Details:
 <br/>
+<br/>
     <ul>
       {#if resource.isCpr}
         <ol>
@@ -147,8 +148,10 @@ Text:
 					<br/>
         {/if}
         {#if resource.pdfSignedDate}
+          <!--
           <b>Digitally signed:</b> {new Date(resource.pdfSignedDate).toISOString().slice(0,10)}
-					<br/>
+          <br/>
+          -->
         {/if}
         <b>PDF present:</b> 
       <a href={url} target="_blank" rel="noopener noreferrer">View</a>
