@@ -12,6 +12,7 @@ const allowableResourceTypes = [
     'DiagnosticReport',
     'DocumentReference',
     'Encounter',
+    'Flag',
     'Immunization',
     'Location',
     'Media',
