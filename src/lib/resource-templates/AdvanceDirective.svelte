@@ -21,13 +21,9 @@
     );
   }
 
-
 </script>
 
-{#if isRevoked}
-  <div class="less-interest">
-</div>
-{/if}
+<div class:is-revoked={isRevoked}>
 
 <!--
 Type: {resource.resourceType}
@@ -186,12 +182,10 @@ Text:
   {/each}
 {/if}
 
-{#if isRevoked}
- <!-- </div> -->
-{/if}
+</div>
 
 <style>
-  .less-interest {
+  .is-revoked {
     background-color: #f0f0f0; /* Light gray background */
     padding: 10px;
     border-radius: 5px;
