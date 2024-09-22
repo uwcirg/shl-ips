@@ -40,7 +40,7 @@
     try {
       if (sofHost) {
         try {
-          authorize(sofHost.url, sofHost.clientId);// , sofHost.clientSecret);
+          authorize(sofHost.url, sofHost.clientId);
           authDispatch('sof-auth-init', { data: true });
         } catch (e) {
           authDispatch('sof-auth-fail', { data: false });
