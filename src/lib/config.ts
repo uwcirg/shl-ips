@@ -45,20 +45,19 @@ export const SOF_HOSTS = [
     id: "aetna",
     name: "AETNA Insurance Sandbox",
     url: "https://vteapif1.aetna.com/fhirdemo/v1/patientaccess",
-    clientId: "09cbb76344009c25a2ec587b39ebc303",
-    clientSecret: "4fe39eccbfc586647407ea19f408521f",
+    clientId: import.meta.env.VITE_AETNA_CLIENT_ID,
     note: "VTETestUser01 / FHIRdemo2020"
   },
   {
-    id: "c4bb",
-    name: "CARIN Blue Button",
-    // url: "https://chpdc-api-sita.carefirst.com/v1/fhir/patientaccess",
+    id: "carefirst",
+    name: "CareFirst",
+    url: "https://chpdc-api-sita.carefirst.com/v1/fhir/patientaccess",
     // url: "https://chpmd-api-sita.carefirst.com/v1/fhir/patientaccess",
     // url: "https://dsnp-api-sita.carefirst.com/v1/fhir/patientaccess",
     // url: "https://mapd-api-sita.carefirst.com/v1/fhir/patientaccess",
     // url: "https://mhbe-api-sita.carefirst.com/v1/fhir/patientaccess",
-    url: "https://egwp-api-sita.carefirst.com/v1/fhir/patientaccess",
-    clientId: "0oaf5w78xfWspNqeA1d7",
+    // url: "https://egwp-api-sita.carefirst.com/v1/fhir/patientaccess",
+    clientId: import.meta.env.VITE_CAREFIRST_CLIENT_ID,
     note: "Credentials provided"
   },
 ];
