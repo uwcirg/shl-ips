@@ -43,18 +43,26 @@ export const SOF_HOSTS = [
     clientId: "<no client id>",
     note: "Credentials provided"
   },
-  // {
-  //   id: "c4bb",
-  //   name: "CARIN Blue Button",
-  //   // url: "https://chpdc-api-sita.carefirst.com/v1/fhir/patientaccess",
-  //   // url: "https://chpmd-api-sita.carefirst.com/v1/fhir/patientaccess",
-  //   // url: "https://dsnp-api-sita.carefirst.com/v1/fhir/patientaccess",
-  //   // url: "https://mapd-api-sita.carefirst.com/v1/fhir/patientaccess",
-  //   // url: "https://mhbe-api-sita.carefirst.com/v1/fhir/patientaccess",
-  //   url: "https://egwp-api-sita.carefirst.com/v1/fhir/patientaccess",
-  //   clientId: "0oaf5w78xfWspNqeA1d7",
-  //   note: "Credentials provided"
-  // }
+  {
+    id: "aetna",
+    name: "AETNA Insurance Sandbox",
+    url: "https://vteapif1.aetna.com/fhirdemo/v1/patientaccess",
+    clientId: "09cbb76344009c25a2ec587b39ebc303",
+    clientSecret: "4fe39eccbfc586647407ea19f408521f",
+    note: "VTETestUser01 / FHIRdemo2020"
+  },
+  {
+    id: "c4bb",
+    name: "CARIN Blue Button",
+    // url: "https://chpdc-api-sita.carefirst.com/v1/fhir/patientaccess",
+    // url: "https://chpmd-api-sita.carefirst.com/v1/fhir/patientaccess",
+    // url: "https://dsnp-api-sita.carefirst.com/v1/fhir/patientaccess",
+    // url: "https://mapd-api-sita.carefirst.com/v1/fhir/patientaccess",
+    // url: "https://mhbe-api-sita.carefirst.com/v1/fhir/patientaccess",
+    url: "https://egwp-api-sita.carefirst.com/v1/fhir/patientaccess",
+    clientId: "0oaf5w78xfWspNqeA1d7",
+    note: "Credentials provided"
+  },
 ];
 
 export const BEARER_AUTHORIZATION = {
@@ -88,19 +96,19 @@ export const SOF_PATIENT_RESOURCES = [
   'AllergyIntolerance',
   // 'MedicationStatement', // Not in EPIC USCDI R4
   'MedicationRequest',
-  // 'Medication', // can't search by patient; "Only an _ID search is allowed."
+  // 'Medication', // Pulled in via references - can't search by patient; "Only an _ID search is allowed."
   'Condition',
   'Encounter',
-  // 'Observation', // "Must have either code or category."
-  // 'Organization', // can't search by patient; "Only an _ID search is allowed."
+  // 'Observation', // Handle specially for IPS codes - "Must have either code or category."
+  // 'Organization', // Pulled in via references - can't search by patient; "Only an _ID search is allowed."
   'Immunization',
   // 'Device',
   // 'DeviceUseStatement', // Not in EPIC USCDI R4
   'DiagnosticReport', // TODO change to subject
   // 'ImagingStudy', // Not in EPIC USCDI R4
   // 'Media', // Not in EPIC USCDI R4
-  // 'Practitioner', // can't search by patient; "Either name, family, or identifier is a required parameter."
-  // 'PractitionerRole',  // can't search by patient; "An identifier, practitioner, organization, location, or specialty parameter is required."
+  // 'Practitioner', // Pulled in via references - can't search by patient; "Either name, family, or identifier is a required parameter."
+  // 'PractitionerRole',  // Pulled in via references - can't search by patient; "An identifier, practitioner, organization, location, or specialty parameter is required."
   'Procedure', // TODO change to subject
   // 'Specimen', // Not in EPIC USCDI R4
   'QuestionnaireResponse',
