@@ -374,6 +374,7 @@
       resources.forEach(async dr => {
         // If this DR is a POLST, add the following chain of queries:
         if (isPolst(dr)){
+          dr.isPolst = true;
           // In the POLST find the content[] with format.code = "urn:hl7-org:pe:adipmo-structuredBody:1.1" (ADIPMO Structured Body Bundle),
           const contentAdipmoBundleRef = dr.content.find(content => content.format && content.format.code && content.format.code === 'urn:hl7-org:pe:adipmo-structuredBody:1.1' && content.attachment && content.attachment.url && content.attachment.url.includes('Bundle'));
           if (contentAdipmoBundleRef) {
@@ -390,12 +391,14 @@
             //adipmoBundleJson = adipmoBundle.json();
             //adipmoBundleJson = adipmoBundle;
             //   That bundle will include ServiceRequest resources.
-            const serviceRequest = adipmoBundleJson.entry.find(entry => entry.resource && entry.resource.resourceType === 'ServiceRequest' && entry.category[0].coding[0].code === '100822-6');
+            const serviceRequest = adipmoBundleJson.entry.find(
+              entry => entry.resource && entry.resource.resourceType === 'ServiceRequest'
+              && entry.resource.category && entry.resource.category[0].coding[0].code === '100822-6');
             //serviceRequests.forEach( serviceRequest => {
               //const serviceRequestCpr = serviceRequests.find(serviceRequests => serviceRequests.category.coding.code "100822-6" (system http://loinc.org) - that's the one for CPR.
               //const isCpr = serviceRequest.category[0].coding[0].code === '100822-6';
-            const doNotPerform = serviceRequest.doNotPerform && serviceRequest.doNotPerform == true;
-            dr.isCpr = isCpr;
+            const doNotPerform = serviceRequest.resource.doNotPerform && serviceRequest.resource.doNotPerform == true;
+            //dr.isCpr = isCpr;
             dr.doNotPerform = doNotPerform;
             //});
           //}

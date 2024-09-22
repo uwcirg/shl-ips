@@ -82,6 +82,16 @@ Text:
   {resource.description.text}
 {/if}
 <br/>
+
+{#if resource.isPolst}
+<b>This is a POLST.</b>
+  <br />
+{#if resource.doNotPerform}
+  doNotPerform = true.
+{/if}
+{/if}
+<br/>
+
 {#if resource.content}
 <!-- FIXME This iteration not ideal - should iterate whether pdf present or not, as created & pdfSignedDate (ill-named) actually refer to the larget context of the DR, not the pdf... as it stands the Personal Advance Care Plan Document won't show created/signed (bug), tho we don't care so much about that one in IPS. 
 -->
