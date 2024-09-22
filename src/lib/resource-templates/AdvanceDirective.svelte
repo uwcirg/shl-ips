@@ -84,10 +84,12 @@ Text:
 <br/>
 
 {#if resource.isPolst}
-<b>This is a POLST.</b>
-  <br />
+{#if resource.isCpr}
 {#if resource.doNotPerform}
-  doNotPerform = true.
+  <b>This includes a directive to NOT perform CPR.</b>
+{:else}
+  <b>This includes a directive to perform CPR.</b>
+{/if}
 {/if}
 {/if}
 <br/>

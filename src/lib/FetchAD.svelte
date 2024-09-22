@@ -381,27 +381,16 @@
             // look in that content's attachment.url, that will point at a Bundle (e.g. https://qa-rr-fhir2.maxmddirect.com/Bundle/10f4ff31-2c24-414d-8d70-de3a86bed808?_format=json)
             const adipmoBundleUrl = contentAdipmoBundleRef.attachment.url;
             // Pull that Bundle.
-            //let adipmoBundle;
-            /**adipmoBundle = await Promise.all([
-              fetchResourceByUrl(adipmoBundleUrl)
-            ]);*/
             let adipmoBundle = await fetchResourceByUrl(adipmoBundleUrl);
-            //if (adipmoBundle.json() != undefined){
             let adipmoBundleJson = await adipmoBundle.json();
-            //adipmoBundleJson = adipmoBundle.json();
-            //adipmoBundleJson = adipmoBundle;
-            //   That bundle will include ServiceRequest resources.
+            //   That bundle will include ServiceRequest resources; look for the one for CPR (loinc 100822-6) 
             const serviceRequest = adipmoBundleJson.entry.find(
               entry => entry.resource && entry.resource.resourceType === 'ServiceRequest'
               && entry.resource.category && entry.resource.category[0].coding[0].code === '100822-6');
-            //serviceRequests.forEach( serviceRequest => {
-              //const serviceRequestCpr = serviceRequests.find(serviceRequests => serviceRequests.category.coding.code "100822-6" (system http://loinc.org) - that's the one for CPR.
-              //const isCpr = serviceRequest.category[0].coding[0].code === '100822-6';
-            const doNotPerform = serviceRequest.resource.doNotPerform && serviceRequest.resource.doNotPerform == true;
-            //dr.isCpr = isCpr;
-            dr.doNotPerform = doNotPerform;
-            //});
-          //}
+            dr.isCpr = false;
+            if (serviceRequest !== undefined) dr.isCpr = true;
+
+            dr.doNotPerform = serviceRequest.resource.doNotPerform && serviceRequest.resource.doNotPerform == true;
           }
         }
       });
