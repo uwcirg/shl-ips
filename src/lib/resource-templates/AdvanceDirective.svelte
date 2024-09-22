@@ -2,17 +2,31 @@
   import { base64toBlob } from '$lib/util';
   export let resource; // Define a prop to pass the data to the component
 
-  // Determine if any extension has the revoked status
+  /** Determine if any extension has the revoked status
   let isRevoked = false;
   if (resource.extension) {
     isRevoked = resource.extension.some(
       ext => ext.url === 'http://hl7.org/fhir/us/pacio-adi/StructureDefinition/adi-document-revoke-status-extension' && ext.valueCoding.code === 'cancelled'
     );
   }
+*/
+
+  // Determine if any extension has the revoked status reactively
+  let isRevoked = false;
+
+  // Reactive declaration to update isRevoked when resource.extension changes
+  $: if (resource.extension) {
+    isRevoked = resource.extension.some(
+      ext => ext.url === 'http://hl7.org/fhir/us/pacio-adi/StructureDefinition/adi-document-revoke-status-extension' && ext.valueCoding.code === 'cancelled'
+    );
+  }
+
+
 </script>
 
 {#if isRevoked}
   <div class="less-interest">
+</div>
 {/if}
 
 <!--
@@ -173,7 +187,7 @@ Text:
 {/if}
 
 {#if isRevoked}
-  </div>
+ <!-- </div> -->
 {/if}
 
 <style>
