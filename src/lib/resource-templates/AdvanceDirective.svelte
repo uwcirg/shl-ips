@@ -1,7 +1,29 @@
 <script>
   import { base64toBlob } from '$lib/util';
   export let resource; // Define a prop to pass the data to the component
+
+  /** Determine if any extension has the revoked status
+  let isRevoked = false;
+  if (resource.extension) {
+    isRevoked = resource.extension.some(
+      ext => ext.url === 'http://hl7.org/fhir/us/pacio-adi/StructureDefinition/adi-document-revoke-status-extension' && ext.valueCoding.code === 'cancelled'
+    );
+  }
+*/
+
+  // Determine if any extension has the revoked status reactively
+  let isRevoked = false;
+
+  // Reactive declaration to update isRevoked when resource.extension changes
+  $: if (resource.extension) {
+    isRevoked = resource.extension.some(
+      ext => ext.url === 'http://hl7.org/fhir/us/pacio-adi/StructureDefinition/adi-document-revoke-status-extension' && ext.valueCoding.code === 'cancelled'
+    );
+  }
+
 </script>
+
+<div class:is-revoked={isRevoked}>
 
 <!--
 Type: {resource.resourceType}
@@ -62,6 +84,17 @@ Text:
   {resource.status}
 {/if}
 <br />
+
+<!-- Revoke Status -->
+{#if resource.extension}
+  {#each resource.extension as ext}
+    {#if ext.url == 'http://hl7.org/fhir/us/pacio-adi/StructureDefinition/adi-document-revoke-status-extension'}
+      <b>Revoke Status:</b> {ext.valueCoding.code}
+      <br />
+    {/if}
+  {/each}
+{/if}
+
 <b>docStatus:</b>
 {#if resource.docStatus}
   {resource.docStatus}
@@ -71,6 +104,61 @@ Text:
   {resource.description.text}
 {/if}
 <br/>
+
+{#if resource.isPolst}
+<br/>
+  <b>
+  POLST Details:
+<br/>
+<br/>
+    <ul>
+      {#if resource.isCpr}
+        <ol>
+{#if resource.doNotPerformCpr}
+  This includes an order to NOT perform CPR.
+{:else}
+  This includes an order to perform CPR.
+{/if}
+        </ol>
+{/if}
+<br/>
+
+{#if resource.isComfortTreatments}
+        <ol>
+{#if resource.doNotPerformComfortTreatments}
+  This includes an order to NOT perform comfort-focused treatments: {@html resource.detailComfortTreatments}
+{:else}
+  This includes an order to perform comfort-focused treatments: {@html resource.detailComfortTreatments}
+{/if}
+        </ol>
+{/if}
+<br/>
+
+{#if resource.isAdditionalTx}
+        <ol>
+{#if resource.doNotPerformAdditionalTx}
+  This includes an order to NOT perform additional treatments: {@html resource.detailAdditionalTx}
+{:else}
+  This includes an order to perform additional treatments: {@html resource.detailAdditionalTx}
+{/if}
+        </ol>
+{/if}
+<br/>
+
+{#if resource.isMedicallyAssisted}
+        <ol>
+{#if resource.doNotPerformMedicallyAssisted}
+  This includes an order to NOT perform medically assisted nutrition: {@html resource.detailMedicallyAssisted}
+{:else}
+  This includes an order to perform medically assisted nutrition: {@html resource.detailMedicallyAssisted}
+{/if}
+        </ol>
+{/if}
+</ul>
+</b>
+<br/>
+{/if}
+
 {#if resource.content}
 <!-- FIXME This iteration not ideal - should iterate whether pdf present or not, as created & pdfSignedDate (ill-named) actually refer to the larget context of the DR, not the pdf... as it stands the Personal Advance Care Plan Document won't show created/signed (bug), tho we don't care so much about that one in IPS. 
 -->
@@ -82,8 +170,10 @@ Text:
 					<br/>
         {/if}
         {#if resource.pdfSignedDate}
+          <!--
           <b>Digitally signed:</b> {new Date(resource.pdfSignedDate).toISOString().slice(0,10)}
-					<br/>
+          <br/>
+          -->
         {/if}
         <b>PDF present:</b> 
       <a href={url} target="_blank" rel="noopener noreferrer">View</a>
@@ -91,3 +181,26 @@ Text:
     {/if}
   {/each}
 {/if}
+
+</div>
+
+<style>
+  .is-revoked1 {
+    background-color: #f0f0f0; /* Light gray background */
+    padding: 10px;
+    border-radius: 5px;
+  }
+  .is-revoked {
+    background-color: #f0f0f0; /* Light gray background */
+    padding: 10px;
+    border-radius: 5px;
+    background-image: 
+      linear-gradient(135deg, rgba(255,255,255,0.3) 25%, transparent 25%),
+      linear-gradient(225deg, rgba(255,255,255,0.3) 25%, transparent 25%),
+      linear-gradient(45deg, rgba(255,255,255,0.3) 25%, transparent 25%),
+      linear-gradient(315deg, rgba(255,255,255,0.3) 25%, transparent 25%);
+    background-size: 40px 40px; /* Adjusts the size of the pattern */
+    background-position: 10px 10px; /* Adjusts the offset of the pattern */
+    opacity: 0.95; /* Slight transparency for a more subtle effect */
+  }
+</style>

@@ -282,6 +282,36 @@
     }
   }
 
+  async function fetchResourceByUrl(url) {
+    return result = await fetch(url, {
+        method: 'GET',
+        headers: { accept: 'application/json' }
+      }).then(function (response: any) {
+        if (!response.ok) {
+          // make the promise be rejected if we didn't get a 2xx response
+          //throw new Error('Unable to fetch ', { cause: response });
+          console.error(`Failed to fetch resource from ${url}`);
+        } else {
+          return response;
+        }
+      });
+  }
+
+/**
+  async function fetchResourceByUrl(url) {
+    try {
+      const response = await fetch(url);
+      if (response.ok) {
+          return response;
+      } else {
+        console.error(`Failed to fetch resource from ${url}`);
+      }
+    } catch (error) {
+      console.error(`Error fetching resource from ${url}:`, error);
+    }
+  }
+*/
+
   async function prepareIps() {
     fetchError = '';
     processing = true;
@@ -338,6 +368,64 @@
       // if one of the DR's `content` elements has attachment.contentType = 'application/pdf', download if possible, put base64 of pdf in DR.content.attachment.data
       const hasPdfContent = dr => dr.content && dr.content.some(content => content.attachment && content.attachment.contentType === 'application/pdf' && !content.attachment.data);
 
+      // if one of the DR's
+      const isPolst = dr => dr.type && dr.type.coding && dr.type.coding.some(coding => coding.system === 'http://loinc.org' && coding.code === '100821-8');
+
+      resources.forEach(async dr => {
+        // If this DR is a POLST, add the following chain of queries:
+        if (isPolst(dr)){
+          dr.isPolst = true;
+          // In the POLST find the content[] with format.code = "urn:hl7-org:pe:adipmo-structuredBody:1.1" (ADIPMO Structured Body Bundle),
+          const contentAdipmoBundleRef = dr.content.find(content => content.format && content.format.code && content.format.code === 'urn:hl7-org:pe:adipmo-structuredBody:1.1' && content.attachment && content.attachment.url && content.attachment.url.includes('Bundle'));
+          if (contentAdipmoBundleRef) {
+            // look in that content's attachment.url, that will point at a Bundle (e.g. https://qa-rr-fhir2.maxmddirect.com/Bundle/10f4ff31-2c24-414d-8d70-de3a86bed808?_format=json)
+            const adipmoBundleUrl = contentAdipmoBundleRef.attachment.url;
+            // Pull that Bundle.
+            let adipmoBundle = await fetchResourceByUrl(adipmoBundleUrl);
+            let adipmoBundleJson = await adipmoBundle.json();
+
+            // TODO The next 4 sections should be generalized into an iteration, just need carve out for "detail" for 2.
+
+            // That bundle will include ServiceRequest resources; look for the one for CPR (loinc 100822-6) 
+            const serviceRequestCpr = adipmoBundleJson.entry.find(
+              entry => entry.resource && entry.resource.resourceType === 'ServiceRequest'
+              && entry.resource.category && entry.resource.category[0].coding[0].code === '100822-6');
+            dr.isCpr = false;
+            if (serviceRequestCpr !== undefined) dr.isCpr = true;
+            dr.doNotPerformCpr = serviceRequestCpr.resource.doNotPerform && serviceRequestCpr.resource.doNotPerform == true;
+
+            // That bundle will include ServiceRequest resources; look for the one for "Initial portable medical treatment orders" (loinc 100823-4) aka Comfort Treatments
+            const serviceRequestComfortTreatments = adipmoBundleJson.entry.find(
+              entry => entry.resource && entry.resource.resourceType === 'ServiceRequest'
+              && entry.resource.category && entry.resource.category[0].coding[0].code === '100823-4');
+            dr.isComfortTreatments = false;
+            if (serviceRequestComfortTreatments !== undefined) dr.isComfortTreatments = true;
+            dr.doNotPerformComfortTreatments = serviceRequestComfortTreatments.resource.doNotPerform && serviceRequestComfortTreatments.resource.doNotPerform == true;
+
+            dr.detailComfortTreatments = serviceRequestComfortTreatments.resource.note[0].text;
+
+            // That bundle will include ServiceRequest resources; look for the one for "Additional..." (loinc 100824-2)
+            const serviceRequestAdditionalTx = adipmoBundleJson.entry.find(
+              entry => entry.resource && entry.resource.resourceType === 'ServiceRequest'
+              && entry.resource.category && entry.resource.category[0].coding[0].code === '100824-2');
+            dr.isAdditionalTx = false;
+            if (serviceRequestAdditionalTx !== undefined) dr.isAdditionalTx = true;
+            dr.doNotPerformAdditionalTx = serviceRequestAdditionalTx.resource.doNotPerform && serviceRequestAdditionalTx.resource.doNotPerform == true;
+
+            dr.detailAdditionalTx = serviceRequestAdditionalTx.resource.orderDetail[0].text;
+
+            // That bundle will include ServiceRequest resources; look for the one for "Medically assisted nutrition orders" (loinc 100825-9)
+            const serviceRequestMedicallyAssisted = adipmoBundleJson.entry.find(
+              entry => entry.resource && entry.resource.resourceType === 'ServiceRequest'
+              && entry.resource.category && entry.resource.category[0].coding[0].code === '100825-9');
+            dr.isMedicallyAssisted = false;
+            if (serviceRequestMedicallyAssisted !== undefined) dr.isMedicallyAssisted = true;
+            dr.doNotPerformMedicallyAssisted = serviceRequestMedicallyAssisted.resource.doNotPerform && serviceRequestMedicallyAssisted.resource.doNotPerform == true;
+
+            dr.detailMedicallyAssisted = serviceRequestMedicallyAssisted.resource.orderDetail[0].text;
+          }
+        }
+      });
       resources.forEach(async dr => {
         if (hasPdfContent(dr)) {
           const pdfContent = dr.content.find(content => content.attachment && content.attachment.contentType === 'application/pdf');
