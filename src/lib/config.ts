@@ -5,6 +5,8 @@ export const API_BASE = import.meta.env.VITE_API_BASE;
 
 export const INTERMEDIATE_FHIR_SERVER_BASE = import.meta.env.VITE_INTERMEDIATE_FHIR_SERVER_BASE;
 
+export const VERSION_STRING = import.meta.env.VITE_VERSION_STRING;
+
 export const SOF_HOSTS = [
   // {
   //   id: "epic-himss",
