@@ -76,11 +76,15 @@ async function activePatient() {
 }
 
 async function getResources() {
-    client = await FHIR.oauth2.ready();
+    try {
+        client = await FHIR.oauth2.ready();
+    } catch (e) {
+        throw Error('SMART authorization failed. The service you selected may be unavailable.')
+    }
     let pid = client.getPatientId();
     if (!pid) {
         console.error("No patient ID found");
-        return undefined;
+        throw Error('The service you selected did not return an ID for the authorized patient. Please try a different service.')
     }
     // Establish resource display methods
     let resources;
@@ -94,7 +98,6 @@ async function getResources() {
             return requestResources(client, resourceType);
         }))).filter(x => x.status == "fulfilled").map(x => x.value);
     }
-   
 
     return resources;
 }

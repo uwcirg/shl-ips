@@ -40,10 +40,10 @@
     try {
       if (sofHost) {
         try {
-          authorize(sofHost.url, sofHost.clientId, sofHost.clientSecret ?? undefined);
-          authDispatch('sof-auth-init');
+          authorize(sofHost.url, sofHost.clientId);// , sofHost.clientSecret);
+          authDispatch('sof-auth-init', { data: true });
         } catch (e) {
-          authDispatch('sof-auth-fail')
+          authDispatch('sof-auth-fail', { data: false });
         }
       }
     } catch (e) {
@@ -86,7 +86,9 @@
       console.log(resources)
       processing = false;
       return resourceDispatch('update-resources', result);
-    } catch (e) {
+    } catch (e: any) {
+      console.log(e.message);
+      fetchError = e.message;
       processing = false;
       endSession();
     }
