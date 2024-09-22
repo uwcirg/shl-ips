@@ -185,9 +185,22 @@ Text:
 </div>
 
 <style>
+  .is-revoked1 {
+    background-color: #f0f0f0; /* Light gray background */
+    padding: 10px;
+    border-radius: 5px;
+  }
   .is-revoked {
     background-color: #f0f0f0; /* Light gray background */
     padding: 10px;
     border-radius: 5px;
+    background-image: 
+      linear-gradient(135deg, rgba(255,255,255,0.3) 25%, transparent 25%),
+      linear-gradient(225deg, rgba(255,255,255,0.3) 25%, transparent 25%),
+      linear-gradient(45deg, rgba(255,255,255,0.3) 25%, transparent 25%),
+      linear-gradient(315deg, rgba(255,255,255,0.3) 25%, transparent 25%);
+    background-size: 40px 40px; /* Adjusts the size of the pattern */
+    background-position: 10px 10px; /* Adjusts the offset of the pattern */
+    opacity: 0.95; /* Slight transparency for a more subtle effect */
   }
 </style>
