@@ -115,9 +115,9 @@ Text:
       {#if resource.isCpr}
         <ol>
 {#if resource.doNotPerformCpr}
-  This includes a directive to NOT perform CPR.
+  This includes an order to NOT perform CPR.
 {:else}
-  This includes a directive to perform CPR.
+  This includes an order to perform CPR.
 {/if}
         </ol>
 {/if}
@@ -126,9 +126,9 @@ Text:
 {#if resource.isComfortTreatments}
         <ol>
 {#if resource.doNotPerformComfortTreatments}
-  This includes a directive to NOT perform comfort-focused treatments: {@html resource.detailComfortTreatments}
+  This includes an order to NOT perform comfort-focused treatments: {@html resource.detailComfortTreatments}
 {:else}
-  This includes a directive to perform comfort-focused treatments: {@html resource.detailComfortTreatments}
+  This includes an order to perform comfort-focused treatments: {@html resource.detailComfortTreatments}
 {/if}
         </ol>
 {/if}
@@ -137,9 +137,9 @@ Text:
 {#if resource.isAdditionalTx}
         <ol>
 {#if resource.doNotPerformAdditionalTx}
-  This includes a directive to NOT perform additional treatments: {@html resource.detailAdditionalTx}
+  This includes an order to NOT perform additional treatments: {@html resource.detailAdditionalTx}
 {:else}
-  This includes a directive to perform additional treatments: {@html resource.detailAdditionalTx}
+  This includes an order to perform additional treatments: {@html resource.detailAdditionalTx}
 {/if}
         </ol>
 {/if}
@@ -148,9 +148,9 @@ Text:
 {#if resource.isMedicallyAssisted}
         <ol>
 {#if resource.doNotPerformMedicallyAssisted}
-  This includes a directive to NOT perform medically assisted nutrition: {@html resource.detailMedicallyAssisted}
+  This includes an order to NOT perform medically assisted nutrition: {@html resource.detailMedicallyAssisted}
 {:else}
-  This includes a directive to perform medically assisted nutrition: {@html resource.detailMedicallyAssisted}
+  This includes an order to perform medically assisted nutrition: {@html resource.detailMedicallyAssisted}
 {/if}
         </ol>
 {/if}
