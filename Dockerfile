@@ -7,12 +7,19 @@ ENV NODE_ENV production
 
 WORKDIR /opt/app
 
+COPY package*.json ./
+
 COPY . .
+
+RUN npm install openai
+
+RUN sed -i '/2\.11\.6/a \ \ "type": "module",' node_modules/@popperjs/core/package.json
+
 RUN npm clean-install --include=dev
 
 #RUN npm install openai
 
-RUN sed -i '/2\.11\.6/a \ \ "type": "module",' node_modules/@popperjs/core/package.json
+#RUN sed -i '/2\.11\.6/a \ \ "type": "module",' node_modules/@popperjs/core/package.json
 
 RUN npm run build
 #RUN npm run build --loglevel verbose
