@@ -10,7 +10,7 @@ WORKDIR /opt/app
 COPY . .
 RUN npm clean-install --include=dev
 
-RUN npm install openai
+#RUN npm install openai
 
 RUN sed -i '/2\.11\.6/a \ \ "type": "module",' node_modules/@popperjs/core/package.json
 
