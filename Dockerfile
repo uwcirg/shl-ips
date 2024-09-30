@@ -11,14 +11,12 @@ COPY package*.json ./
 
 COPY . .
 
-# RUN npm install openai
+RUN npm install openai
+RUN npm install @sveltejs/adapter-node
 
 RUN sed -i '/2\.11\.6/a \ \ "type": "module",' node_modules/@popperjs/core/package.json
 
 RUN npm clean-install --include=dev
-
-#RUN npm install @sveltejs/adapter-node
-RUN npm install openai
 
 #RUN sed -i '/2\.11\.6/a \ \ "type": "module",' node_modules/@popperjs/core/package.json
 
