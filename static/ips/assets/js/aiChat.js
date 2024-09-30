@@ -29,7 +29,7 @@ async function sendMessage() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                messages: [{ role: 'user', content: userMessage }],
+                message: userMessage,
                 fhirResources: fhirResources,
             }),
         });

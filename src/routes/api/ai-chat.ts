@@ -14,7 +14,7 @@ export const POST: RequestHandler = async ({ request }) => {
     const apiMessages = [
       { role: 'system', content: 'You are a helpful assistant that can answer questions about a user\'s health based on their FHIR resources.' },
       { role: 'system', content: `Here are the user's FHIR resources: ${JSON.stringify(fhirResources)}` },
-      ...messages
+      { role: 'user', content: message }
     ];
 
     const completion = await openai.createChatCompletion({
