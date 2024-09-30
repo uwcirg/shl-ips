@@ -54,7 +54,7 @@ function updateDisplayMode(displayMode) {
   }
 
   // Show/hide content based on selected mode
-  $('#rendered-ips').toggle(mode !== 'AiChat');
+  //$('#rendered-ips').toggle(mode !== 'AiChat');
   $('#ai-chat-content').toggle(mode === 'AiChat');
 
   shlContents.forEach((e, i) => {
