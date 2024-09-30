@@ -13,7 +13,8 @@ export const POST: RequestHandler = async ({ request }) => {
 
     const apiMessages = [
       { role: 'system', content: 'You are a helpful assistant that can answer questions about a user\'s health based on their FHIR resources.' },
-      { role: 'system', content: `Here are the user's FHIR resources: ${JSON.stringify(fhirResources)}` },
+      // FIXME removed this for initial testing...
+      //{ role: 'system', content: `Here are the user's FHIR resources: ${JSON.stringify(fhirResources)}` },
       { role: 'user', content: message }
     ];
 
