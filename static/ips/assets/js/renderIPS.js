@@ -21,6 +21,7 @@ $(document).ready(function () {
   $('#content').show();
   $('#FhirDropdown').on('click', () => updateDisplayMode('Entries'));
   $('#NarrativeDropdown').on('click', () => updateDisplayMode('Text'));
+  $('#AiChatDropdown').on('click', () => updateDisplayMode('AiChat'));
 });
 
 function loadSample() {
@@ -43,6 +44,9 @@ function updateDisplayMode(displayMode) {
     newText = 'App Interpretation';
   } else if (displayMode == 'Text') {
     newText = 'Generated Text';
+  }
+  } else if (displayMode == 'AiChat') {
+    newText = 'AI Chat';
   }
   if (newText) {
     mode = displayMode
