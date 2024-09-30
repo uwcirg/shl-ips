@@ -52,6 +52,11 @@ function updateDisplayMode(displayMode) {
     mode = displayMode
     dropdown.html(newText);
   }
+
+  // Show/hide content based on selected mode
+  $('#rendered-ips').toggle(mode !== 'AiChat');
+  $('#ai-chat-content').toggle(mode === 'AiChat');
+
   shlContents.forEach((e, i) => {
     update(e, i);
   });
@@ -59,10 +64,6 @@ function updateDisplayMode(displayMode) {
     $('#ipsInput').val(JSON.stringify(originalShlContents[0], null, 2));
     updateFromText();
   }
-
-  // Show/hide content based on selected mode
-  $('#rendered-ips').toggle(mode !== 'AiChat');
-  $('#ai-chat-content').toggle(mode === 'AiChat');
 };
 
 // Clear data button function. Should be called on all new data loads 
