@@ -1,4 +1,5 @@
 import config from "./config.js";
+import { initAIChat} from "./aiChat.js";
 var { pdfjsLib } = globalThis;
 pdfjsLib.GlobalWorkerOptions.workerSrc = '//mozilla.github.io/pdf.js/build/pdf.worker.mjs';
 
@@ -45,7 +46,7 @@ function updateDisplayMode(displayMode) {
   } else if (displayMode == 'Text') {
     newText = 'Generated Text';
   }
-  } else if (displayMode == 'AiChat') {
+  } else if (displayMode == 'ai-chat') {
     newText = 'AI Chat';
   }
   if (newText) {
@@ -59,6 +60,12 @@ function updateDisplayMode(displayMode) {
     $('#ipsInput').val(JSON.stringify(originalShlContents[0], null, 2));
     updateFromText();
   }
+
+  // Show/hide content based on selected mode; note these 3 lines are new w/ the AI addition...
+  $('#app-interpretation-content').toggle(mode === 'Entries');
+  $('#ips-text-content').toggle(mode === 'Text');
+  $('#ai-chat-content').toggle(mode === 'ai-chat');
+
 };
 
 // Clear data button function. Should be called on all new data loads 
@@ -238,6 +245,7 @@ function addTab(name, id) {
 // Primary function to traverse the Bundle and get data
 // Calls the render function to display contents 
 function update(ips, index) {
+  initAIChat(ips);
   sectionCount = 0;
   $(`.output${index}`).html("");
   $("#renderMessage").hide();
