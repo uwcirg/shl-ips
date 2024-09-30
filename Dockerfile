@@ -12,7 +12,8 @@ COPY package*.json ./
 COPY . .
 
 RUN npm install openai
-RUN npm install @sveltejs/adapter-node@1.0.0
+# this version is compatible, but I want to try via package.json:
+#RUN npm install @sveltejs/adapter-node@1.0.0
 
 RUN sed -i '/2\.11\.6/a \ \ "type": "module",' node_modules/@popperjs/core/package.json
 
