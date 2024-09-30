@@ -45,7 +45,6 @@ function updateDisplayMode(displayMode) {
     newText = 'App Interpretation';
   } else if (displayMode == 'Text') {
     newText = 'Generated Text';
-  }
   } else if (displayMode == 'ai-chat') {
     newText = 'AI Chat';
   }
