@@ -5,7 +5,6 @@ function initAIChat(resources) {
     const aiChatContent = document.getElementById('ai-chat-content');
     const chatInput = document.getElementById('chat-input');
     const sendMessageButton = document.getElementById('send-message');
-    const chatMessages = document.getElementById('chat-messages');
 
     sendMessageButton.addEventListener('click', sendMessage);
     chatInput.addEventListener('keypress', (e) => {

@@ -45,7 +45,7 @@ function updateDisplayMode(displayMode) {
     newText = 'App Interpretation';
   } else if (displayMode == 'Text') {
     newText = 'Generated Text';
-  } else if (displayMode == 'ai-chat') {
+  } else if (displayMode == 'AiChat') {
     newText = 'AI Chat';
   }
   if (newText) {
@@ -60,11 +60,9 @@ function updateDisplayMode(displayMode) {
     updateFromText();
   }
 
-  // Show/hide content based on selected mode; note these 3 lines are new w/ the AI addition...
-  $('#app-interpretation-content').toggle(mode === 'Entries');
-  $('#ips-text-content').toggle(mode === 'Text');
-  $('#ai-chat-content').toggle(mode === 'ai-chat');
-
+  // Show/hide content based on selected mode
+  $('#rendered-ips').toggle(mode !== 'AiChat');
+  $('#ai-chat-content').toggle(mode === 'AiChat');
 };
 
 // Clear data button function. Should be called on all new data loads 
