@@ -12,8 +12,9 @@ export default {
       // default options are shown. On some platforms
       // these options are set automatically — see below
       pages: 'build',
-      assets: 'build',
-      fallback: "404.html",
+      //assets: 'build',
+      out: 'build',
+      //fallback: "404.html",
       precompress: false,
       strict: true,
       paths: {

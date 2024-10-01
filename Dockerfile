@@ -25,6 +25,7 @@ RUN npm clean-install --include=dev
 #RUN npm run build
 RUN npm run build --loglevel verbose
 
-RUN cp build/404.html build/index.html
+#RUN cp build/404.html build/index.html
 
-CMD ["sh", "-c", "npm run build && cp build/404.html build/index.html && npm run start"]
+#CMD ["sh", "-c", "npm run build && cp build/404.html build/index.html && npm run start"]
+CMD ["sh", "-c", "npm run build && npm run start"]
