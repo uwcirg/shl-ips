@@ -11,7 +11,8 @@ COPY package*.json ./
 
 COPY . .
 
-#RUN npm install openai
+# this wouldn't install from package.json for some reason... tried >1.0.0 there.
+RUN npm install openai
 # this version is compatible, but I want to try via package.json:
 #RUN npm install @sveltejs/adapter-node@1.0.0
 
