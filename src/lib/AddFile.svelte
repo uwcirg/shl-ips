@@ -6,7 +6,7 @@
   import { getResourcesFromIPS } from './resourceUploader.js';
   import { goto } from '$app/navigation';
   import { getContext } from 'svelte';
-  import { writable } from 'svelte/store';
+  import { type Writable } from 'svelte/store';
   import {
     Accordion,
     AccordionItem,
@@ -29,10 +29,8 @@
   import FetchAD from './FetchAD.svelte';
   import FetchTEFCA from './FetchTEFCA.svelte';
   import ODHForm from './ODHForm.svelte';
-  import ResourceSelector from './ResourceSelector.svelte';
   import { verify } from './shcDecoder.js';
   import issuerKeys from './issuer.private.jwks.json';
-  import { ResourceHelper } from './ResourceHelper';
   import type { SHCFile,
     SHCRetrieveEvent,
     ResourceRetrieveEvent,
@@ -40,22 +38,22 @@
     SHLSubmitEvent, 
     SOFAuthEvent } from './types';
   import type { Patient, Bundle } from 'fhir/r4';
-  import { type IPSResourceCollectionStore, newIPSResourceCollection } from './IPSResourceCollectionStore.js';
-  import { type IPSExtensionStore, newIPSExtensionStore } from './IPSExtensionStore.js';
-  // import ResourceSelectorStores from './ResourceSelectorStores.svelte';
+  import { IPSResourceCollection } from './IPSResourceCollection.js';
+  import { IPSExtension } from './IPSExtension.js';
+  import ResourceSelectorStores from './ResourceSelectorStores.svelte';
  
   export let status = "";
   
   let shlIdParam = $page.url.searchParams.get('shlid');
 
-  let resourceStore: IPSResourceCollectionStore = newIPSResourceCollection();
+  let resourceStore: IPSResourceCollection = new IPSResourceCollection();
 
-  let adExtensionStore: IPSExtensionStore = newIPSExtensionStore('Advance Directives');
-  let odhExtensionStore: IPSExtensionStore = newIPSExtensionStore('Occupation Data');
-  let extensionStores = writable({
-    'Advance Directives': adExtensionStore,
-    'Occupation Data': odhExtensionStore
-  });
+  let adExtensionStore: IPSExtension = new IPSExtension('Advance Directives');
+  let odhExtensionStore: IPSExtension = new IPSExtension('Occupation Data');
+  let extensionStores = [
+    adExtensionStore,
+    odhExtensionStore
+  ];
 
   const shlDispatch = createEventDispatcher<{ 'shl-submitted': SHLSubmitEvent }>();
   let submitting = false;
@@ -90,10 +88,16 @@
   let type = 'password';
   let showPassword = false;
   let passcode = "";
+
+  resourceStore.selectedPatient.subscribe((patientId) => {
+    if (patientId) {
+      patient = resourceStore.getSelectedPatient()?.resource as Patient;
+    }
+  });
+
   $: type = showPassword ? 'text' : 'password';
   $: icon = showPassword ? 'eye-fill' : 'eye-slash-fill';
   $: addDataHeader = resourcesToReview.length == 0 ? emptyResourceListHeader : fullResourceListHeader;
-  $: patient = $resourceStore.selectedPatient?.resource;
   $: {
     if (patient?.name?.[0].given) {
       patientName = patient.name[0]?.given[0];
@@ -157,7 +161,7 @@
           handleAddDataAccordion({ event: true });
           // Trigger update in ResourceSelector
           resourcesToReview = resourceResult.resources;
-          $resourceStore.addResources(resourceResult.resources);
+          resourceStore.addResources(resourceResult.resources);
           showSuccessMessage();
         }
       } catch (e) {
@@ -381,7 +385,7 @@
       <FetchAD bind:extensionStore={adExtensionStore}></FetchAD>
     </AccordionItem>
     <ResourceSelectorStores
-      bind:resourceStore={$resourceStore}
+      bind:resourceStore={resourceStore}
       bind:extensionStores={extensionStores}
       bind:submitting={submitting}
       on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }

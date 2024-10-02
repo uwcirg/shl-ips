@@ -1,7 +1,6 @@
 <script lang='ts'>
     import { uploadResources } from './resourceUploader.js';
     import { createEventDispatcher } from 'svelte';
-    import { derived, type Writable } from 'svelte/store';
     import {
         Accordion,
         AccordionItem,
@@ -15,7 +14,7 @@
         Label,
         Row } from 'sveltestrap';
     import { ResourceHelper } from './ResourceHelper.js';
-    import type { IPSResourceCollectionStore } from './IPSResourceCollectionStore.js';
+    import type { IPSResourceCollection } from './IPSResourceCollection.js';
     import type { IPSExtension } from './IPSExtension.js';
     import type { IPSRetrieveEvent } from './types.js';
 
@@ -37,8 +36,8 @@
     import SocialHistory from './resource-templates/SocialHistory.svelte';
 
     export let submitting: boolean;
-    export let resourceStore: IPSResourceCollectionStore;
-    export let extensionStores: Writable<IPSExtension>[];
+    export let resourceStore: IPSResourceCollection;
+    export let extensionStores: IPSExtension[];
 
     const components: Record<string, any> = {
         "AllergyIntolerance": AllergyIntolerance,
@@ -65,10 +64,19 @@
     const statusDispatch = createEventDispatcher<{ 'status-update': string }>();
     const errorDispatch = createEventDispatcher<{ 'error': string }>();
     let reference: string;
+    let selectedPatient: string;
+    $: if (selectedPatient) {
+        resourceStore.setSelectedPatient(selectedPatient);
+    }
+    
+    let patientStore = resourceStore.patients;
     let patientBadgeColor: string = "danger";
+    let patientCount: number = 0;
+    $: patientCount = Object.keys($patientStore).length;
+    $: patientBadgeColor = patientCount > 1 ? "danger" : "secondary";
 
-    // let resourcesByType: Record<string, Record<string, ResourceHelper>>;
-    let selectedPatient: string=$resourceStore.selectedPatient;
+    // Proxy for resourceStore's resourcesByType to allow reactive updates
+    let resourcesByTypeStore = resourceStore.resourcesByType;
 
     $: {
         if (submitting) {
@@ -77,15 +85,6 @@
                 console.error(error);
                 errorDispatch("error", error.message);
             });
-        }
-    }
-    $: patientBadgeColor = Object.values(patients).length > 1 ? "danger" : "secondary";
-    // $: resourcesByType = $resourceStore.getResourcesByType();
-    $: patients = $resourceStore.resourcesByType['Patient'] ?? [];
-    $: {
-        if (selectedPatient) {
-            $resourceStore.setSelectedPatient(selectedPatient);
-            selectedPatient = $resourceStore.selectedPatient;
         }
     }
 
@@ -98,7 +97,7 @@
 
         statusDispatch("status-update", "Adding data");
         try {
-            let selectedResources = $resourceStore.getSelectedResources().map((rh:ResourceHelper) => {
+            let selectedResources = resourceStore.getSelectedResources().map((rh:ResourceHelper) => {
                 return rh.resource;
             });
             reference = await uploadResources(selectedResources);
@@ -157,8 +156,8 @@
     <h5 slot="header" class="my-2">4. Directly edit your health summary content</h5>
     <Label>Select which resources to include in your customized IPS</Label>
     <Accordion>
-        {#if Object.keys($resourceStore.resourcesByType).length > 0}
-            {#each Object.keys($resourceStore.resourcesByType) as resourceType}
+        {#if Object.keys($resourcesByTypeStore).length > 0}
+            {#each Object.keys($resourcesByTypeStore) as resourceType}
                 <AccordionItem on:toggle={() => updateBadge(resourceType)}>
                     <span slot="header">
                         {#if resourceType === "Patient"}
@@ -168,7 +167,7 @@
                                 class="mx-1"
                                 color={patientBadgeColor}
                             >
-                                {Object.values(patients).length}
+                                {patientCount}
                             </Badge>
                         {:else}
                             {`${resourceType}s`}
@@ -176,26 +175,26 @@
                                 positioned
                                 class="mx-1"
                                 color={
-                                    Object.values($resourceStore.resourcesByType[resourceType])
+                                    Object.values($resourcesByTypeStore[resourceType])
                                         .filter(resource => resource.include).length
-                                        == Object.keys($resourceStore.resourcesByType[resourceType]).length
+                                        == Object.keys($resourcesByTypeStore[resourceType]).length
                                         ? "primary"
-                                        : Object.values($resourceStore.resourcesByType[resourceType])
+                                        : Object.values($resourcesByTypeStore[resourceType])
                                             .filter(resource => resource.include).length
-                                            == Object.keys($resourceStore.resourcesByType[resourceType]).length
+                                            == Object.keys($resourcesByTypeStore[resourceType]).length
                                             ? "primary"
-                                            : Object.values($resourceStore.resourcesByType[resourceType])
+                                            : Object.values($resourcesByTypeStore[resourceType])
                                                 .filter(resource => resource.include).length
                                                 > 0
                                                 ? "info"
                                                 : "secondary"
                                 }>
-                                {Object.values($resourceStore.resourcesByType[resourceType]).filter(resource => resource.include).length}
+                                {Object.values($resourcesByTypeStore[resourceType]).filter(resource => resource.include).length}
                             </Badge>
                         {/if}
                     </span>
                     <FormGroup>
-                        {#each Object.keys($resourceStore.resourcesByType[resourceType]) as key}
+                        {#each Object.keys($resourcesByTypeStore[resourceType]) as key}
                             <Label style="width: 100%">
                                 <Card style="width: 100%; max-width: 100%">
                                     <CardHeader>
@@ -207,18 +206,18 @@
                                                 {#if resourceType === "Patient"}
                                                     <Input id={key} type="radio" bind:group={selectedPatient} value={key} />
                                                 {:else}
-                                                    <Input id={key} type="checkbox" bind:checked={$resourceStore.resourcesByType[resourceType][key].include} value={key} />
+                                                    <Input id={key} type="checkbox" bind:checked={$resourcesByTypeStore[resourceType][key].include} value={key} />
                                                 {/if}
                                             </Col>
                                             <Col>
                                                 {#if resourceType in components}
-                                                    <svelte:component this={components[resourceType]} resource={$resourceStore.resourcesByType[resourceType][key].resource} />
+                                                    <svelte:component this={components[resourceType]} resource={$resourcesByTypeStore[resourceType][key].resource} />
                                                     <!-- ResourceType: {resourceType}
-                                                    Resource: {JSON.stringify($resourceStore.resourcesByType[resourceType][key].resource)} -->
-                                                {:else if $resourceStore.resourcesByType[resourceType][key].resource.text?.div}
-                                                    {@html $resourceStore.resourcesByType[resourceType][key].resource.text?.div}
+                                                    Resource: {JSON.stringify($resourcesByTypeStore[resourceType][key].resource)} -->
+                                                {:else if $resourcesByTypeStore[resourceType][key].resource.text?.div}
+                                                    {@html $resourcesByTypeStore[resourceType][key].resource.text?.div}
                                                 {:else}
-                                                    {$resourceStore.resourcesByType[resourceType][key].tempId}
+                                                    {$resourcesByTypeStore[resourceType][key].tempId}
                                                 {/if}
                                             </Col>
                                         </Row>
@@ -230,7 +229,7 @@
                 </AccordionItem>
             {/each}
         {/if}
-        {#if extensionStores}
+        <!-- {#if extensionStores}
             {#each extensionStores as $extensionStore}
                 {#if $extensionStore.resources > 0}
                     <AccordionItem on:toggle={() => updateBadge($extensionStore.getName())}>
@@ -287,7 +286,7 @@
                     </AccordionItem>
                 {/if}
             {/each}
-        {/if}
+        {/if} -->
     </Accordion>
 </AccordionItem>
 
