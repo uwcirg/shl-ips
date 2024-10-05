@@ -7,13 +7,25 @@ ENV NODE_ENV production
 
 WORKDIR /opt/app
 
+COPY package*.json ./
+
 COPY . .
-RUN npm clean-install --include=dev
+
+# this wouldn't install from package.json for some reason... tried >1.0.0 there.
+RUN npm install openai
+# this version is compatible, but I want to try via package.json:
+#RUN npm install @sveltejs/adapter-node@1.0.0
 
 RUN sed -i '/2\.11\.6/a \ \ "type": "module",' node_modules/@popperjs/core/package.json
 
-RUN npm run build
+RUN npm clean-install --include=dev
 
-RUN cp build/404.html build/index.html
+#RUN sed -i '/2\.11\.6/a \ \ "type": "module",' node_modules/@popperjs/core/package.json
 
-CMD ["sh", "-c", "npm run build && cp build/404.html build/index.html && npm run start"]
+#RUN npm run build
+RUN npm run build --loglevel verbose
+
+#RUN cp build/404.html build/index.html
+
+#CMD ["sh", "-c", "npm run build && cp build/404.html build/index.html && npm run start"]
+CMD ["sh", "-c", "npm run build && npm run start"]
