@@ -125,9 +125,11 @@
             <tr>
                 <td>{contact.address.use ?? ""}</td>
                 <td>
-                    {#each contact.address.line as line}
-                        {line}<br />
-                    {/each}
+                    {#if contact.address.line}
+                      {#each contact.address.line as line}
+                          {line}<br />
+                      {/each}
+                    {/if}
                     {contact.address.city ?? "[Unknown City]"}{
                         contact.address.state
                             ? `, ${contact.address.state}`
