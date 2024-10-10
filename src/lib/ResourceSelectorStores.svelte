@@ -1,6 +1,7 @@
 <script lang='ts'>
     import { uploadResources } from './resourceUploader.js';
     import { createEventDispatcher } from 'svelte';
+    import { derived, get, type Writable } from 'svelte/store';
     import {
         Accordion,
         AccordionItem,
@@ -15,7 +16,6 @@
         Row } from 'sveltestrap';
     import { ResourceHelper } from './ResourceHelper.js';
     import type { IPSResourceCollection } from './IPSResourceCollection.js';
-    import type { IPSExtension } from './IPSExtension.js';
     import type { IPSRetrieveEvent } from './types.js';
 
     import AdvanceDirective from './resource-templates/AdvanceDirective.svelte';
@@ -36,8 +36,7 @@
     import SocialHistory from './resource-templates/SocialHistory.svelte';
 
     export let submitting: boolean;
-    export let resourceStore: IPSResourceCollection;
-    export let extensionStores: IPSExtension[];
+    export let resourceCollection: IPSResourceCollection;
 
     const components: Record<string, any> = {
         "AllergyIntolerance": AllergyIntolerance,
@@ -63,20 +62,43 @@
     const ipsDispatch = createEventDispatcher<{ 'ips-retrieved': IPSRetrieveEvent }>();
     const statusDispatch = createEventDispatcher<{ 'status-update': string }>();
     const errorDispatch = createEventDispatcher<{ 'error': string }>();
+
     let reference: string;
     let selectedPatient: string;
     $: if (selectedPatient) {
-        resourceStore.setSelectedPatient(selectedPatient);
+        resourceCollection.setSelectedPatient(selectedPatient);
     }
-    
-    let patientStore = resourceStore.patients;
+
+    // Proxy for resourceCollection's resourcesByType to allow reactive updates
+    let resourcesByTypeStore = resourceCollection.resourcesByType;
+
+    let patientStore = $resourcesByTypeStore["Patient"];
     let patientBadgeColor: string = "danger";
     let patientCount: number = 0;
-    $: patientCount = Object.keys($patientStore).length;
+    $: patientCount = Object.keys(patientStore).length;
     $: patientBadgeColor = patientCount > 1 ? "danger" : "secondary";
 
-    // Proxy for resourceStore's resourcesByType to allow reactive updates
-    let resourcesByTypeStore = resourceStore.resourcesByType;
+    // // Proxy for extensionStore's resources to allow reactive updates
+    // let extensionResources = {
+    //     // This store will update when new extensions are added and when each resource array changes
+    //     ...derived([extensionStores, ...Object.values(extensionStores).map((s) => s.resources)],
+    //         ([...arr]) => {
+    //             let extensionStores = arr[0];
+    //             let extensionStoreResourceArrays = arr.slice(1);
+    //             let eR = {} as Record<string, Writable<Record<string, ResourceHelper>>>;
+    //             Object.keys(extensionStores).forEach((storeKey) => {
+    //                 eR[storeKey] = $extensionStores[storeKey].resources;
+    //             });
+    //             return eR;
+    //         }
+    //     ),
+    //     set(newStoreValue:Record<string, Writable<Record<string, ResourceHelper>>>) {
+    //         Object.keys(newStoreValue).forEach((storeKey) => {
+    //             $extensionStores[storeKey].resources.set(get(newStoreValue[storeKey]));
+    //         });
+    //         $extensionStores = $extensionStores; // Triggers reactivity
+    //     }
+    // }
 
     $: {
         if (submitting) {
@@ -97,7 +119,7 @@
 
         statusDispatch("status-update", "Adding data");
         try {
-            let selectedResources = resourceStore.getSelectedResources().map((rh:ResourceHelper) => {
+            let selectedResources = resourceCollection.getSelectedResources().map((rh:ResourceHelper) => {
                 return rh.resource;
             });
             reference = await uploadResources(selectedResources);
@@ -121,9 +143,7 @@
 
         // Add injected resources to existing IPS
         if (content) {
-            extensionStores.forEach(($extensionStore) => {
-                content = $extensionStore.extendIPS(content);
-            });
+            content = resourceCollection.extendIPS(content);
         }
         content.entry.map(entry => {
             if (entry.resource.extension) {
@@ -229,64 +249,6 @@
                 </AccordionItem>
             {/each}
         {/if}
-        <!-- {#if extensionStores}
-            {#each extensionStores as $extensionStore}
-                {#if $extensionStore.resources > 0}
-                    <AccordionItem on:toggle={() => updateBadge($extensionStore.getName())}>
-                        <span slot="header">
-                                {$extensionStore.getName()}
-                                <Badge
-                                    class="mx-1"
-                                    color={
-                                        Object.keys($extensionStore.getSelectedResources()).length
-                                            == $extensionStore.getResourceCount()
-                                            ? "primary"
-                                            : Object.keys($extensionStore.getSelectedResources()).length
-                                                > 0
-                                                ? "info"
-                                                : "secondary"
-                                    }>
-                                    {Object.keys($extensionStore.getSelectedResources()).length}
-                                </Badge>
-                        </span>
-                        <FormGroup>
-                            {#if $extensionStore.getResourceCount() > 0}
-                                {#each Object.keys($extensionStore.getResources()) as key}
-                                    <Label style="width: 100%">
-                                        <Card style="width: 100%; max-width: 100%">
-                                            <CardHeader>
-                                                <span style="font-size:small">{$extensionStore.getName()}</span>
-                                            </CardHeader>
-                                            <CardBody style="overflow:hidden">
-                                                <Row class="flex-nowrap">
-                                                    <Col xs=auto style="vertical-align:baseline">
-                                                        <Input
-                                                            id={key}
-                                                            type="checkbox"
-                                                            bind:checked={$extensionStore.resources[key].include}
-                                                            value={key}
-                                                            />
-                                                    </Col>
-                                                    <Col>
-                                                        {#if $extensionStore.getName() in components}
-                                                            <svelte:component this={components[$extensionStore.getName()]} resource={$extensionStore.getResources()[key].resource} />
-                                                        {:else if $extensionStore.getResources()[key].resource.text?.div}
-                                                            {@html $extensionStore.getResources()[key].resource.text?.div}
-                                                        {:else}
-                                                            {$extensionStore.getResources()[key].tempId}
-                                                        {/if}
-                                                    </Col>
-                                                </Row>
-                                            </CardBody>
-                                        </Card>
-                                    </Label>
-                                {/each}
-                            {/if}
-                        </FormGroup>
-                    </AccordionItem>
-                {/if}
-            {/each}
-        {/if} -->
     </Accordion>
 </AccordionItem>
 
