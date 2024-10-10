@@ -8,11 +8,13 @@
     Row,
     Spinner
   } from 'sveltestrap';
-  import type { IPSExtensionStore } from './IPSExtensionStore';
+  import { get } from 'svelte/store';
   import type { ResourceRetrieveEvent } from './types';
   import type { Attachment, DocumentReference } from 'fhir/r4';
+    import { IPSResourceCollection } from './IPSResourceCollection';
 
-  export let extensionStore: IPSExtensionStore;
+  export let resourceCollection: IPSResourceCollection;
+  export let adExtensionKey: string = "Advance Directives";
 
   let sources: Record<string, {selected: Boolean; url: string}> = {
     "AD Vault": {selected: false, url: "https://qa-rr-fhir.maxmddirect.com"},
@@ -261,17 +263,16 @@
   }
 
   function updateAdSection(resources: any[]) {
-    // Add section if one hasn't already been created or doesn't exist
-    extensionStore.setSection(JSON.parse(JSON.stringify(adSectionTemplate)));
-    let resourceCount = extensionStore.getResourceCount();
+    let resourceCount = Object.keys(get(resourceCollection.resourcesByType)[adExtensionKey]).length;
 
     // Set resource id for bundle reference use later
     resources = resources.map((r, index) => {
-      r.id = `advance-directive-document-${index + resourceCount + 1}`;
+      r.id = `advance-directive-document-${resourceCount + index + 1}`;
+      return r;
     });
 
     // Concatenate or set new resources
-    extensionStore.addResources(resources);
+    resourceCollection.addResources(resources, adExtensionKey, adSectionTemplate);
   }
 
   async function prepareIps() {
