@@ -6,7 +6,7 @@
  */
 
 import { ResourceHelper } from "./ResourceHelper";
-import type { Resource, Bundle } from "fhir/r4";
+import type { Resource, Bundle, CompositionSection } from "fhir/r4";
 import { writable, derived, get, type Writable, type Readable, type Updater } from "svelte/store";
 
 // This is both allowable and reverse order of loading
@@ -36,48 +36,34 @@ const allowableResourceTypes = [
     'Specimen'
 ];
 
+interface SerializedIPSResourceCollection {
+    resourcesByType: Record<string, Record<string, ResourceHelper>>;
+    extensionSections: Record<string, CompositionSection>;
+}
+
 export class IPSResourceCollection {
-    resources: Writable<Record<string, ResourceHelper>>;
     resourcesByType: Writable<Record<string, Record<string, ResourceHelper>>>;
-    patients: Writable<Record<string, ResourceHelper>>;
     selectedPatient: Writable<string>;
     patientReference: Readable<string>;
+    extensionSections: Record<string, CompositionSection>;
 
     constructor();
     constructor(r: Resource | Resource[] | null);
     constructor(r: Resource | Resource[] | null = null) {
         this.resourcesByType = writable({} as Record<string, Record<string, ResourceHelper>>);
-        this.resources = {
-            ...(derived(this.resourcesByType, ($resourcesByType:Record<string, Record<string, ResourceHelper>>) => {
-                let resources = Object.values($resourcesByType).reduce(
-                    (acc, cur) => {
-                        return Object.assign(acc, cur);
-                    },
-                    {}
-                );
-                return resources;
-            })),
-            set: (newStoreValue:Record<string, ResourceHelper>) => {
-                let obj = {} as Record<string, Record<string, ResourceHelper>>;
-                Object.values(newStoreValue).forEach((rh:ResourceHelper) => {
-                    if (!(rh.resource.resourceType in obj)) {
-                        obj[rh.resource.resourceType] = {} as Record<string, ResourceHelper>;
-                    }
-                    obj[rh.resource.resourceType][rh.tempId] = rh;
-                });
-                this.resourcesByType.set(obj);
-            },
-            update(u:Updater<Record<string, ResourceHelper>>) { return this.set(u(get(this))) }
-        };
-        this.patients = writable({} as Record<string, ResourceHelper>);
         this.selectedPatient = writable('');
         this.patientReference = derived(this.selectedPatient, ($selectedPatient) => {
             if ($selectedPatient) {
-                return `Patient/${get(this.patients)[$selectedPatient].resource.id}`;
+                let patients = get(this.resourcesByType)['Patient'];
+                if (!patients) {
+                    throw Error('No patients exist');
+                }
+                return `Patient/${patients[$selectedPatient].resource.id}`;
             } else {
                 return '';
             }
         });
+        this.extensionSections = {} as Record<string, CompositionSection>;
         if (r) {
             if (Array.isArray(r)) {
                 this.addResources(r);
@@ -142,23 +128,27 @@ export class IPSResourceCollection {
      * exists in the list, it will not be added again.
      * @param resource The resource to add.
      */
-    addResource(resource: Resource) {
+    addResource(resource: Resource, key?:string, sectionTemplate?:CompositionSection) {
         let rh = new ResourceHelper(resource);
-        let storage:Writable<Record<string, ResourceHelper>> = (resource.resourceType == 'Patient' ? this.patients : this.resources);
-        if (!(rh.tempId in get(storage))) {
-            storage.update((v:Record<string, ResourceHelper>) => {
-                v[rh.tempId] = rh;
-                return v;
-            });
-            if (!(rh.resource.resourceType in this.resourcesByType)) {
-                this.resourcesByType[rh.resource.resourceType] = {};
-            }
-            this.resourcesByType[rh.resource.resourceType][rh.tempId] = rh;
-
-            if (rh.resource.resourceType == 'Patient' && !get(this.patientReference)) {
-                this.setSelectedPatient(rh.tempId);
+        let sectionKey:string = key ?? resource.resourceType;
+        if (sectionKey !== resource.resourceType) {
+            // Custom section
+            if (sectionTemplate) {
+                this.extensionSections[sectionKey] = sectionTemplate;
             }
         }
+        this.resourcesByType.update((curr) => {
+            if (!(sectionKey in curr)) {
+                curr[sectionKey] = {};
+            }
+            if (!(rh.tempId in curr[sectionKey])) {
+                curr[sectionKey][rh.tempId] = rh;
+                if (sectionKey == 'Patient' && !get(this.patientReference)) {
+                    this.setSelectedPatient(rh.tempId);
+                }
+            }
+            return curr;
+        });
     }
 
     /**
@@ -166,7 +156,9 @@ export class IPSResourceCollection {
      * exists in the list, it will not be added again.
      * @param resources The list of resources to add.
      */
-    addResources(resources:Resource[]) {
+
+    // May want to add signature accepting a sectionKey function to handle more complex cases
+    addResources(resources:Resource[], sectionKey?:string, sectionTemplate?:CompositionSection) {
         resources = resources.filter(r => {
             if (!this._validateResource(r)) {
                 console.warn("Invalid resource: " + JSON.stringify(r));
@@ -174,30 +166,22 @@ export class IPSResourceCollection {
             }
             return true;
         });
-        resources.forEach(r => this.addResource(r));
+        resources.forEach(r => this.addResource(r, sectionKey, sectionTemplate));
         let sp = get(this.selectedPatient);
         if (sp) {
             this.setSelectedPatient(sp);
         } else {
-            this.setSelectedPatient(Object.keys(get(this.patients))[0]);
+            let patients = get(this.resourcesByType)['Patient'];
+            if (!patients) {
+                throw Error('No patients exist');
+            }
+            this.setSelectedPatient(Object.keys(patients)[0]);
         }
-        // TODO: Test if this triggers reactive updates
-        // let newAndOldResources = Object.values(resourceHelperStorage).concat(resources).sort(sortResources);
-
-        // // Refresh the RH storage object, deleting the current key/values and re-adding the full set.
-        // for (var key in resourceHelperStorage){
-        //     if (resourceHelperStorage.hasOwnProperty(key)){
-        //         delete resourceHelperStorage[key];
-        //     }
-        // }
-        // newAndOldResources.forEach(resource => {
-        //     this.addResource(resource, resourceHelperStorage);
-        // });
     }
 
     setSelectedPatient(p: string) {
-        if (get(this.patients)[p] == undefined) {
-            return;
+        if (!("Patients" in get(this.resourcesByType))) {
+            throw Error('No patients exist');
         }
         this.selectedPatient.set(p);
         this._updatePatientRefs();
@@ -208,7 +192,7 @@ export class IPSResourceCollection {
     }
 
     getSelectedPatient() {
-        return get(this.patients)[get(this.selectedPatient)];
+        return get(this.resourcesByType)["Patient"][get(this.selectedPatient)];
     }
 
     /**
@@ -216,8 +200,30 @@ export class IPSResourceCollection {
      * @returns The list of selected resources.
      */
     getSelectedResources(): ResourceHelper[] {
-        let selectedPatient = Object.values(get(this.patients)).filter((patient) => { return (patient as ResourceHelper).include }) as ResourceHelper[];
-        let selectedResources = Object.values(get(this.resources)).filter((resource) => { return (resource as ResourceHelper).include }) as ResourceHelper[];
-        return selectedPatient.concat(selectedResources);
+        let selectedResources = Object.values(get(this.resourcesByType))
+            .flatMap(types => Object.values(types))
+            .filter(resource => (resource as ResourceHelper).include ) as ResourceHelper[];
+        return selectedResources;
+    }
+
+    toJson() {
+        let resourcesByType = get(this.resourcesByType);
+        let extensionSections = this.extensionSections;
+        return JSON.stringify({
+            resources: resourcesByType,
+            extensionSections: extensionSections
+        });
+    }
+
+    fromJson(json:string) {
+        let data:SerializedIPSResourceCollection = JSON.parse(json);
+        let IRC = new IPSResourceCollection();
+        if (data.resourcesByType) {
+            IRC.resourcesByType.set(data.resourcesByType);
+        }
+        if (data.extensionSections) {
+            IRC.extensionSections = data.extensionSections;
+        }
+        return IRC;
     }
 }
