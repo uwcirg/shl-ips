@@ -6,8 +6,8 @@
  */
 
 import { ResourceHelper } from "./ResourceHelper";
-import type { Resource, Bundle, CompositionSection } from "fhir/r4";
-import { writable, derived, get, type Writable, type Readable, type Updater } from "svelte/store";
+import type { Resource, Bundle, Composition,CompositionSection, FhirResource } from "fhir/r4";
+import { writable, derived, get, type Writable, type Readable } from "svelte/store";
 
 // This is both allowable and reverse order of loading
 const allowableResourceTypes = [
@@ -177,6 +177,47 @@ export class IPSResourceCollection {
             }
             this.setSelectedPatient(Object.keys(patients)[0]);
         }
+    }
+
+    extendIPS(ips: Bundle) {
+        if (ips.entry === undefined || !ips.entry[0] || ips.entry[0].resource?.resourceType !== "Composition") {
+            throw Error("IPS does not contain a Composition resource");
+        }
+        
+        let composition = ips.entry[0].resource as Composition;
+        Object.keys(this.extensionSections).forEach((key) => {
+            let sectionToUse = this.extensionSections[key];
+            let addingNewSection = true;
+            if (composition?.section) {
+                composition.section.forEach(section => {
+                    if (section?.code?.coding?.[0].code === this.section?.code?.coding?.[0]?.code) {
+                        sectionToUse = section;
+                        addingNewSection = false;
+                    }
+                });
+            }
+            
+            if (sectionToUse.entry === undefined) {
+                sectionToUse.entry = [];
+            }
+            Object.values(get(this.resourcesByType)[key]).forEach((rh:ResourceHelper) => {
+                if (rh.include) {
+                    let entry = {
+                        resource: rh.resource as FhirResource,
+                        fullUrl: `urn:uuid:${rh.resource.id}`
+                    }
+                    ips.entry?.push(entry);
+                    sectionToUse.entry?.push({
+                        reference: `${entry.fullUrl}`
+                    });
+                }
+            });
+            if (addingNewSection && sectionToUse.entry.length > 0) {
+                composition.section?.push(sectionToUse);
+            }
+        });
+        
+        return ips;
     }
 
     setSelectedPatient(p: string) {
