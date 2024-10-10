@@ -39,21 +39,13 @@
     SOFAuthEvent } from './types';
   import type { Patient, Bundle } from 'fhir/r4';
   import { IPSResourceCollection } from './IPSResourceCollection.js';
-  import { IPSExtension } from './IPSExtension.js';
   import ResourceSelectorStores from './ResourceSelectorStores.svelte';
  
   export let status = "";
   
   let shlIdParam = $page.url.searchParams.get('shlid');
 
-  let resourceStore: IPSResourceCollection = new IPSResourceCollection();
-
-  let adExtensionStore: IPSExtension = new IPSExtension('Advance Directives');
-  let odhExtensionStore: IPSExtension = new IPSExtension('Occupation Data');
-  let extensionStores = [
-    adExtensionStore,
-    odhExtensionStore
-  ];
+  let resourceCollection: IPSResourceCollection = new IPSResourceCollection();
 
   const shlDispatch = createEventDispatcher<{ 'shl-submitted': SHLSubmitEvent }>();
   let submitting = false;
@@ -89,9 +81,9 @@
   let showPassword = false;
   let passcode = "";
 
-  resourceStore.selectedPatient.subscribe((patientId) => {
+  resourceCollection.selectedPatient.subscribe((patientId) => {
     if (patientId) {
-      patient = resourceStore.getSelectedPatient()?.resource as Patient;
+      patient = resourceCollection.getSelectedPatient()?.resource as Patient;
     }
   });
 
@@ -132,7 +124,7 @@
     label = sessionStorage.getItem('LABEL') ?? label;
     passcode = sessionStorage.getItem('PASSCODE') ?? passcode;
     if (sessionStorage.getItem('RESOURCES')) {
-      resourcesToReview = JSON.parse(sessionStorage.getItem('RESOURCES') ?? "") ?? resourcesToReview;
+      resourceCollection = IPSResourceCollection.fromJson(sessionStorage.getItem('RESOURCES') ?? "")
     }
     if (sessionStorage.getItem('PATIENT')) {
       patient = JSON.parse(sessionStorage.getItem('PATIENT') ?? "") ?? patient;
@@ -160,8 +152,7 @@
         if (resourceResult.resources) {
           handleAddDataAccordion({ event: true });
           // Trigger update in ResourceSelector
-          resourcesToReview = resourceResult.resources;
-          resourceStore.addResources(resourceResult.resources);
+          resourceCollection.addResources(resourceResult.resources);
           showSuccessMessage();
         }
       } catch (e) {
@@ -222,7 +213,7 @@
 
   async function preAuthRedirectHandler(details: SOFAuthEvent|undefined) {
     sessionStorage.setItem('URL', window.location.href);
-    sessionStorage.setItem('RESOURCES', JSON.stringify(resourcesToReview ?? ""));
+    sessionStorage.setItem('RESOURCES', resourceCollection.toJson());
     sessionStorage.setItem('PATIENT', JSON.stringify(patient ?? ""));
     sessionStorage.setItem('TAB', String(currentTab ?? ""));
     sessionStorage.setItem('LABEL', label ?? "");
@@ -382,11 +373,10 @@
     <AccordionItem class="ad-data">
       <h5 slot="header" class="my-2">3. Add advance directives</h5>
       <Label>Advance directives help providers know more about your medical preferences</Label>
-      <FetchAD bind:extensionStore={adExtensionStore}></FetchAD>
+      <FetchAD bind:resourceCollection={resourceCollection}></FetchAD>
     </AccordionItem>
     <ResourceSelectorStores
-      bind:resourceStore={resourceStore}
-      bind:extensionStores={extensionStores}
+      bind:resourceCollection={resourceCollection}
       bind:submitting={submitting}
       on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }
       on:status-update={ ({ detail }) => { updateStatus(detail) } }

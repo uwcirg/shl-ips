@@ -256,7 +256,7 @@ export class IPSResourceCollection {
         });
     }
 
-    fromJson(json:string) {
+    static fromJson(json:string) {
         let data:SerializedIPSResourceCollection = JSON.parse(json);
         let IRC = new IPSResourceCollection();
         if (data.resourcesByType) {
