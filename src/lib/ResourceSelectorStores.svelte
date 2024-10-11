@@ -64,7 +64,7 @@
     const errorDispatch = createEventDispatcher<{ 'error': string }>();
 
     let reference: string;
-    let selectedPatient: string;
+    let selectedPatient: string = get(resourceCollection.selectedPatient);
     $: if (selectedPatient) {
         resourceCollection.setSelectedPatient(selectedPatient);
     }
@@ -75,7 +75,11 @@
     let patientStore = $resourcesByTypeStore["Patient"];
     let patientBadgeColor: string = "danger";
     let patientCount: number = 0;
-    $: patientCount = Object.keys(patientStore).length;
+    $: {
+        if (patientStore) {
+            patientCount = Object.keys(patientStore).length;
+        }
+    }
     $: patientBadgeColor = patientCount > 1 ? "danger" : "secondary";
 
     // // Proxy for extensionStore's resources to allow reactive updates
