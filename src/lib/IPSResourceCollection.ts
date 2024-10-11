@@ -221,7 +221,7 @@ export class IPSResourceCollection {
     }
 
     setSelectedPatient(p: string) {
-        if (!("Patients" in get(this.resourcesByType))) {
+        if (!("Patient" in get(this.resourcesByType))) {
             throw Error('No patients exist');
         }
         this.selectedPatient.set(p);
