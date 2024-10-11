@@ -46,6 +46,7 @@
   let shlIdParam = $page.url.searchParams.get('shlid');
 
   let resourceCollection: IPSResourceCollection = new IPSResourceCollection();
+  let resourcesByTypeStore = resourceCollection.resourcesByType;
 
   const shlDispatch = createEventDispatcher<{ 'shl-submitted': SHLSubmitEvent }>();
   let submitting = false;
@@ -362,7 +363,7 @@
       {/if}
     </TabContent>
   </AccordionItem>
-  {#if resourcesToReview.length > 0}
+  {#if $resourcesByTypeStore && Object.keys($resourcesByTypeStore).length > 0}
     <AccordionItem class="odh-data">
       <h5 slot="header" class="my-2">2. Add health-related occupational information</h5>
       <Label>It may be helpful to include information about the work you do in your medical summary</Label>
@@ -384,7 +385,7 @@
     />
   {/if}
 </Accordion>
-{#if resourcesToReview.length > 0}
+{#if $resourcesByTypeStore && Object.keys($resourcesByTypeStore).length > 0}
   {#if shlIdParam == null}
     <Row class="mt-4">
       <h5>5. Save and create your SMART Health Link</h5>
@@ -480,7 +481,7 @@
     </Row>
   {/if}
   <span class="text-danger">{fetchError}</span>
-  {#if resourcesToReview.length > 0}
+  {#if $resourcesByTypeStore && Object.keys($resourcesByTypeStore).length > 0}
     {#if false && ipsResult.ips}
       <Row class="align-items-center">
         <Col xs="auto">
