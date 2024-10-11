@@ -109,9 +109,9 @@ export class IPSResourceCollection {
                     let id = ids[j];
                     let newVal = currState[type][id];
                     if (newVal.resource.subject) {
-                        newVal.resource.subject = newPatientRef;
+                        newVal.resource.subject.reference = newPatientRef;
                     } else if (newVal.resource.patient) {
-                        newVal.resource.patient = newPatientRef;
+                        newVal.resource.patient.reference = newPatientRef;
                     }
                     if (newState[type] === undefined) {
                         newState[type] = {};
