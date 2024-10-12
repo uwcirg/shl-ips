@@ -240,11 +240,15 @@ export class IPSResourceCollection {
      * Gets the list of resources that are selected for upload.
      * @returns The list of selected resources.
      */
-    getSelectedResources(): ResourceHelper[] {
-        let selectedResources = Object.values(get(this.resourcesByType))
+    getSelectedIPSResources(): ResourceHelper[] {
+        let rBT = JSON.parse(JSON.stringify(get(this.resourcesByType)));
+        Object.keys(this.extensionSections).forEach((key) => {
+            delete rBT[key];
+        });
+        let selectedIPSResources = Object.values(rBT)
             .flatMap(types => Object.values(types))
             .filter(resource => (resource as ResourceHelper).include ) as ResourceHelper[];
-        return selectedResources;
+        return selectedIPSResources;
     }
 
     toJson() {
