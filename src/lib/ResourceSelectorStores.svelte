@@ -56,7 +56,7 @@
         "Practitioner": Practitioner,
         "Procedure": Procedure,
         "Social History": SocialHistory,
-        "Advance Directives": AdvanceDirective
+        "Advance Directive": AdvanceDirective
     };
 
     const ipsDispatch = createEventDispatcher<{ 'ips-retrieved': IPSRetrieveEvent }>();
@@ -123,10 +123,10 @@
 
         statusDispatch("status-update", "Adding data");
         try {
-            let selectedResources = resourceCollection.getSelectedResources().map((rh:ResourceHelper) => {
+            let selectedIPSResources = resourceCollection.getSelectedIPSResources().map((rh:ResourceHelper) => {
                 return rh.resource;
             });
-            reference = await uploadResources(selectedResources);
+            reference = await uploadResources(selectedIPSResources);
         } catch (e:any) {
             throw new Error("Unable to upload resources", {cause: e});
         }
@@ -161,7 +161,7 @@
             return entry;
         })
         ipsDispatch('ips-retrieved', { ips: content });
-        submitting = false;
+        // submitting = false;
     }
 
     function updateBadge(type:string, color="") {
