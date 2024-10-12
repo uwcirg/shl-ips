@@ -11,10 +11,10 @@
   import { get } from 'svelte/store';
   import type { ResourceRetrieveEvent } from './types';
   import type { Attachment, DocumentReference } from 'fhir/r4';
-    import { IPSResourceCollection } from './IPSResourceCollection';
+  import { IPSResourceCollection } from './IPSResourceCollection';
 
   export let resourceCollection: IPSResourceCollection;
-  export let adExtensionKey: string = "Advance Directives";
+  export let adExtensionKey: string = "Advance Directive";
 
   let sources: Record<string, {selected: Boolean; url: string}> = {
     "AD Vault": {selected: false, url: "https://qa-rr-fhir.maxmddirect.com"},
@@ -263,7 +263,11 @@
   }
 
   function updateAdSection(resources: any[]) {
-    let resourceCount = Object.keys(get(resourceCollection.resourcesByType)[adExtensionKey]).length;
+    let adExtensionResources = get(resourceCollection.resourcesByType)[adExtensionKey];
+    let resourceCount = 0;
+    if (adExtensionResources) {
+      resourceCount = Object.keys(adExtensionResources).length; 
+    }
 
     // Set resource id for bundle reference use later
     resources = resources.map((r, index) => {
