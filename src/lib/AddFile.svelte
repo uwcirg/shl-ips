@@ -439,12 +439,12 @@
           </Button>
           </Col>
           {#if submitting}
-          <Col xs="auto" class="d-flex align-items-center px-0">
-            <Spinner color="primary" type="border" size="md"/>
-          </Col>
-          <Col xs="auto" class="d-flex align-items-center">
-            <span class="text-secondary">{status}</span>
-          </Col>
+            <Col xs="auto" class="d-flex align-items-center px-0">
+              <Spinner color="primary" type="border" size="md"/>
+            </Col>
+            <Col xs="auto" class="d-flex align-items-center">
+              <span class="text-secondary">{status}</span>
+            </Col>
           {/if}
         </Row>
       </form>
@@ -469,12 +469,12 @@
           </Button>
           </Col>
           {#if submitting}
-          <Col xs="auto" class="d-flex align-items-center px-0">
-            <Spinner color="primary" type="border" size="md"/>
-          </Col>
-          <Col xs="auto" class="d-flex align-items-center">
-            <span class="text-secondary">{status}</span>
-          </Col>
+            <Col xs="auto" class="d-flex align-items-center px-0">
+              <Spinner color="primary" type="border" size="md"/>
+            </Col>
+            <Col xs="auto" class="d-flex align-items-center">
+              <span class="text-secondary">{status}</span>
+            </Col>
           {/if}
         </Row>
       </form>
