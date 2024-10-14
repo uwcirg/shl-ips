@@ -70,9 +70,15 @@
     }
 
     // Proxy for resourceCollection's resourcesByType to allow reactive updates
-    let resourcesByTypeStore = resourceCollection.resourcesByType;
+    let resourcesByTypeStore;
+    $: resourcesByTypeStore = resourceCollection.resourcesByType;
 
-    let patientStore = $resourcesByTypeStore["Patient"];
+    let patientStore: Record<string, ResourceHelper>;
+    $: {
+        if ($resourcesByTypeStore) {
+            patientStore = $resourcesByTypeStore["Patient"];
+        }
+    }
     let patientBadgeColor: string = "danger";
     let patientCount: number = 0;
     $: {

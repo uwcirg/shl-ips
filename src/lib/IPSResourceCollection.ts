@@ -251,13 +251,14 @@ export class IPSResourceCollection {
         return selectedIPSResources;
     }
 
-    toJson() {
+    toJson(): string {
         let resourcesByType = get(this.resourcesByType);
         let extensionSections = this.extensionSections;
-        return JSON.stringify({
-            resources: resourcesByType,
+        let output:SerializedIPSResourceCollection = {
+            resourcesByType: resourcesByType,
             extensionSections: extensionSections
-        });
+        }
+        return JSON.stringify(output);
     }
 
     static fromJson(json:string) {
@@ -268,6 +269,10 @@ export class IPSResourceCollection {
         }
         if (data.extensionSections) {
             IRC.extensionSections = data.extensionSections;
+        }
+        if (data.resourcesByType['Patient']) {
+            let selectedPatient = Object.values(data.resourcesByType['Patient']).filter(rh => rh.include);
+            IRC.setSelectedPatient(selectedPatient[0].tempId);
         }
         return IRC;
     }

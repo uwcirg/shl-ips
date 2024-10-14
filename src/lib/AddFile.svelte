@@ -45,9 +45,6 @@
   
   let shlIdParam = $page.url.searchParams.get('shlid');
 
-  let resourceCollection: IPSResourceCollection = new IPSResourceCollection();
-  let resourcesByTypeStore = resourceCollection.resourcesByType;
-
   const shlDispatch = createEventDispatcher<{ 'shl-submitted': SHLSubmitEvent }>();
   let submitting = false;
   let fetchError = "";
@@ -70,7 +67,6 @@
     ips: undefined
   }
 
-  let resourcesToReview: any[] = [];
   let shcsToAdd: SHCFile[] = [];
   let singleIPS = true;
   let patientName = "My";
@@ -82,27 +78,41 @@
   let showPassword = false;
   let passcode = "";
 
-  resourceCollection.selectedPatient.subscribe((patientId) => {
-    if (patientId) {
+  let resourceCollection: IPSResourceCollection = new IPSResourceCollection();
+  let resourcesByTypeStore;
+  $: resourcesByTypeStore = resourceCollection.resourcesByType;
+  let resourcesAdded = false;
+  $: {
+    if ($resourcesByTypeStore) {
+      resourcesAdded = Object.keys($resourcesByTypeStore).length > 0;
+    }
+  }
+
+  let userUpdatedLabel = false;
+  let selectedPatientStore = resourceCollection.selectedPatient;
+  $: {
+    if ($selectedPatientStore) {
       patient = resourceCollection.getSelectedPatient()?.resource as Patient;
     }
-  });
+  }
 
   $: type = showPassword ? 'text' : 'password';
   $: icon = showPassword ? 'eye-fill' : 'eye-slash-fill';
-  $: addDataHeader = resourcesToReview.length == 0 ? emptyResourceListHeader : fullResourceListHeader;
+  $: addDataHeader = resourcesAdded ? fullResourceListHeader : emptyResourceListHeader;
   $: {
     if (patient?.name?.[0].given) {
       patientName = patient.name[0]?.given[0];
     }
   }
   $: {
-    if (patientName) {
-      label = patientName.charAt(0).toUpperCase() + patientName.slice(1).toLowerCase() + "'s";
-    } else {
-      label = "My";
+    if (!userUpdatedLabel) {
+      if (patientName) {
+        label = patientName.charAt(0).toUpperCase() + patientName.slice(1).toLowerCase() + "'s";
+      } else {
+        label = "My";
+      }
+      label = label + " Summary Link " + new Date().toISOString().slice(0, 10);
     }
-    label = label + " Summary Link " + new Date().toISOString().slice(0, 10);
   }
   $: {
     if ($mode === 'normal') {
@@ -148,35 +158,35 @@
   });
 
   async function handleNewResources(details: ResourceRetrieveEvent) {
-      try {
-        resourceResult = details;
-        if (resourceResult.resources) {
-          handleAddDataAccordion({ event: true });
-          // Trigger update in ResourceSelector
-          resourceCollection.addResources(resourceResult.resources);
-          showSuccessMessage();
-        }
-      } catch (e) {
-        console.log('Failed', e);
-        fetchError = "Error preparing IPS";
+    try {
+      resourceResult = details;
+      if (resourceResult.resources) {
+        handleAddDataAccordion({ event: true });
+        // Trigger update in ResourceSelector
+        resourceCollection.addResources(resourceResult.resources);
+        showSuccessMessage();
       }
+    } catch (e) {
+      console.log('Failed', e);
+      fetchError = "Error preparing IPS";
+    }
   }
 
   async function handleSHCResultUpdate(details: SHCRetrieveEvent) {
-      try {
-        shcResult = details;
-        if (shcResult.shc && isSHCFile(shcResult.shc)) {
-          const decoded = await verify(shcResult.shc.verifiableCredential[0]);
-          const data = decoded.fhirBundle;
-          stageRetrievedIPS({ips: data, source: shcResult.source});
-        } else {
-          throw Error("Empty or invalid smart health card");
-        }
-
-      } catch (e) {
-        console.log('Failed', e);
-        fetchError = "Error processing health card";
+    try {
+      shcResult = details;
+      if (shcResult.shc && isSHCFile(shcResult.shc)) {
+        const decoded = await verify(shcResult.shc.verifiableCredential[0]);
+        const data = decoded.fhirBundle;
+        stageRetrievedIPS({ips: data, source: shcResult.source});
+      } else {
+        throw Error("Empty or invalid smart health card");
       }
+
+    } catch (e) {
+      console.log('Failed', e);
+      fetchError = "Error processing health card";
+    }
   }
 
   async function uploadRetrievedIPS(details: IPSRetrieveEvent) {
@@ -237,13 +247,13 @@
   }
 
   async function packageSHC(content:SHCFile | Bundle | undefined): Promise<SHCFile> {
-      if (content != undefined && isSHCFile(content) && content.verifiableCredential) {
-        return content;
-      }
+    if (content != undefined && isSHCFile(content) && content.verifiableCredential) {
+      return content;
+    }
 
-      const shc = await signJws(content);
+    const shc = await signJws(content);
 
-      return { verifiableCredential: [shc] };
+    return { verifiableCredential: [shc] };
   }
 
   async function submitSHL() {
@@ -316,12 +326,12 @@
 </script>
 <Accordion stayOpen>
   <AccordionItem
-    active={resourcesToReview.length == 0}
+    active={!resourcesAdded}
     class="add-data"
     on:toggle={handleAddDataAccordion}
   >
     <h5 slot="header" class="my-2">{addDataHeader}</h5>
-    {#if resourcesToReview.length == 0}
+    {#if !resourcesAdded}
       <p>Select your provider below, then press "Fetch Data" to begin building your Health Summary.</p>
     {:else}
       <p>Select another provider below, then press "Fetch Data" to add more data to your Health Summary.</p>
@@ -363,7 +373,7 @@
       {/if}
     </TabContent>
   </AccordionItem>
-  {#if $resourcesByTypeStore && Object.keys($resourcesByTypeStore).length > 0}
+  {#if resourcesAdded}
     <AccordionItem class="odh-data">
       <h5 slot="header" class="my-2">2. Add health-related occupational information</h5>
       <Label>It may be helpful to include information about the work you do in your medical summary</Label>
@@ -385,7 +395,7 @@
     />
   {/if}
 </Accordion>
-{#if $resourcesByTypeStore && Object.keys($resourcesByTypeStore).length > 0}
+{#if resourcesAdded}
   {#if shlIdParam == null}
     <Row class="mt-4">
       <h5>5. Save and create your SMART Health Link</h5>
@@ -396,7 +406,7 @@
     <Row class="mx-2">
       <FormGroup>
         <Label>Enter a name for the Summary:</Label>
-        <Input type="text" bind:value={label} />
+        <Input type="text" bind:value={label} on:input={() => { userUpdatedLabel = true }}/>
       </FormGroup>
       <FormGroup>
         <Label for="passcode">Protect with Passcode (optional):</Label>
@@ -481,7 +491,7 @@
     </Row>
   {/if}
   <span class="text-danger">{fetchError}</span>
-  {#if $resourcesByTypeStore && Object.keys($resourcesByTypeStore).length > 0}
+  {#if resourcesAdded}
     {#if false && ipsResult.ips}
       <Row class="align-items-center">
         <Col xs="auto">
@@ -518,7 +528,7 @@
   {/if}
 {/if}
 {#if $mode === "advanced"}
-<br>
-<em class="text-secondary">* Advanced features for demo purposes only</em>
-<br>
+  <br>
+  <em class="text-secondary">* Advanced features for demo purposes only</em>
+  <br>
 {/if}
