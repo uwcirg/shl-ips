@@ -48,7 +48,6 @@
     <br>
   {/if}
 {/if}
-<br>
 {#if resource.code}
   {#if resource.code.coding}
     <Badge color="primary">{resource.code.coding[0].system} : {resource.code.coding[0].code}</Badge>

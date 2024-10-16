@@ -8,13 +8,13 @@
     Row,
     Spinner
   } from 'sveltestrap';
-  import { get } from 'svelte/store';
+  import { createEventDispatcher } from 'svelte';
   import type { ResourceRetrieveEvent } from './types';
   import type { Attachment, DocumentReference } from 'fhir/r4';
-  import { IPSResourceCollection } from './IPSResourceCollection';
 
-  export let resourceCollection: IPSResourceCollection;
-  export let adExtensionKey: string = "Advance Directive";
+  export let sectionKey: string = "Advance Directive";
+
+  const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
   let sources: Record<string, {selected: Boolean; url: string}> = {
     "AD Vault": {selected: false, url: "https://qa-rr-fhir.maxmddirect.com"},
@@ -51,11 +51,7 @@
     'VT','VA','VI','WA','WV','WI','WY'
   ];
 
-  let result: ResourceRetrieveEvent = {
-    resources: undefined
-  };
-
-  let adSectionTemplate = {
+  let sectionTemplate = {
       title: "Advance Directives",
       code: {
           coding: [
@@ -222,7 +218,7 @@
 
   async function fetchAdvanceDirective(patient: any) {
     let query = buildAdvanceDirectiveSearchQuery(patient);
-    return result = await fetch(`${sources[selectedSource].url}/DocumentReference${query}`, {
+    return await fetch(`${sources[selectedSource].url}/DocumentReference${query}`, {
         method: 'GET',
         headers: { accept: 'application/json' }
       }).then(function (response: any) {
@@ -262,23 +258,6 @@
     }
   }
 
-  function updateAdSection(resources: any[]) {
-    let adExtensionResources = get(resourceCollection.resourcesByType)[adExtensionKey];
-    let resourceCount = 0;
-    if (adExtensionResources) {
-      resourceCount = Object.keys(adExtensionResources).length; 
-    }
-
-    // Set resource id for bundle reference use later
-    resources = resources.map((r, index) => {
-      r.id = `advance-directive-document-${resourceCount + index + 1}`;
-      return r;
-    });
-
-    // Concatenate or set new resources
-    resourceCollection.addResources(resources, adExtensionKey, adSectionTemplate);
-  }
-
   async function prepareIps() {
     fetchError = '';
     processing = true;
@@ -314,7 +293,14 @@
           }
         }
       });
-      updateAdSection(resources);
+
+      let result:ResourceRetrieveEvent = {
+        resources: resources,
+        sectionKey: sectionKey,
+        sectionTemplate: sectionTemplate,
+        source: hostname,
+      }
+      resourceDispatch('update-resources', result);
       console.log([patient, ...resources]);
     } catch (e) {
       processing = false;

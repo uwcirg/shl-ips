@@ -156,14 +156,34 @@
 
     document.querySelector(`span.${currentTab}-tab`)?.parentElement?.click();
   });
+  
+  async function preAuthRedirectHandler(details: SOFAuthEvent|undefined) {
+    sessionStorage.setItem('URL', window.location.href);
+    sessionStorage.setItem('RESOURCES', resourceCollection.toJson());
+    sessionStorage.setItem('PATIENT', JSON.stringify(patient ?? ""));
+    sessionStorage.setItem('TAB', String(currentTab ?? ""));
+    sessionStorage.setItem('LABEL', label ?? "");
+    sessionStorage.setItem('PASSCODE', passcode ?? "");
+    sessionStorage.setItem('EXPIRE', JSON.stringify(expiration ?? -1));
+  }
 
+  async function revertPreAuth(details: SOFAuthEvent|undefined) {
+    sessionStorage.removeItem('URL');
+    sessionStorage.removeItem('RESOURCES');
+    sessionStorage.removeItem('PATIENT');
+    sessionStorage.removeItem('TAB');
+    sessionStorage.removeItem('LABEL');
+    sessionStorage.removeItem('PASSCODE');
+    sessionStorage.removeItem('EXPIRE');
+  }
+  
   async function handleNewResources(details: ResourceRetrieveEvent) {
     try {
       resourceResult = details;
       if (resourceResult.resources) {
         handleAddDataAccordion({ event: true });
         // Trigger update in ResourceSelector
-        resourceCollection.addResources(resourceResult.resources);
+        resourceCollection.addResources(resourceResult.resources, resourceResult.sectionKey, resourceResult.sectionTemplate);
         showSuccessMessage();
       }
     } catch (e) {
@@ -220,26 +240,6 @@
       console.log('Failed', e);
       fetchError = "Error parsing IPS";
     }
-  }
-
-  async function preAuthRedirectHandler(details: SOFAuthEvent|undefined) {
-    sessionStorage.setItem('URL', window.location.href);
-    sessionStorage.setItem('RESOURCES', resourceCollection.toJson());
-    sessionStorage.setItem('PATIENT', JSON.stringify(patient ?? ""));
-    sessionStorage.setItem('TAB', String(currentTab ?? ""));
-    sessionStorage.setItem('LABEL', label ?? "");
-    sessionStorage.setItem('PASSCODE', passcode ?? "");
-    sessionStorage.setItem('EXPIRE', JSON.stringify(expiration ?? -1));
-  }
-
-  async function revertPreAuth(details: SOFAuthEvent|undefined) {
-    sessionStorage.removeItem('URL');
-    sessionStorage.removeItem('RESOURCES');
-    sessionStorage.removeItem('PATIENT');
-    sessionStorage.removeItem('TAB');
-    sessionStorage.removeItem('LABEL');
-    sessionStorage.removeItem('PASSCODE');
-    sessionStorage.removeItem('EXPIRE');
   }
   
   function isSHCFile(object: any): object is SHCFile {
@@ -384,7 +384,9 @@
     <AccordionItem class="ad-data">
       <h5 slot="header" class="my-2">3. Add advance directives</h5>
       <Label>Advance directives help providers know more about your medical preferences</Label>
-      <FetchAD bind:resourceCollection={resourceCollection}></FetchAD>
+      <FetchAD
+        on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
+      />
     </AccordionItem>
     <ResourceSelectorStores
       bind:resourceCollection={resourceCollection}

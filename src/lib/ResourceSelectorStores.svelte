@@ -17,6 +17,7 @@
     import { ResourceHelper } from './ResourceHelper.js';
     import type { IPSResourceCollection } from './IPSResourceCollection.js';
     import type { IPSRetrieveEvent } from './types.js';
+    import type { CompositionSection } from 'fhir/r4';
 
     import AdvanceDirective from './resource-templates/AdvanceDirective.svelte';
     import AllergyIntolerance from './resource-templates/AllergyIntolerance.svelte';
@@ -33,7 +34,7 @@
     import Patient from './resource-templates/Patient.svelte';
     import Practitioner from './resource-templates/Practitioner.svelte';
     import Procedure from './resource-templates/Procedure.svelte';
-    import SocialHistory from './resource-templates/SocialHistory.svelte';
+    import OccupationalData from './resource-templates/OccupationalData.svelte';
 
     export let submitting: boolean;
     export let resourceCollection: IPSResourceCollection;
@@ -55,7 +56,7 @@
         "Patient": Patient,
         "Practitioner": Practitioner,
         "Procedure": Procedure,
-        "Social History": SocialHistory,
+        "Occupational Data": OccupationalData,
         "Advance Directive": AdvanceDirective
     };
 
@@ -70,8 +71,11 @@
     }
 
     // Proxy for resourceCollection's resourcesByType to allow reactive updates
-    let resourcesByTypeStore;
+    let resourcesByTypeStore: Writable<Record<string, Record<string, ResourceHelper>>>;
     $: resourcesByTypeStore = resourceCollection.resourcesByType;
+
+    let extensionSectionStore: Writable<Record<string, CompositionSection|false>>;
+    $: extensionSectionStore = resourceCollection.extensionSections;
 
     let patientStore: Record<string, ResourceHelper>;
     $: {
@@ -87,28 +91,6 @@
         }
     }
     $: patientBadgeColor = patientCount > 1 ? "danger" : "secondary";
-
-    // // Proxy for extensionStore's resources to allow reactive updates
-    // let extensionResources = {
-    //     // This store will update when new extensions are added and when each resource array changes
-    //     ...derived([extensionStores, ...Object.values(extensionStores).map((s) => s.resources)],
-    //         ([...arr]) => {
-    //             let extensionStores = arr[0];
-    //             let extensionStoreResourceArrays = arr.slice(1);
-    //             let eR = {} as Record<string, Writable<Record<string, ResourceHelper>>>;
-    //             Object.keys(extensionStores).forEach((storeKey) => {
-    //                 eR[storeKey] = $extensionStores[storeKey].resources;
-    //             });
-    //             return eR;
-    //         }
-    //     ),
-    //     set(newStoreValue:Record<string, Writable<Record<string, ResourceHelper>>>) {
-    //         Object.keys(newStoreValue).forEach((storeKey) => {
-    //             $extensionStores[storeKey].resources.set(get(newStoreValue[storeKey]));
-    //         });
-    //         $extensionStores = $extensionStores; // Triggers reactivity
-    //     }
-    // }
 
     $: {
         if (submitting) {
@@ -185,6 +167,7 @@
 <AccordionItem active class="edit-data">
     <h5 slot="header" class="my-2">4. Directly edit your health summary content</h5>
     <Label>Select which resources to include in your customized IPS</Label>
+    {#if $resourcesByTypeStore}
     <Accordion>
         {#if Object.keys($resourcesByTypeStore).length > 0}
             {#each Object.keys($resourcesByTypeStore) as resourceType}
@@ -200,7 +183,11 @@
                                 {patientCount}
                             </Badge>
                         {:else}
-                            {`${resourceType}s`}
+                            {#if resourceType in $extensionSectionStore}
+                                {resourceType}
+                            {:else}
+                                {`${resourceType}s`}
+                            {/if}
                             <Badge
                                 positioned
                                 class="mx-1"
@@ -260,5 +247,6 @@
             {/each}
         {/if}
     </Accordion>
+    {/if}
 </AccordionItem>
 

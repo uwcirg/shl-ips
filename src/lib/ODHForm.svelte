@@ -12,6 +12,8 @@
 
     const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
+    export let sectionKey: string = "Occupational Data";
+
     let canShare = navigator?.canShare?.({ url: 'https://example.com', title: 'Title' }); // True for Chrome
 
     let employmentStatus: any | undefined;
@@ -498,7 +500,11 @@
         }, 1000);
         if (employmentStatus || currentJob || pastJob || retirementDate || combatPeriod) {
           let odhSectionResources = [employmentStatus, currentJob, pastJob, retirementDate, combatPeriod].filter((r) => r !== undefined);
-          resourceDispatch('update-resources', { resources: odhSectionResources.map((r) => r.resource) });
+          let result: ResourceRetrieveEvent = {
+            resources: odhSectionResources.map((r) => r.resource),
+            sectionKey: sectionKey
+          }
+          resourceDispatch('update-resources', result);
           console.log(odhSectionResources);
         }
     }

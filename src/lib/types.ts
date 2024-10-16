@@ -1,4 +1,4 @@
-import type { Bundle } from 'fhir/r4';
+import type { Bundle, CompositionSection } from 'fhir/r4';
 export interface SHLSubmitEvent {
   shcs: SHCFile[];
   label?: string;
@@ -10,7 +10,9 @@ export interface SHLSubmitEvent {
 
 export interface ResourceRetrieveEvent {
   resources: Array<any> | undefined;
-  source?: string | undefined;
+  sectionKey?: string;
+  sectionTemplate?: CompositionSection;
+  source?: string;
 }
 export interface SHCRetrieveEvent {
   shc: SHCFile | undefined;

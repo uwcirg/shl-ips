@@ -38,14 +38,14 @@ const allowableResourceTypes = [
 
 interface SerializedIPSResourceCollection {
     resourcesByType: Record<string, Record<string, ResourceHelper>>;
-    extensionSections: Record<string, CompositionSection>;
+    extensionSections: Record<string, CompositionSection|false>;
 }
 
 export class IPSResourceCollection {
     resourcesByType: Writable<Record<string, Record<string, ResourceHelper>>>;
     selectedPatient: Writable<string>;
     patientReference: Readable<string>;
-    extensionSections: Record<string, CompositionSection>;
+    extensionSections: Writable<Record<string, CompositionSection|false>>;
 
     constructor();
     constructor(r: Resource | Resource[] | null);
@@ -63,7 +63,7 @@ export class IPSResourceCollection {
                 return '';
             }
         });
-        this.extensionSections = {} as Record<string, CompositionSection>;
+        this.extensionSections = writable({} as Record<string, CompositionSection|false>);
         if (r) {
             if (Array.isArray(r)) {
                 this.addResources(r);
@@ -133,9 +133,14 @@ export class IPSResourceCollection {
         let sectionKey:string = key ?? resource.resourceType;
         if (sectionKey !== resource.resourceType) {
             // Custom section
-            if (sectionTemplate) {
-                this.extensionSections[sectionKey] = sectionTemplate;
-            }
+            this.extensionSections.update((curr) => {
+                if (sectionTemplate) {
+                    curr[sectionKey] = sectionTemplate;
+                } else {
+                    curr[sectionKey] = false;
+                }
+                return curr;
+            })
         }
         this.resourcesByType.update((curr) => {
             if (!(sectionKey in curr)) {
@@ -185,12 +190,16 @@ export class IPSResourceCollection {
         }
         
         let composition = ips.entry[0].resource as Composition;
-        Object.keys(this.extensionSections).forEach((key) => {
-            let sectionToUse = this.extensionSections[key];
+        let extensionSections = get(this.extensionSections);
+        Object.keys(extensionSections).forEach((key) => {
+            let sectionToUse = extensionSections[key];
+            if (sectionToUse === false) {
+                return;
+            }
             let addingNewSection = true;
             if (composition?.section) {
                 composition.section.forEach(section => {
-                    if (section?.code?.coding?.[0].code === this.section?.code?.coding?.[0]?.code) {
+                    if (sectionToUse && section?.code?.coding?.[0].code === sectionToUse?.code?.coding?.[0]?.code) {
                         sectionToUse = section;
                         addingNewSection = false;
                     }
@@ -242,8 +251,12 @@ export class IPSResourceCollection {
      */
     getSelectedIPSResources(): ResourceHelper[] {
         let rBT = JSON.parse(JSON.stringify(get(this.resourcesByType)));
-        Object.keys(this.extensionSections).forEach((key) => {
-            delete rBT[key];
+        let extensionSections = get(this.extensionSections);
+        Object.entries(extensionSections).forEach(([sectionKey, sectionTemplate]) => {
+            // Exclude extensions from upload if attached to a custom section, but allow custom group titles w/o sections to be uploaded
+            if (sectionTemplate) {
+                delete rBT[sectionKey];
+            }
         });
         let selectedIPSResources = Object.values(rBT)
             .flatMap(types => Object.values(types))
@@ -253,7 +266,7 @@ export class IPSResourceCollection {
 
     toJson(): string {
         let resourcesByType = get(this.resourcesByType);
-        let extensionSections = this.extensionSections;
+        let extensionSections = get(this.extensionSections);
         let output:SerializedIPSResourceCollection = {
             resourcesByType: resourcesByType,
             extensionSections: extensionSections
@@ -268,7 +281,7 @@ export class IPSResourceCollection {
             IRC.resourcesByType.set(data.resourcesByType);
         }
         if (data.extensionSections) {
-            IRC.extensionSections = data.extensionSections;
+            IRC.extensionSections.set(data.extensionSections);
         }
         if (data.resourcesByType['Patient']) {
             let selectedPatient = Object.values(data.resourcesByType['Patient']).filter(rh => rh.include);
