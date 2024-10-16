@@ -2,7 +2,7 @@ let fhirResources = null;
 
 function initLLMChat(resources) {
     fhirResources = resources;
-    const llmChatContent = document.getElementById('ai-chat-content');
+    const llmChatContent = document.getElementById('llm-chat-content');
     const chatInput = document.getElementById('chat-input');
     const sendMessageButton = document.getElementById('send-message');
 
@@ -23,7 +23,7 @@ async function sendMessage() {
     chatInput.value = '';
 
     try {
-        const response = await fetch('/api/ai-chat', {
+        const response = await fetch('/api/llm-chat', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -35,13 +35,13 @@ async function sendMessage() {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to get AI response');
+            throw new Error('Failed to get LLM response');
         }
 
         const data = await response.json();
         appendMessage('assistant', data.message);
     } catch (error) {
-        console.error('Error sending message to AI:', error);
+        console.error('Error sending message to LLM:', error);
         appendMessage('error', 'Failed to get a response. Please try again.');
     }
 }

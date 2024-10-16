@@ -46,7 +46,7 @@ function updateDisplayMode(displayMode) {
   } else if (displayMode == 'Text') {
     newText = 'Generated Text';
   } else if (displayMode == 'LlmChat') {
-    newText = 'AI Chat';
+    newText = 'LLM Chat';
   }
   if (newText) {
     mode = displayMode
@@ -55,7 +55,7 @@ function updateDisplayMode(displayMode) {
 
   // Show/hide content based on selected mode
   //$('#rendered-ips').toggle(mode !== 'LlmChat');
-  $('#ai-chat-content').toggle(mode === 'LlmChat');
+  $('#llm-chat-content').toggle(mode === 'LlmChat');
 
   shlContents.forEach((e, i) => {
     update(e, i);
