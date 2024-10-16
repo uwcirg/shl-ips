@@ -1,8 +1,8 @@
 let fhirResources = null;
 
-function initAIChat(resources) {
+function initLLMChat(resources) {
     fhirResources = resources;
-    const aiChatContent = document.getElementById('ai-chat-content');
+    const llmChatContent = document.getElementById('ai-chat-content');
     const chatInput = document.getElementById('chat-input');
     const sendMessageButton = document.getElementById('send-message');
 
@@ -55,4 +55,4 @@ function appendMessage(role, content) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-export { initAIChat };
+export { initLLMChat };

@@ -1,5 +1,5 @@
 import config from "./config.js";
-import { initAIChat} from "./aiChat.js";
+import { initLLMChat} from "./llmChat.js";
 var { pdfjsLib } = globalThis;
 pdfjsLib.GlobalWorkerOptions.workerSrc = '//mozilla.github.io/pdf.js/build/pdf.worker.mjs';
 
@@ -22,7 +22,7 @@ $(document).ready(function () {
   $('#content').show();
   $('#FhirDropdown').on('click', () => updateDisplayMode('Entries'));
   $('#NarrativeDropdown').on('click', () => updateDisplayMode('Text'));
-  $('#AiChatDropdown').on('click', () => updateDisplayMode('AiChat'));
+  $('#LlmChatDropdown').on('click', () => updateDisplayMode('LlmChat'));
 });
 
 function loadSample() {
@@ -45,7 +45,7 @@ function updateDisplayMode(displayMode) {
     newText = 'App Interpretation';
   } else if (displayMode == 'Text') {
     newText = 'Generated Text';
-  } else if (displayMode == 'AiChat') {
+  } else if (displayMode == 'LlmChat') {
     newText = 'AI Chat';
   }
   if (newText) {
@@ -54,8 +54,8 @@ function updateDisplayMode(displayMode) {
   }
 
   // Show/hide content based on selected mode
-  //$('#rendered-ips').toggle(mode !== 'AiChat');
-  $('#ai-chat-content').toggle(mode === 'AiChat');
+  //$('#rendered-ips').toggle(mode !== 'LlmChat');
+  $('#ai-chat-content').toggle(mode === 'LlmChat');
 
   shlContents.forEach((e, i) => {
     update(e, i);
@@ -243,7 +243,7 @@ function addTab(name, id) {
 // Primary function to traverse the Bundle and get data
 // Calls the render function to display contents 
 function update(ips, index) {
-  initAIChat(ips);
+  initLLMChat(ips);
   sectionCount = 0;
   $(`.output${index}`).html("");
   $("#renderMessage").hide();
