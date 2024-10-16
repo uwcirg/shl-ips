@@ -52,7 +52,7 @@
   let currentTab: string | number;
   currentTab = 'url';
   let emptyResourceListHeader = "Retrieve Your Health Data";
-  let fullResourceListHeader = "1. Add data from another provider"
+  let fullResourceListHeader = "1. Add data to your Health Summary"
   let addDataHeader = emptyResourceListHeader;
   let addDataOpen = true;
   let successMessage = false;
