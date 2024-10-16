@@ -11,7 +11,7 @@
 		"forceConsistentCasingInFileNames": true,
 		"strict": true,
 		// "noUncheckedIndexedAccess": true,
-		"moduleResolution": "Bundler",
+		"moduleResolution": "node",
 		"module": "ESNext",
 		"noEmit": true,
 		"lib": ["es2022"],
