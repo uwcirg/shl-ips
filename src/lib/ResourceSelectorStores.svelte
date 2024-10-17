@@ -17,7 +17,7 @@
     import { ResourceHelper } from './ResourceHelper.js';
     import type { IPSResourceCollection } from './IPSResourceCollection.js';
     import type { IPSRetrieveEvent } from './types.js';
-    import type { CompositionSection } from 'fhir/r4';
+    import type { CompositionSection, BundleEntry } from 'fhir/r4';
 
     import AdvanceDirective from './resource-templates/AdvanceDirective.svelte';
     import AllergyIntolerance from './resource-templates/AllergyIntolerance.svelte';
@@ -137,8 +137,8 @@
         if (content) {
             content = resourceCollection.extendIPS(content);
         }
-        content.entry.map(entry => {
-            if (entry.resource.extension) {
+        content.entry.map((entry: BundleEntry) => {
+            if (entry.resource && 'extension' in entry.resource && entry.resource.extension) {
                 entry.resource.extension = entry.resource.extension.filter(function(item) {
                     return item.url !== "http://hl7.org/fhir/StructureDefinition/narrativeLink";
                 });

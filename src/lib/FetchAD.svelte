@@ -9,8 +9,8 @@
     Spinner
   } from 'sveltestrap';
   import { createEventDispatcher } from 'svelte';
-  import type { ResourceRetrieveEvent } from './types';
-  import type { Attachment, DocumentReference } from 'fhir/r4';
+  import type { DocumentReferencePOLST, ResourceRetrieveEvent } from './types';
+  import type { Attachment, BundleEntry, CodeableConcept, Resource, ServiceRequest } from 'fhir/r4';
 
   export let sectionKey: string = "Advance Directive";
 
@@ -258,6 +258,22 @@
     }
   }
 
+  async function fetchResourceByUrl(url: string) {
+    let result = await fetch(url, {
+        method: 'GET',
+        headers: { accept: 'application/json' }
+      }).then(function (response: any) {
+        if (!response.ok) {
+          // make the promise be rejected if we didn't get a 2xx response
+          //throw new Error('Unable to fetch ', { cause: response });
+          console.error(`Failed to fetch resource from ${url}`);
+        } else {
+          return response;
+        }
+      });
+    return result;
+  }
+
   async function prepareIps() {
     fetchError = '';
     processing = true;
@@ -269,23 +285,113 @@
       content = await contentResponse.json();
       hostname = sources[selectedSource].url;
       processing = false;
-      let resources = content.entry ? content.entry.map((e) => {
+      let resources: Array<DocumentReferencePOLST> = content.entry ? content.entry.map((e: BundleEntry) => {
         return e.resource;
       }) : [];
       if (resources.length === 0) {
         console.warn("No advance directives found for patient "+patient.id);
       }
 
-      // If resource.category doesn't exist, ignore the DR - DR's w/out that are simply signature DR's.
-      // Lambda function to check if resource.category exists
-      const nonSignatureDR = (dr: DocumentReference) => dr.category !== undefined;
-      // Filter out resources that don't have a category
+      // Filter out DR's with 'status' == 'superseded'. In May '24 we included these,
+      // but they are just noise since IPS doesn't want to address the complexity of
+      // showing these in the UI behind something like a "history" element.
+      // Lambda function to check this:
+      const nonSupersededDR = (dr: DocumentReferencePOLST) => dr.status !== 'superseded';
+      // Filter out signature resources
+      resources = resources.filter(nonSupersededDR);
+
+      // Iterate over DR's that are for signatures.
+      // Get the date from when it was signed, and show that in the card for the DocumentReference
+      // that it applies to.
+      // That date will be in content.attachment.creation (Lisa to add the evening of 2024-07-17).
+      resources.forEach((dr: DocumentReferencePOLST) => {
+        if (dr.relatesTo && dr.relatesTo[0] && dr.relatesTo[0].code && dr.relatesTo[0].code == 'signs'
+          && dr.relatesTo[0].target && dr.relatesTo[0].target.reference) {
+          // e.g. "DocumentReference/9fad9465-5c95-49cf-a8ff-c3b8d782894d"
+          let target = dr.relatesTo[0].target.reference;
+          target = target.substring(18);
+          let pdfSignDate = '(missing from content.attachment.creation in signature DocumentReference)'; // placeholder until Lisa's change
+          if (dr.content && dr.content[0] && dr.content[0].attachment && dr.content[0].attachment.creation){
+            pdfSignDate = dr.content[0].attachment.creation;
+          }
+          let resourceSigned = resources.find((item) => item.id == target);
+          if (resourceSigned) {
+            resourceSigned.pdfSignedDate = pdfSignDate; // pdfSignedDate is an ad-hoc property name
+          }
+        }
+      });
+
+      // July '24: unlike the May '24 connectathon, signature DR's now have resource.category defined.
+      // The ADI team is planning to add a code for these later, but for the time being they suggest
+      // that we identify these by: "description": "JWS of the FHIR Document",
+      // FIXME may be better to do this when we iterate for the TODO above.
+      const nonSignatureDR = (dr: DocumentReferencePOLST) => dr.description !== 'JWS of the FHIR Document';
+      // Filter out signature resources
       resources = resources.filter(nonSignatureDR);
 
       // if one of the DR's `content` elements has attachment.contentType = 'application/pdf', download if possible, put base64 of pdf in DR.content.attachment.data
-      const hasPdfContent = (dr: DocumentReference) => dr.content && dr.content.some(content => content.attachment && content.attachment.contentType === 'application/pdf' && !content.attachment.data);
+      const hasPdfContent = (dr: DocumentReferencePOLST) => dr.content && dr.content.some(content => content.attachment && content.attachment.contentType === 'application/pdf' && !content.attachment.data);
 
-      resources.forEach(async (dr: DocumentReference) => {
+      // if one of the DR's
+      const isPolst = (dr: DocumentReferencePOLST) => dr.type && dr.type.coding && dr.type.coding.some(coding => coding.system === 'http://loinc.org' && coding.code === '100821-8');
+
+      resources.forEach(async (dr: DocumentReferencePOLST) => {
+        // If this DR is a POLST, add the following chain of queries:
+        if (isPolst(dr)){
+          dr.isPolst = true;
+          // In the POLST find the content[] with format.code = "urn:hl7-org:pe:adipmo-structuredBody:1.1" (ADIPMO Structured Body Bundle),
+          const contentAdipmoBundleRef = dr.content.find(content => content.format && content.format.code && content.format.code === 'urn:hl7-org:pe:adipmo-structuredBody:1.1' && content.attachment && content.attachment.url && content.attachment.url.includes('Bundle'));
+          // look in that content's attachment.url, that will point at a Bundle (e.g. https://qa-rr-fhir2.maxmddirect.com/Bundle/10f4ff31-2c24-414d-8d70-de3a86bed808?_format=json)
+          const adipmoBundleUrl = contentAdipmoBundleRef?.attachment.url;
+          if (adipmoBundleUrl) {
+            // Pull that Bundle.
+            let adipmoBundle = await fetchResourceByUrl(adipmoBundleUrl);
+            let adipmoBundleJson = await adipmoBundle.json();
+
+            let serviceRequests = adipmoBundleJson.entry.filter((entry:BundleEntry) => entry.resource?.resourceType === 'ServiceRequest');
+
+            // TODO The next 4 sections should be generalized into an iteration, just need carve out for "detail" for 2.
+
+            // That bundle will include ServiceRequest resources; look for the one for CPR (loinc 100822-6) 
+            const serviceRequestCpr = serviceRequests.find((resource: ServiceRequest) => {
+              return resource.category?.[0].coding?.[0].code === '100822-6';
+            });
+            dr.isCpr = serviceRequestCpr !== undefined;
+            dr.doNotPerformCpr = serviceRequestCpr.resource.doNotPerform;
+
+            // That bundle will include ServiceRequest resources; look for the one for "Initial portable medical treatment orders" (loinc 100823-4) aka Comfort Treatments
+            const serviceRequestComfortTreatments = serviceRequests.find((resource: ServiceRequest) => {
+              return resource.category?.[0].coding?.[0].code === '100823-4';
+            });
+            dr.isComfortTreatments = false;
+            if (serviceRequestComfortTreatments !== undefined) dr.isComfortTreatments = true;
+            dr.doNotPerformComfortTreatments = serviceRequestComfortTreatments.resource.doNotPerform && serviceRequestComfortTreatments.resource.doNotPerform == true;
+
+            dr.detailComfortTreatments = serviceRequestComfortTreatments.resource.note[0].text;
+
+            // That bundle will include ServiceRequest resources; look for the one for "Additional..." (loinc 100824-2)
+            const serviceRequestAdditionalTx = serviceRequests.find((resource: ServiceRequest) => {
+              return resource.category?.[0].coding?.[0].code === '100824-2';
+            });
+            dr.isAdditionalTx = false;
+            if (serviceRequestAdditionalTx !== undefined) dr.isAdditionalTx = true;
+            dr.doNotPerformAdditionalTx = serviceRequestAdditionalTx.resource.doNotPerform && serviceRequestAdditionalTx.resource.doNotPerform == true;
+
+            dr.detailAdditionalTx = serviceRequestAdditionalTx.resource.orderDetail[0].text;
+
+            // That bundle will include ServiceRequest resources; look for the one for "Medically assisted nutrition orders" (loinc 100825-9)
+            const serviceRequestMedicallyAssisted = serviceRequests.find((resource: ServiceRequest) => {
+              return resource.category?.[0].coding?.[0].code === '100825-9';
+            });
+            dr.isMedicallyAssisted = false;
+            if (serviceRequestMedicallyAssisted !== undefined) dr.isMedicallyAssisted = true;
+            dr.doNotPerformMedicallyAssisted = serviceRequestMedicallyAssisted.resource.doNotPerform && serviceRequestMedicallyAssisted.resource.doNotPerform == true;
+
+            dr.detailMedicallyAssisted = serviceRequestMedicallyAssisted.resource.orderDetail[0].text;
+          }
+        }
+      });
+      resources.forEach(async (dr: DocumentReferencePOLST) => {
         if (hasPdfContent(dr)) {
           const pdfContent = dr.content.find(content => content.attachment && content.attachment.contentType === 'application/pdf');
           if (pdfContent && pdfContent.attachment && pdfContent.attachment.url) {

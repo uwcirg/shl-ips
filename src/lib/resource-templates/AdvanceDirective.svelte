@@ -1,9 +1,31 @@
 <script lang="ts">
   import { base64toBlob } from '$lib/util';
-  import type { DocumentReference, Consent } from 'fhir/r4';
+  import type { DocumentReferencePOLST } from '$lib/types';
 
-  export let resource: DocumentReference; // Define a prop to pass the data to the component
+  export let resource: DocumentReferencePOLST; // Define a prop to pass the data to the component
+
+  /** Determine if any extension has the revoked status
+  let isRevoked = false;
+  if (resource.extension) {
+    isRevoked = resource.extension.some(
+      ext => ext.url === 'http://hl7.org/fhir/us/pacio-adi/StructureDefinition/adi-document-revoke-status-extension' && ext.valueCoding.code === 'cancelled'
+    );
+  }
+*/
+
+  // Determine if any extension has the revoked status reactively
+  let isRevoked = false;
+
+  // Reactive declaration to update isRevoked when resource.extension changes
+  $: if (resource.extension) {
+    isRevoked = resource.extension.some(
+      ext => ext.url === 'http://hl7.org/fhir/us/pacio-adi/StructureDefinition/adi-document-revoke-status-extension' && ext.valueCoding?.code === 'cancelled'
+    );
+  }
+
 </script>
+
+<div class:is-revoked={isRevoked}>
 
 <!--
 Type: {resource.resourceType}
@@ -48,19 +70,33 @@ Text:
 <br />
 <b>Version number:</b>
 {#if resource.extension && resource.extension[0] && resource.extension[0].url && resource.extension[0].url == 'http://hl7.org/fhir/us/ccda/StructureDefinition/VersionNumber'}
+  <!-- As of the July '24 this is now a unix time stamp --> 
   {resource.extension[0].valueInteger}
 {/if}
 <br />
+<!-- This is the date that the DocumentReference resource was created, not of interest.
 <b>Date:</b>
 {#if resource.date}
   {resource.date}
 {/if}
 <br />
+-->
 <b>Status:</b>
 {#if resource.status}
   {resource.status}
 {/if}
 <br />
+
+<!-- Revoke Status -->
+{#if resource.extension}
+  {#each resource.extension as ext}
+    {#if ext.url == 'http://hl7.org/fhir/us/pacio-adi/StructureDefinition/adi-document-revoke-status-extension'}
+      <b>Revoke Status:</b> {ext.valueCoding?.code}
+      <br />
+    {/if}
+  {/each}
+{/if}
+
 <b>docStatus:</b>
 {#if resource.docStatus}
   {resource.docStatus}
@@ -70,12 +106,98 @@ Text:
   {resource.description}
 {/if}
 <br/>
+
+{#if resource.isPolst}
+<br/>
+  <b>
+  POLST Details:
+<br/>
+<br/>
+    <ul>
+      {#if resource.isCpr}
+        <ol>
+{#if resource.doNotPerformCpr}
+  This includes an order to NOT perform CPR.
+{:else}
+  This includes an order to perform CPR.
+{/if}
+        </ol>
+{/if}
+<br/>
+
+{#if resource.isComfortTreatments}
+        <ol>
+{#if resource.doNotPerformComfortTreatments}
+  This includes an order to NOT perform comfort-focused treatments: {@html resource.detailComfortTreatments}
+{:else}
+  This includes an order to perform comfort-focused treatments: {@html resource.detailComfortTreatments}
+{/if}
+        </ol>
+{/if}
+<br/>
+
+{#if resource.isAdditionalTx}
+        <ol>
+{#if resource.doNotPerformAdditionalTx}
+  This includes an order to NOT perform additional treatments: {@html resource.detailAdditionalTx}
+{:else}
+  This includes an order to perform additional treatments: {@html resource.detailAdditionalTx}
+{/if}
+        </ol>
+{/if}
+<br/>
+
+{#if resource.isMedicallyAssisted}
+        <ol>
+{#if resource.doNotPerformMedicallyAssisted}
+  This includes an order to NOT perform medically assisted nutrition: {@html resource.detailMedicallyAssisted}
+{:else}
+  This includes an order to perform medically assisted nutrition: {@html resource.detailMedicallyAssisted}
+{/if}
+        </ol>
+{/if}
+</ul>
+</b>
+<br/>
+{/if}
+
 {#if resource.content}
+<!-- FIXME This iteration not ideal - should iterate whether pdf present or not, as created & pdfSignedDate (ill-named) actually refer to the larget context of the DR, not the pdf... as it stands the Personal Advance Care Plan Document won't show created/signed (bug), tho we don't care so much about that one in IPS. 
+-->
   {#each resource.content as content}
     {#if content.attachment && content.attachment.contentType === "application/pdf" && content.attachment.data}
       {#await base64toBlob(content.attachment.data, content.attachment.contentType) then url}
-        <b>PDF present:</b> <a href={url} target="_blank" rel="noopener noreferrer">View</a>
+        {#if content.attachment && content.attachment.creation}
+          <b>Created:</b> {new Date(content.attachment.creation).toISOString().slice(0,10)}
+					<br/>
+        {/if}
+        {#if resource.pdfSignedDate}
+          <!--
+          <b>Digitally signed:</b> {new Date(resource.pdfSignedDate).toISOString().slice(0,10)}
+          <br/>
+          -->
+        {/if}
+        <b>PDF present:</b> 
+      <a href={url} target="_blank" rel="noopener noreferrer">View</a>
       {/await}
     {/if}
   {/each}
 {/if}
+
+</div>
+
+<style>
+  .is-revoked {
+    background-color: #f0f0f0; /* Light gray background */
+    padding: 10px;
+    border-radius: 5px;
+    background-image: 
+      linear-gradient(135deg, rgba(255,255,255,0.3) 25%, transparent 25%),
+      linear-gradient(225deg, rgba(255,255,255,0.3) 25%, transparent 25%),
+      linear-gradient(45deg, rgba(255,255,255,0.3) 25%, transparent 25%),
+      linear-gradient(315deg, rgba(255,255,255,0.3) 25%, transparent 25%);
+    background-size: 40px 40px; /* Adjusts the size of the pattern */
+    background-position: 10px 10px; /* Adjusts the offset of the pattern */
+    opacity: 0.95; /* Slight transparency for a more subtle effect */
+  }
+</style>

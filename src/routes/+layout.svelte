@@ -22,6 +22,7 @@
     Styles
   } from 'sveltestrap';
   import { SHLClient, type SHLAdminParams } from '$lib/managementClient';
+  import { VERSION_STRING } from '../lib/config';
 
   const LOCAL_STORAGE_KEY = 'shlips_store_shls';
   let shlStore = writable<SHLAdminParams[]>(
@@ -169,7 +170,7 @@
 <Row style="padding:0px 12px">
   <Col style="padding:0; margin-bottom: 20px; border-bottom: 1px solid rgb(204, 204, 204);">
     <Image alt="WA Verify Logo" width="200" src="/img/waverifypluslogo.png" style="align-self: center" />
-    <div style="vertical-align: middle; font-size: 18px; display: inline-block; padding-left: 17px; font-family: Verdana, sans-serif; color: rgb(34, 72, 156);">International Patient Summary</div>
+    <div style="vertical-align: middle; font-size: 18px; display: inline-block; padding-left: 17px; font-family: Verdana, sans-serif; color: rgb(34, 72, 156);">International Patient Summary Prototype</div>
   </Col>
 </Row>
 <Row class="main-row">
@@ -192,7 +193,7 @@
       document. SHLinks can be shared by copy/paste, or by presenting a QR code. Source code and license at
       <a href="https://github.com/uwcirg/shl-ips" target="_blank" rel="noreferrer"
         >https://github.com/uwcirg/shl-ips</a
-      >.
+      >. Site version: {VERSION_STRING}
     </footer>
   </Col>
 </Row>

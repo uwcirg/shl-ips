@@ -1,4 +1,4 @@
-import type { Bundle, CompositionSection } from 'fhir/r4';
+import type { Bundle, CompositionSection, DocumentReference } from 'fhir/r4';
 export interface SHLSubmitEvent {
   shcs: SHCFile[];
   label?: string;
@@ -36,3 +36,26 @@ export interface SOFHost {
   clientId:string;
   note:string | undefined;
 }
+
+export interface DocumentReferencePOLST extends DocumentReference {
+  pdfSignedDate?: string;
+  
+  isPolst?: boolean;
+
+  isCpr?: boolean;
+  doNotPerformCpr?: boolean;
+
+  isComfortTreatments?: boolean;
+  doNotPerformComfortTreatments?: boolean;
+  detailComfortTreatments?: string;
+
+  isAdditionalTx?: boolean;
+  doNotPerformAdditionalTx?: boolean;
+  detailAdditionalTx?: string;
+
+  isMedicallyAssisted?: boolean;
+  doNotPerformMedicallyAssisted?: boolean;
+  detailMedicallyAssisted?: string;
+}
+
+export type DocumentReferenceAD = DocumentReferencePOLST | DocumentReference;

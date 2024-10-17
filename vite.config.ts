@@ -12,6 +12,9 @@ export default defineConfig(({ mode }) => {
 		server: {
 			host: true,
 			port: process.env.DEV_SERVER_PORT ? process.env.DEV_SERVER_PORT : 3000
+		},
+		build: {
+			sourcemap: process.env.DEBUG ?? false
 		}
 	}
 });

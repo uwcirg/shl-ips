@@ -13,7 +13,7 @@
     Row,
     Spinner } from 'sveltestrap';
 
-  import { PATIENT_IPS, EXAMPLE_IPS, IPS_DEFAULT } from './config';
+  import { PATIENT_IPS, EXAMPLE_IPS, IPS_DEFAULT, BEARER_AUTHORIZATION } from './config';
   import type { SHCRetrieveEvent, IPSRetrieveEvent } from './types';
   import { createEventDispatcher } from 'svelte';
 
@@ -53,8 +53,12 @@
     try {
       let content;
       let hostname;
+      let headers: any = { accept: 'application/fhir+json' };
+      if (summaryUrlValidated?.toString().includes('meditech')) {
+        headers['authorization'] = `Bearer ${BEARER_AUTHORIZATION['Meditech']}`
+      }
       const contentResponse = await fetch(summaryUrlValidated!, {
-      headers: { accept: 'application/fhir+json' }
+      headers: headers
       }).then(function(response) {
         if (!response.ok) {
           // make the promise be rejected if we didn't get a 2xx response

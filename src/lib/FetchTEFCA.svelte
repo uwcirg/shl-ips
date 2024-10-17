@@ -17,15 +17,16 @@
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
 
   let sources = {
-    Meld: {selected: false, destination: "Meld", url: "https://gw.interop.community/HeliosConnectathonSa/open"},
+    MeldOpen: {selected: false, destination: "MeldOpen", url: "https://gw.interop.community/HeliosConnectathonSa/open"},
     JMCHelios: {selected: false, destination: "JMCHelios", url: "https://gw.interop.community/JMCHeliosSTISandbox/open"},
-    PublicHapi: {selected: false, destination: "PublicHapi", url: "http://hapi.fhir.org/baseR4"},
+    // Patient no longer exists
+    // PublicHapi: {selected: false, destination: "PublicHapi", url: "http://hapi.fhir.org/baseR4"},
     OpenEpic: {selected: false, destination: "OpenEpic", url: ""},
     CernerHelios: {selected: false, destination: "CernerHelios", url: ""}
   }
 
   let baseUrl = "https://concept01.ehealthexchange.org:52780/fhirproxy/r4";
-  let selectedSource = "Meld";
+  let selectedSource = "MeldOpen";
   let method = 'destination'; // url or destination
   let processing = false;
   let fetchError = '';
@@ -74,7 +75,7 @@
       zip = '';
       phone = '';
       gender = '';
-      if (selectedSource === 'Meld') {
+      if (selectedSource === 'MeldOpen') {
         last = "BLACKSTONE";
         first = "VERONICA";
         gender = "Female";
@@ -95,6 +96,7 @@
         gender = "Female";
         dob = "2023-08-29";
       } else if (selectedSource === 'PublicHapi') {
+        // Patient/test data no longer available
         last = "Sanity";
         first = "TestforPatientR4";
         gender = "Male";
@@ -107,7 +109,7 @@
 
   $: {
     if (method) {
-      if (method === 'url' && selectedSource &&sources[selectedSource].url === "") {
+      if (method === 'url' && selectedSource && sources[selectedSource].url === "") {
         selectedSource = "";
       }
     }
@@ -191,9 +193,9 @@
     if (method === 'url') {
       url = sources[selectedSource].url;
     } else if (method === 'destination') {
-      headers['X-Request-Id'] = '5c92758f-79c8-4137-b104-9c0064205407',
-      headers['X-DESTINATION'] = selectedSource,
-      headers['X-POU'] = 'PUBHLTH'
+      headers['X-Request-Id'] = '21143678-7bd5-4caa-bdae-ee35a409d4f2';
+      headers['X-DESTINATION'] = selectedSource;
+      headers['X-POU'] = (selectedSource === 'OpenEpic' ? 'TREAT' : 'PUBHLTH');
     }
     
     let query = buildPatientSearchQuery();
@@ -227,9 +229,9 @@
     if (method === 'url') {
       url = sources[selectedSource].url;
     } else if (method === 'destination') {
-      headers['X-Request-Id'] = '5c92758f-79c8-4137-b104-9c0064205407',
-      headers['X-DESTINATION'] = selectedSource,
-      headers['X-POU'] = 'PUBHLTH'
+      headers['X-Request-Id'] = '21143678-7bd5-4caa-bdae-ee35a409d4f2';
+      headers['X-DESTINATION'] = selectedSource;
+      headers['X-POU'] = (selectedSource === 'OpenEpic' ? 'TREAT' : 'PUBHLTH');
     }
 
     let results = await Promise.allSettled(
@@ -259,7 +261,7 @@
     let resources = resultJson.filter(x => x.status == "fulfilled").map(x => x.value);
     resources = resources.map((r) => {
         if (r.resourceType === "Bundle") {
-          if (r.total == 0) {
+          if (r.total == 0 || !r.entry) {
             return [];
           } else {
             return r.entry.map(e => e.resource);
