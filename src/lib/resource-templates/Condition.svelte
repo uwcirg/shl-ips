@@ -19,21 +19,17 @@
 
 {#if resource.clinicalStatus || resource.verificationStatus}
   <Badge color="primary">
-    {#if resource.clinicalStatus?.coding}
-      {resource.clinicalStatus?.coding[0].code ?? ''}
-    {/if}
+    {resource.clinicalStatus?.coding?.[0].code ?? ''}
     {resource.clinicalStatus &&
       resource.verificationStatus
         ? '/'
         : ''}
-    {#if resource.verificationStatus?.coding}
-      {resource.verificationStatus?.coding[0].code ?? ''}
-    {/if}
+    {resource.verificationStatus?.coding?.[0].code ?? ''}
   </Badge>
 {/if}
 <Badge color={badgeColor(resource.severity?.text ?? '')}>severity: {resource.severity?.text ?? 'unknown'}</Badge>
 <br>
-{#if resource.category && resource.category[0]}
+{#if resource.category?.[0]}
   {#if resource.category[0].coding}
     <Badge color="primary">{resource.category[0].coding[0].system} : {resource.category[0].coding[0].code}</Badge>
     <br />

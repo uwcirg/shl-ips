@@ -5,7 +5,7 @@
     export let resource: Observation; // Define a prop to pass the data to the component
   </script>
 
-  {#if resource.code && resource.code.coding && resource.code.coding[0].code}
+  {#if resource.code.coding?.[0].code}
     {#if resource.code.coding[0].code === "74165-2"}
         <strong>Employment Status</strong>
         {#if resource.valueCodeableConcept?.coding?.[0].display}
