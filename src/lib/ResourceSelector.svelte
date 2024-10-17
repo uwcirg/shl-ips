@@ -57,7 +57,7 @@
         "Practitioner": Practitioner,
         "Procedure": Procedure,
         "Occupational Data": OccupationalData,
-        "Advance Directive": AdvanceDirective
+        "Advance Directives": AdvanceDirective
     };
 
     const ipsDispatch = createEventDispatcher<{ 'ips-retrieved': IPSRetrieveEvent }>();

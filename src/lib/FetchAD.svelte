@@ -10,9 +10,9 @@
   } from 'sveltestrap';
   import { createEventDispatcher } from 'svelte';
   import type { DocumentReferencePOLST, ResourceRetrieveEvent } from './types';
-  import type { Attachment, BundleEntry, CodeableConcept, Resource, ServiceRequest } from 'fhir/r4';
+  import type { Attachment, BundleEntry, ServiceRequest } from 'fhir/r4';
 
-  export let sectionKey: string = "Advance Directive";
+  export let sectionKey: string = "Advance Directives";
 
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
@@ -340,7 +340,9 @@
         if (isPolst(dr)){
           dr.isPolst = true;
           // In the POLST find the content[] with format.code = "urn:hl7-org:pe:adipmo-structuredBody:1.1" (ADIPMO Structured Body Bundle),
-          const contentAdipmoBundleRef = dr.content.find(content => content.format && content.format.code && content.format.code === 'urn:hl7-org:pe:adipmo-structuredBody:1.1' && content.attachment && content.attachment.url && content.attachment.url.includes('Bundle'));
+          const contentAdipmoBundleRef = dr.content.find((content) => {
+            return (content.format?.code === 'urn:hl7-org:pe:adipmo-structuredBody:1.1' && content.attachment?.url?.includes('Bundle'));
+          });
           // look in that content's attachment.url, that will point at a Bundle (e.g. https://qa-rr-fhir2.maxmddirect.com/Bundle/10f4ff31-2c24-414d-8d70-de3a86bed808?_format=json)
           const adipmoBundleUrl = contentAdipmoBundleRef?.attachment.url;
           if (adipmoBundleUrl) {
@@ -348,7 +350,9 @@
             let adipmoBundle = await fetchResourceByUrl(adipmoBundleUrl);
             let adipmoBundleJson = await adipmoBundle.json();
 
-            let serviceRequests = adipmoBundleJson.entry.filter((entry: BundleEntry) => entry.resource?.resourceType === 'ServiceRequest');
+            let serviceRequests = adipmoBundleJson.entry.filter((entry: BundleEntry) => {
+                return entry.resource?.resourceType === 'ServiceRequest'
+              }).map((entry: BundleEntry) => entry.resource); 
 
             // That bundle will include ServiceRequest resources; look for the one for CPR (loinc 100822-6)
             // then set the appropriate flags in the DR
