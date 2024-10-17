@@ -1,23 +1,5 @@
 import { INTERMEDIATE_FHIR_SERVER_BASE } from './config';
 
-export function getResourcesFromIPS(ips) {
-    let entries = ips.entry;
-    let resources = [];
-    entries.forEach((entry) => {
-        // if (entry.resource.resourceType == 'Condition') return; // Omit conditions until ips fhir server is upgraded
-        if (entry.resource.resourceType == 'Composition') return;
-
-        entry.resource.id = entry.fullUrl;
-        if (entry.resource.extension) {
-            entry.resource.extension = entry.resource.extension.filter(function(item) {
-                return item.url !== "http://hl7.org/fhir/StructureDefinition/narrativeLink";
-            })
-        }
-        resources.push(entry.resource);
-    });
-    return resources;
-}
-
 // Create Bundle and POST
 export async function uploadResources(resources) {
     let entries = [];

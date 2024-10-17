@@ -1,9 +1,11 @@
 <script lang="ts">
-  import * as jose from 'jose';
-  import * as pako from 'pako';
   import { createEventDispatcher, onMount } from 'svelte';
   import { page } from '$app/stores';
-  import { getResourcesFromIPS } from './resourceUploader.js';
+  import {
+    getResourcesFromIPS,
+    isSHCFile,
+    packageSHC,
+  } from '$lib/util';
   import { goto } from '$app/navigation';
   import { getContext } from 'svelte';
   import { type Writable } from 'svelte/store';
@@ -30,14 +32,13 @@
   import FetchTEFCA from './FetchTEFCA.svelte';
   import ODHForm from './ODHForm.svelte';
   import { verify } from './shcDecoder.js';
-  import issuerKeys from './issuer.private.jwks.json';
   import type { SHCFile,
     SHCRetrieveEvent,
     ResourceRetrieveEvent,
     IPSRetrieveEvent,
     SHLSubmitEvent, 
     SOFAuthEvent } from './types';
-  import type { Patient, Bundle } from 'fhir/r4';
+  import type { Patient } from 'fhir/r4';
   import { IPSResourceCollection } from './IPSResourceCollection.js';
   import ResourceSelector from './ResourceSelector.svelte';
  
@@ -241,20 +242,6 @@
       fetchError = "Error parsing IPS";
     }
   }
-  
-  function isSHCFile(object: any): object is SHCFile {
-    return 'verifiableCredential' in object;
-  }
-
-  async function packageSHC(content:SHCFile | Bundle | undefined): Promise<SHCFile> {
-    if (content != undefined && isSHCFile(content) && content.verifiableCredential) {
-      return content;
-    }
-
-    const shc = await signJws(content);
-
-    return { verifiableCredential: [shc] };
-  }
 
   async function submitSHL() {
     return shlDispatch('shl-submitted', {
@@ -264,29 +251,6 @@
       exp: expiration && expiration > 0 ? new Date().getTime() / 1000 + expiration : undefined,
       patientName: patientName
     });
-  }
-
-  const exampleSigningKey = jose.importJWK(issuerKeys.keys[0]);
-  async function signJws(payload: unknown) {
-    const fields = { zip: 'DEF', alg: 'ES256', kid: issuerKeys.keys[0].kid };
-    const body = pako.deflateRaw(
-      JSON.stringify({
-        iss: 'https://spec.smarthealth.cards/examples/issuer',
-        nbf: new Date().getTime() / 1000,
-        vc: {
-          type: ['https://smarthealth.cards#health-card'],
-          credentialSubject: {
-            fhirVersion: '4.0.1',
-            fhirBundle: payload
-          }
-        }
-      })
-    );
-
-    const signed = new jose.CompactSign(body)
-    .setProtectedHeader(fields)
-    .sign(await exampleSigningKey);
-    return signed;
   }
 
   async function showSuccessMessage() {
@@ -493,41 +457,6 @@
     </Row>
   {/if}
   <span class="text-danger">{fetchError}</span>
-  {#if resourcesAdded}
-    {#if false && ipsResult.ips}
-      <Row class="align-items-center">
-        <Col xs="auto">
-          <Button
-            color="secondary"
-            style="width:fit-content"
-            disabled={submitting}
-            type="button"
-            on:click={() => {uploadRetrievedIPS(ipsResult)}}>
-            {#if !submitting}
-            Submit Unchanged IPS
-            {:else}
-            Submitting...
-            {/if}
-          </Button>
-        </Col>
-        {#if submitting}
-        <Col xs="auto" class="d-flex align-items-center px-0">
-          <Spinner color="primary" type="border" size="md"/>
-        </Col>
-        {/if}
-        <Col xs="auto">
-          <Card color="light">
-            <CardBody>
-              <CardText color="light" style="overflow: hidden; text-overflow: ellipsis">
-                <Icon name="file-earmark-text" /> {ipsResult.source}
-              </CardText>
-            </CardBody>
-          </Card>
-        </Col>
-      </Row>
-      <br/>
-    {/if}
-  {/if}
 {/if}
 {#if $mode === "advanced"}
   <br>
