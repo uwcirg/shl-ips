@@ -60,6 +60,6 @@
 {#if resource.bodySite}
   Site: {resource.bodySite}<br>
 {/if}
-{#if resource.bodySite && resource.onsetDateTime}
+{#if resource.onsetDateTime}
   Since {resource.onsetDateTime.split("T")[0]}<br>
 {/if}
