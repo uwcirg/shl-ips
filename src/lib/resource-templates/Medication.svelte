@@ -1,6 +1,8 @@
-<script>
+<script lang="ts">
   import { Badge} from 'sveltestrap';
-  export let resource; // Define a prop to pass the data to the component
+  import type { Medication } from "fhir/r4";
+
+  export let resource: Medication; // Define a prop to pass the data to the component
 </script>
 
 {#if resource.code}
@@ -16,7 +18,7 @@
     <strong>{resource.code.text}</strong><br>
   {/if}
 {/if}
-{#if resource.ingredient && resource.ingredient.resourceCodeableConcept}
+{#if resource.ingredient}
   <table class="table table-bordered table-sm">
     <thead>
       <tr><th colspan="5">Composition</th></tr>
@@ -30,11 +32,11 @@
     </thead>
     {#each resource.ingredient as ingredient}
       <tr>
-        <td>{ingredient.resourceCodeableConcept.coding[0].display}</td>
-        <td>{ingredient.strength.numerator.value}</td>
-        <td>{ingredient.strength.numerator.unit}</td>
-        <td>{ingredient.strength.denominator.value}</td>
-        <td>{ingredient.strength.denominator.unit}</td>
+        <td>{ingredient.itemCodeableConcept?.coding?.[0].display}</td>
+        <td>{ingredient.strength?.numerator?.value}</td>
+        <td>{ingredient.strength?.numerator?.unit}</td>
+        <td>{ingredient.strength?.denominator?.value}</td>
+        <td>{ingredient.strength?.denominator?.unit}</td>
       </tr>
     {/each}
   </table>

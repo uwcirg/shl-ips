@@ -54,7 +54,7 @@
 <AddFile
   status={shlStatus}
   on:shl-submitted={async ({ detail }) => {
-    patientName = detail.patientName;
+    patientName = detail.patientName ?? "";
     if (shl) {
       shl = await addFiles(shl, detail.shcs);
       $shlStore[$shlStore.findIndex(obj => obj.id === shl?.id)] = shl;

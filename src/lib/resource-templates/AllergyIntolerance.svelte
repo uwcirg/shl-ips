@@ -1,8 +1,10 @@
-<script>
+<script lang="ts">
   import { Badge } from 'sveltestrap';
-  export let resource; // Define a prop to pass the data to the component
+  import type { AllergyIntolerance } from 'fhir/r4';
 
-  function badgeColor(criticality) {
+  export let resource: AllergyIntolerance; // Define a prop to pass the data to the component
+
+  function badgeColor(criticality: string) {
     if (criticality) {
       if (criticality == 'high') {
         return 'danger';
@@ -17,12 +19,12 @@
 
 {#if resource.clinicalStatus || resource.verificationStatus}
   <Badge color="primary">
-    {resource.clinicalStatus?.coding[0].code ?? ''}
+    {resource.clinicalStatus?.coding?.[0].code ?? ''}
     {resource.clinicalStatus &&
       resource.verificationStatus
         ? '/'
         : ''}
-    {resource.verificationStatus?.coding[0].code ?? ''}
+    {resource.verificationStatus?.coding?.[0].code ?? ''}
   </Badge>
 {/if}
 <Badge color={badgeColor(resource.criticality ?? '')}>

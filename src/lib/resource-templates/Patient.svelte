@@ -1,6 +1,8 @@
-<script>
+<script lang="ts">
   import { Badge } from 'sveltestrap';
-  export let resource;
+  import type { Patient } from "fhir/r4";
+  
+  export let resource: Patient; // Define a prop to pass the data to the component
 </script>
 
 {#if resource.name}
@@ -9,10 +11,12 @@
             {resource.name[0].prefix ?? ""}
             {resource.name[0].given ? resource.name[0].given.join(' ') : ""}
             {resource.name[0].family ?? ""}
+        <!-- TODO: This doesn't pass type checking, but may be necessary for some example data
         {:else}
             {resource.name.prefix ?? ""}
             {resource.name.given ? resource.name.given.join(' ') : ""}
             {resource.name.family ?? ""}
+        -->
         {/if}
     </strong>
     <br>
@@ -81,20 +85,11 @@
     {/if}
     {#if contact.name}
         <strong>
-            {#if contact.name[0]}
-                {contact.name[0].prefix ?? ""}
-                {contact.name[0].given ? contact.name[0].given.join(' ') : ""}
-                {contact.name[0].family ?? ""}
-            {:else}
-                {contact.name.prefix ?? ""}
-                {contact.name.given ? contact.name.given.join(' ') : ""}
-                {contact.name.family ?? ""}
-            {/if}
+            {contact.name.prefix ?? ""}
+            {contact.name.given ? contact.name.given.join(' ') : ""}
+            {contact.name.family ?? ""}
         </strong>
         <br>
-    {/if}
-    {#if contact.birthDate}
-      Birth Date: {contact.birthDate}<br>
     {/if}
     {#if contact.gender}
       Gender: {contact.gender ?? ""}<br>
@@ -126,9 +121,9 @@
                 <td>{contact.address.use ?? ""}</td>
                 <td>
                     {#if contact.address.line}
-                      {#each contact.address.line as line}
-                          {line}<br />
-                      {/each}
+                        {#each contact.address.line as line}
+                            {line}<br />
+                        {/each}
                     {/if}
                     {contact.address.city ?? "[Unknown City]"}{
                         contact.address.state

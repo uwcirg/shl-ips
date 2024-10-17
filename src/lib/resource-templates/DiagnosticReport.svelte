@@ -1,6 +1,8 @@
-<script>
+<script lang="ts">
   import { Badge } from 'sveltestrap';
-  export let resource; // Define a prop to pass the data to the component
+  import type { DiagnosticReport } from 'fhir/r4';
+
+  export let resource: DiagnosticReport; // Define a prop to pass the data to the component
 </script>
 
 {#if resource.code}

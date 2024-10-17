@@ -279,7 +279,7 @@ function update(ips, index) {
       }
       let alertMissingComposition = false;
       composition.section.forEach(function (section) {
-        if (!section.entry) {
+        if (section.entry.length === 0) {
           return; // Don't display empty sections
         } else if (!section || !section.code || !section.code.coding || !section.code.coding[0]) {
           alertMissingComposition = true;
@@ -451,9 +451,9 @@ function checks(ips) {
       let section = composition.resource.section[i]
       let newData = {};
       newData.display = section.title;
-      if (section.code.coding[0].code == "48765-2") sections.allergies = true;
-      if (section.code.coding[0].code == "10160-0") sections.medications = true;
-      if (section.code.coding[0].code == "11450-4") sections.problems = true;
+      if (section.code?.coding?.[0]?.code == "48765-2") sections.allergies = true;
+      if (section.code?.coding?.[0]?.code == "10160-0") sections.medications = true;
+      if (section.code?.coding?.[0]?.code == "11450-4") sections.problems = true;
       if (section.entry) {
         newData.entries =   section.entry.length;
         newData.entriesColor = "green";
