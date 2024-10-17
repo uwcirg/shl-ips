@@ -348,46 +348,46 @@
             let adipmoBundle = await fetchResourceByUrl(adipmoBundleUrl);
             let adipmoBundleJson = await adipmoBundle.json();
 
-            let serviceRequests = adipmoBundleJson.entry.filter((entry:BundleEntry) => entry.resource?.resourceType === 'ServiceRequest');
+            let serviceRequests = adipmoBundleJson.entry.filter((entry: BundleEntry) => entry.resource?.resourceType === 'ServiceRequest');
 
-            // TODO The next 4 sections should be generalized into an iteration, just need carve out for "detail" for 2.
-
-            // That bundle will include ServiceRequest resources; look for the one for CPR (loinc 100822-6) 
-            const serviceRequestCpr = serviceRequests.find((resource: ServiceRequest) => {
-              return resource.category?.[0].coding?.[0].code === '100822-6';
-            });
-            dr.isCpr = serviceRequestCpr !== undefined;
-            dr.doNotPerformCpr = serviceRequestCpr.resource.doNotPerform;
+            // That bundle will include ServiceRequest resources; look for the one for CPR (loinc 100822-6)
+            // then set the appropriate flags in the DR
+            (
+              {
+                exists: dr.isCpr,
+                doNotPerform: dr.doNotPerformCpr
+              } = digestServiceRequestByCode(serviceRequests, '100822-6')
+            );
 
             // That bundle will include ServiceRequest resources; look for the one for "Initial portable medical treatment orders" (loinc 100823-4) aka Comfort Treatments
-            const serviceRequestComfortTreatments = serviceRequests.find((resource: ServiceRequest) => {
-              return resource.category?.[0].coding?.[0].code === '100823-4';
-            });
-            dr.isComfortTreatments = false;
-            if (serviceRequestComfortTreatments !== undefined) dr.isComfortTreatments = true;
-            dr.doNotPerformComfortTreatments = serviceRequestComfortTreatments.resource.doNotPerform && serviceRequestComfortTreatments.resource.doNotPerform == true;
-
-            dr.detailComfortTreatments = serviceRequestComfortTreatments.resource.note[0].text;
+            // then set the appropriate flags in the DR
+            (
+              {
+                exists: dr.isComfortTreatments,
+                doNotPerform: dr.doNotPerformComfortTreatments,
+                detail: dr.detailComfortTreatments
+              } = digestServiceRequestByCode(serviceRequests, '100823-4')
+            );
 
             // That bundle will include ServiceRequest resources; look for the one for "Additional..." (loinc 100824-2)
-            const serviceRequestAdditionalTx = serviceRequests.find((resource: ServiceRequest) => {
-              return resource.category?.[0].coding?.[0].code === '100824-2';
-            });
-            dr.isAdditionalTx = false;
-            if (serviceRequestAdditionalTx !== undefined) dr.isAdditionalTx = true;
-            dr.doNotPerformAdditionalTx = serviceRequestAdditionalTx.resource.doNotPerform && serviceRequestAdditionalTx.resource.doNotPerform == true;
-
-            dr.detailAdditionalTx = serviceRequestAdditionalTx.resource.orderDetail[0].text;
+            // then set the appropriate flags in the DR
+            (
+              {
+                exists: dr.isAdditionalTx,
+                doNotPerform: dr.doNotPerformAdditionalTx,
+                detail: dr.detailAdditionalTx
+              } = digestServiceRequestByCode(serviceRequests, '100824-2')
+            );
 
             // That bundle will include ServiceRequest resources; look for the one for "Medically assisted nutrition orders" (loinc 100825-9)
-            const serviceRequestMedicallyAssisted = serviceRequests.find((resource: ServiceRequest) => {
-              return resource.category?.[0].coding?.[0].code === '100825-9';
-            });
-            dr.isMedicallyAssisted = false;
-            if (serviceRequestMedicallyAssisted !== undefined) dr.isMedicallyAssisted = true;
-            dr.doNotPerformMedicallyAssisted = serviceRequestMedicallyAssisted.resource.doNotPerform && serviceRequestMedicallyAssisted.resource.doNotPerform == true;
-
-            dr.detailMedicallyAssisted = serviceRequestMedicallyAssisted.resource.orderDetail[0].text;
+            // then set the appropriate flags in the DR
+            (
+              {
+                exists: dr.isMedicallyAssisted,
+                doNotPerform: dr.doNotPerformMedicallyAssisted,
+                detail: dr.detailMedicallyAssisted
+              } = digestServiceRequestByCode(serviceRequests, '100825-9')
+            );
           }
         }
       });
@@ -413,6 +413,23 @@
       console.log('Failed', e);
       fetchError = 'Error preparing IPS';
     }
+  }
+
+  interface ServiceRequestProperties {
+    exists: boolean;
+    doNotPerform?: boolean;
+    detail?: string;
+  }
+
+  function digestServiceRequestByCode(srs: ServiceRequest[], code: string): ServiceRequestProperties {
+    const serviceRequest = srs.find((resource: ServiceRequest) => {
+      return resource.category?.[0].coding?.[0].code === code;
+    });
+    return {
+      exists: serviceRequest !== undefined,
+      doNotPerform: serviceRequest?.doNotPerform === true,
+      detail: serviceRequest?.note?.[0].text
+    };
   }
 </script>
 
