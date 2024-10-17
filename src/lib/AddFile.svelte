@@ -39,7 +39,7 @@
     SOFAuthEvent } from './types';
   import type { Patient, Bundle } from 'fhir/r4';
   import { IPSResourceCollection } from './IPSResourceCollection.js';
-  import ResourceSelectorStores from './ResourceSelectorStores.svelte';
+  import ResourceSelector from './ResourceSelector.svelte';
  
   export let status = "";
   
@@ -388,7 +388,7 @@
         on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
       />
     </AccordionItem>
-    <ResourceSelectorStores
+    <ResourceSelector
       bind:resourceCollection={resourceCollection}
       bind:submitting={submitting}
       on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }
