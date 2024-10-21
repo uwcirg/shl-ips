@@ -190,8 +190,6 @@ function prepareSHLContents(contents) {
         // Create tabs at the top if more than 1 IPS or if in demo mode
         if (shlContents.length > (config.show_demo ? 0 : 1)) {
           addTab(`IPS ${i+1}`, i);
-        } else {
-          data = { index: "" };
         }
         // console.log(template);
         console.log(data);
