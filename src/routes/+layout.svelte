@@ -105,7 +105,7 @@
       </NavItem>
       <Dropdown nav inNavbar size="sm" direction="down">
         <DropdownToggle color="primary" nav caret>Actions</DropdownToggle>
-        <DropdownMenu end style="max-height: 500px; overflow:scroll">
+        <DropdownMenu end style="max-height: 500px; overflow:auto">
           <DropdownItem
             on:click={() => {
               closeNav();
@@ -122,9 +122,11 @@
               on:click={() => {
                 $mode = ($mode === 'advanced' ? 'normal' : 'advanced');
             }}>
-              <Row>
-                <Col>{$mode === "advanced" ? "Hide" : "Show"} Advanced Features</Col>
-                <Col class="d-flex justify-content-end">
+              <Row class="mr-0" style="min-width:240px">
+                <Col class="d-flex justify-content-start align-items-center pe-0">
+                  {$mode === "advanced" ? "Hide" : "Show"} Advanced Features
+                </Col>
+                <Col class="d-flex justify-content-end ps-0">
                   {#if $mode == 'advanced'}
                   <Icon class="text-primary" name="toggle-on"></Icon>
                   {:else}
@@ -151,7 +153,7 @@
           <Icon name="globe2"></Icon>
           {locale}
         </DropdownToggle>
-        <DropdownMenu end style="height: 500px; overflow:scroll">
+        <DropdownMenu end style="height: 500px; overflow:auto">
           {#each Object.entries(locales) as [en, loc]}
             <DropdownItem
               style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"
@@ -190,10 +192,13 @@
       <a href="https://build.fhir.org/ig/HL7/fhir-ips/" target="_blank" rel="noreferrer"
         >International Patient Summary</a
       >
-      document. SHLinks can be shared by copy/paste, or by presenting a QR code. Source code and license at
-      <a href="https://github.com/uwcirg/shl-ips" target="_blank" rel="noreferrer"
-        >https://github.com/uwcirg/shl-ips</a
-      >. Site version: {VERSION_STRING}
+      document. SHLinks can be shared by copy/paste, or by presenting a QR code.
+      {#if $mode === "advanced"}
+        For more information, view the source code and license at
+        <a href="https://github.com/uwcirg/shl-ips" target="_blank" rel="noreferrer"
+          >https://github.com/uwcirg/shl-ips</a
+        >. {VERSION_STRING ? "Site version: " + VERSION_STRING : ""}
+      {/if}
     </footer>
   </Col>
 </Row>
