@@ -1,17 +1,22 @@
 <script lang='ts'>
     import { uploadResources } from './resourceUploader.js';
-    import { createEventDispatcher } from 'svelte';
-    import { derived, get, type Writable } from 'svelte/store';
+    import { download } from './util.js';
+    import { createEventDispatcher, getContext } from 'svelte';
+    import { get, type Writable } from 'svelte/store';
     import {
         Accordion,
         AccordionItem,
         Badge,
+        Button,
+        ButtonGroup,
         Card,
         CardBody,
         CardHeader,
         Col,
         FormGroup,
+        Icon,
         Input,
+        Offcanvas,
         Label,
         Row } from 'sveltestrap';
     import { ResourceHelper } from './ResourceHelper.js';
@@ -63,6 +68,8 @@
     const ipsDispatch = createEventDispatcher<{ 'ips-retrieved': IPSRetrieveEvent }>();
     const statusDispatch = createEventDispatcher<{ 'status-update': string }>();
     const errorDispatch = createEventDispatcher<{ 'error': string }>();
+
+    let mode: Writable<string> = getContext('mode');
 
     let reference: string;
     let selectedPatient: string = get(resourceCollection.selectedPatient);
@@ -163,7 +170,58 @@
             patientBadgeColor = badgeColor ?? patientBadgeColor;
         }
     }
+
+    let json = "";
+    let resourceType = "";
+    let isOpen = false;
+    function setJson(rh: ResourceHelper) {
+        json = JSON.stringify(rh.resource, null, 2);
+        resourceType = rh.resource.resourceType;
+        isOpen = true;
+    }
+    function toggle() {
+        isOpen = !isOpen;
+    }
 </script>
+
+<Offcanvas
+    {isOpen}
+    {toggle}
+    scroll={false}
+    header={resourceType + " JSON"}
+    placement="end"
+    title={resourceType + " JSON"}
+    style="display: flex;  overflow-y:hidden; height: 100dvh;"
+>
+    <Row class="d-flex" style="height: 100%">
+            <Row class="d-flex pe-0" style="height:95%">
+                <Col class="d-flex pe-0" style="height:100%">
+                    <pre class="code"><code>{json}</code></pre>
+                </Col>
+            </Row>
+            <Row class="d-flex pe-0">
+                <Col class="d-flex justify-content-start">
+                    <ButtonGroup>
+                        <Button
+                            size="sm"
+                            color="primary"
+                            on:click={() => navigator.clipboard.writeText(json)}
+                        ><Icon name="clipboard" /> Copy</Button>
+                        <Button
+                            size="sm"
+                            outline
+                            color="secondary"
+                            on:click={() => download(resourceType + ".json", json)}
+                        ><Icon name="download" /> Download</Button>
+                      </ButtonGroup>
+                </Col>
+                <Col class="d-flex justify-content-end pe-0">
+                    
+                </Col>
+            </Row>
+    </Row>
+</Offcanvas>
+
 <AccordionItem active class="edit-data">
     <h5 slot="header" class="my-2">4. Directly edit your health summary content</h5>
     <Label>Select which resources to include in your customized IPS</Label>
@@ -212,11 +270,26 @@
                     </span>
                     <FormGroup>
                         {#each Object.keys($resourcesByTypeStore[resourceType]) as key}
-                            <Label style="width: 100%">
-                                <Card style="width: 100%; max-width: 100%">
-                                    <CardHeader>
-                                        <span style="font-size:small">{resourceType}</span>
-                                    </CardHeader>
+                            <Card style="width: 100%; max-width: 100%" class="mb-2">
+                                <CardHeader>
+                                    <Row>
+                                        <Col class="d-flex justify-content-start align-items-center">
+                                            <span style="font-size:small">{resourceType}</span>
+                                        </Col>
+                                        {#if $mode === "advanced"}
+                                            <Col class="d-flex justify-content-end align-items-center">
+                                                <Button
+                                                    size="sm"
+                                                    color="secondary"
+                                                    on:click={() => setJson($resourcesByTypeStore[resourceType][key])}
+                                                >
+                                                    JSON
+                                                </Button>
+                                            </Col>
+                                        {/if}
+                                    </Row>
+                                </CardHeader>
+                                <Label style="width: 100%">
                                     <CardBody>
                                         <Row>
                                             <Col xs=auto style="vertical-align:baseline">
@@ -239,8 +312,8 @@
                                             </Col>
                                         </Row>
                                     </CardBody>
-                                </Card>
-                            </Label>
+                                </Label>
+                            </Card>
                         {/each}
                     </FormGroup>
                 </AccordionItem>
@@ -250,3 +323,14 @@
     {/if}
 </AccordionItem>
 
+<style>
+    .code {
+        background-color: #f5f5f5;
+        border-radius: 10px;
+        border: 1px solid rgb(200, 200, 200);
+        overflow: auto;
+    }
+    :global(div.offcanvas-body) {
+        overflow-y: hidden !important;
+    }
+</style>
