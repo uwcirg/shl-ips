@@ -1,6 +1,8 @@
-<script>
+<script lang="ts">
   import { base64toBlob } from '$lib/util';
-  export let resource; // Define a prop to pass the data to the component
+  import type { DocumentReferencePOLST } from '$lib/types';
+
+  export let resource: DocumentReferencePOLST; // Define a prop to pass the data to the component
 
   /** Determine if any extension has the revoked status
   let isRevoked = false;
@@ -15,10 +17,13 @@
   let isRevoked = false;
 
   // Reactive declaration to update isRevoked when resource.extension changes
-  $: if (resource.extension) {
-    isRevoked = resource.extension.some(
-      ext => ext.url === 'http://hl7.org/fhir/us/pacio-adi/StructureDefinition/adi-document-revoke-status-extension' && ext.valueCoding.code === 'cancelled'
-    );
+  $: {
+    if (resource.extension) {
+      isRevoked = resource.extension.some(
+        ext => ext.url === 'http://hl7.org/fhir/us/pacio-adi/StructureDefinition/adi-document-revoke-status-extension'
+        && ext.valueCoding?.code === 'cancelled'
+      );
+    }
   }
 
 </script>
@@ -37,41 +42,39 @@ Text:
 <br />
 -->
 
-<b>Category:</b>
-{#if resource.category && resource.category[0] && resource.category[0].coding && resource.category[0].coding[0]}
-  {resource.category[0].coding[0].display} (LOINC {resource.category[0].coding[0].code})
+{#if resource.category}
+  <b>Category:</b>
+  {resource.category?.[0].coding?.[0].display} (LOINC {resource.category?.[0].coding?.[0].code})
+  <br />
 {/if}
-<br />
-<b>Type:</b>
-<!-- 42348-3 is for "Advance Directive"; per cthon, it's presence here is redundant w/ category above. -->
-{#if resource.type && resource.type.coding && resource.type.coding[0] && resource.type.coding[0].code != '42348-3'}
-  {resource.type.coding[0].display} (LOINC {resource.type.coding[0].code})
+{#if resource.type?.coding}
+  <b>Type:</b>
+  <!-- 42348-3 is for "Advance Directive"; per cthon, it's presence here is redundant w/ category above. -->
+  {#if resource.type?.coding?.[0]}
+    {resource.type?.coding?.[0].display} (LOINC {resource.type?.coding?.[0].code})
+  {/if}
+  {#if resource.type?.coding?.[1]}
+    {resource.type?.coding?.[1].display} (LOINC {resource.type?.coding?.[1].code})
+  {/if}
+  <br />
 {/if}
-{#if resource.type && resource.type.coding && resource.type.coding[1] && resource.type.coding[1].code != '42348-3'}
-  {resource.type.coding[1].display} (LOINC {resource.type.coding[1].code}).
-{/if}
-<br />
-<b>Description:</b>
 {#if resource.description}
-  {resource.description}
+  <b>Description:</b> {resource.description}
+  <br />
 {/if}
-<br />
-<b>Author:</b>
-{#if resource.author && resource.author[0] && resource.author[0].display}
-  {resource.author[0].display}
+{#if resource.author?.[0].display}
+  <b>Author:</b> {resource.author[0].display}
+  <br />
 {/if}
-<br />
-<b>setId:</b>
-{#if resource.identifier && resource.identifier[0] && resource.identifier[0].system && resource.identifier[0].system == 'https://mydirectives.com/standards/terminology/namingSystem/setId'}
-  {resource.identifier[0].value}
+{#if resource.identifier?.[0].system == 'https://mydirectives.com/standards/terminology/namingSystem/setId'}
+  <b>setId:</b> {resource.identifier[0].value}
+  <br />
 {/if}
-<br />
-<b>Version number:</b>
-{#if resource.extension && resource.extension[0] && resource.extension[0].url && resource.extension[0].url == 'http://hl7.org/fhir/us/ccda/StructureDefinition/VersionNumber'}
+{#if resource.extension?.[0].url == 'http://hl7.org/fhir/us/ccda/StructureDefinition/VersionNumber'}
   <!-- As of the July '24 this is now a unix time stamp --> 
-  {resource.extension[0].valueInteger}
+  <b>Version number:</b> {resource.extension[0].valueInteger}
+  <br />
 {/if}
-<br />
 <!-- This is the date that the DocumentReference resource was created, not of interest.
 <b>Date:</b>
 {#if resource.date}
@@ -79,102 +82,93 @@ Text:
 {/if}
 <br />
 -->
-<b>Status:</b>
+
 {#if resource.status}
-  {resource.status}
+  <b>Status:</b> {resource.status}
+  <br />
 {/if}
-<br />
 
 <!-- Revoke Status -->
 {#if resource.extension}
   {#each resource.extension as ext}
     {#if ext.url == 'http://hl7.org/fhir/us/pacio-adi/StructureDefinition/adi-document-revoke-status-extension'}
-      <b>Revoke Status:</b> {ext.valueCoding.code}
+      <b>Revoke Status:</b> {ext.valueCoding?.code}
       <br />
     {/if}
   {/each}
 {/if}
 
-<b>docStatus:</b>
 {#if resource.docStatus}
-  {resource.docStatus}
+<b>docStatus:</b> {resource.docStatus}
+<br />
 {/if}
-{#if resource.description && resource.description.text}
-  <br />
-  {resource.description.text}
+{#if resource.description}
+  {resource.description}
+  <br/>
 {/if}
-<br/>
 
-{#if resource.isPolst}
-<br/>
+{#if resource.isPolst && (resource.isCpr || resource.isComfortTreatments || resource.isAdditionalTx || resource.isMedicallyAssisted)}
+  <br/>
   <b>
-  POLST Details:
-<br/>
-<br/>
+    POLST Details:
     <ul>
       {#if resource.isCpr}
         <ol>
-{#if resource.doNotPerformCpr}
-  This includes an order to NOT perform CPR.
-{:else}
-  This includes an order to perform CPR.
-{/if}
+          {#if resource.doNotPerformCpr}
+            This includes an order to NOT perform CPR.
+          {:else}
+            This includes an order to perform CPR.
+          {/if}
         </ol>
-{/if}
-<br/>
+      {/if}
 
-{#if resource.isComfortTreatments}
+      {#if resource.isComfortTreatments}
         <ol>
-{#if resource.doNotPerformComfortTreatments}
-  This includes an order to NOT perform comfort-focused treatments: {@html resource.detailComfortTreatments}
-{:else}
-  This includes an order to perform comfort-focused treatments: {@html resource.detailComfortTreatments}
-{/if}
+          {#if resource.doNotPerformComfortTreatments}
+            This includes an order to NOT perform comfort-focused treatments: {@html resource.detailComfortTreatments}
+          {:else}
+            This includes an order to perform comfort-focused treatments: {@html resource.detailComfortTreatments}
+          {/if}
         </ol>
-{/if}
-<br/>
+      {/if}
 
-{#if resource.isAdditionalTx}
+      {#if resource.isAdditionalTx}
         <ol>
-{#if resource.doNotPerformAdditionalTx}
-  This includes an order to NOT perform additional treatments: {@html resource.detailAdditionalTx}
-{:else}
-  This includes an order to perform additional treatments: {@html resource.detailAdditionalTx}
-{/if}
+          {#if resource.doNotPerformAdditionalTx}
+            This includes an order to NOT perform additional treatments: {@html resource.detailAdditionalTx}
+          {:else}
+            This includes an order to perform additional treatments: {@html resource.detailAdditionalTx}
+          {/if}
         </ol>
-{/if}
-<br/>
+      {/if}
 
-{#if resource.isMedicallyAssisted}
+      {#if resource.isMedicallyAssisted}
         <ol>
-{#if resource.doNotPerformMedicallyAssisted}
-  This includes an order to NOT perform medically assisted nutrition: {@html resource.detailMedicallyAssisted}
-{:else}
-  This includes an order to perform medically assisted nutrition: {@html resource.detailMedicallyAssisted}
-{/if}
+          {#if resource.doNotPerformMedicallyAssisted}
+            This includes an order to NOT perform medically assisted nutrition: {@html resource.detailMedicallyAssisted}
+          {:else}
+            This includes an order to perform medically assisted nutrition: {@html resource.detailMedicallyAssisted}
+          {/if}
         </ol>
-{/if}
+      {/if}
 </ul>
 </b>
-<br/>
 {/if}
 
 {#if resource.content}
-<!-- FIXME This iteration not ideal - should iterate whether pdf present or not, as created & pdfSignedDate (ill-named) actually refer to the larget context of the DR, not the pdf... as it stands the Personal Advance Care Plan Document won't show created/signed (bug), tho we don't care so much about that one in IPS. 
+<!-- FIXME This iteration not ideal - should iterate whether pdf present or not, as created & pdfSignedDate (ill-named) actually refer to the larger context of the DR, not the pdf... as it stands the Personal Advance Care Plan Document won't show created/signed (bug), tho we don't care so much about that one in IPS. 
 -->
+  {#if resource.content[0].attachment.creation}
+    <b>Created:</b> {new Date(resource.content[0].attachment.creation).toISOString().slice(0,10)}
+    <br/>
+  {/if}
+  {#if resource.pdfSignedDate}
+    <b>Digitally signed:</b> {new Date(resource.pdfSignedDate).toISOString().slice(0,10)}
+    <br/>
+  {/if}
   {#each resource.content as content}
-    {#if content.attachment && content.attachment.contentType === "application/pdf" && content.attachment.data}
+    {#if content.attachment.contentType === "application/pdf" && content.attachment.data}
       {#await base64toBlob(content.attachment.data, content.attachment.contentType) then url}
-        {#if content.attachment && content.attachment.creation}
-          <b>Created:</b> {new Date(content.attachment.creation).toISOString().slice(0,10)}
-					<br/>
-        {/if}
-        {#if resource.pdfSignedDate}
-          <!--
-          <b>Digitally signed:</b> {new Date(resource.pdfSignedDate).toISOString().slice(0,10)}
-          <br/>
-          -->
-        {/if}
         <b>PDF present:</b> 
       <a href={url} target="_blank" rel="noopener noreferrer">View</a>
       {/await}
@@ -185,22 +179,17 @@ Text:
 </div>
 
 <style>
-  .is-revoked1 {
-    background-color: #f0f0f0; /* Light gray background */
-    padding: 10px;
-    border-radius: 5px;
-  }
   .is-revoked {
     background-color: #f0f0f0; /* Light gray background */
     padding: 10px;
     border-radius: 5px;
     background-image: 
-      linear-gradient(135deg, rgba(255,255,255,0.3) 25%, transparent 25%),
-      linear-gradient(225deg, rgba(255,255,255,0.3) 25%, transparent 25%),
-      linear-gradient(45deg, rgba(255,255,255,0.3) 25%, transparent 25%),
-      linear-gradient(315deg, rgba(255,255,255,0.3) 25%, transparent 25%);
+      linear-gradient(135deg, rgba(255,255,255,0.5) 25%, transparent 25%),
+      linear-gradient(225deg, rgba(255,255,255,0.5) 25%, transparent 25%),
+      linear-gradient(45deg, rgba(255,255,255,0.5) 25%, transparent 25%),
+      linear-gradient(315deg, rgba(255,255,255,0.5) 25%, transparent 25%);
     background-size: 40px 40px; /* Adjusts the size of the pattern */
-    background-position: 10px 10px; /* Adjusts the offset of the pattern */
+    background-position: 15px 15px; /* Adjusts the offset of the pattern */
     opacity: 0.95; /* Slight transparency for a more subtle effect */
   }
 </style>

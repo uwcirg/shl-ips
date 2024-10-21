@@ -8,19 +8,18 @@
     Row,
     Spinner
   } from 'sveltestrap';
-
-  import type { ResourceRetrieveEvent } from './types';
   import { createEventDispatcher } from 'svelte';
+  import type { DocumentReferencePOLST, ResourceRetrieveEvent } from './types';
+  import type { Attachment, BundleEntry, ServiceRequest } from 'fhir/r4';
 
-  export let adSection: any | undefined;
-  export let adSectionResources: any[] | undefined;
+  export let sectionKey: string = "Advance Directives";
 
-  const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
+  const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
-  let sources = {
+  let sources: Record<string, {selected: Boolean; url: string}> = {
     "AD Vault": {selected: false, url: "https://qa-rr-fhir.maxmddirect.com"},
     "WA Verify+ Demo Server": {selected: false, url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir"}
-  }
+  };
   let selectedSource = "AD Vault";
   let processing = false;
   let fetchError = '';
@@ -52,11 +51,7 @@
     'VT','VA','VI','WA','WV','WI','WY'
   ];
 
-  let result: ResourceRetrieveEvent = {
-    resources: undefined
-  };
-
-  let adSectionTemplate = {
+  let sectionTemplate = {
       title: "Advance Directives",
       code: {
           coding: [
@@ -95,28 +90,6 @@
         dob = "1951-01-20";
       }
     }
-  }
-
-  function updateAdSection(resources: any[]) {
-    if (adSection === undefined) {
-      adSection = JSON.parse(JSON.stringify(adSectionTemplate));
-    }
-    let resourcesAsEntries = resources.map((r, index) => {
-        r.id = `advance-directive-document-${index+1}`;
-        let entry = {resource: r, fullUrl: `urn:uuid:${r.id}`};
-        return entry;
-      });
-    if (adSectionResources) {
-      adSectionResources = adSectionResources.concat(resourcesAsEntries);
-    } else {
-      adSectionResources = resourcesAsEntries;
-    }
-    adSection.entry = adSectionResources.map((r) => {
-      return {
-        reference: r.fullUrl
-      }
-    });
-    console.log(adSectionResources);
   }
 
   let summaryUrlValidated: URL | undefined = undefined;
@@ -245,7 +218,7 @@
 
   async function fetchAdvanceDirective(patient: any) {
     let query = buildAdvanceDirectiveSearchQuery(patient);
-    return result = await fetch(`${sources[selectedSource].url}/DocumentReference${query}`, {
+    return await fetch(`${sources[selectedSource].url}/DocumentReference${query}`, {
         method: 'GET',
         headers: { accept: 'application/json' }
       }).then(function (response: any) {
@@ -258,7 +231,7 @@
       });
   }
 
-  async function injectPdfIntoDocRef(url, attachment) {
+  async function injectPdfIntoDocRef(url:string, attachment: Attachment) {
     try {
       const response = await fetch(url);
       if (response.ok) {
@@ -266,9 +239,12 @@
         const reader = new FileReader();
         reader.onloadend = () => {
           console.log(reader.result); // Log the full data URL for debugging
-          attachment.data = reader.result?.split(',')[1]; // Base64 encoded data
+          if (reader.result) {
+            // Get base64 encoded data from Data URL
+            attachment.data = (reader.result as String).split(',')[1];
+          }
         };
-        reader.readAsDataURL(blob);
+        reader.readAsDataURL(blob); // Result is a string like "data:application/pdf;base64,<data>"
   /**
             const arrayBuffer = await response.arrayBuffer();
             const base64String = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
@@ -282,8 +258,8 @@
     }
   }
 
-  async function fetchResourceByUrl(url) {
-    return result = await fetch(url, {
+  async function fetchResourceByUrl(url: string) {
+    let result = await fetch(url, {
         method: 'GET',
         headers: { accept: 'application/json' }
       }).then(function (response: any) {
@@ -295,22 +271,8 @@
           return response;
         }
       });
+    return result;
   }
-
-/**
-  async function fetchResourceByUrl(url) {
-    try {
-      const response = await fetch(url);
-      if (response.ok) {
-          return response;
-      } else {
-        console.error(`Failed to fetch resource from ${url}`);
-      }
-    } catch (error) {
-      console.error(`Error fetching resource from ${url}:`, error);
-    }
-  }
-*/
 
   async function prepareIps() {
     fetchError = '';
@@ -323,7 +285,7 @@
       content = await contentResponse.json();
       hostname = sources[selectedSource].url;
       processing = false;
-      let resources = content.entry ? content.entry.map((e) => {
+      let resources: Array<DocumentReferencePOLST> = content.entry ? content.entry.map((e: BundleEntry) => {
         return e.resource;
       }) : [];
       if (resources.length === 0) {
@@ -334,7 +296,7 @@
       // but they are just noise since IPS doesn't want to address the complexity of
       // showing these in the UI behind something like a "history" element.
       // Lambda function to check this:
-      const nonSupersededDR = dr => dr.status !== 'superseded';
+      const nonSupersededDR = (dr: DocumentReferencePOLST) => dr.status !== 'superseded';
       // Filter out signature resources
       resources = resources.filter(nonSupersededDR);
 
@@ -342,7 +304,7 @@
       // Get the date from when it was signed, and show that in the card for the DocumentReference
       // that it applies to.
       // That date will be in content.attachment.creation (Lisa to add the evening of 2024-07-17).
-      resources.forEach(dr => {
+      resources.forEach((dr: DocumentReferencePOLST) => {
         if (dr.relatesTo && dr.relatesTo[0] && dr.relatesTo[0].code && dr.relatesTo[0].code == 'signs'
           && dr.relatesTo[0].target && dr.relatesTo[0].target.reference) {
           // e.g. "DocumentReference/9fad9465-5c95-49cf-a8ff-c3b8d782894d"
@@ -353,7 +315,9 @@
             pdfSignDate = dr.content[0].attachment.creation;
           }
           let resourceSigned = resources.find((item) => item.id == target);
-          resourceSigned.pdfSignedDate = pdfSignDate; // pdfSignedDate is an ad-hoc property name
+          if (resourceSigned) {
+            resourceSigned.pdfSignedDate = pdfSignDate; // pdfSignedDate is an ad-hoc property name
+          }
         }
       });
 
@@ -361,72 +325,77 @@
       // The ADI team is planning to add a code for these later, but for the time being they suggest
       // that we identify these by: "description": "JWS of the FHIR Document",
       // FIXME may be better to do this when we iterate for the TODO above.
-      const nonSignatureDR = dr => dr.description !== 'JWS of the FHIR Document';
+      const nonSignatureDR = (dr: DocumentReferencePOLST) => dr.description !== 'JWS of the FHIR Document';
       // Filter out signature resources
       resources = resources.filter(nonSignatureDR);
 
       // if one of the DR's `content` elements has attachment.contentType = 'application/pdf', download if possible, put base64 of pdf in DR.content.attachment.data
-      const hasPdfContent = dr => dr.content && dr.content.some(content => content.attachment && content.attachment.contentType === 'application/pdf' && !content.attachment.data);
+      const hasPdfContent = (dr: DocumentReferencePOLST) => dr.content && dr.content.some(content => content.attachment && content.attachment.contentType === 'application/pdf' && !content.attachment.data);
 
       // if one of the DR's
-      const isPolst = dr => dr.type && dr.type.coding && dr.type.coding.some(coding => coding.system === 'http://loinc.org' && coding.code === '100821-8');
+      const isPolst = (dr: DocumentReferencePOLST) => dr.type && dr.type.coding && dr.type.coding.some(coding => coding.system === 'http://loinc.org' && coding.code === '100821-8');
 
-      resources.forEach(async dr => {
+      resources.forEach(async (dr: DocumentReferencePOLST) => {
         // If this DR is a POLST, add the following chain of queries:
         if (isPolst(dr)){
           dr.isPolst = true;
           // In the POLST find the content[] with format.code = "urn:hl7-org:pe:adipmo-structuredBody:1.1" (ADIPMO Structured Body Bundle),
-          const contentAdipmoBundleRef = dr.content.find(content => content.format && content.format.code && content.format.code === 'urn:hl7-org:pe:adipmo-structuredBody:1.1' && content.attachment && content.attachment.url && content.attachment.url.includes('Bundle'));
-          if (contentAdipmoBundleRef) {
-            // look in that content's attachment.url, that will point at a Bundle (e.g. https://qa-rr-fhir2.maxmddirect.com/Bundle/10f4ff31-2c24-414d-8d70-de3a86bed808?_format=json)
-            const adipmoBundleUrl = contentAdipmoBundleRef.attachment.url;
+          const contentAdipmoBundleRef = dr.content.find((content) => {
+            return (content.format?.code === 'urn:hl7-org:pe:adipmo-structuredBody:1.1' && content.attachment?.url?.includes('Bundle'));
+          });
+          // look in that content's attachment.url, that will point at a Bundle (e.g. https://qa-rr-fhir2.maxmddirect.com/Bundle/10f4ff31-2c24-414d-8d70-de3a86bed808?_format=json)
+          const adipmoBundleUrl = contentAdipmoBundleRef?.attachment.url;
+          if (adipmoBundleUrl) {
             // Pull that Bundle.
             let adipmoBundle = await fetchResourceByUrl(adipmoBundleUrl);
             let adipmoBundleJson = await adipmoBundle.json();
 
-            // TODO The next 4 sections should be generalized into an iteration, just need carve out for "detail" for 2.
+            let serviceRequests = adipmoBundleJson.entry.filter((entry: BundleEntry) => {
+                return entry.resource?.resourceType === 'ServiceRequest'
+              }).map((entry: BundleEntry) => entry.resource); 
 
-            // That bundle will include ServiceRequest resources; look for the one for CPR (loinc 100822-6) 
-            const serviceRequestCpr = adipmoBundleJson.entry.find(
-              entry => entry.resource && entry.resource.resourceType === 'ServiceRequest'
-              && entry.resource.category && entry.resource.category[0].coding[0].code === '100822-6');
-            dr.isCpr = false;
-            if (serviceRequestCpr !== undefined) dr.isCpr = true;
-            dr.doNotPerformCpr = serviceRequestCpr.resource.doNotPerform && serviceRequestCpr.resource.doNotPerform == true;
+            // That bundle will include ServiceRequest resources; look for the one for CPR (loinc 100822-6)
+            // then set the appropriate flags in the DR
+            (
+              {
+                exists: dr.isCpr,
+                doNotPerform: dr.doNotPerformCpr
+              } = digestServiceRequestByCode(serviceRequests, '100822-6')
+            );
 
             // That bundle will include ServiceRequest resources; look for the one for "Initial portable medical treatment orders" (loinc 100823-4) aka Comfort Treatments
-            const serviceRequestComfortTreatments = adipmoBundleJson.entry.find(
-              entry => entry.resource && entry.resource.resourceType === 'ServiceRequest'
-              && entry.resource.category && entry.resource.category[0].coding[0].code === '100823-4');
-            dr.isComfortTreatments = false;
-            if (serviceRequestComfortTreatments !== undefined) dr.isComfortTreatments = true;
-            dr.doNotPerformComfortTreatments = serviceRequestComfortTreatments.resource.doNotPerform && serviceRequestComfortTreatments.resource.doNotPerform == true;
-
-            dr.detailComfortTreatments = serviceRequestComfortTreatments.resource.note[0].text;
+            // then set the appropriate flags in the DR
+            (
+              {
+                exists: dr.isComfortTreatments,
+                doNotPerform: dr.doNotPerformComfortTreatments,
+                detail: dr.detailComfortTreatments
+              } = digestServiceRequestByCode(serviceRequests, '100823-4')
+            );
 
             // That bundle will include ServiceRequest resources; look for the one for "Additional..." (loinc 100824-2)
-            const serviceRequestAdditionalTx = adipmoBundleJson.entry.find(
-              entry => entry.resource && entry.resource.resourceType === 'ServiceRequest'
-              && entry.resource.category && entry.resource.category[0].coding[0].code === '100824-2');
-            dr.isAdditionalTx = false;
-            if (serviceRequestAdditionalTx !== undefined) dr.isAdditionalTx = true;
-            dr.doNotPerformAdditionalTx = serviceRequestAdditionalTx.resource.doNotPerform && serviceRequestAdditionalTx.resource.doNotPerform == true;
-
-            dr.detailAdditionalTx = serviceRequestAdditionalTx.resource.orderDetail[0].text;
+            // then set the appropriate flags in the DR
+            (
+              {
+                exists: dr.isAdditionalTx,
+                doNotPerform: dr.doNotPerformAdditionalTx,
+                detail: dr.detailAdditionalTx
+              } = digestServiceRequestByCode(serviceRequests, '100824-2')
+            );
 
             // That bundle will include ServiceRequest resources; look for the one for "Medically assisted nutrition orders" (loinc 100825-9)
-            const serviceRequestMedicallyAssisted = adipmoBundleJson.entry.find(
-              entry => entry.resource && entry.resource.resourceType === 'ServiceRequest'
-              && entry.resource.category && entry.resource.category[0].coding[0].code === '100825-9');
-            dr.isMedicallyAssisted = false;
-            if (serviceRequestMedicallyAssisted !== undefined) dr.isMedicallyAssisted = true;
-            dr.doNotPerformMedicallyAssisted = serviceRequestMedicallyAssisted.resource.doNotPerform && serviceRequestMedicallyAssisted.resource.doNotPerform == true;
-
-            dr.detailMedicallyAssisted = serviceRequestMedicallyAssisted.resource.orderDetail[0].text;
+            // then set the appropriate flags in the DR
+            (
+              {
+                exists: dr.isMedicallyAssisted,
+                doNotPerform: dr.doNotPerformMedicallyAssisted,
+                detail: dr.detailMedicallyAssisted
+              } = digestServiceRequestByCode(serviceRequests, '100825-9')
+            );
           }
         }
       });
-      resources.forEach(async dr => {
+      resources.forEach(async (dr: DocumentReferencePOLST) => {
         if (hasPdfContent(dr)) {
           const pdfContent = dr.content.find(content => content.attachment && content.attachment.contentType === 'application/pdf');
           if (pdfContent && pdfContent.attachment && pdfContent.attachment.url) {
@@ -434,19 +403,37 @@
           }
         }
       });
-      updateAdSection(resources);
-      // resources.unshift(patient);
-      result = {
-        resources: [patient], // resources,
-        source: hostname
-      };
-      console.log([patient, ...resources]);
+
+      let result:ResourceRetrieveEvent = {
+        resources: resources,
+        sectionKey: sectionKey,
+        sectionTemplate: sectionTemplate,
+        source: hostname,
+      }
       resourceDispatch('update-resources', result);
+      console.log([patient, ...resources]);
     } catch (e) {
       processing = false;
       console.log('Failed', e);
       fetchError = 'Error preparing IPS';
     }
+  }
+
+  interface ServiceRequestProperties {
+    exists: boolean;
+    doNotPerform?: boolean;
+    detail?: string;
+  }
+
+  function digestServiceRequestByCode(srs: ServiceRequest[], code: string): ServiceRequestProperties {
+    const serviceRequest = srs.find((resource: ServiceRequest) => {
+      return resource.category?.[0].coding?.[0].code === code;
+    });
+    return {
+      exists: serviceRequest !== undefined,
+      doNotPerform: serviceRequest?.doNotPerform === true,
+      detail: serviceRequest?.note?.[0].text
+    };
   }
 </script>
 
