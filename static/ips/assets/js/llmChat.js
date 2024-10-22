@@ -24,7 +24,7 @@ async function sendMessage() {
 
     try {
         // FIXME use a .env variable for this URL, a la the VITE configs...
-        const response = await fetch('https://llm-chat.fl.mcjustin.dev.cirg.uw.edu/api/chat', {
+        const response = await fetch('https://llm-service.fl.mcjustin.dev.cirg.uw.edu/api/chat', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
