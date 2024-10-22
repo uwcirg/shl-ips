@@ -194,13 +194,15 @@
     style="display: flex;  overflow-y:hidden; height: 100dvh;"
 >
     <Row class="d-flex" style="height: 100%">
-            <Row class="d-flex pe-0" style="height:95%">
+            <Row class="d-flex pe-0" style="height:calc(100% - 50px)">
                 <Col class="d-flex pe-0" style="height:100%">
-                    <pre class="code"><code>{json}</code></pre>
+                    <div class="d-flex pe-0 pb-0 code-container">
+                        <pre class="code"><code>{json}</code></pre>
+                    </div>
                 </Col>
             </Row>
-            <Row class="d-flex pe-0">
-                <Col class="d-flex justify-content-start">
+            <Row class="d-flex pe-0" style="height:50px">
+                <Col class="d-flex justify-content-start align-items-end" style="padding-top: 1rem">
                     <ButtonGroup>
                         <Button
                             size="sm"
@@ -214,9 +216,6 @@
                             on:click={() => download(resourceType + ".json", json)}
                         ><Icon name="download" /> Download</Button>
                       </ButtonGroup>
-                </Col>
-                <Col class="d-flex justify-content-end pe-0">
-                    
                 </Col>
             </Row>
     </Row>
@@ -291,8 +290,8 @@
                                 </CardHeader>
                                 <Label style="width: 100%">
                                     <CardBody>
-                                        <Row>
-                                            <Col xs=auto style="vertical-align:baseline">
+                                        <Row style="overflow:hidden">
+                                            <Col xs=auto class="d-flex align-items-center pe-0">
                                                 {#if resourceType === "Patient"}
                                                     <Input id={key} type="radio" bind:group={selectedPatient} value={key} />
                                                 {:else}
@@ -325,10 +324,15 @@
 
 <style>
     .code {
+        overflow:auto;
+        margin: 0;
+        padding: 10px;
+    }
+    .code-container {
         background-color: #f5f5f5;
         border-radius: 10px;
         border: 1px solid rgb(200, 200, 200);
-        overflow: auto;
+        overflow: hidden;
     }
     :global(div.offcanvas-body) {
         overflow-y: hidden !important;
