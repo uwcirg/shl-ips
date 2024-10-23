@@ -43,19 +43,20 @@
 
   onMount(() => {
     window.onscroll = function() {scrollFunction()};
+    scrollFunction();
   });
 
   function scrollFunction() {
     closeNav();
     if (window.scrollY > 40) {
-      document.getElementById("nav-image").classList.add("scrolling");
+      document.getElementById("nav-image")?.classList.add("scrolling");
       document.getElementsByClassName("navbar")[0].classList.add("scrolling");
       let es = document.getElementsByClassName("nav-text");
       for(let i = 0; i < es.length; i++) {
         es[i].classList.add("scrolling");
       }
     } else if (window.scrollY == 0) {
-      document.getElementById("nav-image").classList.remove("scrolling");
+      document.getElementById("nav-image")?.classList.remove("scrolling");
       document.getElementsByClassName("navbar")[0].classList.remove("scrolling");
       let es = document.getElementsByClassName("nav-text");
       for(let i = 0; i < es.length; i++) {
