@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { setContext } from 'svelte';
+  import { onMount, setContext } from 'svelte';
   import { writable } from 'svelte/store';
   import {
     Dropdown,
@@ -39,6 +39,29 @@
 
   $: {
     if ($mode) window.localStorage[MODE_KEY] = JSON.stringify($mode);
+  }
+
+  onMount(() => {
+    window.onscroll = function() {scrollFunction()};
+  });
+
+  function scrollFunction() {
+    closeNav();
+    if (window.scrollY > 40) {
+      document.getElementById("nav-image").classList.add("scrolling");
+      document.getElementsByClassName("navbar")[0].classList.add("scrolling");
+      let es = document.getElementsByClassName("nav-text");
+      for(let i = 0; i < es.length; i++) {
+        es[i].classList.add("scrolling");
+      }
+    } else if (window.scrollY == 0) {
+      document.getElementById("nav-image").classList.remove("scrolling");
+      document.getElementsByClassName("navbar")[0].classList.remove("scrolling");
+      let es = document.getElementsByClassName("nav-text");
+      for(let i = 0; i < es.length; i++) {
+        es[i].classList.remove("scrolling");
+      }
+    }
   }
   
   setContext('shlStore', shlStore);
@@ -84,16 +107,18 @@
 </script>
 <Container class="main" fluid>
 <Styles />
-<Navbar color="light" light expand="md" style="border-bottom: 1px solid rgb(204, 204, 204);">
-  <NavbarBrand href="https://doh.wa.gov/">
+<Navbar class="sticky-top" color="light" light expand="md" style="border-bottom: 1px solid rgb(204, 204, 204);">
+  <NavbarBrand href="https://doh.wa.gov/" target="_blank">
     <Row>
       <Col>
-        <Image alt="Washington State Department of Health Logo" width="240" src="/img/doh_logo_doh-black.png"/>
+        <Image id="nav-image" alt="Washington State Department of Health Logo" src="/img/doh_logo_doh-black.png"/>
       </Col>
-      <Col style="vertical-align:middle" class="d-none d-sm-block">
-        <span style="font-size:medium">Washington State</span>
-        <p style="margin: 0px; padding: 0px: line-height: 0;"></p>
-        <span style="font-size:medium">Department of Health</span>
+      <Col style="vertical-align:middle" class="d-none d-sm-block align-items-center">
+        <div class="nav-text mt-2">
+          <span>Washington State</span>
+          <p style="margin: 10px; padding: 0px: line-height: 0;"></p>
+          <span>Department of Health</span>
+        </div>
       </Col>
     </Row>
   </NavbarBrand>
@@ -169,9 +194,19 @@
   </Collapse>
 </Navbar>
 <div on:click={closeNav} on:keypress={closeNav}>
-<Row style="padding:0px 12px">
-  <Col style="padding:0; margin-bottom: 20px; border-bottom: 1px solid rgb(204, 204, 204);">
+<Row
+  style="
+    padding:0px 12px;
+    margin-left: 0px;
+    margin-right: 0px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgb(204, 204, 204);"
+  class="d-flex justify-content-between align-items-center"
+>
+  <Col style="max-width: 200px">
     <Image alt="WA Verify Logo" width="200" src="/img/waverifypluslogo.png" style="align-self: center" />
+  </Col>
+  <Col>
     <div style="vertical-align: middle; font-size: 18px; display: inline-block; padding-left: 17px; font-family: Verdana, sans-serif; color: rgb(34, 72, 156);">International Patient Summary Prototype</div>
   </Col>
 </Row>
@@ -209,6 +244,34 @@
   :global(.main-row) {
     flex-grow: 1;
   }
+
+  :global(#nav-image) {
+    width: 240px;
+    -webkit-transition: all 0.06s linear;
+    -moz-transition: all 0.06s linear;
+    -o-transition: all 0.06s linear;
+    transition: all 0.06s linear;
+  }
+  :global(#nav-image.scrolling) {
+    width: 160px !important;
+    margin-left: 10px;
+  }
+  :global(.nav-text) {
+    font-size:medium;
+    -webkit-transition: all 0.06s linear;
+    -moz-transition: all 0.06s linear;
+    -o-transition: all 0.06s linear;
+    transition: all 0.06s linear;
+  }
+  :global(.nav-text.scrolling)  {
+    font-size: xx-small;
+    color: #000; /* Fallback for older browsers */
+    color: rgba(0, 0, 0, 0.0);
+  }
+  :global(.navbar.scrolling) {
+    padding: 0px !important;
+  }
+
   footer {
     margin-bottom: 1em;
     font-style: italic;
