@@ -1,4 +1,5 @@
 let fhirResources = null;
+let messages = [];
 
 function initLLMChat(resources) {
     fhirResources = resources;
@@ -14,12 +15,22 @@ function initLLMChat(resources) {
 
 async function sendMessage() {
     const chatInput = document.getElementById('chat-input');
-    const chatMessages = document.getElementById('chat-messages');
     const userMessage = chatInput.value.trim();
     
-    if (userMessage === '') return;
+    // Append the FHIR resources as the first message
+    if (messages.length === 0) {
+        messages.push({
+            role: "user",
+            content: [{ type: "text", text: JSON.stringify(fhirResources) }]
+        });
+    }
 
-    appendMessage('user', userMessage);
+    // Append the user message
+    messages.push({
+        role: "user",
+        content: [{ type: "text", text: userMessage }]
+    });
+
     chatInput.value = '';
 
     try {
@@ -29,10 +40,7 @@ async function sendMessage() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                message: userMessage,
-                fhirResources: fhirResources,
-            }),
+            body: JSON.stringify({ messages: messages }), // Send the messages array
         });
 
         if (!response.ok) {
@@ -40,6 +48,12 @@ async function sendMessage() {
         }
 
         const data = await response.json();
+        // Append the assistant's response
+        messages.push({
+            role: "assistant",
+            content: [{ type: "text", text: data.message }]
+        });
+
         appendMessage('assistant', data.message);
     } catch (error) {
         console.error('Error sending message to LLM:', error);
