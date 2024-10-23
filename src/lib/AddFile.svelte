@@ -182,7 +182,6 @@
     try {
       resourceResult = details;
       if (resourceResult.resources) {
-        handleAddDataAccordion({ event: true });
         // Trigger update in ResourceSelector
         resourceCollection.addResources(resourceResult.resources, resourceResult.sectionKey, resourceResult.sectionTemplate);
         showSuccessMessage();
@@ -260,7 +259,7 @@
     }, 1000);
   }
 
-  function handleAddDataAccordion({ detail }) {
+  function handleAddDataAccordionOverflow({ detail }) {
     addDataOpen = detail;
     const accordion = document.querySelector('div.add-data > div.accordion-collapse');
     if (accordion) {
@@ -292,7 +291,7 @@
   <AccordionItem
     active={!resourcesAdded}
     class="add-data"
-    on:toggle={handleAddDataAccordion}
+    on:toggle={handleAddDataAccordionOverflow}
   >
     <h5 slot="header" class="my-2">{addDataHeader}</h5>
     {#if !resourcesAdded}
