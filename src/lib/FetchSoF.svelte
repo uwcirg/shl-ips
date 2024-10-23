@@ -153,6 +153,7 @@
     <Col xs="auto">
       <Button
       color="secondary"
+      outline
       style="width:fit-content"
       disabled={processing || loadingSample}
       type="button"
