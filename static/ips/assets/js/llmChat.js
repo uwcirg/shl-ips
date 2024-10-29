@@ -51,7 +51,7 @@ async function sendMessage() {
         // Append the assistant's response
         messages.push({
             role: "assistant",
-            content: [{ type: "text", text: data.message }]
+            content: [{ type: "text", text: data.content}]
         });
 
         appendMessage('assistant', data.message);
