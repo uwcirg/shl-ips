@@ -1,4 +1,5 @@
 import config from "./config.js";
+import { initLLMChat} from "./llmChat.js";
 var { pdfjsLib } = globalThis;
 pdfjsLib.GlobalWorkerOptions.workerSrc = '//mozilla.github.io/pdf.js/build/pdf.worker.mjs';
 
@@ -21,6 +22,7 @@ $(document).ready(function () {
   $('#content').show();
   $('#FhirDropdown').on('click', () => updateDisplayMode('Entries'));
   $('#NarrativeDropdown').on('click', () => updateDisplayMode('Text'));
+  $('#LlmChatDropdown').on('click', () => updateDisplayMode('LlmChat'));
 });
 
 function loadSample() {
@@ -43,11 +45,18 @@ function updateDisplayMode(displayMode) {
     newText = 'App Interpretation';
   } else if (displayMode == 'Text') {
     newText = 'Generated Text';
+  } else if (displayMode == 'LlmChat') {
+    newText = 'LLM Chat';
   }
   if (newText) {
     mode = displayMode
     dropdown.html(newText);
   }
+
+  // Show/hide content based on selected mode
+  //$('#rendered-ips').toggle(mode !== 'LlmChat');
+  $('#llm-chat-content').toggle(mode === 'LlmChat');
+
   shlContents.forEach((e, i) => {
     update(e, i);
   });
@@ -232,6 +241,7 @@ function addTab(name, id) {
 // Primary function to traverse the Bundle and get data
 // Calls the render function to display contents 
 function update(ips, index) {
+  initLLMChat(ips);
   sectionCount = 0;
   $(`.output${index}`).html("");
   $("#renderMessage").hide();
