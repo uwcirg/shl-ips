@@ -31,6 +31,8 @@ async function sendMessage() {
         content: [{ type: "text", text: userMessage }]
     });
 
+    insertMessageIntoUi('user', "Your query: " + userMessage);
+
     chatInput.value = '';
 
     try {
@@ -54,14 +56,14 @@ async function sendMessage() {
             content: [{ type: "text", text: data.content}]
         });
 
-        appendMessage('assistant', data.content);
+        insertMessageIntoUi('assistant', "LLM: " + data.content);
     } catch (error) {
         console.error('Error sending message to LLM:', error);
-        appendMessage('error', 'Failed to get a response. Please try again.');
+        insertMessageIntoUi('error', 'Failed to get a response. Please try again.');
     }
 }
 
-function appendMessage(role, content) {
+function insertMessageIntoUi(role, content) {
     const chatMessages = document.getElementById('chat-messages');
     const messageElement = document.createElement('div');
     messageElement.classList.add('message', role);
