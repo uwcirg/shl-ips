@@ -54,7 +54,7 @@ async function sendMessage() {
             content: [{ type: "text", text: data.content}]
         });
 
-        appendMessage('assistant', data.message);
+        appendMessage('assistant', data.content);
     } catch (error) {
         console.error('Error sending message to LLM:', error);
         appendMessage('error', 'Failed to get a response. Please try again.');
