@@ -147,7 +147,7 @@
 <Row class="mx-0">
   <!--wrap in accordion with title-->
   <Accordion class="mt-3">
-    <AccordionItem active>
+    <AccordionItem active class="ips-section">
       <h6 slot="header" class="my-2">{title}</h6>
       {#if content.useText || mode === "text"}
         {@html content.section.text?.div}
@@ -176,6 +176,7 @@
 {/each}
 
 <style>
+  /* Table styling */
   :global(table) {
     border-collapse: collapse !important;
     width: 100% !important;
@@ -187,32 +188,35 @@
     text-align: center !important;
   }
 
+  :global(thead) {
+    background-color: #0c63e4;
+    color: white;
+  }
+
+  /* Alternating table row coloring */
+  :global(tbody tr:nth-child(odd)) {
+    background-color: #fff;
+  }
+  :global(tbody tr:nth-child(even)) {
+    background-color: #e7f1ff;
+  }
+  
+  /* Sticky table header */
   :global(th) {
     background: #0c63e4;
     position: sticky;
     top: -17px;
   }
 
-  :global(thead) {
-    background-color: #0c63e4;
-    color: white;
-  }
-
-  :global(.accordion-body) {
-    overflow: auto !important;
-    max-height: 30rem !important;
-  }
-
-  :global(tbody tr:nth-child(odd)) {
-    background-color: #fff;
-  }
-
-  :global(tbody tr:nth-child(even)) {
-    background-color: #e7f1ff;
-  }
-
+  /* First column of generated table is usually most important */
   :global(td:first-child) {
     font-weight: bold;
+  }
+
+  /* Limit height for section content window */
+  :global(.ips-section > .accordion-collapse > .accordion-body) {
+    overflow: auto !important;
+    max-height: 30rem !important;
   }
 
 </style>
