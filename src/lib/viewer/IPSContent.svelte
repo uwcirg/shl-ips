@@ -177,39 +177,39 @@
 
 <style>
   /* Table styling */
-  :global(table) {
+  :global(.ips-section table) {
     border-collapse: collapse !important;
     width: 100% !important;
   }
 
-  :global(th, td) {
+  :global(.ips-section th, td) {
     border: 1px solid lightgray !important;
     padding: 0 7px !important;
     text-align: center !important;
   }
 
-  :global(thead) {
+  :global(.ips-section thead) {
     background-color: #0c63e4;
     color: white;
   }
 
   /* Alternating table row coloring */
-  :global(tbody tr:nth-child(odd)) {
+  :global(.ips-section tbody tr:nth-child(odd)) {
     background-color: #fff;
   }
-  :global(tbody tr:nth-child(even)) {
+  :global(.ips-section tbody tr:nth-child(even)) {
     background-color: #e7f1ff;
   }
   
   /* Sticky table header */
-  :global(th) {
+  :global(.ips-section th) {
     background: #0c63e4;
     position: sticky;
     top: -17px;
   }
 
   /* First column of generated table is usually most important */
-  :global(td:first-child) {
+  :global(.ips-section td:first-child) {
     font-weight: bold;
   }
 
