@@ -17,22 +17,22 @@
   export let content: Bundle;
   export let mode: string;
 
-  import AdvanceDirective from '$lib/resource-templates/AdvanceDirective.svelte';
-  import AllergyIntolerance from '$lib/resource-templates/AllergyIntolerance.svelte';
-  import Condition from '$lib/resource-templates/Condition.svelte';
-  import DiagnosticReport from '$lib/resource-templates/DiagnosticReport.svelte';
-  import Encounter from '$lib/resource-templates/Encounter.svelte';
-  import Immunization from '$lib/resource-templates/Immunization.svelte';
-  import Location from '$lib/resource-templates/Location.svelte';
-  import Medication from '$lib/resource-templates/Medication.svelte';
-  import MedicationRequest from '$lib/resource-templates/MedicationRequest.svelte';
-  import MedicationStatement from '$lib/resource-templates/MedicationStatement.svelte';
-  import Observation from '$lib/resource-templates/Observation.svelte';
-  import Organization from '$lib/resource-templates/Organization.svelte';
-  import Patient from '$lib/resource-templates/Patient.svelte';
-  import Practitioner from '$lib/resource-templates/Practitioner.svelte';
-  import Procedure from '$lib/resource-templates/Procedure.svelte';
-  import OccupationalData from '$lib/resource-templates/OccupationalData.svelte';
+  import AdvanceDirective from '$lib/components/resource-templates/AdvanceDirective.svelte';
+  import AllergyIntolerance from '$lib/components/resource-templates/AllergyIntolerance.svelte';
+  import Condition from '$lib/components/resource-templates/Condition.svelte';
+  import DiagnosticReport from '$lib/components/resource-templates/DiagnosticReport.svelte';
+  import Encounter from '$lib/components/resource-templates/Encounter.svelte';
+  import Immunization from '$lib/components/resource-templates/Immunization.svelte';
+  import Location from '$lib/components/resource-templates/Location.svelte';
+  import Medication from '$lib/components/resource-templates/Medication.svelte';
+  import MedicationRequest from '$lib/components/resource-templates/MedicationRequest.svelte';
+  import MedicationStatement from '$lib/components/resource-templates/MedicationStatement.svelte';
+  import Observation from '$lib/components/resource-templates/Observation.svelte';
+  import Organization from '$lib/components/resource-templates/Organization.svelte';
+  import Patient from '$lib/components/resource-templates/Patient.svelte';
+  import Practitioner from '$lib/components/resource-templates/Practitioner.svelte';
+  import Procedure from '$lib/components/resource-templates/Procedure.svelte';
+  import OccupationalData from '$lib/components/resource-templates/OccupationalData.svelte';
 
   const components: Record<string, any> = {
     "AllergyIntolerance": AllergyIntolerance,

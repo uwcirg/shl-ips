@@ -7,7 +7,7 @@
         Label,
         Row,
         Spinner } from 'sveltestrap';
-    import type { SHCRetrieveEvent, IPSRetrieveEvent } from './types';
+    import type { SHCRetrieveEvent, IPSRetrieveEvent } from '$lib/utils/types';
     import { createEventDispatcher } from 'svelte';
     
     const shcDispatch = createEventDispatcher<{'shc-retrieved': SHCRetrieveEvent}>();

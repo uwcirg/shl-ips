@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Badge } from 'sveltestrap';
   import type { MedicationStatement } from "fhir/r4";
-  import Dosage from '$lib/resource-templates/Dosage.svelte';
+  import Dosage from '$lib/components/resource-templates/Dosage.svelte';
   
   export let resource: MedicationStatement; // Define a prop to pass the data to the component
 </script>

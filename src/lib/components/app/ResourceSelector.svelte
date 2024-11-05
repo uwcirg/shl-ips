@@ -1,6 +1,6 @@
 <script lang='ts'>
-    import { uploadResources } from './resourceUploader.js';
-    import { download } from './util.js';
+    import { uploadResources } from '$lib/utils/resourceUploader.js';
+    import { download } from '$lib/utils/util.js';
     import { createEventDispatcher, getContext } from 'svelte';
     import { get, type Writable } from 'svelte/store';
     import {
@@ -19,27 +19,27 @@
         Offcanvas,
         Label,
         Row } from 'sveltestrap';
-    import { ResourceHelper } from './ResourceHelper.js';
-    import type { IPSResourceCollection } from './IPSResourceCollection.js';
-    import type { IPSRetrieveEvent } from './types.js';
+    import { ResourceHelper } from '$lib/utils/ResourceHelper.js';
+    import type { IPSResourceCollection } from '$lib/utils/IPSResourceCollection.js';
+    import type { IPSRetrieveEvent } from '$lib/utils/types.js';
     import type { CompositionSection, BundleEntry } from 'fhir/r4';
 
-    import AdvanceDirective from './resource-templates/AdvanceDirective.svelte';
-    import AllergyIntolerance from './resource-templates/AllergyIntolerance.svelte';
-    import Condition from './resource-templates/Condition.svelte';
-    import DiagnosticReport from './resource-templates/DiagnosticReport.svelte';
-    import Encounter from './resource-templates/Encounter.svelte';
-    import Immunization from './resource-templates/Immunization.svelte';
-    import Location from './resource-templates/Location.svelte';
-    import Medication from './resource-templates/Medication.svelte';
-    import MedicationRequest from './resource-templates/MedicationRequest.svelte';
-    import MedicationStatement from './resource-templates/MedicationStatement.svelte';
-    import Observation from './resource-templates/Observation.svelte';
-    import Organization from './resource-templates/Organization.svelte';
-    import Patient from './resource-templates/Patient.svelte';
-    import Practitioner from './resource-templates/Practitioner.svelte';
-    import Procedure from './resource-templates/Procedure.svelte';
-    import OccupationalData from './resource-templates/OccupationalData.svelte';
+    import AdvanceDirective from '$lib/components/resource-templates/AdvanceDirective.svelte';
+    import AllergyIntolerance from '$lib/components/resource-templates/AllergyIntolerance.svelte';
+    import Condition from '$lib/components/resource-templates/Condition.svelte';
+    import DiagnosticReport from '$lib/components/resource-templates/DiagnosticReport.svelte';
+    import Encounter from '$lib/components/resource-templates/Encounter.svelte';
+    import Immunization from '$lib/components/resource-templates/Immunization.svelte';
+    import Location from '$lib/components/resource-templates/Location.svelte';
+    import Medication from '$lib/components/resource-templates/Medication.svelte';
+    import MedicationRequest from '$lib/components/resource-templates/MedicationRequest.svelte';
+    import MedicationStatement from '$lib/components/resource-templates/MedicationStatement.svelte';
+    import Observation from '$lib/components/resource-templates/Observation.svelte';
+    import Organization from '$lib/components/resource-templates/Organization.svelte';
+    import Patient from '$lib/components/resource-templates/Patient.svelte';
+    import Practitioner from '$lib/components/resource-templates/Practitioner.svelte';
+    import Procedure from '$lib/components/resource-templates/Procedure.svelte';
+    import OccupationalData from '$lib/components/resource-templates/OccupationalData.svelte';
 
     export let submitting: boolean;
     export let resourceCollection: IPSResourceCollection;

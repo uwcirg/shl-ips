@@ -1,11 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher, onMount } from 'svelte';
   import { page } from '$app/stores';
-  import {
-    getResourcesFromIPS,
-    isSHCFile,
-    packageSHC,
-  } from '$lib/utils/util';
   import { goto } from '$app/navigation';
   import { getContext } from 'svelte';
   import { type Writable } from 'svelte/store';
@@ -13,9 +8,6 @@
     Accordion,
     AccordionItem,
     Button,
-    Card,
-    CardBody,
-    CardText,
     Col,
     FormGroup,
     Icon,
@@ -24,23 +16,31 @@
     Row,
     Spinner,
     TabContent,
-    TabPane } from 'sveltestrap';
+    TabPane
+  } from 'sveltestrap';
   import FetchUrl from '$lib/components/app/FetchUrl.svelte';
   import FetchFile from '$lib/components/app/FetchFile.svelte';
   import FetchSoF from '$lib/components/app/FetchSoF.svelte';
   import FetchAD from '$lib/components/app/FetchAD.svelte';
   import FetchTEFCA from '$lib/components/app/FetchTEFCA.svelte';
   import ODHForm from '$lib/components/app/ODHForm.svelte';
+  import ResourceSelector from '$lib/components/app/ResourceSelector.svelte';
+  import {
+    getResourcesFromIPS,
+    isSHCFile,
+    packageSHC,
+  } from '$lib/utils/util';
   import { verify } from '$lib/utils/shcDecoder.js';
-  import type { SHCFile,
+  import type {
+    SHCFile,
     SHCRetrieveEvent,
     ResourceRetrieveEvent,
     IPSRetrieveEvent,
     SHLSubmitEvent, 
-    SOFAuthEvent } from '$lib/utils/types';
+    SOFAuthEvent
+  } from '$lib/utils/types';
   import type { Patient } from 'fhir/r4';
   import { IPSResourceCollection } from '$lib/utils/IPSResourceCollection.js';
-  import ResourceSelector from '$lib/components/app/ResourceSelector.svelte';
  
   export let status = "";
   

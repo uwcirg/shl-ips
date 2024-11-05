@@ -5,7 +5,7 @@
  * for inclusion in an IPS bundle.
  */
 
-import { ResourceHelper } from "./ResourceHelper";
+import { ResourceHelper } from "$lib/utils/ResourceHelper";
 import type { Resource, Bundle, Composition,CompositionSection, FhirResource } from "fhir/r4";
 import { writable, derived, get, type Writable, type Readable } from "svelte/store";
 

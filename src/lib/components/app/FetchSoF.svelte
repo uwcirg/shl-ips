@@ -8,10 +8,14 @@
     Row,
     Spinner } from 'sveltestrap';
 
-  import { SOF_HOSTS } from './config';
-  import type { ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from './types';
-  import { authorize, getResourcesWithReferences } from './sofClient.js';
+  import { SOF_HOSTS } from '$lib/config';
+  import type { ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from '$lib/utils/types';
+  import { authorize, getResourcesWithReferences } from '$lib/utils/sofClient.js';
   import { createEventDispatcher, onMount } from 'svelte';
+
+  // For "quick sample" in demo
+  import { EXAMPLE_IPS, IPS_DEFAULT } from '$lib/config';
+  import type { IPSRetrieveEvent } from '$lib/utils/types';
   
   const authDispatch = createEventDispatcher<{'sof-auth-init': SOFAuthEvent; 'sof-auth-fail': SOFAuthEvent}>();
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
@@ -89,8 +93,6 @@
   }
 
   // Demo quick sample loader
-  import { EXAMPLE_IPS, IPS_DEFAULT } from './config';
-  import type { IPSRetrieveEvent } from './types';
   let defaultUrl = EXAMPLE_IPS[IPS_DEFAULT];
   const ipsDispatch = createEventDispatcher<{'ips-retrieved': IPSRetrieveEvent}>();
   let ipsResult: IPSRetrieveEvent = {

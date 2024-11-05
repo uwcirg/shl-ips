@@ -1,6 +1,6 @@
-import * as shlClient from './shlClient.js';
-import { verify } from './shcDecoder.js';
-import { prepareSHLContents } from "./renderIPS.js";
+import * as shlClient from '$lib/utils/shlClient.js';
+import { verify } from '$lib/utils/shcDecoder.js';
+import { prepareSHLContents } from "$lib/utils/renderIPS.js";
 
 const shl = window.location.hash.match(/shlink:\/.*/)?.[0];
 if (shl) {

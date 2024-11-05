@@ -14,9 +14,9 @@
     Spinner
   } from 'sveltestrap';
 
-  import type { ResourceRetrieveEvent } from './types';
+  import type { ResourceRetrieveEvent } from '$lib/utils/types';
   import { createEventDispatcher } from 'svelte';
-  import { API_BASE } from './config';
+  import { API_BASE } from '$lib/config';
 
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
 

@@ -9,10 +9,10 @@
     Spinner
   } from 'sveltestrap';
 
-  import type { ResourceRetrieveEvent } from './types';
+  import type { ResourceRetrieveEvent } from '$lib/utils/types';
   import { createEventDispatcher } from 'svelte';
-  import { constructResourceUrl } from './sofClient';
-  import { SOF_PATIENT_RESOURCES } from './config';
+  import { constructResourceUrl } from '$lib/utils/sofClient';
+  import { SOF_PATIENT_RESOURCES } from '$lib/config';
 
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
 

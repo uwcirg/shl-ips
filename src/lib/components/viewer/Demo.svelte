@@ -13,7 +13,7 @@
   } from "sveltestrap";
   import { onMount } from "svelte";
   import type { Bundle } from "fhir/r4";
-  import IpsContent from "./IPSContent.svelte";
+  import IpsContent from "$lib/components/viewer/IPSContent.svelte";
 
   export let content: Bundle | undefined;
   export let mode: string;

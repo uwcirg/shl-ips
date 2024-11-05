@@ -1,12 +1,11 @@
 <script lang="ts">
-  import HealthLinkOverview from '$lib/HealthLinkOverview.svelte';
+  import HealthLinkOverview from '$lib/components/app/HealthLinkOverview.svelte';
   import {
-      Accordion,
-      AccordionItem,
+    Accordion,
+    AccordionItem,
     Col,
     Row,
-    Styles,
-
+    Styles
   } from 'sveltestrap';
 </script>
 <Styles />

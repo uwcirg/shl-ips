@@ -1,4 +1,5 @@
 import type { Bundle, CompositionSection, DocumentReference } from 'fhir/r4';
+
 export interface SHLSubmitEvent {
   shcs: SHCFile[];
   label?: string;
