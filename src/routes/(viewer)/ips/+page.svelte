@@ -246,7 +246,7 @@
 {/if}
 
 <style lang="css">
-  :global(.loader) {
+  .loader {
     width: 100%;
     height: 150px;
     margin: 40px;
@@ -255,7 +255,7 @@
     background: #FFF;
     box-sizing: border-box;
   }
-  :global(.loader::after) {
+  .loader::after {
     content: '';  
     width: calc(100% - 30px);
     height: calc(100% - 30px);
@@ -280,5 +280,13 @@
               0px 66px; /* box 1 */
     box-sizing: border-box;
     animation: animloader 1s linear infinite;
+  }
+  @keyframes -global-animloader {
+    0% {
+      background-position: 0% 0, 0 0, 70px 5px, 70px 38px, 0px 66px;
+    }
+    100% {
+      background-position: 150% 0, 0 0, 70px 5px, 70px 38px, 0px 66px;
+    }
   }
 </style>
