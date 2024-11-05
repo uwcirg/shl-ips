@@ -8,6 +8,7 @@ interface ImportMetaEnv {
     readonly VITE_MEDITECH_BEARER_TOKEN: string
     readonly VITE_API_BASE: string
     readonly VITE_VIEWER_BASE: string
+    readonly VITE_SHOW_VIEWER_DEMO: boolean
     readonly VITE_INTERMEDIATE_FHIR_SERVER_BASE: string
     readonly VITE_VERSION_STRING: string
     readonly DEV_SERVER_PORT: number
