@@ -8,7 +8,7 @@
       Input,
       Row } from 'sveltestrap';
     import { createEventDispatcher } from 'svelte';
-    import type { ResourceRetrieveEvent } from './types';
+    import type { ResourceRetrieveEvent } from '$lib/utils/types';
 
     const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 

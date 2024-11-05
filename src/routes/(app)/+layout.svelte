@@ -17,12 +17,11 @@
     NavItem,
     NavLink,
     NavbarToggler,
-    Row,
-    Styles
+    Row
   } from 'sveltestrap';
-  import { SHLClient, type SHLAdminParams } from '$lib/managementClient';
-  import LanguageMenu from '$lib/layout/navbar/LanguageMenu.svelte';
-  import Banner from '$lib/layout/Banner.svelte';
+  import { SHLClient, type SHLAdminParams } from '$lib/utils/managementClient';
+  import LanguageMenu from '$lib/components/layout/LanguageMenu.svelte';
+  import Banner from '$lib/components/layout/Banner.svelte';
 
   const LOCAL_STORAGE_KEY = 'shlips_store_shls';
   let shlStore = writable<SHLAdminParams[]>(
@@ -69,7 +68,7 @@
     }
   }
 
-  function handleUpdate(event) {
+  function handleUpdate(event: any) {
     $isOpen = event.detail.isOpen;
   }
 

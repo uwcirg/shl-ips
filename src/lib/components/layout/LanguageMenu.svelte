@@ -3,7 +3,7 @@
     // import { locale } from 'svelte-i18n'; // TODO
     import { getContext } from 'svelte';
     import type { Writable, Readable } from 'svelte/store';
-    import type { Language } from '$lib/types';
+    import type { Language } from '$lib/utils/types';
 
     let locale: Writable<string> = getContext('locale');
     let locales: Readable<Record<string, Language>> = getContext('locales');

@@ -3,9 +3,9 @@
   import { page } from '$app/stores';
   import { getContext } from 'svelte';
   import type { Writable } from 'svelte/store';
-  import type { SHLAdminParams, SHLClient } from '$lib/managementClient';
-  import type { SHLSubmitEvent, SHCFile } from '$lib/types';
-  import AddFile from '$lib/AddFile.svelte';
+  import type { SHLAdminParams, SHLClient } from '$lib/utils/managementClient';
+  import type { SHLSubmitEvent, SHCFile } from '$lib/utils/types';
+  import AddFile from '$lib/components/app/AddFile.svelte';
 
   let shlClient: SHLClient = getContext('shlClient');
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');

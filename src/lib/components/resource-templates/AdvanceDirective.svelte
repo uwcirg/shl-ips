@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { base64toBlob } from '$lib/util';
-  import type { DocumentReferencePOLST } from '$lib/types';
+  import { base64toBlob } from '$lib/utils/util';
+  import type { DocumentReferencePOLST } from '$lib/utils/types';
 
   export let resource: DocumentReferencePOLST; // Define a prop to pass the data to the component
 

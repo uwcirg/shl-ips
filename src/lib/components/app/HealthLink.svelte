@@ -26,7 +26,7 @@
   import mergeImages from 'merge-images';
   import { goto } from '$app/navigation';
   import type { Writable } from 'svelte/store';
-  import type { SHLAdminParams, SHLClient } from './managementClient';
+  import type { SHLAdminParams, SHLClient } from '$lib/utils/managementClient';
 
   export let shl: SHLAdminParams;
   let shlControlled: SHLAdminParams;

@@ -1,5 +1,5 @@
-import { randomStringWithEntropy, base64url } from './util';
-import { API_BASE, VIEWER_BASE } from './config';
+import { randomStringWithEntropy, base64url } from '$lib/utils/util';
+import { API_BASE, VIEWER_BASE } from '$lib/config';
 import * as jose from 'jose';
 
 type ConfigForServer = Pick<SHLAdminParams, 'passcode' | 'exp'>;

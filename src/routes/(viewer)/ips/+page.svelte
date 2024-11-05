@@ -12,12 +12,12 @@
     TabPane,
     Row,
   } from 'sveltestrap';
-  import * as shlClient from '$lib/viewer/shlClient.js';
-  import { verify } from '$lib/viewer/shcDecoder.js';
+  import * as shlClient from '$lib/utils/shlClient.js';
+  import { verify } from '$lib/utils/shcDecoder.js';
   import type { Bundle, Composition, Patient } from 'fhir/r4';
   
-  import IPSContent from '$lib/viewer/IPSContent.svelte';
-  import Demo from '$lib/viewer/Demo.svelte';
+  import IPSContent from '$lib/components/viewer/IPSContent.svelte';
+  import Demo from '$lib/components/viewer/Demo.svelte';
   
   import { SHOW_VIEWER_DEMO } from "$lib/config";
 

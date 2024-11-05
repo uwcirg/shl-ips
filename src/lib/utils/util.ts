@@ -1,6 +1,6 @@
 import * as jose from 'jose';
 import * as pako from 'pako';
-import issuerKeys from './issuer.private.jwks.json';
+import issuerKeys from '$lib/utils/issuer.private.jwks.json';
 import type { SHCFile } from './types';
 import type { Bundle, BundleEntry, Resource } from 'fhir/r4';
 

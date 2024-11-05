@@ -9,7 +9,7 @@
     Spinner
   } from 'sveltestrap';
   import { createEventDispatcher } from 'svelte';
-  import type { DocumentReferencePOLST, ResourceRetrieveEvent } from './types';
+  import type { DocumentReferencePOLST, ResourceRetrieveEvent } from '$lib/utils/types';
   import type { Attachment, BundleEntry, ServiceRequest } from 'fhir/r4';
 
   export let sectionKey: string = "Advance Directives";

@@ -1,5 +1,5 @@
 import FHIR from 'fhirclient';
-import { SOF_REDIRECT_URI, SOF_PATIENT_RESOURCES, SOF_RESOURCES } from './config';
+import { SOF_REDIRECT_URI, SOF_PATIENT_RESOURCES, SOF_RESOURCES } from '$lib/config';
 
 export { authorize, getResources, getResourcesWithReferences, activePatient, constructResourceUrl };
 
