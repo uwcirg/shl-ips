@@ -59,3 +59,9 @@ export interface DocumentReferencePOLST extends DocumentReference {
 }
 
 export type DocumentReferenceAD = DocumentReferencePOLST | DocumentReference;
+
+export interface Language {
+  lang_en: string;
+  lang: string;
+  code: string;
+}
