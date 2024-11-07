@@ -246,7 +246,7 @@
 {/if}
 
 <style lang="css">
-  .loader {
+  :global(.loader) {
     width: 100%;
     height: 150px;
     margin: 40px;
@@ -255,7 +255,7 @@
     background: #FFF;
     box-sizing: border-box;
   }
-  .loader::after {
+  :global(.loader::after) {
     content: '';  
     width: calc(100% - 30px);
     height: calc(100% - 30px);
