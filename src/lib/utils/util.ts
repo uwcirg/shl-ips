@@ -1,7 +1,7 @@
 import * as jose from 'jose';
 import * as pako from 'pako';
 import issuerKeys from '$lib/utils/issuer.private.jwks.json';
-import type { SHCFile } from './types';
+import type { SHCFile } from '$lib/utils/types';
 import type { Bundle, BundleEntry, Resource } from 'fhir/r4';
 
 export const base64url = jose.base64url;
