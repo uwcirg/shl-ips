@@ -5,15 +5,17 @@ export class ResourceHelper {
     original_resource: Resource;
     simple_resource: Resource;
     resource: Resource;
-    include: boolean = true;
-    inject: boolean = false;
+    include: boolean;
+    source: string;
 
     // Constructor
-    constructor(resource: Resource) {
+    constructor(resource: Resource, source?: string) {
         this.original_resource = resource;
         this.simple_resource = this.simplify(resource);
         this.resource = resource;
         this.tempId = this.hash(this.simple_resource);
+        this.include = true;
+        this.source = source ?? "";
     }
 
     hash(value: any) {
