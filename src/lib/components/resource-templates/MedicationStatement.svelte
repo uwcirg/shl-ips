@@ -2,40 +2,17 @@
   import { Badge } from 'sveltestrap';
   import type { MedicationStatement } from "fhir/r4";
   import Dosage from '$lib/components/resource-templates/Dosage.svelte';
+  import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
   
   export let resource: MedicationStatement; // Define a prop to pass the data to the component
 </script>
-{#if resource.status}
-<Badge color={resource.status === "unknown" ? "secondary" : "primary"}>{resource.status}</Badge>
-<br>
-{/if}
 
-{#if resource.medicationCodeableConcept}
-  {#if resource.medicationCodeableConcept.coding}  
-    <Badge color="primary">{resource.medicationCodeableConcept.coding[0].system} : {resource.medicationCodeableConcept?.coding[0].code}</Badge>
-    <br>
-    {#if resource.medicationCodeableConcept.coding[0].display}
-      <strong>{resource.medicationCodeableConcept.coding[0].display}</strong><br>
-    {:else if resource.medicationCodeableConcept.text}
-      <strong>{resource.medicationCodeableConcept.text}</strong><br>
-    {/if}
-  {:else if resource.medicationCodeableConcept.text}
-    <strong>{resource.medicationCodeableConcept.text}</strong><br>
-  {/if}
-  {#if resource.medicationCodeableConcept.coding}  
-    <Badge color="primary">{resource.medicationCodeableConcept.coding[0].system} : {resource.medicationCodeableConcept?.coding[0].code}</Badge>
-    <br>
-    {#if resource.medicationCodeableConcept.coding[0].display}
-      <strong>{resource.medicationCodeableConcept.coding[0].display}</strong><br>
-    {:else if resource.medicationCodeableConcept.text}
-      <strong>{resource.medicationCodeableConcept.text}</strong><br>
-    {/if}
-  {:else if resource.medicationCodeableConcept.text}
-    <strong>{resource.medicationCodeableConcept.text}</strong><br>
-  {/if}
-{/if}
+<Badge color={resource.status === "stopped" ? "secondary" : "primary"}>{resource.status ? `${resource.status}` : ''}</Badge>
+
+<CodeableConcept codeableConcept={resource.medicationCodeableConcept} />
 
 {#if resource.medicationReference?.display}
+  <br>
   <strong>{resource.medicationReference?.display}</strong>
   <br>
 {/if}

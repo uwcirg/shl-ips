@@ -1,23 +1,11 @@
 <script lang="ts">
-  import { Badge } from 'sveltestrap';
   import type { DiagnosticReport } from 'fhir/r4';
+  import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
 
   export let resource: DiagnosticReport; // Define a prop to pass the data to the component
 </script>
 
-{#if resource.code}
-  {#if resource.code.coding}
-    <Badge color="primary">{resource.code.coding[0].system} : {resource.code.coding[0].code}</Badge>
-    <br />
-    {#if resource.code.coding[0].display}
-      <strong>{resource.code.coding[0].display}</strong><br>
-    {:else if resource.code.text}
-      <strong>{resource.code.text}</strong><br>
-    {/if}
-  {:else if resource.code.text}
-    <strong>{resource.code.text}</strong><br>
-  {/if}
-{/if}
+<CodeableConcept codeableConcept={resource.code} />
 {#if resource.effectivePeriod?.start}
   Effective {resource.effectivePeriod.start}{resource.effectivePeriod.end
     ? ` - ${resource.effectivePeriod.end}`
@@ -27,16 +15,18 @@
 {/if}
 <br>
 {#if resource.result}
+  <div class="ips-section-table">
     <table class="table table-bordered table-sm">
-        <thead>
+      <thead>
         <tr><th colspan="5">Result(s)</th></tr>
-        </thead>
-        {#each resource.result as result}
-            {#if result.display}
-            <tr>
-                <td>{result.display}</td>
-            </tr>
-            {/if}
-        {/each}
+      </thead>
+      {#each resource.result as result}
+        {#if result.display}
+        <tr>
+          <td>{result.display}</td>
+        </tr>
+        {/if}
+      {/each}
     </table>
+  </div>
 {/if}

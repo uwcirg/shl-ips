@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Badge } from 'sveltestrap';
   import type { Condition } from 'fhir/r4';
+  import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
 
   export let resource : Condition; // Define a prop to pass the data to the component
 
@@ -28,35 +29,8 @@
   </Badge>
 {/if}
 <Badge color={badgeColor(resource.severity?.text ?? '')}>severity: {resource.severity?.text ?? 'unknown'}</Badge>
-<br>
-{#if resource.category?.[0]}
-  {#if resource.category[0].coding}
-    <Badge color="primary">{resource.category[0].coding[0].system} : {resource.category[0].coding[0].code}</Badge>
-    <br />
-    {#if resource.category[0].coding[0].display}
-      <strong>{resource.category[0].coding[0].display}</strong>
-    {:else if resource.category[0].text}
-      <strong>{resource.category[0].text}</strong>
-    {/if}
-    <br>
-  {:else if resource.category[0].text}
-    <strong>{resource.category[0].text}</strong>
-    <br>
-  {/if}
-{/if}
-{#if resource.code}
-  {#if resource.code.coding}
-    <Badge color="primary">{resource.code.coding[0].system} : {resource.code.coding[0].code}</Badge>
-    <br />
-    {#if resource.code.coding[0].display}
-      <strong>{resource.code.coding[0].display}</strong><br>
-    {:else if resource.code.text}
-      <strong>{resource.code.text}</strong><br>
-    {/if}
-  {:else if resource.code.text}
-    <strong>{resource.code.text}</strong><br>
-  {/if}
-{/if}
+<CodeableConcept codeableConcept={resource.category?.[0]} />
+<CodeableConcept codeableConcept={resource.code} />
 {#if resource.bodySite}
   Site: {resource.bodySite}<br>
 {/if}
