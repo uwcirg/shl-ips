@@ -2,8 +2,8 @@
   import { page } from '$app/stores';
   import { getContext } from 'svelte';
   import type { Writable } from 'svelte/store';
-  import HealthLink from '$lib/HealthLink.svelte';
-  import type { SHLAdminParams } from '$lib/managementClient';
+  import HealthLink from '$lib/components/app/HealthLink.svelte';
+  import type { SHLAdminParams } from '$lib/utils/managementClient';
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
   let shl: SHLAdminParams | undefined;
   $: {

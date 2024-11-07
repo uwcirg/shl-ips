@@ -11,11 +11,11 @@
     NavbarToggler,
     Row
   } from 'sveltestrap';
-  import LanguageMenu from '$lib/layout/navbar/LanguageMenu.svelte';
-  import Banner from '$lib/layout/Banner.svelte';
+  import LanguageMenu from '$lib/components/layout/LanguageMenu.svelte';
+  import Banner from '$lib/components/layout/Banner.svelte';
 
   let isOpen = false;
-  function handleUpdate(event) {
+  function handleUpdate(event: any) {
     isOpen = event.detail.isOpen;
   }
   function closeNav() {

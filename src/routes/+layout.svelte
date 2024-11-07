@@ -8,7 +8,7 @@
   import { setContext } from 'svelte';
   import {writable, type Writable, readable, type Readable } from 'svelte/store';
   import { VERSION_STRING } from '$lib/config';
-  import type { Language } from '$lib/types';
+  import type { Language } from '$lib/utils/types';
 
   const locale: Writable<string> = writable('en');
   const locales: Readable<Record<string, Language>> = readable({
