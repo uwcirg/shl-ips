@@ -176,43 +176,6 @@
 {/each}
 
 <style>
-  /* Table styling */
-  :global(.ips-section table) {
-    border-collapse: collapse !important;
-    width: 100% !important;
-  }
-
-  :global(.ips-section th, td) {
-    border: 1px solid lightgray !important;
-    padding: 0 7px !important;
-    text-align: center !important;
-  }
-
-  :global(.ips-section thead) {
-    background-color: #0c63e4;
-    color: white;
-  }
-
-  /* Alternating table row coloring */
-  :global(.ips-section tbody tr:nth-child(odd)) {
-    background-color: #fff;
-  }
-  :global(.ips-section tbody tr:nth-child(even)) {
-    background-color: #e7f1ff;
-  }
-  
-  /* Sticky table header */
-  :global(.ips-section th) {
-    background: #0c63e4;
-    position: sticky;
-    top: -17px;
-  }
-
-  /* First column of generated table is usually most important */
-  :global(.ips-section td:first-child) {
-    font-weight: bold;
-  }
-
   /* Limit height for section content window */
   :global(.ips-section > .accordion-collapse > .accordion-body) {
     overflow: auto !important;

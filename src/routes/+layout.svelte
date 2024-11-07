@@ -130,49 +130,86 @@
 </Container>
 
 <style>
-  :global(#nav-image) {
-    width: 240px;
-    -webkit-transition: all 0.06s linear;
-    -moz-transition: all 0.06s linear;
-    -o-transition: all 0.06s linear;
-    transition: all 0.06s linear;
-  }
-  :global(.nav-text) {
-    font-size:medium;
-    -webkit-transition: all 0.06s linear;
-    -moz-transition: all 0.06s linear;
-    -o-transition: all 0.06s linear;
-    transition: all 0.06s linear;
-  }
-  :global(#nav-image.scrolling) {
-    width: 160px !important;
-    margin-left: 10px;
-  }
-  :global(.nav-text.scrolling)  {
-    font-size: xx-small;
-    color: #000; /* Fallback for older browsers */
-    color: rgba(0, 0, 0, 0.0);
-  }
-  :global(.navbar.scrolling) {
-    padding: 0px !important;
-  }
+  /* Nav bar styling */
+    :global(#nav-image) {
+      width: 240px;
+      -webkit-transition: all 0.06s linear;
+      -moz-transition: all 0.06s linear;
+      -o-transition: all 0.06s linear;
+      transition: all 0.06s linear;
+    }
+    :global(.nav-text) {
+      font-size:medium;
+      -webkit-transition: all 0.06s linear;
+      -moz-transition: all 0.06s linear;
+      -o-transition: all 0.06s linear;
+      transition: all 0.06s linear;
+    }
+    :global(#nav-image.scrolling) {
+      width: 160px !important;
+      margin-left: 10px;
+    }
+    :global(.nav-text.scrolling)  {
+      font-size: xx-small;
+      color: #000; /* Fallback for older browsers */
+      color: rgba(0, 0, 0, 0.0);
+    }
+    :global(.navbar.scrolling) {
+      padding: 0px !important;
+    }
+    :global(.navbar .container-fluid) {
+      padding: 0px;
+    }
+  /* End nav bar styling */
 
-  :global(.main-row) {
-    flex-grow: 1;
-  }
+  /* Page container styling */
+    :global(.main-row) {
+      flex-grow: 1;
+    }
+    :global(div.container-fluid.main) {
+      min-height: 100%;
+      margin-right: auto;
+      margin-left: auto;
+      max-width: 800px;
+      display: flex;
+      flex-direction: column;
+    }
+    :global(html, body) {
+      height: 100%;
+    }
+  /* End page container styling */
 
-  :global(div.container-fluid.main) {
-    min-height: 100%;
-    margin-right: auto;
-    margin-left: auto;
-    max-width: 800px;
-    display: flex;
-    flex-direction: column;
-  }
-  :global(html, body) {
-    height: 100%;
-  }
-  :global(.navbar .container-fluid) {
-    padding: 0px;
-  }
+  /* Table styling */
+    :global(.ips-section-table table) {
+      border-collapse: collapse !important;
+      width: 100% !important;
+    }
+    :global(.ips-section-table th, td) {
+      border: 1px solid lightgray !important;
+      padding: 0 7px !important;
+      text-align: center !important;
+    }
+    :global(.ips-section-table thead) {
+      background-color: #0c63e4;
+      color: white;
+    }
+    /* Alternating table row coloring */
+    :global(.ips-section-table tbody tr:nth-child(odd)) {
+      background-color: #fff;
+    }
+    :global(.ips-section-table tbody tr:nth-child(even)) {
+      background-color: #e7f1ff;
+    }
+    /* Sticky table header */
+    :global(.ips-section-table th) {
+      background: #0c63e4;
+      position: sticky;
+      top: -17px;
+    }
+    /* First column of generated table is usually most important */
+    :global(.ips-section-table td:first-child) {
+      font-weight: bold;
+    }
+  /* End table styling */
+
 </style>
