@@ -73,22 +73,6 @@
   let mode = writable('normal');
   window.localStorage[MODE_KEY] ? mode.set(JSON.parse(window.localStorage[MODE_KEY])) : mode.set('normal');
 
-  let isOpen = writable(false);
-  setContext('isOpen', isOpen);
-  function closeNav() {
-    $isOpen = false;
-  }
-
-  document.addEventListener('click', (event) => {
-    closeNav();
-  });
-  document.addEventListener('keydown', (event) => {
-    closeNav();
-  });
-  window.addEventListener('scroll', (event) => {
-    closeNav();
-  });
-
   $: {
     if ($mode) window.localStorage[MODE_KEY] = JSON.stringify($mode);
   }
@@ -130,33 +114,6 @@
 </Container>
 
 <style>
-  :global(#nav-image) {
-    width: 240px;
-    -webkit-transition: all 0.06s linear;
-    -moz-transition: all 0.06s linear;
-    -o-transition: all 0.06s linear;
-    transition: all 0.06s linear;
-  }
-  :global(.nav-text) {
-    font-size:medium;
-    -webkit-transition: all 0.06s linear;
-    -moz-transition: all 0.06s linear;
-    -o-transition: all 0.06s linear;
-    transition: all 0.06s linear;
-  }
-  :global(#nav-image.scrolling) {
-    width: 160px !important;
-    margin-left: 10px;
-  }
-  :global(.nav-text.scrolling)  {
-    font-size: xx-small;
-    color: #000; /* Fallback for older browsers */
-    color: rgba(0, 0, 0, 0.0);
-  }
-  :global(.navbar.scrolling) {
-    padding: 0px !important;
-  }
-
   :global(.main-row) {
     flex-grow: 1;
   }

@@ -66,3 +66,9 @@ export interface Language {
   lang: string;
   code: string;
 }
+
+export enum NavLinks {
+  Home = "home",
+  Actions = "actions",
+  Languages = "languages"
+}

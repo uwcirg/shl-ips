@@ -1,57 +1,15 @@
 <script lang="ts">
   import {
     Col,
-    Collapse,
-    Image,
-    Nav,
-    Navbar,
-    NavbarBrand,
-    NavItem,
-    NavLink,
-    NavbarToggler,
     Row
   } from 'sveltestrap';
-  import LanguageMenu from '$lib/components/layout/LanguageMenu.svelte';
+  import Header from '$lib/components/layout/Header.svelte';
   import Banner from '$lib/components/layout/Banner.svelte';
+  import { NavLinks } from '$lib/utils/types';
 
-  let isOpen = false;
-  function handleUpdate(event: any) {
-    isOpen = event.detail.isOpen;
-  }
-  function closeNav() {
-    isOpen = false;
-  }
 </script>
 
-<Navbar color="light" light expand="md" style="border-bottom: 1px solid rgb(204, 204, 204);">
-  <NavbarBrand href="https://doh.wa.gov/" target="_blank">
-    <Row>
-      <Col>
-        <Image
-          id="nav-image"
-          alt="Washington State Department of Health Logo"
-          src="/img/doh_logo_doh-black.png"
-        />
-      </Col>
-      <Col style="vertical-align:middle" class="d-none d-sm-block align-items-center">
-        <div class="nav-text mt-2">
-          <span>Washington State</span>
-          <p style="margin: 10px; padding: 0px: line-height: 0;" />
-          <span>Department of Health</span>
-        </div>
-      </Col>
-    </Row>
-  </NavbarBrand>
-  <NavbarToggler on:click={() => (isOpen = !isOpen)} />
-  <Collapse {isOpen} navbar expand="md" on:update={handleUpdate}>
-    <Nav class="ms-auto" navbar>
-      <NavItem>
-        <NavLink href="/home" on:click={closeNav}>Home</NavLink>
-      </NavItem>
-      <LanguageMenu />
-    </Nav>
-  </Collapse>
-</Navbar>
+<Header content={[NavLinks.Home, NavLinks.Languages]}/>
 <Banner title="International Patient Summary Viewer"/>
 <Row class="main-row">
   <Col>
