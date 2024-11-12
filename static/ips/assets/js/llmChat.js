@@ -16,6 +16,7 @@ function initLLMChat(resources) {
 async function sendMessage() {
     const chatInput = document.getElementById('chat-input');
     const userMessage = chatInput.value.trim();
+    if (userMessage.length === 0) return;
     
     // Append the FHIR resources as the first message
     if (messages.length === 0) {
@@ -31,7 +32,7 @@ async function sendMessage() {
         content: [{ type: "text", text: userMessage }]
     });
 
-    insertMessageIntoUi('user', "Your query: " + userMessage);
+    insertMessageIntoUi('user', "<b>Your query</b>: " + userMessage);
 
     chatInput.value = '';
 
@@ -59,7 +60,7 @@ async function sendMessage() {
         const promptTokens = data.prompt_tokens;
         const completionTokens = data.completion_tokens;
 
-        const formattedResponse = `LLM: ${data.content} (prompt_tokens=${promptTokens}, completion_tokens=${completionTokens})`;
+        const formattedResponse = `<b>LLM</b>: ${data.content} (prompt_tokens=${promptTokens}, completion_tokens=${completionTokens})`;
         insertMessageIntoUi('assistant', formattedResponse);
     } catch (error) {
         console.error('Error sending message to LLM:', error);
