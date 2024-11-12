@@ -13,11 +13,42 @@ function initLLMChat(resources) {
     });
 }
 
+function insertMessageIntoUi(role, userMessage, llmResponse, promptTokens, completionTokens) {
+    const chatMessages = document.getElementById('chat-messages');
+
+    // Create a new table row
+    const row = document.createElement('tr');
+
+    // Create cells for each piece of information
+    const requestCell = document.createElement('td');
+    requestCell.textContent = userMessage;
+
+    const responseCell = document.createElement('td');
+    responseCell.textContent = llmResponse;
+
+    const promptTokensCell = document.createElement('td');
+    promptTokensCell.textContent = promptTokens;
+
+    const completionTokensCell = document.createElement('td');
+    completionTokensCell.textContent = completionTokens;
+
+    // Append cells to the row
+    row.appendChild(requestCell);
+    row.appendChild(responseCell);
+    row.appendChild(promptTokensCell);
+    row.appendChild(completionTokensCell);
+
+    // Append the row to the chat messages table
+    chatMessages.appendChild(row);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Update the sendMessage function to use the new insertMessageIntoUi
 async function sendMessage() {
     const chatInput = document.getElementById('chat-input');
     const userMessage = chatInput.value.trim();
     if (userMessage.length === 0) return;
-    
+
     // Append the FHIR resources as the first message
     if (messages.length === 0) {
         messages.push({
@@ -32,12 +63,13 @@ async function sendMessage() {
         content: [{ type: "text", text: userMessage }]
     });
 
-    insertMessageIntoUi('user', "<b>Your query</b>: " + userMessage);
+    // Insert the user message into the UI
+    insertMessageIntoUi('user', userMessage, '', '', '');
 
     chatInput.value = '';
 
     try {
-        // FIXME use a .env variable for this URL, a la the VITE configs...
+        // FIXME move this URL to config
         const response = await fetch('https://llm-service.fl.mcjustin.dev.cirg.uw.edu/api/chat', {
             method: 'POST',
             headers: {
@@ -54,27 +86,18 @@ async function sendMessage() {
         // Append the assistant's response
         messages.push({
             role: "assistant",
-            content: [{ type: "text", text: data.content}]
+            content: [{ type: "text", text: data.content }]
         });
 
         const promptTokens = data.prompt_tokens;
         const completionTokens = data.completion_tokens;
 
-        const formattedResponse = `<b>LLM</b>: ${data.content} (prompt_tokens=${promptTokens}, completion_tokens=${completionTokens})`;
-        insertMessageIntoUi('assistant', formattedResponse);
+        // Insert the assistant's response into the UI
+        insertMessageIntoUi('assistant', userMessage, data.content, promptTokens, completionTokens);
     } catch (error) {
         console.error('Error sending message to LLM:', error);
-        insertMessageIntoUi('error', 'Failed to get a response. Please try again.');
+        insertMessageIntoUi('error', userMessage, 'Failed to get a response. Please try again.', '', '');
     }
-}
-
-function insertMessageIntoUi(role, content) {
-    const chatMessages = document.getElementById('chat-messages');
-    const messageElement = document.createElement('div');
-    messageElement.classList.add('message', role);
-    messageElement.textContent = content;
-    chatMessages.appendChild(messageElement);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
 export { initLLMChat };

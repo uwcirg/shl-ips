@@ -119,9 +119,21 @@
     </div>
 
     <div id="llm-chat-content" style="display: none; margin: 30px;">
-      <div id="chat-messages"></div>
-        <input type="text" id="chat-input" placeholder="Ask a large language model about your health...">
-        <button id="send-message">Send to LLM</button>
+      <table id="chat-messages" style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr>
+            <th>Request</th>
+            <th>Response</th>
+            <th>Prompt Tokens</th>
+            <th>Completion Tokens</th>
+          </tr>
+        </thead>
+        <tbody>
+            <!-- Messages will be appended here -->
+        </tbody>
+      </table>
+      <input type="text" id="chat-input" placeholder="Ask a large language model about your health...">
+      <button id="send-message">Send to LLM</button>
     </div>
 
     <div id="rendered-ips" class="tab-content" style="margin: 30px; margin-right: 0px;">
