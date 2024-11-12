@@ -13,24 +13,20 @@ function initLLMChat(resources) {
     });
 }
 
-function insertMessageIntoUi(role, userMessage, llmResponse, promptTokens, completionTokens) {
+function insertMessageIntoUi(role, userMessage) {
     const chatMessages = document.getElementById('chat-messages');
-
-    // Create a new table row
+    
+    // Create a new table row for the user message
     const row = document.createElement('tr');
 
-    // Create cells for each piece of information
+    // Create cells for the request
     const requestCell = document.createElement('td');
     requestCell.textContent = userMessage;
 
+    // Create empty cells for response and tokens
     const responseCell = document.createElement('td');
-    responseCell.textContent = llmResponse;
-
     const promptTokensCell = document.createElement('td');
-    promptTokensCell.textContent = promptTokens;
-
     const completionTokensCell = document.createElement('td');
-    completionTokensCell.textContent = completionTokens;
 
     // Append cells to the row
     row.appendChild(requestCell);
@@ -40,7 +36,9 @@ function insertMessageIntoUi(role, userMessage, llmResponse, promptTokens, compl
 
     // Append the row to the chat messages table
     chatMessages.appendChild(row);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Return the row for later updates
+    return row;
 }
 
 // Update the sendMessage function to use the new insertMessageIntoUi
@@ -63,13 +61,13 @@ async function sendMessage() {
         content: [{ type: "text", text: userMessage }]
     });
 
-    // Insert the user message into the UI
-    insertMessageIntoUi('user', userMessage, '', '', '');
+    // Insert the user message into the UI and get the row reference
+    const row = insertMessageIntoUi('user', userMessage);
 
     chatInput.value = '';
 
     try {
-        // FIXME move this URL to config
+		// FIXME config for this url...
         const response = await fetch('https://llm-service.fl.mcjustin.dev.cirg.uw.edu/api/chat', {
             method: 'POST',
             headers: {
@@ -92,11 +90,13 @@ async function sendMessage() {
         const promptTokens = data.prompt_tokens;
         const completionTokens = data.completion_tokens;
 
-        // Insert the assistant's response into the UI
-        insertMessageIntoUi('assistant', userMessage, data.content, promptTokens, completionTokens);
+        // Update the existing row with the response and token counts
+        row.cells[1].textContent = data.content; // Response
+        row.cells[2].textContent = promptTokens; // Prompt Tokens
+        row.cells[3].textContent = completionTokens; // Completion Tokens
     } catch (error) {
         console.error('Error sending message to LLM:', error);
-        insertMessageIntoUi('error', userMessage, 'Failed to get a response. Please try again.', '', '');
+        row.cells[1].textContent = 'Failed to get a response. Please try again.'; // Update response cell with error message
     }
 }
 
