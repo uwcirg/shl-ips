@@ -56,7 +56,11 @@ async function sendMessage() {
             content: [{ type: "text", text: data.content}]
         });
 
-        insertMessageIntoUi('assistant', "LLM: " + data.content);
+        const promptTokens = data.prompt_tokens;
+        const completionTokens = data.completion_tokens;
+
+        const formattedResponse = `LLM: ${data.content} (prompt_tokens=${promptTokens}, completion_tokens=${completionTokens})`;
+        insertMessageIntoUi('assistant', formattedResponse);
     } catch (error) {
         console.error('Error sending message to LLM:', error);
         insertMessageIntoUi('error', 'Failed to get a response. Please try again.');
