@@ -7,6 +7,12 @@ export const INTERMEDIATE_FHIR_SERVER_BASE = import.meta.env.VITE_INTERMEDIATE_F
 
 export const VERSION_STRING = import.meta.env.VITE_VERSION_STRING;
 
+export const AUTH_URL = import.meta.env.VITE_AUTH_URL;
+export const AUTH_CLIENT_ID = import.meta.env.VITE_AUTH_CLIENT_ID;
+export const AUTH_REDIRECT_URI = import.meta.env.VITE_AUTH_REDIRECT_URI;
+export const AUTH_SILENT_REDIRECT_URI = import.meta.env.VITE_AUTH_SILENT_REDIRECT_URI;
+export const AUTH_POST_LOGOUT_URI = import.meta.env.VITE_AUTH_POST_LOGOUT_URI;
+
 export const SOF_HOSTS = [
   // {
   //   id: "epic-himss",
