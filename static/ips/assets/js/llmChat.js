@@ -99,7 +99,7 @@ async function sendMessage() {
         row.cells[1].textContent = data.content; // Response
         row.cells[2].textContent = promptTokens; // Prompt Tokens
         row.cells[3].textContent = completionTokens; // Completion Tokens
-        row.cells[4].textContent = costInput.toString(8) + " (in) + " + costOutput.toString(8) + " (out) = " + cost.toString(8);
+        row.cells[4].textContent = costInput.toString().substring(0,7) + " (in) + " + costOutput.toString().substring(0,7) + " (out) = " + cost.toString().substring(0,7);
     } catch (error) {
         console.error('Error sending message to LLM:', error);
         row.cells[1].textContent = 'Failed to get a response. Please try again.'; // Update response cell with error message
