@@ -27,12 +27,14 @@ function insertMessageIntoUi(role, userMessage) {
     const responseCell = document.createElement('td');
     const promptTokensCell = document.createElement('td');
     const completionTokensCell = document.createElement('td');
+    const costCell = document.createElement('td');
 
     // Append cells to the row
     row.appendChild(requestCell);
     row.appendChild(responseCell);
     row.appendChild(promptTokensCell);
     row.appendChild(completionTokensCell);
+    row.appendChild(costCell);
 
     // Append the row to the chat messages table
     chatMessages.appendChild(row);
@@ -89,11 +91,15 @@ async function sendMessage() {
 
         const promptTokens = data.prompt_tokens;
         const completionTokens = data.completion_tokens;
+        const costInput = parseInt(promptTokens) * 0.15 / 1000000;
+        const costOutput = parseInt(completionTokens) * 0.6 / 1000000;
+        const cost = costInput + costOutput;
 
         // Update the existing row with the response and token counts
         row.cells[1].textContent = data.content; // Response
         row.cells[2].textContent = promptTokens; // Prompt Tokens
         row.cells[3].textContent = completionTokens; // Completion Tokens
+        row.cells[4].textContent = costInput + " (in) + " costOutput + " (out) = " + cost;
     } catch (error) {
         console.error('Error sending message to LLM:', error);
         row.cells[1].textContent = 'Failed to get a response. Please try again.'; // Update response cell with error message
