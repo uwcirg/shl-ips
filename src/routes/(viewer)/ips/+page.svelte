@@ -254,9 +254,6 @@
   </TabContent>
 {:else}
   <!-- Single tab view -->
-  <IPSContent content={shlContents[0]} mode={$displayMode} />
-{/if}
-
 <Row class="mx-0 my-4">
   <Col>
 <div id="llm-chat-content" style="display: block; margin: 30px;"> <!-- Changed display to block -->
@@ -279,6 +276,9 @@
 </div>
   </Col>
 </Row>
+
+  <IPSContent content={shlContents[0]} mode={$displayMode} />
+{/if}
 
 <style lang="css">
   :global(.loader) {
