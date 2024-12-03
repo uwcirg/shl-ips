@@ -20,6 +20,7 @@
     Row
   } from 'sveltestrap';
   import { SHLClient, type SHLAdminParams } from '$lib/utils/managementClient';
+  import Auth from '$lib/components/app/Auth.svelte';
   import LanguageMenu from '$lib/components/layout/LanguageMenu.svelte';
   import Banner from '$lib/components/layout/Banner.svelte';
 
@@ -143,8 +144,10 @@
   </Collapse>
 </Navbar>
 <Banner title="International Patient Summary Prototype"/>
-<Row class="main-row">
-  <Col>
-    <slot />
-  </Col>
-</Row>
+<Auth bind:authService={authService}>
+  <Row class="main-row">
+    <Col>
+      <slot />
+    </Col>
+  </Row>
+</Auth>
