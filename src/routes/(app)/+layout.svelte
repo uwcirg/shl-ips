@@ -23,6 +23,7 @@
   import Auth from '$lib/components/app/Auth.svelte';
   import LanguageMenu from '$lib/components/layout/LanguageMenu.svelte';
   import Banner from '$lib/components/layout/Banner.svelte';
+  import { AuthService } from '$lib/utils/AuthService';
 
   const LOCAL_STORAGE_KEY = 'shlips_store_shls';
   let shlStore = writable<SHLAdminParams[]>(
@@ -40,6 +41,8 @@
   let isOpen: Writable<boolean> = getContext('isOpen');
 
   let mode: Writable<string> = getContext('mode');
+
+  let authService = new AuthService();
 
   $: {
     if ($shlStore) window.localStorage[LOCAL_STORAGE_KEY] = JSON.stringify($shlStore);
