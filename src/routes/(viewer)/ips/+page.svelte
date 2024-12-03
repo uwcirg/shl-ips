@@ -257,26 +257,24 @@
   <IPSContent content={shlContents[0]} mode={$displayMode} />
 {/if}
 
-{#if showLlmChat} <!-- Conditional rendering for LLM chat content -->
-  <div id="llm-chat-content" style="display: block; margin: 30px;"> <!-- Changed display to block -->
-    <table id="chat-messages" style="width: 100%; border-collapse: collapse;">
-      <thead>
-        <tr>
-          <th>Your request</th>
-          <th>LLM Chat Response</th>
-          <th>Prompt Tokens</th>
-          <th>Response Tokens</th>
-          <th>Cost in US$ (prompt + response = total)</th>
-        </tr>
-      </thead>
-      <tbody>
-          <!-- Messages will be appended here -->
-      </tbody>
-    </table>
-    <input type="text" id="chat-input" placeholder="Ask a large language model about your health...">
-    <button id="send-message">Send to LLM</button>
-  </div>
-{/if}
+<div id="llm-chat-content" style="display: none; margin: 30px;"> <!-- Changed display to block -->
+  <table id="chat-messages" style="width: 100%; border-collapse: collapse;">
+    <thead>
+      <tr>
+        <th>Your request</th>
+        <th>LLM Chat Response</th>
+        <th>Prompt Tokens</th>
+        <th>Response Tokens</th>
+        <th>Cost in US$ (prompt + response = total)</th>
+      </tr>
+    </thead>
+    <tbody>
+        <!-- Messages will be appended here -->
+    </tbody>
+  </table>
+  <input type="text" id="chat-input" placeholder="Ask a large language model about your health...">
+  <button id="send-message">Send to LLM</button>
+</div>
 
 <style lang="css">
   :global(.loader) {
