@@ -257,7 +257,7 @@
   <IPSContent content={shlContents[0]} mode={$displayMode} />
 {/if}
 
-<div id="llm-chat-content" style="display: none; margin: 30px;"> <!-- Changed display to block -->
+<div id="llm-chat-content" style="display: block; margin: 30px;"> <!-- Changed display to block -->
   <table id="chat-messages" style="width: 100%; border-collapse: collapse;">
     <thead>
       <tr>
