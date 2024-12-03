@@ -9,6 +9,7 @@ import { User, UserManager } from 'oidc-client-ts';
 
 export class AuthService {
   userManager: UserManager;
+  redirect_url: string = '';
 
   constructor() {
     const settings = {
@@ -26,12 +27,38 @@ export class AuthService {
     return this.userManager.getUser();
   }
 
+  getRedirectUrl(): string {
+    let url = this.redirect_url;
+    this.redirect_url = '';
+    return url;
+  }
+
+  signinCallback(): Promise<User | undefined> {
+    return this.userManager.signinCallback().then((user) => {
+      if (user) {
+        this.redirect_url = user.url_state ?? "";
+        this.storeUser(user);
+      }
+      return user;
+    });
+  }
+
+  storeUser(user: User): void {
+    this.userManager.storeUser(user);
+  }
+
   login(): Promise<void> {
-    return this.userManager.signinRedirect();
+    let currentUrl = window.location.href.split('?')[0];
+    return this.userManager.signinRedirect({ url_state: currentUrl });
   }
 
   renewToken(): Promise<User | null> {
-    return this.userManager.signinSilent();
+    return this.userManager.signinSilent().then((user) => {
+      if (user) {
+        this.storeUser(user);
+      }
+      return user;
+    });
   }
 
   logout(): Promise<void> {
