@@ -21,6 +21,8 @@
   
   import { SHOW_VIEWER_DEMO } from "$lib/config";
 
+  import { initLLMChat } from '$lib/utils/llmChat.js';
+
   let shlContents: Bundle[] = [];
 
   let loading: boolean;
@@ -157,6 +159,9 @@
     if (retrieveResult.shcs) {
       const decoded = await Promise.all(retrieveResult.shcs.map(verify));
       const data = decoded.map((e) => e.fhirBundle);
+
+      data.forEach(ipsBundle => initLLMChat(ipsBundle)); // Call initLLMChat for each bundle
+
       shlContents = data;
     }
 }
