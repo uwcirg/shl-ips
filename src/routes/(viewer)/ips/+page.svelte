@@ -255,7 +255,7 @@
 {:else}
   <!-- Single tab view -->
 <Row class="mx-0 my-4">
-<Col>
+  <Col>
 <div id="llm-chat-content" style="display: block; margin: 30px;">
   <table id="chat-messages" style="width: 100%; border-collapse: collapse;">
     <thead>
