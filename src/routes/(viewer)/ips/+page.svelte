@@ -254,9 +254,11 @@
   </TabContent>
 {:else}
   <!-- Single tab view -->
+<!--  
 <Row class="mx-0 my-4">
-  <Col>
-<div id="llm-chat-content" style="display: block; margin: 30px;"> <!-- Changed display to block -->
+<Col>
+-->
+<div id="llm-chat-content" style="display: block; margin: 30px;">
   <table id="chat-messages" style="width: 100%; border-collapse: collapse;">
     <thead>
       <tr>
@@ -274,8 +276,10 @@
   <input type="text" id="chat-input" placeholder="Ask a large language model about your health...">
   <button id="send-message">Send to LLM</button>
 </div>
+<!--  
   </Col>
 </Row>
+-->
 
   <IPSContent content={shlContents[0]} mode={$displayMode} />
 {/if}
