@@ -155,7 +155,7 @@
   }
 
   function buildPatientSearchQuery() {
-    let query = "?";
+    let query = "?_count=1&";
     if (selectedSource === 'AD Vault') {
       query += 'active=true&'; 
     }
@@ -206,7 +206,7 @@
     if (body.resourceType == 'Bundle' && (body.total == 0 || body.entry.length === 0)) {
       throw new Error('Unable to find patient');
     }
-    let patient_response = body.entry[body.entry.length - 1].resource;
+    let patient_response = body.entry[0].resource;
     return patient_response;
   }
 
