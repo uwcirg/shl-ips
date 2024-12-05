@@ -84,10 +84,10 @@
         gender = "Female";
         dob = "1950-11-15";
       } else if (selectedSource === 'WA Verify+ Demo Server') {
-        last = "deBronkartTest";
-        first = "DaveTest";
-        gender = "Male";
-        dob = "1951-01-20";
+        last = "Gravitate";
+        first = "Maria SEATTLE";
+        gender = "Female";
+        dob = "1946-05-05";
       }
     }
   }
