@@ -369,6 +369,7 @@
               {
                 exists: dr.isComfortTreatments,
                 doNotPerform: dr.doNotPerformComfortTreatments,
+                type: dr.typeComfortTreatments,
                 detail: dr.detailComfortTreatments
               } = digestServiceRequestByCode(serviceRequests, '100823-4')
             );
@@ -422,6 +423,7 @@
   interface ServiceRequestProperties {
     exists: boolean;
     doNotPerform?: boolean;
+    type?: string;
     detail?: string;
   }
 
@@ -432,7 +434,8 @@
     return {
       exists: serviceRequest !== undefined,
       doNotPerform: serviceRequest?.doNotPerform === true,
-      detail: serviceRequest?.note?.[0].text
+      type: serviceRequest?.orderDetail?.[0].text ?? serviceRequest?.code?.coding?.[0].display,
+      detail: serviceRequest?.note?.[0].text ?? serviceRequest?.orderDetail?.[0].text
     };
   }
 </script>
