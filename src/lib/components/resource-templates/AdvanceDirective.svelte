@@ -109,25 +109,26 @@ Text:
 
 {#if resource.isPolst && (resource.isCpr || resource.isComfortTreatments || resource.isAdditionalTx || resource.isMedicallyAssisted)}
   <br/>
-  <b>
-    POLST Details:
+  <b>POLST Details:</b>
     <ul>
       {#if resource.isCpr}
         <ol>
-          {#if resource.doNotPerformCpr}
-            This includes an order to NOT perform CPR.
-          {:else}
-            This includes an order to perform CPR.
-          {/if}
+          <b>
+            {#if resource.doNotPerformCpr}
+              This includes an order to NOT perform CPR.
+            {:else}
+              This includes an order to perform CPR.
+            {/if}
+          </b>
         </ol>
       {/if}
 
       {#if resource.isComfortTreatments}
         <ol>
           {#if resource.doNotPerformComfortTreatments}
-            This includes an order to NOT perform comfort-focused treatments: {@html resource.detailComfortTreatments}
+            <b>This includes an order to NOT perform treatments:</b> {@html resource.detailComfortTreatments}
           {:else}
-            This includes an order to perform comfort-focused treatments: {@html resource.detailComfortTreatments}
+            <b>This includes an order to perform {resource.typeComfortTreatments ? `${resource.typeComfortTreatments.toLowerCase()}` : 'treatments'}:</b> {@html resource.detailComfortTreatments}
           {/if}
         </ol>
       {/if}
@@ -135,9 +136,9 @@ Text:
       {#if resource.isAdditionalTx}
         <ol>
           {#if resource.doNotPerformAdditionalTx}
-            This includes an order to NOT perform additional treatments: {@html resource.detailAdditionalTx}
+            <b>This includes an order to NOT perform additional treatments:</b> {@html resource.detailAdditionalTx}
           {:else}
-            This includes an order to perform additional treatments: {@html resource.detailAdditionalTx}
+            <b>This includes an order to perform additional treatments:</b> {@html resource.detailAdditionalTx}
           {/if}
         </ol>
       {/if}
@@ -145,14 +146,13 @@ Text:
       {#if resource.isMedicallyAssisted}
         <ol>
           {#if resource.doNotPerformMedicallyAssisted}
-            This includes an order to NOT perform medically assisted nutrition: {@html resource.detailMedicallyAssisted}
+            <b>This includes an order to NOT perform medically assisted nutrition:</b> {@html resource.detailMedicallyAssisted}
           {:else}
-            This includes an order to perform medically assisted nutrition: {@html resource.detailMedicallyAssisted}
+            <b>This includes an order to perform medically assisted nutrition:</b> {@html resource.detailMedicallyAssisted}
           {/if}
         </ol>
       {/if}
 </ul>
-</b>
 {/if}
 
 {#if resource.content}
@@ -168,9 +168,11 @@ Text:
   {/if}
   {#each resource.content as content}
     {#if content.attachment.contentType === "application/pdf" && content.attachment.data}
-      {#await base64toBlob(content.attachment.data, content.attachment.contentType) then url}
-        <b>PDF present:</b> 
-      <a href={url} target="_blank" rel="noopener noreferrer">View</a>
+      <b>PDF present:</b>
+      {#await base64toBlob(content.attachment.data, content.attachment.contentType)}
+        Loading PDF...
+      {:then url}
+        <a href={url} target="_blank" rel="noopener noreferrer">View</a>
       {/await}
     {/if}
   {/each}
