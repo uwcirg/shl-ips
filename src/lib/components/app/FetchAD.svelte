@@ -84,10 +84,10 @@
         gender = "Female";
         dob = "1950-11-15";
       } else if (selectedSource === 'WA Verify+ Demo Server') {
-        last = "deBronkartTest";
-        first = "DaveTest";
-        gender = "Male";
-        dob = "1951-01-20";
+        last = "Gravitate";
+        first = "Maria SEATTLE";
+        gender = "Female";
+        dob = "1946-05-05";
       }
     }
   }
@@ -155,7 +155,7 @@
   }
 
   function buildPatientSearchQuery() {
-    let query = "?";
+    let query = "?_count=1&";
     if (selectedSource === 'AD Vault') {
       query += 'active=true&'; 
     }
@@ -206,7 +206,7 @@
     if (body.resourceType == 'Bundle' && (body.total == 0 || body.entry.length === 0)) {
       throw new Error('Unable to find patient');
     }
-    let patient_response = body.entry[body.entry.length - 1].resource;
+    let patient_response = body.entry[0].resource;
     return patient_response;
   }
 
@@ -369,6 +369,7 @@
               {
                 exists: dr.isComfortTreatments,
                 doNotPerform: dr.doNotPerformComfortTreatments,
+                type: dr.typeComfortTreatments,
                 detail: dr.detailComfortTreatments
               } = digestServiceRequestByCode(serviceRequests, '100823-4')
             );
@@ -422,6 +423,7 @@
   interface ServiceRequestProperties {
     exists: boolean;
     doNotPerform?: boolean;
+    type?: string;
     detail?: string;
   }
 
@@ -432,7 +434,8 @@
     return {
       exists: serviceRequest !== undefined,
       doNotPerform: serviceRequest?.doNotPerform === true,
-      detail: serviceRequest?.note?.[0].text
+      type: serviceRequest?.orderDetail?.[0].text ?? serviceRequest?.code?.coding?.[0].display,
+      detail: serviceRequest?.note?.[0].text ?? serviceRequest?.orderDetail?.[0].text
     };
   }
 </script>
