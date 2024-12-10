@@ -228,94 +228,96 @@
     <Accordion>
         {#if Object.keys($resourcesByTypeStore).length > 0}
             {#each Object.keys($resourcesByTypeStore) as resourceType}
-                <AccordionItem on:toggle={() => updateBadge(resourceType)}>
-                    <span slot="header">
-                        {#if resourceType === "Patient"}
-                            Patients
-                            <Badge
-                                positioned
-                                class="mx-1"
-                                color={patientBadgeColor}
-                            >
-                                {patientCount}
-                            </Badge>
-                        {:else}
-                            {#if resourceType in $extensionSectionStore}
-                                {resourceType}
+                {#if Object.keys($resourcesByTypeStore[resourceType]).length > 0}
+                    <AccordionItem on:toggle={() => updateBadge(resourceType)}>
+                        <span slot="header">
+                            {#if resourceType === "Patient"}
+                                Patients
+                                <Badge
+                                    positioned
+                                    class="mx-1"
+                                    color={patientBadgeColor}
+                                >
+                                    {patientCount}
+                                </Badge>
                             {:else}
-                                {`${resourceType}s`}
-                            {/if}
-                            <Badge
-                                positioned
-                                class="mx-1"
-                                color={
-                                    Object.values($resourcesByTypeStore[resourceType])
-                                        .filter(resource => resource.include).length
-                                        == Object.keys($resourcesByTypeStore[resourceType]).length
-                                        ? "primary"
-                                        : Object.values($resourcesByTypeStore[resourceType])
+                                {#if resourceType in $extensionSectionStore}
+                                    {resourceType}
+                                {:else}
+                                    {`${resourceType}s`}
+                                {/if}
+                                <Badge
+                                    positioned
+                                    class="mx-1"
+                                    color={
+                                        Object.values($resourcesByTypeStore[resourceType])
                                             .filter(resource => resource.include).length
                                             == Object.keys($resourcesByTypeStore[resourceType]).length
                                             ? "primary"
                                             : Object.values($resourcesByTypeStore[resourceType])
                                                 .filter(resource => resource.include).length
-                                                > 0
-                                                ? "info"
-                                                : "secondary"
-                                }>
-                                {Object.values($resourcesByTypeStore[resourceType]).filter(resource => resource.include).length}
-                            </Badge>
-                        {/if}
-                    </span>
-                    <FormGroup>
-                        {#each Object.keys($resourcesByTypeStore[resourceType]) as key}
-                            <Card style="width: 100%; max-width: 100%" class="mb-2">
-                                <CardHeader>
-                                    <Row>
-                                        <Col class="d-flex justify-content-start align-items-center">
-                                            <span style="font-size:small">{resourceType}</span>
-                                        </Col>
-                                        {#if $mode === "advanced"}
-                                            <Col class="d-flex justify-content-end align-items-center">
-                                                <Button
-                                                    size="sm"
-                                                    color="secondary"
-                                                    on:click={() => setJson($resourcesByTypeStore[resourceType][key])}
-                                                >
-                                                    JSON
-                                                </Button>
+                                                == Object.keys($resourcesByTypeStore[resourceType]).length
+                                                ? "primary"
+                                                : Object.values($resourcesByTypeStore[resourceType])
+                                                    .filter(resource => resource.include).length
+                                                    > 0
+                                                    ? "info"
+                                                    : "secondary"
+                                    }>
+                                    {Object.values($resourcesByTypeStore[resourceType]).filter(resource => resource.include).length}
+                                </Badge>
+                            {/if}
+                        </span>
+                        <FormGroup>
+                            {#each Object.keys($resourcesByTypeStore[resourceType]) as key}
+                                <Card style="width: 100%; max-width: 100%" class="mb-2">
+                                    <CardHeader>
+                                        <Row>
+                                            <Col class="d-flex justify-content-start align-items-center">
+                                                <span style="font-size:small">{resourceType}</span>
                                             </Col>
-                                        {/if}
-                                    </Row>
-                                </CardHeader>
-                                <Label style="width: 100%">
-                                    <CardBody>
-                                        <Row style="overflow:hidden">
-                                            <Col xs=auto class="d-flex align-items-center pe-0">
-                                                {#if resourceType === "Patient"}
-                                                    <Input id={key} type="radio" bind:group={selectedPatient} value={key} />
-                                                {:else}
-                                                    <Input id={key} type="checkbox" bind:checked={$resourcesByTypeStore[resourceType][key].include} value={key} />
-                                                {/if}
-                                            </Col>
-                                            <Col>
-                                                {#if resourceType in components}
-                                                    <svelte:component this={components[resourceType]} resource={$resourcesByTypeStore[resourceType][key].resource} />
-                                                    <!-- ResourceType: {resourceType}
-                                                    Resource: {JSON.stringify($resourcesByTypeStore[resourceType][key].resource)} -->
-                                                {:else if $resourcesByTypeStore[resourceType][key].resource.text?.div}
-                                                    {@html $resourcesByTypeStore[resourceType][key].resource.text?.div}
-                                                {:else}
-                                                    {$resourcesByTypeStore[resourceType][key].tempId}
-                                                {/if}
-                                            </Col>
+                                            {#if $mode === "advanced"}
+                                                <Col class="d-flex justify-content-end align-items-center">
+                                                    <Button
+                                                        size="sm"
+                                                        color="secondary"
+                                                        on:click={() => setJson($resourcesByTypeStore[resourceType][key])}
+                                                    >
+                                                        JSON
+                                                    </Button>
+                                                </Col>
+                                            {/if}
                                         </Row>
-                                    </CardBody>
-                                </Label>
-                            </Card>
-                        {/each}
-                    </FormGroup>
-                </AccordionItem>
+                                    </CardHeader>
+                                    <Label style="width: 100%">
+                                        <CardBody>
+                                            <Row style="overflow:hidden">
+                                                <Col xs=auto class="d-flex align-items-center pe-0">
+                                                    {#if resourceType === "Patient"}
+                                                        <Input id={key} type="radio" bind:group={selectedPatient} value={key} />
+                                                    {:else}
+                                                        <Input id={key} type="checkbox" bind:checked={$resourcesByTypeStore[resourceType][key].include} value={key} />
+                                                    {/if}
+                                                </Col>
+                                                <Col>
+                                                    {#if resourceType in components}
+                                                        <svelte:component this={components[resourceType]} resource={$resourcesByTypeStore[resourceType][key].resource} />
+                                                        <!-- ResourceType: {resourceType}
+                                                        Resource: {JSON.stringify($resourcesByTypeStore[resourceType][key].resource)} -->
+                                                    {:else if $resourcesByTypeStore[resourceType][key].resource.text?.div}
+                                                        {@html $resourcesByTypeStore[resourceType][key].resource.text?.div}
+                                                    {:else}
+                                                        {$resourcesByTypeStore[resourceType][key].tempId}
+                                                    {/if}
+                                                </Col>
+                                            </Row>
+                                        </CardBody>
+                                    </Label>
+                                </Card>
+                            {/each}
+                        </FormGroup>
+                    </AccordionItem>
+                {/if}
             {/each}
         {/if}
     </Accordion>
