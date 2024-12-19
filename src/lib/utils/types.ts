@@ -48,6 +48,7 @@ export interface DocumentReferencePOLST extends DocumentReference {
 
   isComfortTreatments?: boolean;
   doNotPerformComfortTreatments?: boolean;
+  typeComfortTreatments?: string;
   detailComfortTreatments?: string;
 
   isAdditionalTx?: boolean;
