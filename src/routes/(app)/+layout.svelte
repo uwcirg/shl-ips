@@ -20,8 +20,10 @@
     Row
   } from 'sveltestrap';
   import { SHLClient, type SHLAdminParams } from '$lib/utils/managementClient';
+  import Auth from '$lib/components/app/Auth.svelte';
   import LanguageMenu from '$lib/components/layout/LanguageMenu.svelte';
   import Banner from '$lib/components/layout/Banner.svelte';
+  import { AuthService } from '$lib/utils/AuthService';
 
   const LOCAL_STORAGE_KEY = 'shlips_store_shls';
   let shlStore = writable<SHLAdminParams[]>(
@@ -40,6 +42,8 @@
 
   let mode: Writable<string> = getContext('mode');
 
+  let authService = new AuthService();
+
   $: {
     if ($shlStore) window.localStorage[LOCAL_STORAGE_KEY] = JSON.stringify($shlStore);
   }
@@ -53,15 +57,17 @@
   function scrollFunction() {
     if (window.scrollY > 40) {
       document.getElementById("nav-image")?.classList.add("scrolling");
-      document.getElementsByClassName("navbar")[0].classList.add("scrolling");
+      document.getElementsByClassName("navbar")?.[0].classList.add("scrolling");
       let es = document.getElementsByClassName("nav-text");
+      if (es.length == 0) return;
       for(let i = 0; i < es.length; i++) {
         es[i].classList.add("scrolling");
       }
     } else if (window.scrollY == 0) {
       document.getElementById("nav-image")?.classList.remove("scrolling");
-      document.getElementsByClassName("navbar")[0].classList.remove("scrolling");
+      document.getElementsByClassName("navbar")?.[0].classList.remove("scrolling");
       let es = document.getElementsByClassName("nav-text");
+      if (es.length == 0) return;
       for(let i = 0; i < es.length; i++) {
         es[i].classList.remove("scrolling");
       }
@@ -141,8 +147,10 @@
   </Collapse>
 </Navbar>
 <Banner title="International Patient Summary Prototype"/>
-<Row class="main-row">
-  <Col>
-    <slot />
-  </Col>
-</Row>
+<Auth bind:authService={authService}>
+  <Row class="main-row">
+    <Col>
+      <slot />
+    </Col>
+  </Row>
+</Auth>

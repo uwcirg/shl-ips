@@ -1,6 +1,11 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
+    readonly VITE_AUTH_URL: string
+    readonly VITE_AUTH_CLIENT_ID: string
+    readonly VITE_AUTH_REDIRECT_URI: string
+    readonly VITE_AUTH_SILENT_REDIRECT_URI: string
+    readonly VITE_AUTH_POST_LOGOUT_URI: string
     readonly VITE_EPIC_HIMSS_CLIENT_ID: string
     readonly VITE_ECW_HIMSS_CLIENT_ID: string
     readonly VITE_EPIC_CLIENT_ID: string
