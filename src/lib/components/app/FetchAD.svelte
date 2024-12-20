@@ -284,12 +284,13 @@
       const contentResponse = await fetchAdvanceDirective(patient.id);
       content = await contentResponse.json();
       hostname = sources[selectedSource].url;
-      processing = false;
       let resources: Array<DocumentReferencePOLST> = content.entry ? content.entry.map((e: BundleEntry) => {
         return e.resource;
       }) : [];
       if (resources.length === 0) {
         console.warn("No advance directives found for patient "+patient.id);
+        processing = false;
+        return;
       }
 
       // Filter out DR's with 'status' == 'superseded'. In May '24 we included these,
@@ -335,7 +336,7 @@
       // if one of the DR's
       const isPolst = (dr: DocumentReferencePOLST) => dr.type && dr.type.coding && dr.type.coding.some(coding => coding.system === 'http://loinc.org' && coding.code === '100821-8');
 
-      resources.forEach(async (dr: DocumentReferencePOLST) => {
+      for (let dr of resources) {
         // If this DR is a POLST, add the following chain of queries:
         if (isPolst(dr)){
           dr.isPolst = true;
@@ -395,16 +396,18 @@
             );
           }
         }
-      });
-      resources.forEach(async (dr: DocumentReferencePOLST) => {
+      }
+
+      for (let dr of resources) {
         if (hasPdfContent(dr)) {
           const pdfContent = dr.content.find(content => content.attachment && content.attachment.contentType === 'application/pdf');
           if (pdfContent && pdfContent.attachment && pdfContent.attachment.url) {
             await injectPdfIntoDocRef (pdfContent.attachment.url, pdfContent.attachment);
           }
         }
-      });
-
+      }
+      
+      processing = false;
       let result:ResourceRetrieveEvent = {
         resources: resources,
         sectionKey: sectionKey,
