@@ -230,7 +230,7 @@
   </Col>
   <Col class="d-flex justify-content-center">
     <FormGroup class="label shlbutton" style="width: 100%">
-      <div style="border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 1em"><h3>Manage this SHLink</h3></div>
+      <div style="border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 1em"><h3>Manage Link</h3></div>
       {#await linkIsActive then active}
         <Alert isOpen={active === false} color="danger" fade={false}>
           <Col class="d-flex justify-content-between">
@@ -330,7 +330,7 @@
   {#if $mode === 'advanced'}
   <Col class="d-flex justify-content-center">
     <FormGroup class="label shlbutton" style="width: 100%">
-      <div style="border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 1em"><h3>Contents</h3></div>
+      <div style="border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 1em"><h3>Content</h3></div>
       <Label>Add, update, or remove summaries shared by this link.</Label>
       {#if shl.files.length == 0}
         <p><em>No Summaries found</em></p>
