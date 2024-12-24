@@ -94,7 +94,7 @@
       <NavItem>
         <NavLink href="/home">Home</NavLink>
       </NavItem>
-      <Dropdown nav inNavbar size="sm" direction="down">
+      <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
         <DropdownToggle color="primary" nav caret>Actions</DropdownToggle>
         <DropdownMenu end style="max-height: 500px; overflow:auto">
           <DropdownItem
