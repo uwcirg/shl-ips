@@ -38,13 +38,6 @@
           src="/img/doh_logo_doh-black.png"
         />
       </Col>
-      <Col style="vertical-align:middle" class="d-none d-sm-block align-items-center">
-        <div class="nav-text mt-2">
-          <span>Washington State</span>
-          <p style="margin: 10px; padding: 0px: line-height: 0;" />
-          <span>Department of Health</span>
-        </div>
-      </Col>
     </Row>
   </NavbarBrand>
   <NavbarToggler on:click={() => (isOpen = !isOpen)} />
