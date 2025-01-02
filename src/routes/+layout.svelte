@@ -99,7 +99,7 @@
 
   window.addEventListener('scroll', (event) => {
     if (document.querySelector('.navbar-dropdown.show')?.matches(':hover')) return;
-    if (document.getElementsByClassName('navbar-collapse collapsing').length > 0) return;
+    if (document.getElementsByClassName('navbar-collapse collapsing')?.length > 0) return;
     if (navOpening) return;
     closeNav();
   });
