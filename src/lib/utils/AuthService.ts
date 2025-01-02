@@ -8,19 +8,24 @@ import {
 import { User, UserManager } from 'oidc-client-ts';
 
 export class AuthService {
+  private static _instance: AuthService;
   userManager: UserManager;
-  redirect_url: string = '';
+  redirect_url: string = "";
 
-  constructor() {
+  private constructor() {
     const settings = {
       authority: AUTH_URL,
       client_id: AUTH_CLIENT_ID,
       redirect_uri: AUTH_REDIRECT_URI,
       silent_redirect_uri: AUTH_SILENT_REDIRECT_URI,
       post_logout_redirect_uri: AUTH_POST_LOGOUT_URI,
-      scope: 'openid online_access',
+      scope: "openid online_access",
     };
     this.userManager = new UserManager(settings);
+  }
+
+  public static get Instance(): AuthService {
+    return this._instance || (this._instance = new this());
   }
 
   getUser(): Promise<User | null> {
@@ -29,7 +34,7 @@ export class AuthService {
 
   getRedirectUrl(): string {
     let url = this.redirect_url;
-    this.redirect_url = '';
+    this.redirect_url = "";
     return url;
   }
 
@@ -58,6 +63,10 @@ export class AuthService {
         this.storeUser(user);
       }
       return user;
+    }).catch((error) => {
+      console.error(error);
+      this.logout();
+      return null;
     });
   }
 
@@ -72,6 +81,10 @@ export class AuthService {
       } else {
         return this.renewToken().then((user) => {
           return user?.access_token ? true : false;
+        }).catch((error) => {
+          console.error(error);
+          this.logout();
+          return false;
         });
       }
     });
