@@ -43,7 +43,7 @@
 
   let mode: Writable<string> = getContext('mode');
 
-  let authService = new AuthService();
+  let authService = AuthService.Instance;
 
   $: {
     if ($shlStore) window.localStorage[LOCAL_STORAGE_KEY] = JSON.stringify($shlStore);
@@ -80,75 +80,95 @@
   }
 
 </script>
-<Navbar class="sticky-top" color="light" light expand="md" style="border-bottom: 1px solid rgb(204, 204, 204);">
-  <NavbarBrand href="https://doh.wa.gov/" target="_blank">
-    <Row>
-      <Col>
-        <Image id="nav-image" alt="Washington State Department of Health Logo" src="/img/doh_logo_doh-black.png"/>
-      </Col>
-      <Col style="vertical-align:middle" class="d-none d-sm-block align-items-center">
-        <div class="nav-text mt-2">
-          <span>Washington State</span>
-          <p style="margin: 10px; padding: 0px: line-height: 0;"></p>
-          <span>Department of Health</span>
-        </div>
-      </Col>
-    </Row>
-  </NavbarBrand>
-  <NavbarToggler on:click={() => ($isOpen = !$isOpen)} />
-  <Collapse isOpen={$isOpen} navbar expand="md" on:update={handleUpdate}>
-    <Nav class="ms-auto" navbar>
-      <NavItem>
-        <NavLink href="/home">Home</NavLink>
-      </NavItem>
-      <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
-        <DropdownToggle color="primary" nav caret>Actions</DropdownToggle>
-        <DropdownMenu end style="max-height: 500px; overflow:auto">
-          <DropdownItem
-            on:click={() => {
-              goto("/create");
-            }}>Add New SHLink</DropdownItem>
-          <DropdownItem
-            on:click={() => {
-              $shlStore = [];
-              goto('/');
-            }}>Reset Demo</DropdownItem>
-            <DropdownItem divider />
+<Auth>
+  <Navbar class="sticky-top" color="light" light expand="md" style="border-bottom: 1px solid rgb(204, 204, 204);">
+    <NavbarBrand href="https://doh.wa.gov/" target="_blank">
+      <Row>
+        <Col>
+          <Image id="nav-image" alt="Washington State Department of Health Logo" src="/img/doh_logo_doh-black.png"/>
+        </Col>
+      </Row>
+    </NavbarBrand>
+    <NavbarToggler on:click={() => ($isOpen = !$isOpen)} />
+    <Collapse isOpen={$isOpen} navbar expand="md" on:update={handleUpdate}>
+      <Nav class="ms-auto" navbar>
+        <NavItem>
+          <NavLink href="/home">Home</NavLink>
+        </NavItem>
+        <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
+          <DropdownToggle color="primary" nav caret>My Links</DropdownToggle>
+          <DropdownMenu end style="max-height: 500px; overflow:auto">
             <DropdownItem
               on:click={() => {
-                $mode = ($mode === 'advanced' ? 'normal' : 'advanced');
-            }}>
-              <Row class="mr-0" style="min-width:240px">
-                <Col class="d-flex justify-content-start align-items-center pe-0">
-                  {$mode === "advanced" ? "Hide" : "Show"} Advanced Features
-                </Col>
-                <Col class="d-flex justify-content-end ps-0">
-                  {#if $mode == 'advanced'}
-                  <Icon class="text-primary" name="toggle-on"></Icon>
-                  {:else}
-                  <Icon class="text-secondary" name="toggle-off"></Icon>
-                  {/if}
-                </Col>
-              </Row>
+                goto("/create");
+              }}>
+              <Icon name="plus-lg" /> Add New SHLink
             </DropdownItem>
-          {#if $shlStore.length > 0}
-            <DropdownItem divider />
-            <DropdownItem header>View Stored SHLinks</DropdownItem>
-            {#each $shlStore as shl, i}
-              <DropdownItem
-                on:click={() => {
-                goto('/view/' + shl.id);
-              }}>{shl.label || `SHLink ${i + 1}`}</DropdownItem>
-            {/each}
+            {#if $shlStore.length > 0}
+              <DropdownItem divider />
+              <DropdownItem header>Your Saved SHLinks</DropdownItem>
+              {#each $shlStore as shl, i}
+                <DropdownItem
+                  on:click={() => {
+                  goto('/view/' + shl.id);
+                }}>{shl.label || `SHLink ${i + 1}`}</DropdownItem>
+              {/each}
+            {/if}
+          </DropdownMenu>
+        </Dropdown>
+        <LanguageMenu />
+        {#await authService.getUser()}
+          <NavItem>
+            <NavLink on:click={() => authService.login()}><Icon name="person-circle"/> Sign In</NavLink>
+          </NavItem>
+        {:then user}
+          {#if user}
+            <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
+              <DropdownToggle color="primary" nav caret><Icon name="person-circle"/> Account</DropdownToggle>
+              <DropdownMenu end style="max-height: 500px; overflow:auto">
+                <DropdownItem header>Welcome, {user.profile.given_name}</DropdownItem>
+                <DropdownItem
+                  on:click={() => {
+                    authService.logout();
+                  }}><Icon name="box-arrow-right"/> Sign Out</DropdownItem>
+                  <DropdownItem divider />
+                  <DropdownItem header>Demo Options</DropdownItem>
+                  <DropdownItem
+                    on:click={() => {
+                      $mode = ($mode === 'advanced' ? 'normal' : 'advanced');
+                  }}>
+                    <Row class="mr-0" style="min-width:240px">
+                      <Col class="d-flex justify-content-start align-items-center pe-0">
+                        {$mode === "advanced" ? "Hide" : "Show"} Advanced Features
+                      </Col>
+                      <Col class="d-flex justify-content-end ps-0">
+                        {#if $mode == 'advanced'}
+                        <Icon class="text-primary" name="toggle-on"></Icon>
+                        {:else}
+                        <Icon class="text-secondary" name="toggle-off"></Icon>
+                        {/if}
+                      </Col>
+                    </Row>
+                  </DropdownItem>
+                  <DropdownItem
+                    on:click={() => {
+                      $shlStore = [];
+                      goto('/');
+                    }}><span class="text-danger">Reset Demo</span>
+                  </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+          {:else}
+            <NavItem>
+              <NavLink on:click={() => authService.login()}><Icon name="person-circle"/> Sign In</NavLink>
+            </NavItem>
           {/if}
-        </DropdownMenu>
-      </Dropdown>
-      <LanguageMenu />
-    </Nav>
-  </Collapse>
-</Navbar>
-<Banner title="International Patient Summary Prototype"/>
-<Auth bind:authService={authService}>
+        {/await}
+      </Nav>
+    </Collapse>
+  </Navbar>
+  <Banner title="International Patient Summary Prototype"/>
+  
   <Row class="main-row">
     <Col>
       <slot />
