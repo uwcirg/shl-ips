@@ -3,6 +3,7 @@
     import {
         Button,
         Col,
+        Icon,
         Row,
         Styles
     } from 'sveltestrap';
@@ -22,7 +23,7 @@
 <Row>
     <Col md="1"></Col>
     <Col md="10">
-        <Button color="success" style="width:100%" href={'/create'}><span style="font-size: medium"><b>+</b></span> New IPS SHLink</Button>
+        <Button color="success" style="width:100%" href={'/create'}><b><Icon name="plus-lg"/></b> New IPS SHLink</Button>
     </Col>
     <Col md="1"></Col>
 </Row>
