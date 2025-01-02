@@ -3,16 +3,12 @@
   import { AuthService } from '$lib/utils/AuthService';
   import type { User } from 'oidc-client-ts';
   import { goto } from '$app/navigation';
-  import { Button } from 'sveltestrap';
 
-  export let authService: AuthService | undefined = undefined;
+  let authService: AuthService = AuthService.Instance;
 
   let currentUser: User | undefined;
   
   onMount(async () => {
-    if (!authService) {
-      authService = new AuthService();
-    }
     let newUser: User | undefined;
     try {
       newUser = await authService.signinCallback();
@@ -43,6 +39,7 @@
 
 </script>
 {#if currentUser}
-  <Button color="primary" on:click={async () => await authService.logout()}>Sign out</Button>
   <slot />
+{:else}
+  Authorizing...
 {/if}
