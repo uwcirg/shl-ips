@@ -57,6 +57,11 @@
 
   function scrollFunction() {
     if (window.scrollY > 40) {
+      let links = document.getElementsByClassName("nav-link");
+      if (links.length == 0) return;
+      for(let i = 0; i < links.length; i++) {
+        links[i].classList.add("scrolling");
+      }
       document.getElementById("nav-image")?.classList.add("scrolling");
       document.getElementsByClassName("navbar")?.[0]?.classList.add("scrolling");
       let es = document.getElementsByClassName("nav-text");
@@ -65,6 +70,11 @@
         es[i].classList.add("scrolling");
       }
     } else if (window.scrollY == 0) {
+      let links = document.getElementsByClassName("nav-link");
+      if (links.length == 0) return;
+      for(let i = 0; i < links.length; i++) {
+        links[i].classList.remove("scrolling");
+      }
       document.getElementById("nav-image")?.classList.remove("scrolling");
       document.getElementsByClassName("navbar")?.[0]?.classList.remove("scrolling");
       let es = document.getElementsByClassName("nav-text");
