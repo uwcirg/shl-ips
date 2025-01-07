@@ -132,6 +132,10 @@
     -o-transition: all 0.06s linear;
     transition: all 0.06s linear;
   }
+  :global(.nav-link.scrolling) {
+    padding-top: 0rem !important;
+    padding-bottom: 0.25rem !important;
+  }
   :global(#nav-image.scrolling) {
     width: 160px !important;
     margin-left: 10px;

@@ -10,7 +10,7 @@
 </script>
 
 <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
-  <DropdownToggle color="primary" nav>
+  <DropdownToggle color="primary" class="pt-0" nav>
     <span style="font-size:small">
       {$locales[$locale].lang} <Icon name="globe2" />
     </span>
