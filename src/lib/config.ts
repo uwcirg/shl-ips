@@ -24,8 +24,11 @@ export const SOF_HOSTS = [
   // },
   {
     id: "epic",
-    name: "Epic Demo",
-    url: "https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4",
+    //name: "Epic Demo",
+    //url: "https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4",
+    name: "Epic, UW Medicine Epic (production)",
+    // per https://open.epic.com/MyApps/Endpoints :
+    url: "https://fhir.epic.medical.washington.edu/FHIR-Proxy/api/FHIR/R4",
     clientId: import.meta.env.VITE_EPIC_CLIENT_ID,
     note: "<a href='https://fhir.epic.com/Documentation?docId=testpatients' target='_blank' rel='noreferrer'>Test patient credentials <Icon name='box-arrow-up-right' /></a>"
   },
