@@ -6,6 +6,17 @@ import type { Bundle, BundleEntry, Resource } from 'fhir/r4';
 
 export const base64url = jose.base64url;
 
+export function ensureError(value: unknown): Error {
+  if (value instanceof Error) return value;
+  let stringifiedValue = "[Unable to stringify the thrown value]";
+  try {
+    stringifiedValue = JSON.stringify(value);
+  } catch (e) {}
+
+  const error = new Error(`This value was thrown, but it was not an Error object: ${stringifiedValue}`);
+  return error
+}
+
 export function randomStringWithEntropy(entropy = 32): string {
   const b = new Uint8Array(entropy);
   crypto.getRandomValues(b);

@@ -26,6 +26,7 @@
   import { goto } from '$app/navigation';
   import type { Writable } from 'svelte/store';
   import type { SHLAdminParams, SHLClient } from '$lib/utils/managementClient';
+  import { ensureError } from '$lib/utils/util';
 
   export let shl: SHLAdminParams;
   let shlControlled: SHLAdminParams;
@@ -63,7 +64,7 @@
     try {
       linkIsActive = await shlClient.isActive(shl.id);
     } catch (e) {
-      console.error(e);
+      console.error(ensureError(e).message);
       linkNotFound = true;
     }
   });
@@ -75,7 +76,7 @@
     const qrCode = await new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => resolve(img);
-        img.onerror = (err) => reject(new Error('Failed to load image from data URI.'));
+        img.onerror = (err) => reject(new Error('Failed to load image from data URI.', { cause: err }));
         img.src = qrCodeURI;
       }) as HTMLImageElement;
     // get the header and footer images
