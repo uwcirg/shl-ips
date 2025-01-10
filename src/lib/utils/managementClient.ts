@@ -17,6 +17,7 @@ export interface SHLAdminParams {
   passcode?: string;
   exp?: number;
   label?: string;
+  source?: string;
   v?: number;
 }
 

@@ -42,6 +42,7 @@
   let mode: Writable<string> = getContext('mode');
 
   let copyNotice = '';
+  let sourceCopyNotice = '';
 
   let href: Promise<string>;
   let qrCodeImage: Promise<string>;
@@ -129,6 +130,21 @@
     copyNotice = 'Copied!';
     setTimeout(() => {
       copyNotice = copyNoticePrev;
+    }, 1000);
+  }
+
+  async function copySource() {
+    let copyNoticePrev = sourceCopyNotice;
+    sourceCopyNotice = '...';
+    let text = shlControlled.source;
+    if (text) {
+      navigator.clipboard.writeText(text);
+      sourceCopyNotice = 'Copied!';
+    } else {
+      sourceCopyNotice = 'No source';
+    }
+    setTimeout(() => {
+      sourceCopyNotice = copyNoticePrev;
     }, 1000);
   }
 
@@ -365,6 +381,20 @@
         </Card>
       {/each}
       <Button class="mb-3" color="primary" on:click={addFile}><Icon name="file-earmark-plus" /> Add {shl.files.length == 0 ? "a" : "another"} Summary</Button>
+    </FormGroup>
+  </Col>
+  <Col class="d-flex justify-content-center">
+    <FormGroup class="label shlbutton" style="width: 100%">
+      <div style="border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 1em"><h3>Content</h3></div>
+      <Label>Add, update, or remove summaries shared by this link.</Label>
+      <Button size="sm" color="primary" class="mx-1" style="width: fit-content" on:click={copySource} disabled={!!copyNotice}>
+        <Icon name="clipboard" />
+        {#if sourceCopyNotice}
+          {sourceCopyNotice}
+        {:else}
+          Copy Source Link
+        {/if}
+      </Button>
     </FormGroup>
   </Col>
   {/if}

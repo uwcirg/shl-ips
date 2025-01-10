@@ -37,6 +37,7 @@
     shlCreated = await addFiles(shlCreated, details.shcs);
     shlCreated.label = details.label;
     shlCreated.passcode = details.passcode;
+    shlCreated.source = details.source;
     return shlCreated;
   }
 
