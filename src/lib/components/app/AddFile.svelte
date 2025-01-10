@@ -248,7 +248,8 @@
       label,
       passcode: passcode ?? undefined,
       exp: expiration && expiration > 0 ? new Date().getTime() / 1000 + expiration : undefined,
-      patientName: patientName
+      patientName: patientName,
+      source: ipsResult.source
     });
   }
 

@@ -7,6 +7,7 @@ export interface SHLSubmitEvent {
   passcode?: string;
   exp?: number;
   patientName?: string;
+  source?: string;
 }
 
 export interface ResourceRetrieveEvent {
