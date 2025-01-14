@@ -112,6 +112,8 @@ export const EXAMPLE_IPS = {
   'Angela Roster': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/10965/$summary',
   'Horace Skelly': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/11142/$summary',
   'Anonymous': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/10999/$summary',
-  'Desiree': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/Pat1-System2/$summary'
+  'Desiree': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/Pat1-System2/$summary',
+  // 2025-01 Connectathon PACIO track:
+  'Jenny Mosley': 'https://hapi.fhir.org/baseR4/Patient/patientJM1/$summary'
 };
 export const IPS_DEFAULT = 'Maria SEATTLE Gravitate';
