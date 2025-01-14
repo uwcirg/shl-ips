@@ -18,7 +18,7 @@
   }
 </script>
 
-<strong>{resource.questionnaire}</strong>
+<strong>Questionnaire: {resource.questionnaire}</strong>
 <br />
 Authored: {resource.authored}
 {#if resource.source}
