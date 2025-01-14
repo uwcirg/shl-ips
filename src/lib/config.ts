@@ -68,6 +68,7 @@ export const SOF_RESOURCES = [
   'PractitionerRole',  // can't search by patient; "An identifier, practitioner, organization, location, or specialty parameter is required."
   'Procedure', // TODO change to subject
   // 'Specimen', // Not in EPIC USCDI R4
+  'QuestionnaireResponse',
 ];
 
 export const SOF_PATIENT_RESOURCES = [
@@ -90,6 +91,7 @@ export const SOF_PATIENT_RESOURCES = [
   // 'PractitionerRole',  // can't search by patient; "An identifier, practitioner, organization, location, or specialty parameter is required."
   'Procedure', // TODO change to subject
   // 'Specimen', // Not in EPIC USCDI R4
+  'QuestionnaireResponse',
 ];
 
 export const VIEWER_BASE = new URL(
