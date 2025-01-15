@@ -5,6 +5,8 @@ export const API_BASE = import.meta.env.VITE_API_BASE;
 
 export const INTERMEDIATE_FHIR_SERVER_BASE = import.meta.env.VITE_INTERMEDIATE_FHIR_SERVER_BASE;
 
+export const VERSION_STRING = import.meta.env.VITE_VERSION_STRING;
+
 export const SOF_HOSTS = [
   // {
   //   id: "epic-himss",
@@ -61,6 +63,10 @@ export const SOF_HOSTS = [
     note: "Credentials provided"
   },
 ];
+
+export const BEARER_AUTHORIZATION = {
+  'Meditech': import.meta.env.VITE_MEDITECH_BEARER_TOKEN
+}
 export const SOF_REDIRECT_URI = '/create';
 export const SOF_RESOURCES = [
   'Patient',
@@ -106,16 +112,20 @@ export const SOF_PATIENT_RESOURCES = [
 ];
 
 export const VIEWER_BASE = new URL(
-  (import.meta.env.VITE_VIEWER_BASE ? import.meta.env.VITE_VIEWER_BASE : `/ips${dev ? '/index.html' : ''}`)+'#',
+  (import.meta.env.VITE_VIEWER_BASE ? import.meta.env.VITE_VIEWER_BASE : `/ips`)+'#',
   window.location.href
 ).toString();
+export const SHOW_VIEWER_DEMO = import.meta.env.VITE_SHOW_VIEWER_DEMO;
+
 export const PATIENT_IPS = {
-  'Dave deBronkart': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/16501/$summary'
+  'Dave deBronkart': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/16501/$summary',
+  'Peter Kieth Jordan': 'https://terminz.azurewebsites.net/fhir/Patient/$summary?profile=http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips&identifier=https://standards.digital.health.nz/ns/nhi-id|NNJ9186&_format=json'
 }
 export const EXAMPLE_IPS = {
   'Maria SEATTLE Gravitate': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/14599/$summary',
   'Martha Mum': 'https://hl7-ips-server.hl7.org/fhir/Patient/15/$summary',
-  'Peter Keith Jones': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/11013/$summary',
+  'Meditech 1': 'https://dev-mtx-interop.meditech.com:443/v2/ips/STU1/Patient/f3b430be-1f8a-53d3-8261-4ffbafa05a61/$summary',
+  // 'Meditech 2': 'https://dev-mtx-interop.meditech.com:443/v2/ips/STU1/Patient/9bad7dc5-47ad-5022-82e7-0cb0aab13ee9/$summary', // Error returned
   'Angela Roster': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/10965/$summary',
   'Horace Skelly': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/11142/$summary',
   'Anonymous': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/10999/$summary',
