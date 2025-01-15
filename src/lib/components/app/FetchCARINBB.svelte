@@ -130,6 +130,34 @@
       fetchError = "Error preparing IPS";
     }
   }
+
+  async function testAPI() {
+    fetchError = "";
+    loadingSample = true;
+    try {
+      let content;
+      let hostname;
+      const contentResponse = await fetch("/api/proxy", {
+      method: 'POST',
+      headers: { accept: 'application/fhir+json' },
+      body: JSON.stringify({ url: defaultUrl })
+      }).then(function(response) {
+        if (!response.ok) {
+          // make the promise be rejected if we didn't get a 2xx response
+          throw new Error("Unable to fetch IPS", {cause: response});
+        } else {
+          return response;
+        }
+      });
+      content = await contentResponse.json();
+      loadingSample = false
+      console.log(content);
+    } catch (e) {
+      loadingSample = false;
+      console.log('Failed', e);
+      fetchError = "Error preparing IPS";
+    }
+  }
 </script>
 <form on:submit|preventDefault={() => prepareIps()}>
   <FormGroup>
@@ -166,6 +194,21 @@
           Quick Sample
         {:else}
           Loading...
+        {/if}
+      </Button>
+    </Col>
+    <Col xs="auto">
+      <Button
+      color="secondary"
+      outline
+      style="width:fit-content"
+      disabled={processing || loadingSample}
+      type="button"
+      on:click={() => testAPI()}>
+        {#if !loadingSample}
+          Test API
+        {:else}
+          Testing...
         {/if}
       </Button>
     </Col>
