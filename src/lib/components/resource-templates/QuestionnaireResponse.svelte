@@ -18,8 +18,8 @@
   }
 </script>
 
-<strong>Questionnaire reference: {resource.questionnaire}</strong>
-<strong>Questionnaire resource: <a href='{resource.questionnaire}'>{resource.identifier.value}</a></strong>
+<strong>Questionnaire identifier: {resource.identifier.value}</strong>
+<strong>Questionnaire reference: <a href='{resource.questionnaire}'>{resource.questionnaire}</a></strong>
 <br />
 Authored: {resource.authored}
 {#if resource.source}
