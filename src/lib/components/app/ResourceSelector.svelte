@@ -40,6 +40,7 @@
     import Practitioner from '$lib/components/resource-templates/Practitioner.svelte';
     import Procedure from '$lib/components/resource-templates/Procedure.svelte';
     import OccupationalData from '$lib/components/resource-templates/OccupationalData.svelte';
+    import QuestionnaireResponse from '$lib/components/resource-templates/QuestionnaireResponse.svelte';
 
     export let submitting: boolean;
     export let resourceCollection: IPSResourceCollection;
@@ -62,7 +63,8 @@
         "Practitioner": Practitioner,
         "Procedure": Procedure,
         "Occupational Data": OccupationalData,
-        "Advance Directives": AdvanceDirective
+        "Advance Directives": AdvanceDirective,
+        "QuestionnaireResponse": QuestionnaireResponse
     };
 
     const ipsDispatch = createEventDispatcher<{ 'ips-retrieved': IPSRetrieveEvent }>();
