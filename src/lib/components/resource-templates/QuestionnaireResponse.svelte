@@ -18,9 +18,9 @@
   }
 </script>
 
-<strong>Questionnaire identifier: {resource.identifier.value}</strong>
-<strong>Questionnaire reference: <a href='{resource.questionnaire}'>{resource.questionnaire}</a></strong>
-<br />
+<Badge color="primary">{resource.identifier.value}</Badge><br/>
+<strong>Questionnaire identifier: {resource.identifier.value}</strong><br />
+Questionnaire reference: <a href='{resource.questionnaire}'>{resource.questionnaire}</a><br />
 Authored: {resource.authored}
 {#if resource.source}
   {#if resource.source.display}
