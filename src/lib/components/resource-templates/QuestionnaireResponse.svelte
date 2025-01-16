@@ -14,7 +14,7 @@
 
 <Badge color="primary">{resource.identifier.value}</Badge><br/>
 Questionnaire reference: <a href='{resource.questionnaire}' target='_blank'>{resource.questionnaire}</a><br />
-Authored: {resource.authored}
+Authored: {resource.authored.split("T")[0]}
 {#if resource.source}
   {#if resource.source.display}
     <br />
