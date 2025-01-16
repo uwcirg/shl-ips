@@ -4,19 +4,13 @@
 
   export let resource: QuestionnaireResponse; // Define a prop to pass the data to the component
 
-// FIXME won't need this... and likely the rest of this file will need heavy edits...
-  function badgeColor(criticality: string) {
-    if (criticality) {
-      if (criticality == 'high') {
-        return 'danger';
-      } else {
-        return 'primary';
-      }
-    } else {
-      return 'secondary';
-    }
-  }
 </script>
+
+<style>
+  .small-text-table {
+    font-size: 12px; /* Adjust this value as needed */
+  }
+</style>
 
 <Badge color="primary">{resource.identifier.value}</Badge><br/>
 Questionnaire reference: <a href='{resource.questionnaire}' target='_blank'>{resource.questionnaire}</a><br />
@@ -31,7 +25,7 @@ Authored: {resource.authored}
   {/if}
 {/if}
 
-<table class="table table-bordered table-responsive table-sm">
+<table class="table table-bordered table-responsive table-sm small-text-table">
     <thead>
         <tr><th colspan="3">Responses</th></tr>
     </thead>
