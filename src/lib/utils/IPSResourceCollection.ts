@@ -265,6 +265,10 @@ export class IPSResourceCollection {
         return selectedIPSResources;
     }
 
+    flattenResources(resourcesByType: Record<string, Record<string, ResourceHelper>>) {
+        return Object.values(resourcesByType).flatMap(types => Object.values(types))
+    }
+
     toJson(): string {
         let resourcesByType = get(this.resourcesByType);
         let extensionSections = get(this.extensionSections);

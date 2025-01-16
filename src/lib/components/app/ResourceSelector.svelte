@@ -281,9 +281,10 @@
                                                     <Button
                                                         size="sm"
                                                         color="secondary"
+                                                        outline
                                                         on:click={() => setJson($resourcesByTypeStore[resourceType][key])}
                                                     >
-                                                        JSON
+                                                        View
                                                     </Button>
                                                 </Col>
                                             {/if}
@@ -292,7 +293,7 @@
                                     <Label style="width: 100%">
                                         <CardBody>
                                             <Row style="overflow:hidden">
-                                                <Col xs=auto class="d-flex align-items-center pe-0">
+                                                <Col xs=auto class="d-flex align-items-top pt-4 pe-0">
                                                     {#if resourceType === "Patient"}
                                                         <Input id={key} type="radio" bind:group={selectedPatient} value={key} />
                                                     {:else}
@@ -301,7 +302,11 @@
                                                 </Col>
                                                 <Col>
                                                     {#if resourceType in components}
-                                                        <svelte:component this={components[resourceType]} resource={$resourcesByTypeStore[resourceType][key].resource} />
+                                                        <svelte:component
+                                                            this={components[resourceType]}
+                                                            content={{
+                                                                resource: $resourcesByTypeStore[resourceType][key].resource,
+                                                                entries: resourceCollection.flattenResources($resourcesByTypeStore)}} />
                                                         <!-- ResourceType: {resourceType}
                                                         Resource: {JSON.stringify($resourcesByTypeStore[resourceType][key].resource)} -->
                                                     {:else if $resourcesByTypeStore[resourceType][key].resource.text?.div}
@@ -325,6 +330,49 @@
 </AccordionItem>
 
 <style>
+    /* Table styling */
+  :global(table) {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  :global(th) {
+    border: 1px solid lightgray !important;
+    padding: 0 7px !important;
+    text-align: center !important;
+  }
+
+  :global(td) {
+    margin-left: 2em !important;
+  }
+
+  :global(thead) {
+    background-color: #0c63e4;
+    color: white;
+  }
+
+  /* Alternating table row coloring */
+  :global(tbody tr:nth-child(odd)) {
+    background-color: #fff;
+    border: 1px solid lightgray;
+  }
+  :global(tbody tr:nth-child(even)) {
+    background-color: #e7f1ff;
+    border: 1px solid lightgray;
+  }
+  
+  /* Sticky table header */
+  :global(th) {
+    background: #0c63e4;
+    position: sticky;
+    top: -17px;
+  }
+
+  /* First column of generated table is usually most important */
+  :global(td:first-child) {
+    font-weight: bold;
+  }
+
     .code {
         overflow:auto;
         margin: 0;

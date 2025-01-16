@@ -30,9 +30,12 @@ export function getEntry(entries: Array<BundleEntry>, reference: string) {
       // Attempt to match based on resource and uuid
       let splitReference = reference.split('/');
       let referenceId = splitReference?.pop();
-      let referenceResourceType = splitReference?.pop();
-      if (referenceResourceType === entry.resource?.resourceType && referenceId && entry.fullUrl?.includes(referenceId)) {
-        return entry.resource;
+      if (entry.resource?.resourceType && splitReference.includes(entry.resource?.resourceType) && referenceId) {
+        if (entry.fullUrl?.includes(referenceId)) {
+          return entry.resource;
+        } else if (entry.resource?.id?.includes(referenceId)) {
+          return entry.resource;
+        }
       }
     }
   }
