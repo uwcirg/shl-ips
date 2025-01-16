@@ -30,3 +30,19 @@ Authored: {resource.authored}
     Source: (unknown)
   {/if}
 {/if}
+
+  <table class="table table-bordered table-sm">
+      <thead>
+          <tr><th colspan="3">Responses</th></tr>
+      </thead>
+      {#each resource.item as item}
+          <tr>
+              <td>{item.text ?? ""}</td>
+				<td>
+      	{#each item.item as subitem}
+              {subitem.text ?? ""}<br/>
+      	{/each}
+				</td>
+          </tr>
+      {/each}
+  </table>
