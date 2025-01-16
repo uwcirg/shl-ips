@@ -31,18 +31,44 @@ Authored: {resource.authored}
   {/if}
 {/if}
 
-  <table class="table table-bordered table-sm">
-      <thead>
-          <tr><th colspan="3">Responses</th></tr>
-      </thead>
-      {#each resource.item as item}
-          <tr>
-              <td>{item.text ?? ""}</td>
-				<td>
-      	{#each item.item as subitem}
-              {subitem.text ?? ""}<br/>
-      	{/each}
-				</td>
-          </tr>
-      {/each}
-  </table>
+<table class="table table-bordered table-sm">
+    <thead>
+        <tr><th colspan="3">Responses</th></tr>
+    </thead>
+    <tbody>
+        {#each resource.item as item}
+            <tr>
+                <td>{item.text ?? "No text provided"}</td>
+                <td>
+                    <!-- Render answers if present -->
+                    {#if item.answer}
+                        {#each item.answer as ans}
+                            {ans.valueString ?? ans.valueCoding?.display ?? "No answer text"}<br/>
+                        {/each}
+                    {/if}
+                </td>
+                <td>
+                    <!-- Nested subitems -->
+                    {#if item.item}
+                        <table class="table table-bordered table-sm">
+                            <tbody>
+                                {#each item.item as subitem}
+                                    <tr>
+                                        <td>{subitem.text ?? "No subitem text provided"}</td>
+                                        <td>
+                                            {#if subitem.answer}
+                                                {#each subitem.answer as subAns}
+                                                    {subAns.valueString ?? subAns.valueCoding?.display ?? "No sub-answer text"}<br/>
+                                                {/each}
+                                            {/if}
+                                        </td>
+                                    </tr>
+                                {/each}
+                            </tbody>
+                        </table>
+                    {/if}
+                </td>
+            </tr>
+        {/each}
+    </tbody>
+</table>
