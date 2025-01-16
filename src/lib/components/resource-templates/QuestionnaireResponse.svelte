@@ -31,7 +31,7 @@ Authored: {resource.authored}
   {/if}
 {/if}
 
-<table class="table table-bordered table-sm">
+<table class="table table-bordered table-responsive table-sm">
     <thead>
         <tr><th colspan="3">Responses</th></tr>
     </thead>
