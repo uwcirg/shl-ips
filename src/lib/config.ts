@@ -68,6 +68,7 @@ export const SOF_RESOURCES = [
   'PractitionerRole',  // can't search by patient; "An identifier, practitioner, organization, location, or specialty parameter is required."
   'Procedure', // TODO change to subject
   // 'Specimen', // Not in EPIC USCDI R4
+  'QuestionnaireResponse',
 ];
 
 export const SOF_PATIENT_RESOURCES = [
@@ -90,6 +91,7 @@ export const SOF_PATIENT_RESOURCES = [
   // 'PractitionerRole',  // can't search by patient; "An identifier, practitioner, organization, location, or specialty parameter is required."
   'Procedure', // TODO change to subject
   // 'Specimen', // Not in EPIC USCDI R4
+  'QuestionnaireResponse',
 ];
 
 export const VIEWER_BASE = new URL(
@@ -112,6 +114,8 @@ export const EXAMPLE_IPS = {
   'Angela Roster': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/10965/$summary',
   'Horace Skelly': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/11142/$summary',
   'Anonymous': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/10999/$summary',
-  'Desiree': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/Pat1-System2/$summary'
+  'Desiree': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/Pat1-System2/$summary',
+  // 2025-01 Connectathon PACIO track:
+  'Jenny Mosley': 'https://hapi.fhir.org/baseR4/Patient/patientJM1/$summary'
 };
 export const IPS_DEFAULT = 'Maria SEATTLE Gravitate';
