@@ -104,6 +104,8 @@ export const PATIENT_IPS = {
 }
 export const EXAMPLE_IPS = {
   'Maria SEATTLE Gravitate': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/14599/$summary',
+  'Peter Kieth Jordan': 'https://raw.githubusercontent.com/jddamore/IPSviewer/4eedba9df34afbf3eb20d98c49d36afc7f9ce104/samples/connectathon_Jan2025/new_IPS_Example.json',
+  'Johanna Petronella Maria (Jo) van Putten-van der Giessen': "https://raw.githubusercontent.com/jddamore/IPSviewer/4eedba9df34afbf3eb20d98c49d36afc7f9ce104/samples/connectathon_archive/NL_core_patient_01.json",
   'Martha Mum': 'https://hl7-ips-server.hl7.org/fhir/Patient/15/$summary',
   'Meditech 1': 'https://dev-mtx-interop.meditech.com:443/v2/ips/STU1/Patient/f3b430be-1f8a-53d3-8261-4ffbafa05a61/$summary',
   // 'Meditech 2': 'https://dev-mtx-interop.meditech.com:443/v2/ips/STU1/Patient/9bad7dc5-47ad-5022-82e7-0cb0aab13ee9/$summary', // Error returned
