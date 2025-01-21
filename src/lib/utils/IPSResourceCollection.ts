@@ -259,8 +259,7 @@ export class IPSResourceCollection {
                 delete rBT[sectionKey];
             }
         });
-        let selectedIPSResources = Object.values(rBT)
-            .flatMap(types => Object.values(types))
+        let selectedIPSResources = this.flattenResources(rBT)
             .filter(resource => (resource as ResourceHelper).include ) as ResourceHelper[];
         return selectedIPSResources;
     }
