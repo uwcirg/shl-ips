@@ -1,4 +1,4 @@
-import type { Bundle, CompositionSection, DocumentReference } from 'fhir/r4';
+import type { Bundle, BundleEntry, CompositionSection, DocumentReference } from 'fhir/r4';
 
 export interface SHLSubmitEvent {
   shcs: SHCFile[];
@@ -7,6 +7,12 @@ export interface SHLSubmitEvent {
   passcode?: string;
   exp?: number;
   patientName?: string;
+}
+
+
+export interface ResourceTemplateParams<T> {
+  resource: T;
+  entries?: BundleEntry[];
 }
 
 export interface ResourceRetrieveEvent {

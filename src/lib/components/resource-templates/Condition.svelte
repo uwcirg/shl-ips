@@ -1,8 +1,11 @@
 <script lang="ts">
   import { Badge } from 'sveltestrap';
   import type { Condition } from 'fhir/r4';
+  import type { ResourceTemplateParams } from '$lib/utils/types';
 
-  export let resource : Condition; // Define a prop to pass the data to the component
+  export let content: ResourceTemplateParams<Condition>; // Define a prop to pass the data to the component
+
+  let resource: Condition = content.resource;
 
   function badgeColor(severity: string) {
     if (severity) {
@@ -57,9 +60,12 @@
     <strong>{resource.code.text}</strong><br>
   {/if}
 {/if}
-{#if resource.bodySite}
-  Site: {resource.bodySite}<br>
+{#if resource.bodySite?.[0]?.coding?.[0]?.display}
+  Site: {resource.bodySite[0]?.coding?.[0]?.display}<br>
 {/if}
 {#if resource.onsetDateTime}
-  Since {resource.onsetDateTime.split("T")[0]}<br>
+  Since: {resource.onsetDateTime.split("T")[0]}<br>
+{/if}
+{#if resource.recordedDate}
+  Recorded: {resource.recordedDate.split("T")[0]}<br>
 {/if}
