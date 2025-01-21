@@ -300,7 +300,7 @@
                                                         <Input id={key} type="checkbox" bind:checked={$resourcesByTypeStore[resourceType][key].include} value={key} />
                                                     {/if}
                                                 </Col>
-                                                <Col>
+                                                <Col class="justify-content-center align-items-center">
                                                     {#if resourceType in components}
                                                         <svelte:component
                                                             this={components[resourceType]}
