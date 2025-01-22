@@ -385,8 +385,7 @@
   </Col>
   <Col class="d-flex justify-content-center">
     <FormGroup class="label shlbutton" style="width: 100%">
-      <div style="border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 1em"><h3>Content</h3></div>
-      <Label>Add, update, or remove summaries shared by this link.</Label>
+      <div style="border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 1em"><h3>Source</h3></div>
       <Button size="sm" color="primary" class="mx-1" style="width: fit-content" on:click={copySource} disabled={!!copyNotice}>
         <Icon name="clipboard" />
         {#if sourceCopyNotice}
