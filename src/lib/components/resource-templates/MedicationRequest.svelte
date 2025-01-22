@@ -43,10 +43,9 @@
     {/if}
     {#if resource.medicationCodeableConcept.coding[0].display}
       <strong>{resource.medicationCodeableConcept.coding[0].display}</strong><br />
-    {:else if resource.medicationCodeableConcept.text}
-      <strong>{resource.medicationCodeableConcept.text}</strong><br />
     {/if}
-  {:else if resource.medicationCodeableConcept.text}
+  {/if}
+  {#if resource.medicationCodeableConcept.text}
     <strong>{resource.medicationCodeableConcept.text}</strong><br />
   {/if}
 {/if}

@@ -27,6 +27,8 @@
     import AdvanceDirective from '$lib/components/resource-templates/AdvanceDirective.svelte';
     import AllergyIntolerance from '$lib/components/resource-templates/AllergyIntolerance.svelte';
     import Condition from '$lib/components/resource-templates/Condition.svelte';
+    import Device from '$lib/components/resource-templates/Device.svelte';
+    import DeviceUseStatement from '../resource-templates/DeviceUseStatement.svelte';
     import DiagnosticReport from '$lib/components/resource-templates/DiagnosticReport.svelte';
     import Encounter from '$lib/components/resource-templates/Encounter.svelte';
     import Immunization from '$lib/components/resource-templates/Immunization.svelte';
@@ -49,6 +51,8 @@
         "AllergyIntolerance": AllergyIntolerance,
         "Condition": Condition,
         "Consent": AdvanceDirective,
+        "Device" : Device,
+        "DeviceUseStatement": DeviceUseStatement,
         "DiagnosticReport": DiagnosticReport,
         "DocumentReference": AdvanceDirective,
         "Encounter": Encounter,

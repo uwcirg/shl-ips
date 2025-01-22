@@ -26,6 +26,8 @@
   import AllergyIntolerance from '$lib/components/resource-templates/AllergyIntolerance.svelte';
   import Condition from '$lib/components/resource-templates/Condition.svelte';
   import Consent from '$lib/components/resource-templates/Consent.svelte';
+  import Device from '$lib/components/resource-templates/Device.svelte';
+  import DeviceUseStatement from '$lib/components/resource-templates/DeviceUseStatement.svelte';
   import DiagnosticReport from '$lib/components/resource-templates/DiagnosticReport.svelte';
   import Encounter from '$lib/components/resource-templates/Encounter.svelte';
   import Immunization from '$lib/components/resource-templates/Immunization.svelte';
@@ -39,11 +41,14 @@
   import Practitioner from '$lib/components/resource-templates/Practitioner.svelte';
   import Procedure from '$lib/components/resource-templates/Procedure.svelte';
   import OccupationalData from '$lib/components/resource-templates/OccupationalData.svelte';
+  import QuestionnaireResponse from '$lib/components/resource-templates/QuestionnaireResponse.svelte';
 
   const components: Record<string, any> = {
     "AllergyIntolerance": AllergyIntolerance,
     "Condition": Condition,
     "Consent": Consent,
+    "Device" : Device,
+    "DeviceUseStatement": DeviceUseStatement,
     "DiagnosticReport": DiagnosticReport,
     "DocumentReference": AdvanceDirective,
     "Encounter": Encounter,
@@ -58,7 +63,8 @@
     "Practitioner": Practitioner,
     "Procedure": Procedure,
     "Occupational Data": OccupationalData,
-    "Advance Directives": AdvanceDirective
+    "Advance Directives": AdvanceDirective,
+    "QuestionnaireResponse": QuestionnaireResponse
   };
 
   interface IpsContent {
