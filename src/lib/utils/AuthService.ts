@@ -5,7 +5,7 @@ import {
   AUTH_SILENT_REDIRECT_URI,
   AUTH_POST_LOGOUT_URI
 } from '$lib/config';
-import { User, UserManager } from 'oidc-client-ts';dsfadf
+import { User, UserManager } from 'oidc-client-ts';
 
 export class AuthService {
   private static _instance: AuthService;
