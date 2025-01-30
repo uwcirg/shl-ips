@@ -235,6 +235,12 @@ export class IPSResourceCollection {
         if (!("Patient" in get(this.resourcesByType))) {
             throw Error('No patients exist');
         }
+        this.resourcesByType.update((curr) => {
+            Object.entries(curr["Patient"]).forEach(([id, rh]) => {
+                rh.include = (id == p);
+            });
+            return curr;
+        })
         this.selectedPatient.set(p);
         this._updatePatientRefs();
     }
