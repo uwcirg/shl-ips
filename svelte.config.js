@@ -18,6 +18,15 @@ export default {
       paths: {
         base: dev ? '' : '/shlips'
       }
-    })
+    }),
+    csp: {
+      directives: {
+        'script-src': ['self']
+      },
+      reportOnly: {
+        'script-src': ['self'],
+        'report-uri': ['/']
+      }
+    }
   }
 };
