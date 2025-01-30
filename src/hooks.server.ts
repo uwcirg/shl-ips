@@ -1,7 +1,6 @@
 import { redirect, type Handle } from '@sveltejs/kit';
 
 const public_paths = [
-  '/',
   '/home',
   '/ips'
 ];
@@ -23,7 +22,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   }
 
   if (!authorized && !isPathAllowed(event.url.pathname)) {
-    throw redirect(302, '/');
+    throw redirect(302, '/home');
   }
 
   const response = await resolve(event);
