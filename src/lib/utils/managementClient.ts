@@ -68,7 +68,9 @@ export class SHLClient {
       },
       body: JSON.stringify(config)
     });
-    const shl = await res.json();
+    const shlink = await res.json();
+    const payload = shlink.split('/');
+    const shl: SHLAdminParams = JSON.parse(base64url.decode(payload[payload.length - 1]).toString());
     return shl;
   }
 
