@@ -116,8 +116,8 @@
       url: shl.url,
       managementToken: shl.managementToken,
       key: shl.key,
-      passcode: shl.passcode,
-      exp: shl.exp,
+      passcode: shl.passcode ?? "",
+      exp: shl.exp ?? 0,
       files: []
     }
     return await shlClient.toLink(shlMin);
@@ -337,7 +337,7 @@
             <Row class="align-items-center">
               <Col xs=6 class="align-items-center">
                 {#if file.added}
-                  <strong><Icon name="calendar"></Icon> {file.added}</strong>
+                  <strong><Icon name="calendar"></Icon> {file.added.split(' ')[0]}</strong>
                 {/if}
               </Col>
               <Col xs=6>

@@ -19,6 +19,7 @@ export class AuthService {
       redirect_uri: AUTH_REDIRECT_URI,
       silent_redirect_uri: AUTH_SILENT_REDIRECT_URI,
       post_logout_redirect_uri: AUTH_POST_LOGOUT_URI,
+      // iframeScriptOrigin: "http://localhost:3000",
       scope: "openid online_access",
     };
     this.userManager = new UserManager(settings);
@@ -32,7 +33,7 @@ export class AuthService {
     return this.userManager.getUser();
   }
 
-  getToken(): Promise<string | null> {
+  getAccessToken(): Promise<string | null> {
     return this.getUser().then((user) => {
       if (user?.access_token) {
         return user.access_token;
@@ -46,6 +47,10 @@ export class AuthService {
         });
       }
     });
+  }
+
+  async getProfile(): Promise<any | undefined> {
+    return (await this.userManager.getUser())?.profile;
   }
 
   getRedirectUrl(): string {
@@ -91,6 +96,6 @@ export class AuthService {
   }
 
   async isAuthenticated(): Promise<boolean> {
-    return this.getToken().then((token) => token !== null);
+    return this.getAccessToken().then((token) => token !== null);
   }
 }

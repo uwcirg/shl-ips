@@ -25,7 +25,7 @@
   import Banner from '$lib/components/layout/Banner.svelte';
   import { AuthService } from '$lib/utils/AuthService';
   import { VERSION_STRING } from '$lib/config';
-  
+
   let shlStore = writable<SHLAdminParams[]>([]);
   setContext('shlStore', shlStore);
 
@@ -42,14 +42,19 @@
 
   let mode: Writable<string> = getContext('mode');
 
+  let user = authService.getUser();
+
   onMount(async () => {
     window.onscroll = function() {scrollFunction()};
     scrollFunction();
     $isOpen = false;
 
-    $shlStore = [
-      ...(await shlClient.getUserShls())
-    ];
+    // TODO: Why does this still run before auth completes?
+    user.then(async () => {
+      $shlStore = [
+        ...(await shlClient.getUserShls())
+      ];
+    });
   });
 
   function scrollFunction() {
@@ -126,7 +131,7 @@
               {/if}
             </DropdownMenu>
           </Dropdown>
-          {#await authService.getUser()}
+          {#await authService.getProfile()}
             <NavItem>
               <NavLink on:click={() => authService.login()}><Icon name="person-circle"/> Sign In</NavLink>
             </NavItem>
@@ -135,7 +140,7 @@
               <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
                 <DropdownToggle color="primary" nav caret><Icon name="person-circle"/> Account</DropdownToggle>
                 <DropdownMenu end style="max-height: 500px; overflow:auto">
-                  <DropdownItem header>Welcome, {user.profile.given_name}</DropdownItem>
+                  <DropdownItem header>Welcome, {user.given_name}</DropdownItem>
                   <DropdownItem
                     on:click={() => {
                       authService.logout();

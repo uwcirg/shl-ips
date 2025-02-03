@@ -38,9 +38,8 @@ export class SHLClient {
     const shlinkJsonPayload = {
       url: `${API_BASE}/shl/${shl.id}`,
       exp: shl.exp || undefined,
-      flag: shl.flag,
-      key: shl.key,
-      label: shl.label
+      flag: shl.flag ?? 'P',
+      key: shl.key
     };
 
     const encodedPayload: string = base64url.encode(JSON.stringify(shlinkJsonPayload));
@@ -54,14 +53,14 @@ export class SHLClient {
     }
     const res = await fetch(`${API_BASE}/user`, {
       method: 'POST',
-      body: JSON.stringify({ userId: await this.auth.getUser()})
+      body: JSON.stringify({ userId: (await this.auth.getProfile())?.sub }),
     });
     const shls = await res.json();
     return shls;
   }
 
   async createShl(config: ConfigForServer = {}): Promise<SHLAdminParams> {
-    config.userId = await this.auth.getUser();
+    config.userId = (await this.auth.getProfile())?.sub;
     const res = await fetch(`${API_BASE}/shl`, {
       method: 'POST',
       headers: {
@@ -166,7 +165,7 @@ export class SHLClient {
       body: contentEncrypted
     });
     const updatedShl = await res.json();
-    return await updatedShl.json();
+    return await updatedShl;
   }
 
   async deleteFile(shl: SHLAdminParams, contentHash: string): Promise<SHLAdminParams> {
