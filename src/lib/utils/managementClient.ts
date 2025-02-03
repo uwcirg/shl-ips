@@ -48,12 +48,12 @@ export class SHLClient {
   }
 
   async getUserShls(): Promise<SHLAdminParams[]> {
-    if (!this.auth) {
-      return [];
-    }
+    let profile = await this.auth.getProfile();
+    if (!profile) return [];
+    const userId = profile.sub;
     const res = await fetch(`${API_BASE}/user`, {
       method: 'POST',
-      body: JSON.stringify({ userId: (await this.auth.getProfile())?.sub }),
+      body: JSON.stringify({ userId }),
     });
     const shls = await res.json();
     return shls;
