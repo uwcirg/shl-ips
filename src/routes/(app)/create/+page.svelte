@@ -33,8 +33,10 @@
   async function newShlFromShc(details: SHLSubmitEvent): Promise<SHLAdminParams> {
     shlStatus = "Creating SHL";
     let shlCreated = await shlClient.createShl({exp: details.exp, passcode: details.passcode, label: details.label });
+    $shlStore = await shlClient.getUserShls();
+    let fullShlCreated = $shlStore.filter((s) => s.id === shlCreated.id)[0];
     shlStatus = "Adding IPS";
-    shlCreated = await addFiles(shlCreated, details.shcs);
+    shlCreated = await addFiles(fullShlCreated, details.shcs);
     return shlCreated;
   }
 
