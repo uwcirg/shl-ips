@@ -25,15 +25,14 @@
   import Banner from '$lib/components/layout/Banner.svelte';
   import { AuthService } from '$lib/utils/AuthService';
   import { VERSION_STRING } from '$lib/config';
-
-  const LOCAL_STORAGE_KEY = 'shlips_store_shls';
-  let shlStore = writable<SHLAdminParams[]>(
-    window.localStorage[LOCAL_STORAGE_KEY] ? JSON.parse(window.localStorage[LOCAL_STORAGE_KEY]) : []
-  );
-
+  
+  let shlStore = writable<SHLAdminParams[]>([]);
   setContext('shlStore', shlStore);
 
-  let shlClient = new SHLClient();
+  let authService = AuthService.Instance;
+  setContext('authService', authService);
+
+  let shlClient = new SHLClient(authService);
   setContext('shlClient', shlClient);
 
   let reset = writable(0);
@@ -43,16 +42,14 @@
 
   let mode: Writable<string> = getContext('mode');
 
-  let authService = AuthService.Instance;
-
-  $: {
-    if ($shlStore) window.localStorage[LOCAL_STORAGE_KEY] = JSON.stringify($shlStore);
-  }
-
-  onMount(() => {
+  onMount(async () => {
     window.onscroll = function() {scrollFunction()};
     scrollFunction();
     $isOpen = false;
+
+    $shlStore = [
+      ...(await shlClient.getUserShls())
+    ];
   });
 
   function scrollFunction() {
@@ -161,12 +158,6 @@
                           {/if}
                         </Col>
                       </Row>
-                    </DropdownItem>
-                    <DropdownItem
-                      on:click={() => {
-                        $shlStore = [];
-                        goto('/');
-                      }}><span class="text-danger">Reset Demo</span>
                     </DropdownItem>
                 </DropdownMenu>
               </Dropdown>

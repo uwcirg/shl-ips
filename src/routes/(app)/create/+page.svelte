@@ -32,11 +32,9 @@
 
   async function newShlFromShc(details: SHLSubmitEvent): Promise<SHLAdminParams> {
     shlStatus = "Creating SHL";
-    let shlCreated = await shlClient.createShl({exp: details.exp, passcode: details.passcode });
+    let shlCreated = await shlClient.createShl({exp: details.exp, passcode: details.passcode, label: details.label });
     shlStatus = "Adding IPS";
     shlCreated = await addFiles(shlCreated, details.shcs);
-    shlCreated.label = details.label;
-    shlCreated.passcode = details.passcode;
     return shlCreated;
   }
 
@@ -57,15 +55,11 @@
     patientName = detail.patientName ?? "";
     if (shl) {
       shl = await addFiles(shl, detail.shcs);
-      $shlStore[$shlStore.findIndex(obj => obj.id === shl?.id)] = shl;
+      $shlStore = await shlClient.getUserShls();
       goto(`/view/${shl.id}`);
     } else {
       const newShl = await newShlFromShc(detail);
-      newShl.files.map(f => {
-        f.contentEncrypted = f.contentEncrypted.slice(0, 200);
-        return f;
-      });
-      $shlStore = [...$shlStore, newShl];
+      $shlStore = await shlClient.getUserShls();
       goto(`/view/${newShl.id}`);
     }
   }}

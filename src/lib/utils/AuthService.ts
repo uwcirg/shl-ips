@@ -32,6 +32,22 @@ export class AuthService {
     return this.userManager.getUser();
   }
 
+  getToken(): Promise<string | null> {
+    return this.getUser().then((user) => {
+      if (user?.access_token) {
+        return user.access_token;
+      } else {
+        return this.renewToken().then((user) => {
+          return user?.access_token ?? null;
+        }).catch((error) => {
+          console.error(error);
+          this.logout();
+          return null;
+        });
+      }
+    });
+  }
+
   getRedirectUrl(): string {
     let url = this.redirect_url;
     this.redirect_url = "";
@@ -75,18 +91,6 @@ export class AuthService {
   }
 
   async isAuthenticated(): Promise<boolean> {
-    return this.getUser().then((user) => {
-      if (user?.access_token) {
-        return true;
-      } else {
-        return this.renewToken().then((user) => {
-          return user?.access_token ? true : false;
-        }).catch((error) => {
-          console.error(error);
-          this.logout();
-          return false;
-        });
-      }
-    });
+    return this.getToken().then((token) => token !== null);
   }
 }
