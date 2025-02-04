@@ -15,8 +15,6 @@
   import * as shlClient from '$lib/utils/shlClient.js';
   import { verify } from '$lib/utils/shcDecoder.js';
   import type { Bundle, Composition, Patient } from 'fhir/r4';
-  import decode from 'base64url';
-  import * as jose from 'jose';
   
   import IPSContent from '$lib/components/viewer/IPSContent.svelte';
   import Demo from '$lib/components/viewer/Demo.svelte';
@@ -92,94 +90,6 @@
     showError = message !== "";
   }
   // End error display and handling logic
-interface SHLinkConnectRequest {
-  shl: string;
-  recipient: string;
-  passcode?: string;
-}
-
-interface SHLinkConnectResponse {
-  state: string;
-  shcs: string[];
-}
-
-interface SHLClientStateDecoded {
-  url: string;
-  key: string;
-  recipient: string;
-  passcode?: string;
-}
-
-interface SHLDecoded {
-  url: string;
-  key: string;
-  flag?: string;
-  label?: string;
-}
-
-interface SHLManifestFile {
-  files: {
-    contentType: string;
-    location: string;
-    embedded?: string;
-  }[];
-}
-function decodeBase64urlToJson<T>(s: string): T {
-  return JSON.parse(new TextDecoder('utf-8').decode(jose.base64url.decode(s))) as T;
-}
-async function retrieveIHETesting(configIncoming: SHLinkConnectRequest | {state: string}) {
-  const config: SHLinkConnectRequest = configIncoming.state ? JSON.parse(new TextDecoder('utf-8').decode(jose.base64url.decode(configIncoming.state))) : configIncoming
-  const shlBody = config.shl.split(/^(?:.+:\/.+#)?shlink:\//)[1];
-  const parsedShl: SHLDecoded = decodeBase64urlToJson(shlBody);
-  const manifestResponse = await fetch(parsedShl.url, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      passcode: config.passcode,
-      recipient: config.recipient,
-    }),
-  });
-  let isJson = false;
-  let manifestResponseContent;
-  manifestResponseContent = await manifestResponse.text();
-  try {
-    manifestResponseContent = JSON.parse(manifestResponseContent);
-    isJson = true;
-  } catch (error) {
-    console.warn("Manifest did not return JSON object");
-  }
-
-  if (!manifestResponse.ok || !isJson) {
-    return {
-      status: manifestResponse.status,
-      error: (manifestResponseContent ?? "")
-    };
-  } else {
-    const allFiles = (manifestResponseContent as SHLManifestFile).files
-      .filter((f) => f.contentType === 'application/smart-health-card')
-      .map(async (f) =>  {
-        if (f.embedded !== undefined) {
-          return f.embedded
-        } else {
-          return fetch(f.location).then((f) => f.text())
-        }
-      });
-
-    const decryptionKey = Buffer.from(decode(parsedShl.key));
-    const allFilesDecrypted = allFiles.map(async (f) => {
-      const decrypted = await jose.compactDecrypt(await f, decryptionKey);
-      const decoded = new TextDecoder().decode(decrypted.plaintext);
-      return decoded;
-    });
-
-    const shcs = (await Promise.all(allFilesDecrypted)).flatMap((f) => JSON.parse(f)['verifiableCredential'] as string);
-    const result: SHLinkConnectResponse = { shcs, state: jose.base64url.encode(JSON.stringify(config))};
-
-    return result;
-  }
-}
 
   // Retrieving SHL
   async function retrieve(){
@@ -193,7 +103,6 @@ async function retrieveIHETesting(configIncoming: SHLinkConnectRequest | {state:
     let retrieveResult;
     try {
         retrieveResult = await shlClient.retrieve({
-        // retrieveResult = await retrieveIHETesting({
             shl: shl ?? "",
             passcode: passcode ?? "",
             recipient
