@@ -68,7 +68,7 @@ export class SHLClient {
     config.pin = config.passcode;
     config.patientIdentifierSystem = "http://keycloak.ips-shl.ubu.dlorigan.dev.cirg.uw.edu";
     // const res = await fetch(`${API_BASE}/shl`, {
-    const res = await fetch(`https://pancanadianio.ca::10245/myhealth-gateway/v1/patient-summary`, {
+    const res = await fetch(`https://pancanadianio.ca:10245/myhealth-gateway/v1/patient-summary`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -77,7 +77,7 @@ export class SHLClient {
       body: JSON.stringify(config)
     });
     console.log(`Request: POST ${API_BASE}/shl`);
-    console.log(`Request: POST https://pancanadianio.ca::10245/myhealth-gateway/v1/patient-summary`);
+    console.log(`Request: POST https://pancanadianio.ca:10245/myhealth-gateway/v1/patient-summary`);
     console.log("Request body: ", JSON.stringify(config));
     const shlink = await res.text();
     console.log("Response body: ", shlink);
