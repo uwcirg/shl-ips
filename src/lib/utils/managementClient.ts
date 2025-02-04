@@ -68,10 +68,14 @@ export class SHLClient {
       },
       body: JSON.stringify(config)
     });
+    console.log(`Request: POST ${API_BASE}/shl`);
+    console.log("Request body: ", JSON.stringify(config));
     const shlink = await res.text();
+    console.log("Response body: ", shlink);
     const payload = shlink.split('/');
     const decodedPayload = base64url.decode(payload[payload.length - 1]);
     const asString = new TextDecoder('utf-8').decode(decodedPayload);
+    console.log("Decoded payload: ", asString);
     const shl: SHLAdminParams = JSON.parse(asString);
     return shl;
   }
