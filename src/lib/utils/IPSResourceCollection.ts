@@ -34,6 +34,7 @@ const allowableResourceTypes = [
     'Practitioner',
     // 'PractitionerRole', Not relevant to IPS
     'Procedure',
+    'QuestionnaireResponse', // FIXME this is not part of IPS, should get a carve-out elsewhere...
     'Specimen'
 ];
 
@@ -234,6 +235,12 @@ export class IPSResourceCollection {
         if (!("Patient" in get(this.resourcesByType))) {
             throw Error('No patients exist');
         }
+        this.resourcesByType.update((curr) => {
+            Object.entries(curr["Patient"]).forEach(([id, rh]) => {
+                rh.include = (id == p);
+            });
+            return curr;
+        })
         this.selectedPatient.set(p);
         this._updatePatientRefs();
     }
@@ -259,10 +266,13 @@ export class IPSResourceCollection {
                 delete rBT[sectionKey];
             }
         });
-        let selectedIPSResources = Object.values(rBT)
-            .flatMap(types => Object.values(types))
+        let selectedIPSResources = this.flattenResources(rBT)
             .filter(resource => (resource as ResourceHelper).include ) as ResourceHelper[];
         return selectedIPSResources;
+    }
+
+    flattenResources(resourcesByType: Record<string, Record<string, ResourceHelper>>) {
+        return Object.values(resourcesByType).flatMap(types => Object.values(types))
     }
 
     toJson(): string {
