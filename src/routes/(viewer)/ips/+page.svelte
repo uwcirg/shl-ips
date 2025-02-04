@@ -98,7 +98,7 @@
     let passcode;
     const needPasscode = shlClient.flag({ shl }).includes('P');
     if (needPasscode) {
-        passcode = prompt("Enter passcode for SMART Health Link");
+      passcode = prompt("Patient Summary Viewer\n----------------------------------------\nEnter passcode for SMART Health Link\nIf no passcode was set, just click \"OK\"");
     }
     let retrieveResult;
     try {
@@ -123,7 +123,7 @@
             } else if (retrieveResult.status === 401) {
                 // Failed the password requirement
                 while (retrieveResult.status === 401) {
-                    passcode = prompt(`Enter passcode for SMART Health Link ${retrieveResult.error.remainingAttempts !== undefined ? "\nAttempts remaining: "+retrieveResult.error.remainingAttempts : ""}`);
+                  passcode = prompt(`Patient Summary Viewer\n----------------------------------------\nEnter passcode for SMART Health Link\nIf no passcode was set, just click \"OK\"${retrieveResult.error.remainingAttempts !== undefined ? "\nAttempts remaining: "+retrieveResult.error.remainingAttempts : ""}`);
                     try {
                         retrieveResult = await shlClient.retrieve({
                             shl,
