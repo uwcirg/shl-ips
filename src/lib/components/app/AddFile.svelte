@@ -70,7 +70,7 @@
 
   let shcsToAdd: SHCFile[] = [];
   let singleIPS = true;
-  let patientName = "My";
+  let patientName = "";
   let patient: Patient | undefined;
 
   let label = 'Health Summary ' + new Date().toISOString().slice(0, 10);
