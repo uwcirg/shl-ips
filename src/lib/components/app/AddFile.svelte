@@ -315,7 +315,7 @@
       </TabPane>
       {#if $mode === "advanced"}
         <TabPane class="sof-tab" tabId="sof" style="padding-top:10px">
-          <span class="smart-tab" slot="tab">CARIN BB</span>
+          <span class="smart-tab" slot="tab">*CARIN BB</span>
           <FetchCARINBB
             on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
             on:sof-auth-fail={ async ({ detail }) => { revertPreAuth(detail) }}
