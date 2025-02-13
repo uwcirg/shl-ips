@@ -17,6 +17,35 @@ export async function base64toBlob(base64:string, type="application/octet-stream
   return window.URL.createObjectURL(await result.blob());
 }
 
+// For machine-readable content, use the reference in the Composition.section.entry to retrieve resource from Bundle
+export function getEntry(entries: Array<BundleEntry>, reference: string) {
+  let result;
+  if (!entries) {
+    return result;
+  }
+  for (let entry of entries) {
+    if (entry.fullUrl?.includes(reference)) {
+      return entry.resource;
+    } else {
+      // Attempt to match based on resource and uuid
+      let splitReference = reference.split('/');
+      let referenceId = splitReference?.pop();
+      if (entry.resource?.resourceType && splitReference.includes(entry.resource?.resourceType) && referenceId) {
+        if (entry.fullUrl?.includes(referenceId)) {
+          return entry.resource;
+        } else if (entry.resource?.id?.includes(referenceId)) {
+          return entry.resource;
+        }
+      }
+    }
+  }
+
+  if (!result) {
+    console.log(`missing reference ${reference}`);
+  }
+  return result;
+};
+
 export function download(filename:string, text:string) {
   var element = document.createElement('a');
   element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
