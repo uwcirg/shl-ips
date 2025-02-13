@@ -30,6 +30,29 @@ export function download(filename:string, text:string) {
   document.body.removeChild(element);
 }
 
+export function getReferences(resource: Resource, references: Resource[] | undefined): Resource[] | undefined {
+    let key = "reference";
+    if (references === undefined) {
+      references = [];
+    }
+    if (typeof resource === "object") {
+      for (let k in resource) {
+        if (k !== "subject" && k !== "patient") {
+          if (k === key && references !== undefined) {
+            references.push(resource[k]);
+          } else {
+            references = getReferences(resource[k], references);
+          }
+        } 
+      }
+    } else if (resource instanceof Array) {
+      for (let i=0; i < resource.length; i++) {
+        references = getReferences(resource[i], references);
+      }
+    }
+    return references;
+  }
+
 export function getResourcesFromIPS(ips: Bundle) {
   let entries = ips.entry;
   let resources = [] as Resource[];

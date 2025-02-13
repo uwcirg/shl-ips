@@ -1,5 +1,6 @@
 import FHIR from 'fhirclient';
 import { SOF_REDIRECT_URI, SOF_PATIENT_RESOURCES, SOF_RESOURCES } from '$lib/config';
+import { getReferences } from '$lib/utils/util';
 
 export { authorize, getResources, getResourcesWithReferences, activePatient, constructResourceUrl };
 
@@ -8,7 +9,7 @@ const resourceScope = patientResourceScope.join(" ");
 const config = {
         clientId: '(ehr client id, populated later)', // clientId() is ignored at smit
         // scope: `openid fhirUser launch/patient ${resourceScope}`,
-        scope: `launch/patient patient/*.read`,
+        scope: `openid fhirUser launch/patient patient/*.read`,
         iss: '(authorization url, populated later)',
         redirect_uri: SOF_REDIRECT_URI
     };
@@ -21,29 +22,6 @@ function authorize(inputFhirUrl, clientId) {
     config.pkceMode = "ifSupported";
     return FHIR.oauth2.authorize(config);
 };
-
-function getReferences(obj, references) {
-    let key = "reference";
-    if (references === undefined) {
-      references = [];
-    }
-    if (typeof obj === "object") {
-      for (let k in obj) {
-        if (k !== "subject" && k !== "patient") {
-          if (k === key && references !== undefined) {
-            references.push(obj[k]);
-          } else {
-            references = getReferences(obj[k], references);
-          }
-        } 
-      }
-    } else if (obj instanceof Array) {
-      for (let i=0; i < obj.length; i++) {
-        references = getReferences(obj[i], references);
-      }
-    }
-    return references;
-  }
 
 function constructResourceUrl(resourceType, patientId, endpoint='') {
     if (endpoint) {
@@ -127,7 +105,6 @@ async function getResourcesWithReferences(depth=1) {
         referenceMap = {};
         depth--;
     }
-
     return allResources;
 }
 

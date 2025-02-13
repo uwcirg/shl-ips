@@ -12,4 +12,6 @@ RUN npm clean-install --include=dev
 
 RUN sed -i '/2\.11\.6/a \ \ "type": "module",' node_modules/@popperjs/core/package.json
 
+RUN npm run build
+
 CMD npm run build && npm run start
