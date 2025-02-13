@@ -1,5 +1,4 @@
 // import {PUBLIC_BASE_URL} from '$env/static/public';
-import { dev } from '$app/environment';
 
 export const API_BASE = import.meta.env.VITE_API_BASE;
 
@@ -43,26 +42,43 @@ export const SOF_HOSTS = [
     clientId: "<no client id>",
     note: "Credentials provided"
   },
+];
+
+export const CARIN_HOSTS = [
   {
     id: "aetna",
     name: "AETNA Insurance Sandbox",
-    url: "https://vteapif1.aetna.com/fhirdemo/v1/patientaccess",
+    url: "https://vteapif1.aetna.com/fhirdemo/v2/patientaccess",
     clientId: import.meta.env.VITE_AETNA_CLIENT_ID,
     note: "VTETestUser01 / FHIRdemo2020"
   },
   {
-    id: "carefirst",
-    name: "CareFirst",
-    url: "https://chpdc-api-sita.carefirst.com/v1/fhir/patientaccess",
-    // url: "https://chpmd-api-sita.carefirst.com/v1/fhir/patientaccess",
-    // url: "https://dsnp-api-sita.carefirst.com/v1/fhir/patientaccess",
-    // url: "https://mapd-api-sita.carefirst.com/v1/fhir/patientaccess",
-    // url: "https://mhbe-api-sita.carefirst.com/v1/fhir/patientaccess",
-    // url: "https://egwp-api-sita.carefirst.com/v1/fhir/patientaccess",
-    clientId: import.meta.env.VITE_CAREFIRST_CLIENT_ID,
+    id: "cpcds",
+    name: "CPCDS Demo",
+    url: "https://cpcds-server.lantanagroup.com/fhir",
+    clientId: import.meta.env.VITE_CPCDS_CLIENT_ID,
+    note: "Patient1 / password"
+  },
+  {
+    id: "inferno",
+    name: "Inferno Test Suite",
+    url: "https://inferno-qa.healthit.gov/suites/custom/c4bb_v200_client",
+    clientId: import.meta.env.VITE_INFERNO_CLIENT_ID,
     note: "Credentials provided"
   },
-];
+  // {
+  //   id: "carefirst",
+  //   name: "CareFirst",
+  //   url: "https://chpdc-api-sita.carefirst.com/v1/fhir/patientaccess",
+  //   // url: "https://chpmd-api-sita.carefirst.com/v1/fhir/patientaccess",
+  //   // url: "https://dsnp-api-sita.carefirst.com/v1/fhir/patientaccess",
+  //   // url: "https://mapd-api-sita.carefirst.com/v1/fhir/patientaccess",
+  //   // url: "https://mhbe-api-sita.carefirst.com/v1/fhir/patientaccess",
+  //   // url: "https://egwp-api-sita.carefirst.com/v1/fhir/patientaccess",
+  //   clientId: import.meta.env.VITE_CAREFIRST_CLIENT_ID,
+  //   note: "Credentials provided"
+  // },
+]
 
 export const BEARER_AUTHORIZATION = {
   'Meditech': import.meta.env.VITE_MEDITECH_BEARER_TOKEN
@@ -87,6 +103,7 @@ export const SOF_RESOURCES = [
   'PractitionerRole',  // can't search by patient; "An identifier, practitioner, organization, location, or specialty parameter is required."
   'Procedure', // TODO change to subject
   // 'Specimen', // Not in EPIC USCDI R4
+  'QuestionnaireResponse',
 ];
 
 export const SOF_PATIENT_RESOURCES = [
@@ -109,6 +126,15 @@ export const SOF_PATIENT_RESOURCES = [
   // 'PractitionerRole',  // Pulled in via references - can't search by patient; "An identifier, practitioner, organization, location, or specialty parameter is required."
   'Procedure', // TODO change to subject
   // 'Specimen', // Not in EPIC USCDI R4
+  'QuestionnaireResponse',
+];
+
+export const CARIN_RESOURCES = [
+  'Coverage',
+  'Practitioner',
+  'Organization',
+  'RelatedPerson',
+  'ExplanationOfBenefit',
 ];
 
 export const VIEWER_BASE = new URL(
@@ -123,12 +149,16 @@ export const PATIENT_IPS = {
 }
 export const EXAMPLE_IPS = {
   'Maria SEATTLE Gravitate': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/14599/$summary',
+  'Peter Kieth Jordan': 'https://raw.githubusercontent.com/jddamore/IPSviewer/4eedba9df34afbf3eb20d98c49d36afc7f9ce104/samples/connectathon_Jan2025/new_IPS_Example.json',
+  'Johanna Petronella Maria (Jo) van Putten-van der Giessen': "https://raw.githubusercontent.com/jddamore/IPSviewer/4eedba9df34afbf3eb20d98c49d36afc7f9ce104/samples/connectathon_archive/NL_core_patient_01.json",
   'Martha Mum': 'https://hl7-ips-server.hl7.org/fhir/Patient/15/$summary',
   'Meditech 1': 'https://dev-mtx-interop.meditech.com:443/v2/ips/STU1/Patient/f3b430be-1f8a-53d3-8261-4ffbafa05a61/$summary',
   // 'Meditech 2': 'https://dev-mtx-interop.meditech.com:443/v2/ips/STU1/Patient/9bad7dc5-47ad-5022-82e7-0cb0aab13ee9/$summary', // Error returned
   'Angela Roster': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/10965/$summary',
   'Horace Skelly': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/11142/$summary',
   'Anonymous': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/10999/$summary',
-  'Desiree': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/Pat1-System2/$summary'
+  'Desiree': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/Pat1-System2/$summary',
+  // 2025-01 Connectathon PACIO track:
+  'Jenny Mosley': 'https://hapi.fhir.org/baseR4/Patient/patientJM1/$summary'
 };
 export const IPS_DEFAULT = 'Maria SEATTLE Gravitate';

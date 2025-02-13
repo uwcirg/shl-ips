@@ -4,6 +4,9 @@
 <script lang="ts">
   import {
     Button,
+    Card,
+    CardBody,
+    CardHeader,
     Col,
     FormGroup,
     Icon,
@@ -15,37 +18,36 @@
   import type { Bundle } from "fhir/r4";
   import IpsContent from "$lib/components/viewer/IPSContent.svelte";
 
-  export let content: Bundle | undefined;
+  export let bundle: Bundle | undefined;
   export let mode: string;
 
   let demoContent: string;
 
   onMount (() => {
-    if (!content) {
-      loadSample().then(submit);
-    }
+
   });
 
   $: {
-    if (!content) {
+    if (!bundle) {
       demoContent = "";
     } else {
-      demoContent = JSON.stringify(content, null, 2);
+      demoContent = JSON.stringify(bundle, null, 2);
     }
   }
 
   let textInput: string;
   $: textInput = demoContent;
 
+  let checksResult: CheckResult | undefined;
   let error: string[] = [];
   let valid: boolean = true;
   let invalid: boolean = false;
   $: {
     if (textInput) {
       try {
-        let result = checks(JSON.parse(textInput));
-        if (result.errors) {
-          result.errors.forEach(element => {
+        checksResult = checks(JSON.parse(textInput));
+        if (checksResult.errors && checksResult.errors.length) {
+          checksResult.errors.forEach(element => {
             setInputError(element);
           });
         } else {
@@ -91,6 +93,7 @@
       });
     if (sample) {
       textInput = sample;
+      submit();
     }
   }
 
@@ -101,7 +104,7 @@
   let submitted = false;
   function submit() {
     try {
-      content = JSON.parse(textInput);
+      bundle = JSON.parse(textInput);
       clearInputErrors();
       submitted = true;
       setTimeout(() => submitted = false, 2000);
@@ -110,12 +113,16 @@
     }
   }
 
+  interface CheckResult {
+    data: ValidationResult[];
+    errors: string[];
+  }
   interface ValidationResult {
-    display?: string,
-    entries?: number,
-    entriesColor?: string,
-    narrative?: string,
-    narrativeColor?: string
+    display?: string;
+    entries?: number;
+    entriesColor?: string;
+    narrative?: string;
+    narrativeColor?: string;
   };
   function checks(ips: Bundle) {
     let composition = ips.entry?.[0];
@@ -160,34 +167,72 @@
   }
 
 </script>
-<Row class="mx-1">
-  <h3>Submit Data</h3>
-  <p>This is for test data only. <span class="text-danger"><strong>Please do not submit PHI.</strong></span></p>
-  <FormGroup>
-    <Label>Paste your IPS JSON here:</Label>
-    <Input rows={8} type="textarea" bind:value={textInput} {valid} {invalid} feedback={error} class="pr-10"/>
-  </FormGroup>
-</Row>
-<Row class="mx-3" cols={{ sm: 2, xs: 1 }}>
-  <Col class="d-flex justify-content-start align-items-center">
-    <Button class="m-1" color="danger" on:click={clear}>Clear</Button>
-    <Button class="m-1" color="primary" on:click={submit}>Submit</Button>
-    {#if submitted}
-      <Icon name="check" class="text-success fs-5"/>
+<Row class="px-3">
+  <Col style="min-width: min-content">
+    <Row>
+      <h3>Submit Data</h3>
+      <p>This is for test data only. <span class="text-danger"><strong>Please do not submit PHI.</strong></span></p>
+      <FormGroup>
+        <Label>Paste your IPS JSON here:</Label>
+        <Input rows={8} type="textarea" bind:value={textInput} {valid} {invalid} feedback={error} class="pr-10"/>
+      </FormGroup>
+    </Row>
+    <Row>
+      <Col class="d-flex justify-content-start align-items-center">
+        <Button class="m-1" color="danger" on:click={clear}>Clear</Button>
+        <Button class="m-1" color="primary" on:click={submit}>Submit</Button>
+        {#if submitted}
+          <Icon name="check" class="text-success fs-5"/>
+        {/if}
+      </Col>
+      <Col class="d-flex justify-content-end align-items-center">
+        <Button color="success" on:click={loadSample} style="min-width:max-content; margin-right: 10px">Try a Sample</Button>
+        <a href="https://github.com/jddamore/IPSviewer/tree/main/samples" class="m-1" target="_blank" rel="noreferrer">Repository of IPS Samples</a>
+      </Col>
+    </Row>
+  </Col>
+  <Col class="col-4 d-flex align-items-center" style="width: fit-content; min-width:min-content max-width:fit-content">
+    {#if checksResult}
+      <Card class="mt-4">
+        <CardHeader>
+          <span class="title"><b>Simple Data Checks</b> (not complete FHIR validation)</span>
+        </CardHeader>
+        <CardBody id="checks-body">
+            <table class="checksTable">
+              <colgroup>
+                <col span="1" style="width: 50%;">
+                <col span="1" style="width: 25%;">
+                <col span="1" style="width: 25%;">
+            </colgroup>
+              <thead>
+                <th>Section</th>
+                <th class="tdCenter">Entries</th>
+                <th class="tdCenter">Narrative</th>
+              </thead>
+              {#each checksResult.data as result}
+              <tr>
+                <td>{result.display}</td>
+                <td class="tdCenter" style="color:{result.entriesColor}">{result.entries}</td>
+                <td class="tdCenter" style="color:{result.narrativeColor}">{result.narrative}</td>
+              </tr>
+              {/each}
+            </table>
+            <ul class="list-group">
+              {#each checksResult.errors as error}
+              <li style="color:red">
+                  {error}
+              </li>
+              {/each}
+          </ul>  
+        </CardBody>
+      </Card>
     {/if}
   </Col>
-  <Col class="d-flex justify-content-end align-items-center">
-    <Col class="m-1 justify-content-end align-items-center">
-      <Button color="success" on:click={loadSample} style="width:max-content">Try a Sample</Button>
-    </Col>
-    <Col class="d-flex flex-fill justify-content-start align-items-center">
-      <a href="https://github.com/jddamore/IPSviewer/tree/main/samples" class="m-1" target="_blank" rel="noreferrer">Repository of IPS Samples</a>
-    </Col>
-  </Col>
 </Row>
-{#if content}
+
+{#if bundle}
 <Row>
-  <IpsContent content={content} mode={mode} />
+  <IpsContent {bundle} {mode} />
 </Row>
 {/if}
 
