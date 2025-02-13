@@ -59,24 +59,20 @@ export function download(filename:string, text:string) {
   document.body.removeChild(element);
 }
 
-export function getReferences(resource: Resource, references: Resource[] | undefined): Resource[] | undefined {
-    let key = "reference";
+export function getReferences(resourceContent: any, references: any[] | undefined=undefined): string[]{
+    let referenceFieldKey = "reference";
     if (references === undefined) {
       references = [];
     }
-    if (typeof resource === "object") {
-      for (let k in resource) {
+    if (typeof resourceContent === "object") {
+      for (let k in resourceContent) {
         if (k !== "subject" && k !== "patient") {
-          if (k === key && references !== undefined) {
-            references.push(resource[k]);
+          if (k === referenceFieldKey && references !== undefined) {
+            references.push(resourceContent[k]);
           } else {
-            references = getReferences(resource[k], references);
+            references = getReferences(resourceContent[k], references);
           }
         } 
-      }
-    } else if (resource instanceof Array) {
-      for (let i=0; i < resource.length; i++) {
-        references = getReferences(resource[i], references);
       }
     }
     return references;
