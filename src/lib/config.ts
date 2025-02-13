@@ -1,5 +1,4 @@
 // import {PUBLIC_BASE_URL} from '$env/static/public';
-import { dev } from '$app/environment';
 
 export const API_BASE = import.meta.env.VITE_API_BASE;
 
@@ -43,26 +42,43 @@ export const SOF_HOSTS = [
     clientId: "<no client id>",
     note: "Credentials provided"
   },
+];
+
+export const CARIN_HOSTS = [
   {
     id: "aetna",
     name: "AETNA Insurance Sandbox",
-    url: "https://vteapif1.aetna.com/fhirdemo/v1/patientaccess",
+    url: "https://vteapif1.aetna.com/fhirdemo/v2/patientaccess",
     clientId: import.meta.env.VITE_AETNA_CLIENT_ID,
     note: "VTETestUser01 / FHIRdemo2020"
   },
   {
-    id: "carefirst",
-    name: "CareFirst",
-    url: "https://chpdc-api-sita.carefirst.com/v1/fhir/patientaccess",
-    // url: "https://chpmd-api-sita.carefirst.com/v1/fhir/patientaccess",
-    // url: "https://dsnp-api-sita.carefirst.com/v1/fhir/patientaccess",
-    // url: "https://mapd-api-sita.carefirst.com/v1/fhir/patientaccess",
-    // url: "https://mhbe-api-sita.carefirst.com/v1/fhir/patientaccess",
-    // url: "https://egwp-api-sita.carefirst.com/v1/fhir/patientaccess",
-    clientId: import.meta.env.VITE_CAREFIRST_CLIENT_ID,
+    id: "cpcds",
+    name: "CPCDS Demo",
+    url: "https://cpcds-server.lantanagroup.com/fhir",
+    clientId: import.meta.env.VITE_CPCDS_CLIENT_ID,
+    note: "Patient1 / password"
+  },
+  {
+    id: "inferno",
+    name: "Inferno Test Suite",
+    url: "https://inferno-qa.healthit.gov/suites/custom/c4bb_v200_client",
+    clientId: import.meta.env.VITE_INFERNO_CLIENT_ID,
     note: "Credentials provided"
   },
-];
+  // {
+  //   id: "carefirst",
+  //   name: "CareFirst",
+  //   url: "https://chpdc-api-sita.carefirst.com/v1/fhir/patientaccess",
+  //   // url: "https://chpmd-api-sita.carefirst.com/v1/fhir/patientaccess",
+  //   // url: "https://dsnp-api-sita.carefirst.com/v1/fhir/patientaccess",
+  //   // url: "https://mapd-api-sita.carefirst.com/v1/fhir/patientaccess",
+  //   // url: "https://mhbe-api-sita.carefirst.com/v1/fhir/patientaccess",
+  //   // url: "https://egwp-api-sita.carefirst.com/v1/fhir/patientaccess",
+  //   clientId: import.meta.env.VITE_CAREFIRST_CLIENT_ID,
+  //   note: "Credentials provided"
+  // },
+]
 
 export const BEARER_AUTHORIZATION = {
   'Meditech': import.meta.env.VITE_MEDITECH_BEARER_TOKEN
@@ -111,6 +127,14 @@ export const SOF_PATIENT_RESOURCES = [
   'Procedure', // TODO change to subject
   // 'Specimen', // Not in EPIC USCDI R4
   'QuestionnaireResponse',
+];
+
+export const CARIN_RESOURCES = [
+  'Coverage',
+  'Practitioner',
+  'Organization',
+  'RelatedPerson',
+  'ExplanationOfBenefit',
 ];
 
 export const VIEWER_BASE = new URL(

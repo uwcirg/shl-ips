@@ -35,7 +35,12 @@ const allowableResourceTypes = [
     // 'PractitionerRole', Not relevant to IPS
     'Procedure',
     'QuestionnaireResponse', // FIXME this is not part of IPS, should get a carve-out elsewhere...
-    'Specimen'
+    'Specimen',
+    'Coverage',
+    'Practitioner',
+    'Organization',
+    'RelatedPerson',
+    'ExplanationOfBenefit',
 ];
 
 interface SerializedIPSResourceCollection {

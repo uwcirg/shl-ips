@@ -40,7 +40,8 @@
     try {
       if (sofHost) {
         try {
-          authorize(sofHost.url, sofHost.clientId);
+          sessionStorage.setItem('AUTH_METHOD', 'sof');
+          authorize(sofHost.url, sofHost.clientId);// , sofHost.clientSecret);
           authDispatch('sof-auth-init', { data: true });
         } catch (e) {
           authDispatch('sof-auth-fail', { data: false });
@@ -53,18 +54,25 @@
   }
 
   onMount(async function() {
-    let key = sessionStorage.getItem('SMART_KEY');
-    if (key) {
-      let token = sessionStorage.getItem(JSON.parse(key));
-      if (token) {
-        let url = JSON.parse(token).serverUrl;
-        let sofHostAuthd = SOF_HOSTS.find(e => e.url == url);
-        if (sofHostAuthd) {
-          sofHost = sofHostAuthd;
-          sofHostSelection = sofHost.id;
-          await fetchData();
-          sessionStorage.removeItem(key);
-          sessionStorage.removeItem('SMART_KEY');
+    let method = sessionStorage.getItem('AUTH_METHOD');
+    if (method) {
+      if (method != 'sof') {
+        return;
+      }
+      sessionStorage.removeItem('AUTH_METHOD');
+      let key = sessionStorage.getItem('SMART_KEY');
+      if (key) {
+        let token = sessionStorage.getItem(JSON.parse(key));
+        if (token) {
+          let url = JSON.parse(token).serverUrl;
+          let sofHostAuthd = SOF_HOSTS.find(e => e.url == url);
+          if (sofHostAuthd) {
+            sofHost = sofHostAuthd;
+            sofHostSelection = sofHost.id;
+            await fetchData();
+            sessionStorage.removeItem(key);
+            sessionStorage.removeItem('SMART_KEY');
+          }
         }
       }
     }
