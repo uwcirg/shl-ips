@@ -51,7 +51,7 @@
     }
   }
 
-  async function getResourcesWithReferences(resources: Resource[], token: string, depth=1) {
+  async function getResourcesWithReferences(resources: Resource[], depth=1, token=undefined) {
     let allResources = JSON.parse(JSON.stringify(resources));
     let referenceMap = {} as {[key: string]: boolean};
     let retrievedResources = {} as {[key: string]: boolean};
@@ -68,9 +68,13 @@
       let referencedResourcesToFetch = referencedResources.filter(x => {
         return (!(x in retrievedResources) && CARIN_RESOURCES.indexOf(x.split('/')[0]) >= 0);
       });
+      let headers: HeadersInit = {};
+      if (token) {
+        headers.authorization = `Bearer ${token}`;
+      }
       resources = (await Promise.allSettled(referencedResourcesToFetch.map(reference => {
         return fetch(`${sofHost!.url}/${reference}`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: headers
         }).then(response => response.json());
       }))).filter(x => x.status == "fulfilled").map(x => x.value);
       allResources = allResources.concat(...resources);
@@ -144,7 +148,7 @@
             resources = resources.flat();
             resources = [patient, ...resources];
             if (resources) {
-              result = { resources: await getResourcesWithReferences(resources, accessToken) };
+              result = { resources: await getResourcesWithReferences(resources, 1, accessToken) };
               console.log(result.resources);
               resourceDispatch('update-resources', result);
             }
