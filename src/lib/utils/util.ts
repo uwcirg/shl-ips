@@ -134,3 +134,13 @@ export async function packageSHC(content:SHCFile | Bundle | undefined): Promise<
 
   return { verifiableCredential: [shc] };
 }
+
+// Utility function to validate a URL
+export function isValidUrl(url: string) {
+  try {
+      new URL(url);
+      return true;
+  } catch (e) {
+      return false;
+  }
+}
