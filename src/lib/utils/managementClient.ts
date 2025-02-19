@@ -5,6 +5,9 @@ import type { AuthService } from './AuthService';
 
 interface ConfigForServer extends Pick<SHLAdminParams, 'passcode' | 'exp' | 'label'> {
   userId?: string;
+  patientId?: string;
+  pin?: string;
+  patientIdentifierSystem?: string;
 }
 
 export interface SHLAdminParams {
@@ -64,7 +67,7 @@ export class SHLClient {
     const res = await fetch(`${API_BASE}/shl`, {
       method: 'POST',
       headers: {
-        'content-type': 'application/json'
+        "Content-Type": 'application/json',
       },
       body: JSON.stringify(config)
     });
@@ -80,7 +83,7 @@ export class SHLClient {
     const res = await fetch(`${API_BASE}/shl/${shl.id}`, {
       method: 'DELETE',
       headers: {
-        authorization: `Bearer ${shl.managementToken}`
+        "Authorization": `Bearer ${shl.managementToken}`
       }
     });
     const deleted = await res.json();
@@ -92,7 +95,7 @@ export class SHLClient {
       method: 'PUT',
       body: JSON.stringify({ passcode: shl.passcode, exp: shl.exp, label: shl.label }),
       headers: {
-        authorization: `Bearer ${shl.managementToken}`
+        "Authorization": `Bearer ${shl.managementToken}`
       }
     });
     const updatedShl = await res.json();
@@ -135,7 +138,7 @@ export class SHLClient {
     const res = await fetch(`${API_BASE}/shl/${shl.id}/reactivate`, {
       method: 'PUT',
       headers: {
-        authorization: `Bearer ${shl.managementToken}`
+        "Authorization": `Bearer ${shl.managementToken}`
       }
     });
     const reactivated = await res.json();
@@ -163,8 +166,8 @@ export class SHLClient {
     const res = await fetch(`${API_BASE}/shl/${shl.id}/file`, {
       method: 'POST',
       headers: {
-        'content-type': contentType,
-        authorization: `Bearer ${shl.managementToken}`
+        "Content-Type": contentType,
+        "Authorization": `Bearer ${shl.managementToken}`
       },
       body: contentEncrypted
     });
@@ -176,7 +179,7 @@ export class SHLClient {
     const res = await fetch(`${API_BASE}/shl/${shl.id}/file`, {
       method: 'DELETE',
       headers: {
-        authorization: `Bearer ${shl.managementToken}`
+        "Authorization": `Bearer ${shl.managementToken}`
       },
       body: contentHash
     });

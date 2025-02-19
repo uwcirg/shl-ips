@@ -168,7 +168,7 @@
             <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
               <DropdownToggle color="primary" nav caret><Icon name="person-circle"/> Account</DropdownToggle>
               <DropdownMenu end style="max-height: 500px; overflow:auto">
-                <DropdownItem header>Welcome, {profile.given_name}</DropdownItem>
+                <DropdownItem header>Welcome, {profile.given_name ?? profile.preferred_username}</DropdownItem>
                 <DropdownItem
                   on:click={() => {
                     authService.logout();
