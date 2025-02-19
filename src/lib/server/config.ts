@@ -1,5 +1,7 @@
 export const REDIRECT_URI = process.env.REDIRECT_URI;
 
+export const SERVER_API_BASE = process.env.VITE_API_BASE;
+
 export const CARIN_HOSTS: Record<string, any> = {
   aetna: {
     tokenEndpoint: process.env.AETNA_TOKEN_ENDPOINT,

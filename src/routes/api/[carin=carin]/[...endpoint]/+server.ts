@@ -1,12 +1,28 @@
 // import fetch from 'node-fetch';
 import { json, error, Request } from '@sveltejs/kit';
 import {
-  ALLOWED,
   CARIN_HOSTS,
   REDIRECT_URI,
+  SERVER_API_BASE,
 } from '$lib/server/config';
 
-export const POST = async ({ params, request }: { params: { carin: typeof ALLOWED[number] }; request: Request; }) => {
+export const POST = async ({ params, request }: { params: { carin: string }; request: Request; }) => {
+
+  const auth = request.headers.get('Authorization');
+  if (!auth || !auth.startsWith('Bearer ')) {
+    return error(401, { message: "Unauthorized" });
+  }
+  const authorized = await fetch(`${SERVER_API_BASE}/authcheck`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: auth,
+    },
+  });
+  if (!authorized.ok) {
+    return error(401, { message: 'Authorization check failed' });
+  }
+
   const restPath = params.carin;
   const { code } = await request.json();
 
