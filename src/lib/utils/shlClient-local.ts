@@ -126,7 +126,7 @@ export async function retrieve(configIncoming: SHLinkConnectRequest | {state: st
     const shcs = (await Promise.all(allFilesDecrypted)).flatMap((f) => JSON.parse(f)['verifiableCredential'] as string);
 
     const jsonFiles = (manifestResponseContent as SHLManifestFile).files
-      .filter((f) => f.contentType === 'application/json+fhir')
+      .filter((f) => f.contentType === 'application/fhir+json')
       .map(async (f) =>  {
         if (f.embedded !== undefined) {
           return f.embedded
