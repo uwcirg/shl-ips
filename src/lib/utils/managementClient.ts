@@ -64,27 +64,17 @@ export class SHLClient {
 
   async createShl(config: ConfigForServer = {}): Promise<SHLAdminParams> {
     config.userId = (await this.auth.getProfile())?.sub;
-    config.patientId = config.userId;
-    config.pin = config.passcode;
-    config.patientIdentifierSystem = "http://keycloak.ips-shl.ubu.dlorigan.dev.cirg.uw.edu";
-    // const res = await fetch(`${API_BASE}/shl`, {
-    const res = await fetch(`https://pancanadianio.ca:10245/myhealth-gateway/v1/patient-summary`, {
+    const res = await fetch(`${API_BASE}/shl`, {
       method: 'POST',
       headers: {
-        'content-type': 'application/json',
-        "Authorization": `Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJfTENVTExfanhlb2JQYmtBM3lIaUV0OHlMdzVDVUF5ODVFYnVmTE9xeXNJIn0.eyJleHAiOjE3Mzg3MDIxNDEsImlhdCI6MTczODcwMDk0MSwianRpIjoiODZmYzE0MzktNjM1Mi00Y2M1LWI3ZjctZjhhMTZkZWZiMzhjIiwiaXNzIjoiaHR0cHM6Ly9wYW5jYW5hZGlhbmlvLmNhOjEwMTAwL2F1dGgvcmVhbG1zL3BzLWNhIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6ImRkZWFmMjNmLThhZDktNDNlMy1hMzExLWYyM2FiY2RmNjgzZCIsInR5cCI6IkJlYXJlciIsImF6cCI6Imd1ZXN0LXJlc3QtY2xpZW50Iiwic2Vzc2lvbl9zdGF0ZSI6ImI5MWI0NTZjLTU4YjItNGYxZC04ZWQ2LWFmY2E4ZjUyZDFjZCIsImFjciI6IjEiLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsib2ZmbGluZV9hY2Nlc3MiLCJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoiZW1haWwgcHJvZmlsZSBDQUZFWC0yIiwiY2xpZW50SG9zdCI6IjE1LjIyMi4xMDguNDk6MTIxODgiLCJjbGllbnRJZCI6Imd1ZXN0LXJlc3QtY2xpZW50IiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJzZXJ2aWNlLWFjY291bnQtZ3Vlc3QtcmVzdC1jbGllbnQiLCJjbGllbnRBZGRyZXNzIjoiMTUuMjIyLjEwOC40OToxMjE4OCJ9.EAVSbH0RVMGfkX5sxdTKAI6lc_N2_s40z3fcCoWBVChwhOXMZEnkzoz_zGMQjbs8cexVtazXaAeJNmGd85YOpAh4f2HZzO1xyVJxkdBK1iMtd6undZ0_pi1LosKI7wl0qkYVr0HP4RcYgJnQMzcSCBxEVvvBBde53OyTG9eO420d6FrIUjey0OJz62SA_bJdy71HyIpDjruH_hkoKzU7C7X3k-JI9CUNb3QuzGrq947EVRz3ctlbhExcpyZ20x7s5CLXBKdM4p4ginRwhMrovDBqyGmXAOo7azExuOTVruAgeRf8xIkFat9EWWCyOGcCusCF4F9qwt0OsqXI_5MsUg`
+        "Content-Type": 'application/json',
       },
       body: JSON.stringify(config)
     });
-    console.log(`Request: POST ${API_BASE}/shl`);
-    console.log(`Request: POST https://pancanadianio.ca:10245/myhealth-gateway/v1/patient-summary`);
-    console.log("Request body: ", JSON.stringify(config));
     const shlink = await res.text();
-    console.log("Response body: ", shlink);
     const payload = shlink.split('/');
     const decodedPayload = base64url.decode(payload[payload.length - 1]);
     const asString = new TextDecoder('utf-8').decode(decodedPayload);
-    console.log("Decoded payload: ", asString);
     const shl: SHLAdminParams = JSON.parse(asString);
     return shl;
   }
@@ -93,7 +83,7 @@ export class SHLClient {
     const res = await fetch(`${API_BASE}/shl/${shl.id}`, {
       method: 'DELETE',
       headers: {
-        authorization: `Bearer ${shl.managementToken}`
+        "Authorization": `Bearer ${shl.managementToken}`
       }
     });
     const deleted = await res.json();
@@ -105,7 +95,7 @@ export class SHLClient {
       method: 'PUT',
       body: JSON.stringify({ passcode: shl.passcode, exp: shl.exp, label: shl.label }),
       headers: {
-        authorization: `Bearer ${shl.managementToken}`
+        "Authorization": `Bearer ${shl.managementToken}`
       }
     });
     const updatedShl = await res.json();
@@ -148,7 +138,7 @@ export class SHLClient {
     const res = await fetch(`${API_BASE}/shl/${shl.id}/reactivate`, {
       method: 'PUT',
       headers: {
-        authorization: `Bearer ${shl.managementToken}`
+        "Authorization": `Bearer ${shl.managementToken}`
       }
     });
     const reactivated = await res.json();
@@ -176,8 +166,8 @@ export class SHLClient {
     const res = await fetch(`${API_BASE}/shl/${shl.id}/file`, {
       method: 'POST',
       headers: {
-        'content-type': contentType,
-        authorization: `Bearer ${shl.managementToken}`
+        "Content-Type": contentType,
+        "Authorization": `Bearer ${shl.managementToken}`
       },
       body: contentEncrypted
     });
@@ -189,7 +179,7 @@ export class SHLClient {
     const res = await fetch(`${API_BASE}/shl/${shl.id}/file`, {
       method: 'DELETE',
       headers: {
-        authorization: `Bearer ${shl.managementToken}`
+        "Authorization": `Bearer ${shl.managementToken}`
       },
       body: contentHash
     });
