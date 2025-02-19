@@ -12,7 +12,7 @@
     TabPane,
     Row,
   } from 'sveltestrap';
-  import * as shlClient from '$lib/utils/shlClient-local';
+  import * as shlClient from '$lib/utils/shlClient';
   import { verify } from '$lib/utils/shcDecoder.js';
   import type { Bundle, Composition, Patient } from 'fhir/r4';
   
