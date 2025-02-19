@@ -107,13 +107,3 @@ async function getResourcesWithReferences(depth=1) {
     }
     return allResources;
 }
-
-// Utility function to validate a URL
-function isValidUrl(url) {
-    try {
-        new URL(url);
-        return true;
-    } catch (e) {
-        return false;
-    }
-}

@@ -13,11 +13,7 @@
   import { getReferences } from '$lib/utils/util';
   import { authorize } from '$lib/utils/sofClient.js';
   import { createEventDispatcher, onMount } from 'svelte';
-  import type { Resource } from 'fhir/r4';
-
-  // For "quick sample" in demo
-  import { EXAMPLE_IPS, IPS_DEFAULT } from '$lib/config';
-  import type { IPSRetrieveEvent } from '$lib/utils/types';
+  import type { BundleEntry, Resource } from 'fhir/r4';
   
   const authDispatch = createEventDispatcher<{'sof-auth-init': SOFAuthEvent; 'sof-auth-fail': SOFAuthEvent}>();
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
@@ -55,36 +51,38 @@
     }
   }
 
-  async function getResourcesWithReferences(resources: Resource[], token: string, depth=1) {
+  async function getResourcesWithReferences(resources: Resource[], depth=1, token=undefined) {
     let allResources = JSON.parse(JSON.stringify(resources));
     let referenceMap = {} as {[key: string]: boolean};
     let retrievedResources = {} as {[key: string]: boolean};
     while (resources.length > 0 && depth > 0) {
       for (let resource of resources) {
-            let retrieved = `${resource.resourceType}/${resource.id}`;
-            retrievedResources[retrieved] = true;
-            let refs = getReferences(resource) as string[];
-            for (let i=0; i<refs.length; i++) {
-                referenceMap[refs[i]] = true;
-            }
-          }
-        let referencedResources = Object.keys(referenceMap);
-        let referencedResourcesToFetch = referencedResources.filter(x => {
-            return (!(x in retrievedResources) && CARIN_RESOURCES.indexOf(x.split('/')[0]) >= 0);
-        });
-        resources = (await Promise.allSettled(referencedResourcesToFetch.map(reference => {
-            return fetch(`${sofHost!.url}/${reference}`, {
-              headers: { Authorization: `Bearer ${token}` }
-            })
-              .then(response => response.json());
-        }))).filter(x => x.status == "fulfilled").map(x => x.value);
-        allResources = allResources.concat(...resources);
-        referenceMap = {};
-        depth--;
+        let retrieved = `${resource.resourceType}/${resource.id}`;
+        retrievedResources[retrieved] = true;
+        let refs = getReferences(resource);
+        for (let i=0; i<refs.length; i++) {
+          referenceMap[refs[i]] = true;
+        }
+      }
+      let referencedResources = Object.keys(referenceMap);
+      let referencedResourcesToFetch = referencedResources.filter(x => {
+        return (!(x in retrievedResources) && CARIN_RESOURCES.indexOf(x.split('/')[0]) >= 0);
+      });
+      let headers: HeadersInit = {};
+      if (token) {
+        headers.authorization = `Bearer ${token}`;
+      }
+      resources = (await Promise.allSettled(referencedResourcesToFetch.map(reference => {
+        return fetch(`${sofHost!.url}/${reference}`, {
+          headers: headers
+        }).then(response => response.json());
+      }))).filter(x => x.status == "fulfilled").map(x => x.value);
+      allResources = allResources.concat(...resources);
+      referenceMap = {};
+      depth--;
     }
-
     return allResources;
-}
+  }
 
   onMount(async function() {
     let method = sessionStorage.getItem('AUTH_METHOD');
@@ -139,8 +137,8 @@
                 .then(data => {
                   console.log(`${resourceType} Data:`, data);
                   if (data.resourceType === 'Bundle') {
-                    return data.entry.map(e => e.resource);
-                  } else if (CARIN_RESOURCES.contains(data.resourceType)) {
+                    return data.entry.map((e: BundleEntry) => e.resource);
+                  } else if (CARIN_RESOURCES.includes(data.resourceType)) {
                     return [data];
                   }
                   throw Error (`Unexpected resource type ${data.resourceType}`);
@@ -150,7 +148,7 @@
             resources = resources.flat();
             resources = [patient, ...resources];
             if (resources) {
-              result = { resources: await getResourcesWithReferences(resources, accessToken) };
+              result = { resources: await getResourcesWithReferences(resources, 1, accessToken) };
               console.log(result.resources);
               resourceDispatch('update-resources', result);
             }
@@ -167,59 +165,6 @@
     if (key) {
       sessionStorage.removeItem(JSON.parse(key));
       sessionStorage.removeItem('SMART_KEY');
-    }
-  }
-
-  async function fetchData() {
-    processing = true;
-    try {
-      let resources = await getResourcesWithReferences(1);
-      result.resources = resources;
-      console.log(resources)
-      processing = false;
-      return resourceDispatch('update-resources', result);
-    } catch (e: any) {
-      console.log(e.message);
-      fetchError = e.message;
-      processing = false;
-      endSession();
-    }
-  }
-
-  // Demo quick sample loader
-  let defaultUrl = EXAMPLE_IPS[IPS_DEFAULT];
-  const ipsDispatch = createEventDispatcher<{'ips-retrieved': IPSRetrieveEvent}>();
-  let ipsResult: IPSRetrieveEvent = {
-    ips: undefined
-  };
-  async function quickLoad() {
-    fetchError = "";
-    loadingSample = true;
-    try {
-      let content;
-      let hostname;
-      const contentResponse = await fetch(defaultUrl!, {
-      headers: { accept: 'application/fhir+json' }
-      }).then(function(response) {
-        if (!response.ok) {
-          // make the promise be rejected if we didn't get a 2xx response
-          throw new Error("Unable to fetch IPS", {cause: response});
-        } else {
-          return response;
-        }
-      });
-      content = await contentResponse.json();
-      hostname = defaultUrl?.hostname;
-      loadingSample = false
-      ipsResult = {
-        ips: content,
-        source: hostname
-      };
-      ipsDispatch('ips-retrieved', ipsResult);
-    } catch (e) {
-      loadingSample = false;
-      console.log('Failed', e);
-      fetchError = "Error preparing IPS";
     }
   }
 
@@ -246,21 +191,6 @@
         Fetching...
       {/if}
     </Button>
-    </Col>
-    <Col xs="auto">
-      <Button
-      color="secondary"
-      outline
-      style="width:fit-content"
-      disabled={processing || loadingSample}
-      type="button"
-      on:click={() => quickLoad()}>
-        {#if !loadingSample}
-          Quick Sample
-        {:else}
-          Loading...
-        {/if}
-      </Button>
     </Col>
   {#if processing || loadingSample}
     <Col xs="auto" class="d-flex align-items-center px-0">
