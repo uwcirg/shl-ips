@@ -18,6 +18,7 @@
   } from 'sveltestrap';
   import { onMount, getContext } from 'svelte';
   import { goto } from '$app/navigation';
+  import { page } from '$app/stores';
   import { type Writable } from 'svelte/store';
   import Banner from '$lib/components/layout/Banner.svelte';
   import LanguageMenu from '$lib/components/layout/LanguageMenu.svelte';
@@ -36,6 +37,17 @@
   let mode: Writable<string> = getContext('mode');
 
   let currentUser: Promise<User | undefined>;
+
+  let activeItem: "home" | "summaries" | "" = "";
+  $: {
+    if ($page.url.pathname.includes("home")) {
+      activeItem = "summaries";
+    } else if ($page.url.pathname === "/") {
+      activeItem = "home";
+    } else {
+      activeItem = "";
+    }
+  }
 
   onMount(async () => {
     window.onscroll = function() {scrollFunction()};
@@ -120,7 +132,7 @@
   }
 </script>
 
-<Navbar class="sticky-top" color="light" light expand="md" style="border-bottom: 1px solid rgb(204, 204, 204);">
+<Navbar sticky="top"color="light" light expand="md" style="border-bottom: 1px solid rgb(204, 204, 204);">
   <NavbarBrand href="https://doh.wa.gov/" target="_blank">
     <Row>
       <Col>
@@ -133,14 +145,14 @@
       <Nav class="ms-auto" navbar>
         <LanguageMenu />
       </Nav>
-      <Nav class="ms-auto" navbar>
+      <Nav class="ms-auto" navbar underline>
         <NavItem>
-          <NavLink href={"/"}>Home</NavLink>
+          <NavLink href={"/"} active={ activeItem === "home" }>Home</NavLink>
         </NavItem>
         {#await authService.getProfile() then profile}
           {#if profile}
             <NavItem>
-              <NavLink href="/home">My Summaries</NavLink>
+              <NavLink href="/home" active={ activeItem === "summaries" }>My Summaries</NavLink>
             </NavItem>
             <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
               <DropdownToggle color="primary" nav caret><Icon name="person-circle"/> Account</DropdownToggle>
