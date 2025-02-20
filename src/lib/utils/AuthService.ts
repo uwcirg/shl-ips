@@ -99,3 +99,5 @@ export class AuthService {
     return this.getAccessToken().then((token) => token !== null);
   }
 }
+
+export default AuthService;

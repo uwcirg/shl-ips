@@ -7,10 +7,15 @@
   } from 'sveltestrap';
   import { setContext } from 'svelte';
   import {writable, type Writable, readable, type Readable } from 'svelte/store';
-  import { VERSION_STRING } from '$lib/config';
+  import { AuthService } from '$lib/utils/AuthService';
   import type { Language } from '$lib/utils/types';
+  import { SHLClient, type SHLAdminParams } from '$lib/utils/managementClient';
+  import Header from '$lib/components/layout/Header.svelte';
+  import Footer from '$lib/components/layout/Footer.svelte';
 
   const locale: Writable<string> = writable('en');
+  setContext('locale', locale);
+
   const locales: Readable<Record<string, Language>> = readable({
     am: { lang_en: 'Amharic', lang: 'አማርኛ', code: 'am' },
     ar: { lang_en: 'Arabic', lang: 'العَرَبِيةُ', code: 'ar' },
@@ -65,56 +70,41 @@
     ur: { lang_en: 'Urdu', lang: 'اُردُو', code: 'ur' },
     vi: { lang_en: 'Vietnamese', lang: 'Tiếng Việt', code: 'vi' }
   });
-
-  setContext('locale', locale);
   setContext('locales', locales);
+
+  let shlStore = writable<SHLAdminParams[]>([]);
+  setContext('shlStore', shlStore);
+
+  let authService = AuthService.Instance;
+  setContext('authService', authService);
+
+  let shlClient = new SHLClient(authService);
+  setContext('shlClient', shlClient);
+
+  let reset = writable(0);
+  setContext('reset', reset);
 
   const MODE_KEY = 'demo_mode';
   let mode = writable('normal');
   window.localStorage[MODE_KEY] ? mode.set(JSON.parse(window.localStorage[MODE_KEY])) : mode.set('normal');
+  setContext('mode', mode);
 
   let isOpen = writable(false);
   setContext('isOpen', isOpen);
-  function closeNav() {
-    $isOpen = false;
-  }
-
-  let navOpening = false;
-  document.addEventListener('click', (event) => {
-    // Ignore clicks on the navbar toggler
-    if (event.target?.className?.includes('navbar-toggler')) return;
-    // Ignore clicks on the dropdown toggle menu items
-    if (event.target?.className?.includes('nav-link') && event.target?.className?.includes('dropdown-toggle')) {
-      navOpening = true;
-      setTimeout(() => {
-        navOpening = false;
-      }, 100);
-      return;
-    }
-    closeNav();
-  });
-  document.addEventListener('keydown', (event) => {
-    closeNav();
-  });
-
-  window.addEventListener('scroll', (event) => {
-    if (document.querySelector('.navbar-dropdown.show')?.matches(':hover')) return;
-    if (document.getElementsByClassName('navbar-collapse collapsing')?.length > 0) return;
-    if (navOpening) return;
-    closeNav();
-  });
 
   $: {
     if ($mode) window.localStorage[MODE_KEY] = JSON.stringify($mode);
   }
 
-  setContext('mode', mode);
-
 </script>
 
 <Container class="main" fluid>
   <Styles />
-  <slot />
+  <Header />
+  <div class="main-content">
+    <slot />
+  </div>
+  <Footer />
 </Container>
 
 <style>
@@ -149,6 +139,9 @@
     padding: 0px !important;
   }
 
+  :global(.main-content) {
+    flex-grow: 1;
+  }
   :global(.main-row) {
     flex-grow: 1;
   }
