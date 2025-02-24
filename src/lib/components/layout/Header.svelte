@@ -38,10 +38,12 @@
 
   let currentUser: Promise<User | undefined>;
 
-  let activeItem: "home" | "summaries" | "" = "";
+  let activeItem: ("home" | "summaries" | "create" | "") = "";
   $: {
     if ($page.url.pathname.includes("home")) {
       activeItem = "summaries";
+    } else if ($page.url.pathname.includes("create")) {
+      activeItem = "create";
     } else if ($page.url.pathname === "/") {
       activeItem = "home";
     } else {
@@ -152,7 +154,10 @@
         {#await authService.getProfile() then profile}
           {#if profile}
             <NavItem>
-              <NavLink href="/home" active={ activeItem === "summaries" }>My Summaries</NavLink>
+              <NavLink href="/home" active={ activeItem === "summaries" }>Summaries</NavLink>
+            </NavItem>
+            <NavItem>
+              <NavLink href="/create" active={ activeItem === "create" }>Create</NavLink>
             </NavItem>
             <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
               <DropdownToggle color="primary" nav caret><Icon name="person-circle"/> Account</DropdownToggle>
