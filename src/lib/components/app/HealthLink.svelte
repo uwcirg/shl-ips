@@ -13,6 +13,7 @@
     CardText,
     CardTitle,
     Col,
+    Form,
     FormGroup,
     Icon,
     Input,
@@ -233,95 +234,98 @@
     </Card>
   </Col>
   <Col class="d-flex justify-content-center">
-    <FormGroup class="label shlbutton" style="width: 100%">
-      <div style="border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 1em"><h3>Manage Link</h3></div>
-      {#await linkIsActive then active}
-        <Alert isOpen={active === false} color="danger" fade={false}>
-          <Col class="d-flex justify-content-between">
-            <Col class="d-flex align-items-center">
-              <Icon name="exclamation-octagon-fill" />&nbsp;Inactive link
+    <Form>
+      <FormGroup class="label shlbutton" style="width: 100%">
+        <div style="border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 1em"><h3>Manage Link</h3></div>
+        {#await linkIsActive then active}
+          <Alert isOpen={active === false} color="danger" fade={false}>
+            <Col class="d-flex justify-content-between">
+              <Col class="d-flex align-items-center">
+                <Icon name="exclamation-octagon-fill" />&nbsp;Inactive link
+              </Col>
+              <Button
+              size="sm" 
+              color="danger" 
+              style="width: fit-content"
+              on:click={async () => {
+                await shlClient.reactivate(shl).then(async () => {
+                  linkIsActive = await shlClient.isActive(shl.id);
+                  showActive = linkIsActive;
+                  setTimeout(() => {
+                    showActive = false;
+                  }, 2000)
+                });
+              }}>
+                <Icon name="arrow-counterclockwise"/>
+                Reactivate
+              </Button>
             </Col>
-            <Button
-            size="sm" 
-            color="danger" 
-            style="width: fit-content"
-            on:click={async () => {
-              await shlClient.reactivate(shl).then(async () => {
-                linkIsActive = await shlClient.isActive(shl.id);
-                showActive = linkIsActive;
-                setTimeout(() => {
-                  showActive = false;
-                }, 2000)
-              });
-            }}>
-              <Icon name="arrow-counterclockwise"/>
-              Reactivate
-            </Button>
-          </Col>
-        </Alert>
-      {/await}
-      {#if showActive}
-        <Alert color="success">
-          <Icon name="check-circle-fill" />&nbsp;Active
-        </Alert>
-      {/if}
-      <Label for="label">Label for SMART Health Link</Label>
-      <Input
-        name="label"
-        maxlength={40}
-        type="text"
-        bind:value={shlControlled.label}
-        placeholder="label"
-      />
-      <Button
-        size="sm"
-        color="primary"
-        disabled={(shl.label || '') === (shlControlled.label || '')}
-        on:click={async () => {
-          await shlClient.resetShl({ ...shl, label: shlControlled.label });
-          $shlStore = await shlClient.getUserShls();
-        }}>
-        <Icon name="sticky" /> Update Label
-      </Button>
-      <Label for="passcode">Add or Update Passcode (optional)</Label>
-      <div style="position:relative">
+          </Alert>
+        {/await}
+        {#if showActive}
+          <Alert color="success">
+            <Icon name="check-circle-fill" />&nbsp;Active
+          </Alert>
+        {/if}
+        <Label for="label">Label for SMART Health Link</Label>
         <Input
+          name="label"
           maxlength={40}
-          name="passcode"
-          type={type}
-          bind:value={shlControlled.passcode}
-          placeholder="Assign Passcode"
+          type="text"
+          bind:value={shlControlled.label}
+          placeholder="label"
         />
-        <Icon name={icon}
-          style="position: absolute;
-          cursor: pointer;
-          height: 25px;
-          width: 20px;
-          top: 6px;
-          right: 10px;
-          color: rgb(50, 50, 50);"
-          onclick={() => showPassword = !showPassword}/>
-      </div>
-      <Button
-        size="sm"
-        color="primary"
-        disabled={(shl.passcode || '') === (shlControlled.passcode || '')}
-        on:click={async () => {
-          await shlClient.resetShl({ ...shl, passcode: shlControlled.passcode });
-          $shlStore = await shlClient.getUserShls();
-        }}><Icon name="lock" /> Update Passcode</Button>
-      <Button size="sm" on:click={toggle} color="danger"><Icon name="trash3" /> Delete SMART Health Link</Button>
-      <Modal isOpen={open} backdrop="static" {toggle}>
-        <ModalHeader {toggle}>Delete SMART Health Link</ModalHeader>
-        <ModalBody>
-          "{shl.label}" will be permanently deleted. Continue?
-        </ModalBody>
-        <ModalFooter>
-          <Button color="secondary" on:click={toggle}>Cancel</Button>
-          <Button color="danger"  on:click={deleteShl}><Icon name="trash3" /> Yes, Delete SHL</Button>
-        </ModalFooter>
-      </Modal>
-    </FormGroup>
+        <Button
+          size="sm"
+          color="primary"
+          disabled={(shl.label || '') === (shlControlled.label || '')}
+          on:click={async () => {
+            await shlClient.resetShl({ ...shl, label: shlControlled.label });
+            $shlStore = await shlClient.getUserShls();
+          }}>
+          <Icon name="sticky" /> Update Label
+        </Button>
+        <Label for="passcode">Add or Update Passcode (optional)</Label>
+        <div style="position:relative">
+          <Input
+            maxlength={40}
+            name="passcode"
+            type={type}
+            autocomplete="off"
+            bind:value={shlControlled.passcode}
+            placeholder="Assign Passcode"
+          />
+          <Icon name={icon}
+            style="position: absolute;
+            cursor: pointer;
+            height: 25px;
+            width: 20px;
+            top: 6px;
+            right: 10px;
+            color: rgb(50, 50, 50);"
+            onclick={() => showPassword = !showPassword}/>
+        </div>
+        <Button
+          size="sm"
+          color="primary"
+          disabled={(shl.passcode || '') === (shlControlled.passcode || '')}
+          on:click={async () => {
+            await shlClient.resetShl({ ...shl, passcode: shlControlled.passcode });
+            $shlStore = await shlClient.getUserShls();
+          }}><Icon name="lock" /> Update Passcode</Button>
+        <Button size="sm" on:click={toggle} color="danger"><Icon name="trash3" /> Delete SMART Health Link</Button>
+        <Modal isOpen={open} backdrop="static" {toggle}>
+          <ModalHeader {toggle}>Delete SMART Health Link</ModalHeader>
+          <ModalBody>
+            "{shl.label}" will be permanently deleted. Continue?
+          </ModalBody>
+          <ModalFooter>
+            <Button color="secondary" on:click={toggle}>Cancel</Button>
+            <Button color="danger"  on:click={deleteShl}><Icon name="trash3" /> Yes, Delete SHL</Button>
+          </ModalFooter>
+        </Modal>
+      </FormGroup>
+    </Form>
   </Col>
   {#if $mode === 'advanced'}
   <Col class="d-flex justify-content-center">
