@@ -40,10 +40,9 @@
             let redirectUrl = authService.getRedirectUrl();
             if (redirectUrl) {
               goto(redirectUrl);
-            } else {
-              goto('/home');
             }
           }
+          return user ?? undefined;
         }
       });
       currentUser.then(async (user) => {
