@@ -11,7 +11,7 @@
   $: {
     title =
       $mode === 'advanced'
-        ? 'Summaries created and stored on this device'
+        ? 'Summaries created and stored on this account'
         : 'Summaries you have created';
   }
 </script>
