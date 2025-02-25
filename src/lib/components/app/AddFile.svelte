@@ -71,7 +71,7 @@
 
   let shcsToAdd: SHCFile[] = [];
   let singleIPS = true;
-  let patientName = "My";
+  let patientName = "";
   let patient: Patient | undefined;
 
   let label = 'Health Summary ' + new Date().toISOString().slice(0, 10);
@@ -154,6 +154,10 @@
     const accordion = document.querySelector('div.add-data > div.accordion-collapse');
     if (accordion) {
       accordion.style.overflow = 'visible';
+      accordion.classList.add('at-load');
+      setTimeout(() => {
+        accordion.classList.remove('at-load');
+      }, 250);
     }
 
     document.querySelector(`span.${currentTab}-tab`)?.parentElement?.click();
@@ -473,3 +477,9 @@
   <em class="text-secondary">* Advanced features for demo purposes only</em>
   <br>
 {/if}
+
+<style>
+  :global(.at-load) {
+    transition: all 0s !important;
+  }
+</style>

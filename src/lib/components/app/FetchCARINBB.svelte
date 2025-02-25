@@ -7,6 +7,7 @@
     Label,
     Row,
     Spinner } from 'sveltestrap';
+  import { page } from '$app/stores';
 
   import { CARIN_HOSTS, CARIN_RESOURCES } from '$lib/config';
   import type { ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from '$lib/utils/types';
@@ -30,6 +31,13 @@
   $: {
     if (sofHostSelection) {
       sofHost = CARIN_HOSTS.find(e => e.id == sofHostSelection);
+    }
+  }
+  
+  $: {
+    if (fetchError !== "") {
+      processing = false;
+      loadingSample = false;
     }
   }
 
@@ -91,87 +99,91 @@
         return;
       }
       sessionStorage.removeItem('AUTH_METHOD');
+      try {
+        let key = sessionStorage.getItem('SMART_KEY');
+        if (!key) {
+          throw Error('No SMART session key found in storage');
+        }
 
-      let key = sessionStorage.getItem('SMART_KEY');
-      if (key) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
+        const code = $page.url.searchParams.get('code');
         if (!code) {
           throw Error('No code found in authentication response url');
         }
+
         let token = sessionStorage.getItem(JSON.parse(key));
-        if (token) {
-          let url = JSON.parse(token).serverUrl;
-          let sofHostAuthd = CARIN_HOSTS.find(e => e.url == url);
-          if (sofHostAuthd) {
-            sofHost = sofHostAuthd;
-            sofHostSelection = sofHost.id;
-
-            sessionStorage.removeItem(key);
-            sessionStorage.removeItem('SMART_KEY');
-            // Send the code to your server for token exchange
-            let tokenResult = await fetch(`/api/${sofHostSelection}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ code }),
-            })
-              .then(response => response.json());
-            const accessToken = tokenResult.access_token;
-            const patientId = tokenResult.patient;
-            console.log('Access Token:', accessToken);
-
-            let patient = await fetch(`${url}/Patient/${patientId}`, {
-              headers: { Authorization: `Bearer ${accessToken}` },
-            })
-              .then(response => response.json())
-              .then(patientData => {
-                console.log('Patient Data:', patientData);
-                return patientData;
-              });
-                
-            let resources = (await Promise.allSettled(["ExplanationOfBenefit"].map((resourceType: string) => {
-              return fetch(`${url}/${resourceType}?patient=${patientId}`, {
-                headers: { Authorization: `Bearer ${accessToken}` },
-              })
-                .then(response => response.json())
-                .then(data => {
-                  console.log(`${resourceType} Data:`, data);
-                  if (data.resourceType === 'Bundle') {
-                    return data.entry.map((e: BundleEntry) => e.resource);
-                  } else if (CARIN_RESOURCES.includes(data.resourceType)) {
-                    return [data];
-                  }
-                  throw Error (`Unexpected resource type ${data.resourceType}`);
-                });
-            }))).filter(x => x.status == "fulfilled").map(x => x.value);
-
-            resources = resources.flat();
-            resources = [patient, ...resources];
-            if (resources) {
-              result = { resources: await getResourcesWithReferences(resources, 1, accessToken) };
-              console.log(result.resources);
-              resourceDispatch('update-resources', result);
-            }
-
-            console.log(result);
-          }
+        if (!token) {
+          throw Error('No SMART token found in storage');
         }
+
+        let url = JSON.parse(token).serverUrl;
+        let sofHostAuthd = CARIN_HOSTS.find(e => e.url == url);
+        if (!sofHostAuthd) {
+          throw Error(`No registered SMART host found matching ${url}`);
+        }
+
+        sofHost = sofHostAuthd;
+        sofHostSelection = sofHost.id;
+
+        sessionStorage.removeItem(key);
+        sessionStorage.removeItem('SMART_KEY');
+        // Send the code to the server for token exchange
+        let tokenResult = await fetch(`/api/${sofHostSelection}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code }),
+        })
+          .then(response => response.json());
+        const accessToken = tokenResult.access_token;
+        const patientId = tokenResult.patient;
+        console.log('Access Token:', accessToken);
+
+        let patient = await fetch(`${url}/Patient/${patientId}`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        })
+          .then(response => response.json())
+          .then(patientData => {
+            console.log('Patient Data:', patientData);
+            return patientData;
+          });
+            
+        let resources = (await Promise.allSettled(["ExplanationOfBenefit"].map((resourceType: string) => {
+          return fetch(`${url}/${resourceType}?patient=${patientId}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          })
+            .then(response => response.json())
+            .then(data => {
+              console.log(`${resourceType} Data:`, data);
+              if (data.resourceType === 'Bundle') {
+                return data.entry.map((e: BundleEntry) => e.resource);
+              } else if (CARIN_RESOURCES.includes(data.resourceType)) {
+                return [data];
+              }
+              throw Error (`Unexpected resource type ${data.resourceType}`);
+            });
+        }))).filter(x => x.status == "fulfilled").map(x => x.value);
+
+        resources = resources.flat();
+        resources = [patient, ...resources];
+        if (resources) {
+          result = { resources: await getResourcesWithReferences(resources, 1, accessToken) };
+          console.log(result.resources);
+          resourceDispatch('update-resources', result);
+        }
+
+        console.log(result);
+      } catch (e) {
+        console.log('Failed', e);
+        fetchError = "Error fetching CARIN BB data";
+        const shlid = $page.url.searchParams.get('shlid');
+        window.history.replaceState(null, "", $page.url.href.split("?")[0] + (shlid ? `?shlid=${shlid}` : ""));
       }
     }
   });
 
-  function endSession() {
-    let key = sessionStorage.getItem('SMART_KEY');
-    if (key) {
-      sessionStorage.removeItem(JSON.parse(key));
-      sessionStorage.removeItem('SMART_KEY');
-    }
-  }
-
 </script>
 <form on:submit|preventDefault={() => prepareIps()}>
   <FormGroup>
-      <Label>Fetch US Core data via SMART authorization</Label>
+      <Label>Fetch CARIN BB data via SMART authorization</Label>
     {#each CARIN_HOSTS as host}
       <Row class="mx-2">
         <Input type="radio" bind:group={sofHostSelection} value={host.id} label={host.name} />

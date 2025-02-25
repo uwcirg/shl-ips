@@ -2,6 +2,11 @@
 
 interface ImportMetaEnv {
     readonly DEV_SERVER_PORT: number
+    readonly VITE_AUTH_URL: string
+    readonly VITE_AUTH_CLIENT_ID: string
+    readonly VITE_AUTH_REDIRECT_URI: string
+    readonly VITE_AUTH_SILENT_REDIRECT_URI: string
+    readonly VITE_AUTH_POST_LOGOUT_URI: string
     readonly VITE_EPIC_HIMSS_CLIENT_ID: string
     readonly VITE_ECW_HIMSS_CLIENT_ID: string
     readonly VITE_EPIC_CLIENT_ID: string
@@ -11,6 +16,10 @@ interface ImportMetaEnv {
     readonly VITE_HUMANA_CLIENT_ID: string
     readonly VITE_ACENTRA_CLIENT_ID: string
     readonly VITE_MEDITECH_BEARER_TOKEN: string
+    readonly VITE_AETNA_CLIENT_ID: string
+    readonly VITE_CAREFIRST_CLIENT_ID: string
+    readonly VITE_HUMANA_CLIENT_ID: string
+    readonly VITE_ACENTRA_CLIENT_ID: string
     readonly VITE_API_BASE: string
     readonly VITE_VIEWER_BASE: string
     readonly VITE_SHOW_VIEWER_DEMO: boolean
