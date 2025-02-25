@@ -147,7 +147,7 @@
       <Nav class="ms-auto" navbar>
         <LanguageMenu />
       </Nav>
-      <Nav class="ms-auto" navbar underline>
+      <Nav class="ms-auto" navbar>
         <NavItem>
           <NavLink href={"/"} active={ activeItem === "home" }>Home</NavLink>
         </NavItem>
@@ -211,3 +211,29 @@
   </Collapse>
 </Navbar>
 <Banner title="International Patient Summary Prototype"/>
+
+<style>
+  :global(.nav-link) {
+    position: relative;
+  }
+  /* using ::before because of dropdown arrow ::after pseudo element */
+  :global(.nav-link::before) {
+    content: '';
+    opacity: 0;
+    transition: all 0.2s;
+    height: 2px;
+    width: calc(100% - 2*var(--bs-navbar-nav-link-padding-x));
+    left: var(--bs-navbar-nav-link-padding-x);
+    background-color: lightgrey;
+    position: absolute;
+    bottom: 1px;
+    /* left: 0; */
+  }
+  :global(.nav-link:hover::before) {
+    opacity: 1;
+  }
+  :global(.nav-link.active::before) {
+    opacity: 1;
+    background-color: grey;
+  }
+</style>
