@@ -12,6 +12,15 @@ export default {
       out: 'build',
       precompress: false,
       envPrefix: ''
-    })
+    }),
+    csp: {
+      directives: {
+        'script-src': ['self']
+      },
+      reportOnly: {
+        'script-src': ['self'],
+        'report-uri': ['/']
+      }
+    }
   }
 };
