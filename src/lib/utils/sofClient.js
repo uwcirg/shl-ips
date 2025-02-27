@@ -93,13 +93,15 @@ async function getResources() {
             return requestResources(client, resourceType);
         }))).filter(x => x.status == "fulfilled").map(x => x.value);
     }
-   
 
     return resources;
 }
 
 async function getResourcesWithReferences(depth=1) {
     let resources = await getResources();
+    if (resources === undefined) {
+        return [];
+    }
     let allResources = [].concat(...resources);
     let referenceMap = {};
     let retrievedResources = {};
