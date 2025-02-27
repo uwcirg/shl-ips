@@ -28,6 +28,13 @@ export const SOF_HOSTS = [
   //   note: "zhangwei / Cures@2022"
   // },
   {
+    id: "epic-himss",
+    name: "Epic - HIMSS Demo",
+    url: " https://ihe-nimbus.epic.com/Interconnect-FHIR/api/FHIR/R4",
+    clientId: import.meta.env.VITE_EPIC_CLIENT_ID,
+    note: "user / pass"
+  },
+  {
     id: "epic",
     name: "Epic Demo",
     url: "https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4",
@@ -87,7 +94,8 @@ export const CARIN_HOSTS = [
 ]
 
 export const BEARER_AUTHORIZATION = {
-  'Meditech': import.meta.env.VITE_MEDITECH_BEARER_TOKEN
+  'Meditech': import.meta.env.VITE_MEDITECH_BEARER_TOKEN,
+  'EpicHIMSS': import.meta.env.VITE_EPIC_CLIENT_ID
 }
 export const SOF_REDIRECT_URI = '/create';
 export const SOF_RESOURCES = [
@@ -136,6 +144,7 @@ export const SOF_PATIENT_RESOURCES = [
 ];
 
 export const CARIN_RESOURCES = [
+  'Patient',
   'Coverage',
   'Practitioner',
   'Organization',
@@ -154,6 +163,7 @@ export const PATIENT_IPS = {
   'Peter Kieth Jordan': 'https://terminz.azurewebsites.net/fhir/Patient/$summary?profile=http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips&identifier=https://standards.digital.health.nz/ns/nhi-id|NNJ9186&_format=json'
 }
 export const EXAMPLE_IPS = {
+  'Epic HIMSS': 'https://ihe-nimbus.epic.com/Interconnect-FHIR-Open/api/FHIR/R4/Patient/e1o-b5iIsAPxRiD2Ct8KekQ3/$summary',
   'Maria SEATTLE Gravitate': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/14599/$summary',
   'Peter Kieth Jordan': 'https://raw.githubusercontent.com/jddamore/IPSviewer/4eedba9df34afbf3eb20d98c49d36afc7f9ce104/samples/connectathon_Jan2025/new_IPS_Example.json',
   'Johanna Petronella Maria (Jo) van Putten-van der Giessen': "https://raw.githubusercontent.com/jddamore/IPSviewer/4eedba9df34afbf3eb20d98c49d36afc7f9ce104/samples/connectathon_archive/NL_core_patient_01.json",
