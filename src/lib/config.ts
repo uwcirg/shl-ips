@@ -39,14 +39,14 @@ export const SOF_HOSTS = [
     name: "Epic Demo",
     url: "https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4",
     clientId: import.meta.env.VITE_EPIC_CLIENT_ID,
-    note: "<a href='https://fhir.epic.com/Documentation?docId=testpatients' target='_blank' rel='noreferrer'>Test patient credentials <Icon name='box-arrow-up-right' /></a>"
+    note: "fhircamila / epicepic1 <br> <a style='color: grey; font-size: small' href='https://fhir.epic.com/Documentation?docId=testpatients' target='_blank' rel='noreferrer'>More credentials <span style='vertical-align: text-top; font-size: x-small' class='bi-box-arrow-up-right' /></a>"
   },
   { 
     id: "cerner",
     name: "Oracle Cerner Demo",
     url: "https://fhir-myrecord.cerner.com/r4/ec2458f2-1e24-41c8-b71b-0e701af7583d",
     clientId: import.meta.env.VITE_CERNER_CLIENT_ID,
-    note: "<a href='https://docs.google.com/document/u/1/d/e/2PACX-1vQwyX3px4qi5t1O6_El6022zYt4ymKAWCrcgxcX5NvYGUJAkJ4WFwOnLoikow6rEccpFZzDWBdcBqsQ/pub' target='_blank' rel='noreferrer'>Test patient credentials <Icon name='box-arrow-up-right' /></a>"
+    note: "nancysmart / Cerner01 <br> <a style='color: grey; font-size: small' href='https://docs.google.com/document/u/1/d/e/2PACX-1vQwyX3px4qi5t1O6_El6022zYt4ymKAWCrcgxcX5NvYGUJAkJ4WFwOnLoikow6rEccpFZzDWBdcBqsQ/pub' target='_blank' rel='noreferrer'>More credentials <span style='vertical-align: text-top; font-size: x-small' class='bi-box-arrow-up-right' /></a>"
   },
   {
     id: "smit",
