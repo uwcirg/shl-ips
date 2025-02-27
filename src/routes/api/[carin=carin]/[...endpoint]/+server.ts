@@ -8,8 +8,10 @@ import {
 
 export const POST = async ({ params, request }: { params: { carin: string }; request: Request; }) => {
 
+  console.log('Checking auth');
   const auth = request.headers.get('Authorization');
   if (!auth || !auth.startsWith('Bearer ')) {
+    console.log('Unauthorized');
     return error(401, { message: "Unauthorized" });
   }
   const authorized = await fetch(`${SERVER_API_BASE}/authcheck`, {
@@ -20,9 +22,12 @@ export const POST = async ({ params, request }: { params: { carin: string }; req
     },
   });
   if (!authorized.ok) {
+    console.log('Authorization check failed');
+    console.log(authorized.status, authorized.statusText, await authorized.text());
     return error(401, { message: 'Authorization check failed' });
   }
 
+  console.log('Token exchange');
   const restPath = params.carin;
   const { code } = await request.json();
 

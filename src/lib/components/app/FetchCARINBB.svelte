@@ -15,6 +15,7 @@
   import { authorize } from '$lib/utils/sofClient.js';
   import { createEventDispatcher, onMount } from 'svelte';
   import type { BundleEntry, Resource } from 'fhir/r4';
+  import AuthService from '$lib/utils/AuthService';
   
   const authDispatch = createEventDispatcher<{'sof-auth-init': SOFAuthEvent; 'sof-auth-fail': SOFAuthEvent}>();
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
@@ -129,7 +130,10 @@
         // Send the code to the server for token exchange
         let tokenResult = await fetch(`/api/${sofHostSelection}`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${await AuthService.Instance.getAccessToken()}`,
+          },
           body: JSON.stringify({ code }),
         })
           .then(response => response.json());
