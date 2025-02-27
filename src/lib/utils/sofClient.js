@@ -1,5 +1,6 @@
 import FHIR from 'fhirclient';
 import { SOF_REDIRECT_URI, SOF_PATIENT_RESOURCES, SOF_RESOURCES } from '$lib/config';
+import { getReferences } from '$lib/utils/util';
 
 export { authorize, getResources, getResourcesWithReferences, activePatient, constructResourceUrl };
 
@@ -7,7 +8,8 @@ const patientResourceScope = SOF_PATIENT_RESOURCES.map(resourceType => `patient/
 const resourceScope = patientResourceScope.join(" ");
 const config = {
         clientId: '(ehr client id, populated later)', // clientId() is ignored at smit
-        scope: `openid fhirUser launch/patient ${resourceScope}`,
+        // scope: `openid fhirUser launch/patient ${resourceScope}`,
+        scope: `openid fhirUser launch/patient patient/*.read`,
         iss: '(authorization url, populated later)',
         redirect_uri: SOF_REDIRECT_URI
     };
@@ -20,29 +22,6 @@ function authorize(inputFhirUrl, clientId) {
     config.pkceMode = "ifSupported";
     return FHIR.oauth2.authorize(config);
 };
-
-function getReferences(obj, references) {
-    let key = "reference";
-    if (references === undefined) {
-      references = [];
-    }
-    if (typeof obj === "object") {
-      for (let k in obj) {
-        if (k !== "subject" && k !== "patient") {
-          if (k === key && references !== undefined) {
-            references.push(obj[k]);
-          } else {
-            references = getReferences(obj[k], references);
-          }
-        } 
-      }
-    } else if (obj instanceof Array) {
-      for (let i=0; i < obj.length; i++) {
-        references = getReferences(obj[i], references);
-      }
-    }
-    return references;
-  }
 
 function constructResourceUrl(resourceType, patientId, endpoint='') {
     if (endpoint) {
@@ -70,21 +49,25 @@ async function requestResources(client, resourceType) {
 async function activePatient() {
     if (client === undefined) {
         client = await FHIR.oauth2.ready();
-        return client.getPatientId();
     }
-    return null
+    return client.getPatientId() ?? undefined;
 }
 
 async function getResources() {
-    client = await FHIR.oauth2.ready();
+    try {
+        client = await FHIR.oauth2.ready();
+    } catch (e) {
+        throw Error('SMART authorization failed. The service you selected may be unavailable.')
+    }
     let pid = client.getPatientId();
     if (!pid) {
         console.error("No patient ID found");
-        return undefined;
+        throw Error('The service you selected did not return an ID for the authorized patient. Please try a different service.')
     }
     // Establish resource display methods
     let resources;
     if (client.state.clientId === "XfubBaEQzzHCOvgeB9Q7qZbg4QcK3Jro_65w5VWFRP8") {
+        // Minimum required requests for eClinicalWorks HIMSS 2024 demo
         resources = (await Promise.allSettled(['Patient', 'Immunization'].map((resourceType) => {
             return requestResources(client, resourceType);
         }))).filter(x => x.status == "fulfilled").map(x => x.value);
@@ -125,16 +108,5 @@ async function getResourcesWithReferences(depth=1) {
         referenceMap = {};
         depth--;
     }
-
     return allResources;
-}
-
-// Utility function to validate a URL
-function isValidUrl(url) {
-    try {
-        new URL(url);
-        return true;
-    } catch (e) {
-        return false;
-    }
 }
