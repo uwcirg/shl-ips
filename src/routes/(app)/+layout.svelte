@@ -27,6 +27,13 @@
       }
       return user;
     });
+    currentUser.then(async (user) => {
+      window.dispatchEvent(new CustomEvent('userFound', { 
+        detail: { message: 'Hello from another component!' } 
+      }));
+      $shlStore = await shlClient.getUserShls();
+      return user;
+    });
   });
 
 </script>
