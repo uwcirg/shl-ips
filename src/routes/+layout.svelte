@@ -124,10 +124,14 @@
       if (user) {
         let now = Date.now() / 1000;
         if ((user.expires_at ?? 0) < now) {
-          return user ?? undefined;
+          return user;
         }
       }
+      return undefined;
     }).then(async (user) => {
+      if (!user) {
+        return undefined;
+      }
       window.dispatchEvent(new CustomEvent('userFound', { 
         detail: { message: 'Hello from another component!' } 
       }));

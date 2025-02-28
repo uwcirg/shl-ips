@@ -2,11 +2,15 @@
   import {
     Styles
   } from 'sveltestrap';
-  import { onMount } from 'svelte';
+  import { onMount, getContext } from 'svelte';
   import { goto } from '$app/navigation';
-  import { page } from '$app/stores';
+  import { page, type Writable } from '$app/stores';
   import AuthService from '$lib/utils/AuthService';
   import type { User } from 'oidc-client-ts';
+  import type { SHLAdminParams, SHLClient } from '$lib/utils/managementClient';
+
+  let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
+  let shlClient: SHLClient = getContext('shlClient');
 
   let authService = AuthService.Instance;
   onMount(async () => {
@@ -14,13 +18,19 @@
     try {
       newUser = await authService.signinCallback();
       if (newUser) {
-        let redirectUrl = authService.getRedirectUrl();
-        // avoid redirecting to the same page
-        if (redirectUrl && !redirectUrl.includes($page.url.pathname)) {
-          goto(redirectUrl);
-        } else {
-          goto('/home');
-        }
+        setTimeout(async () => {
+          window.dispatchEvent(new CustomEvent('userFound', { 
+            detail: { message: 'Hello from another component!' } 
+          }));
+          $shlStore = await shlClient.getUserShls();
+          let redirectUrl = authService.getRedirectUrl();
+          // avoid redirecting to the same page
+          if (redirectUrl && !redirectUrl.includes($page.url.pathname)) {
+            goto(redirectUrl);
+          } else {
+            goto('/home');
+          }
+        }, 100);
       }
     } catch (error) {
       console.error("No authentication parameters found.");
