@@ -1,3 +1,5 @@
+export const AUTOCODER_API_KEY = process.env.AUTOCODER_API_KEY;
+
 export const REDIRECT_URI = process.env.REDIRECT_URI;
 
 export const SERVER_API_BASE = process.env.VITE_API_BASE;
