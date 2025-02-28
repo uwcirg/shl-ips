@@ -23,6 +23,7 @@
   import FetchSoF from '$lib/components/app/FetchSoF.svelte';
   import FetchAD from '$lib/components/app/FetchAD.svelte';
   import FetchTEFCA from '$lib/components/app/FetchTEFCA.svelte';
+  import FetchCARINBB from '$lib/components/app/FetchCARINBB.svelte';
   import ODHForm from '$lib/components/app/ODHForm.svelte';
   import ResourceSelector from '$lib/components/app/ResourceSelector.svelte';
   import {
@@ -317,6 +318,16 @@
         </FetchSoF>
       </TabPane>
       {#if $mode === "advanced"}
+        <TabPane class="sof-tab" tabId="sof" style="padding-top:10px">
+          <span class="smart-tab" slot="tab">*CARIN BB</span>
+          <FetchCARINBB
+            on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
+            on:sof-auth-fail={ async ({ detail }) => { revertPreAuth(detail) }}
+            on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
+            on:ips-retrieved={ async ({ detail }) => { stageRetrievedIPS(detail) } }
+            on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }>
+          </FetchCARINBB>
+        </TabPane>
         <TabPane class="url-tab" tabId="url" style="padding-top:10px">
           <span class="url-tab" slot="tab">*FHIR URL</span>
           <FetchUrl
@@ -459,8 +470,8 @@
       </form>
     </Row>
   {/if}
-  <span class="text-danger">{fetchError}</span>
 {/if}
+<span class="text-danger">{fetchError}</span>
 {#if $mode === "advanced"}
   <br>
   <em class="text-secondary">* Advanced features for demo purposes only</em>

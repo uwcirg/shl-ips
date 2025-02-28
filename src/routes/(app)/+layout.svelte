@@ -6,6 +6,7 @@
     Col,
     Row
   } from 'sveltestrap';
+  import { page } from '$app/stores';
   import { AuthService } from '$lib/utils/AuthService';
   import { User } from 'oidc-client-ts';
   import { type SHLAdminParams, type SHLClient } from '$lib/utils/managementClient';
@@ -18,38 +19,21 @@
   let currentUser: Promise<User | undefined>;
   
   onMount(async () => {
-    let newUser: User | undefined;
-    try {
-      newUser = await authService.signinCallback();
-    } catch (error) {
-      console.warn("No authentication parameters found, checking for current user");
-    } finally {
-      currentUser = authService.getUser().then((user) => {
-        if (user) {
-          let now = Date.now() / 1000;
-          if ((user.expires_at ?? 0) < now) {
-            return user ?? undefined;
-          }
-        }
-        if (!user) {
-          return authService.login().then(() => {
-            return authService.getUser().then((user) => user ?? undefined);
-          });
-        } else {
-          if (newUser) {
-            let redirectUrl = authService.getRedirectUrl();
-            if (redirectUrl) {
-              goto(redirectUrl);
-            }
-          }
-          return user ?? undefined;
-        }
-      });
-      currentUser.then(async (user) => {
-        $shlStore = await shlClient.getUserShls();
-        return user;
-      });
-    }
+    currentUser = authService.getUser().then((user) => {
+      if (!user) {
+        return authService.login().then(() => {
+          return authService.getUser().then((user) => user ?? undefined);
+        });
+      }
+      return user;
+    });
+    currentUser.then(async (user) => {
+      window.dispatchEvent(new CustomEvent('userFound', { 
+        detail: { message: 'Hello from another component!' } 
+      }));
+      $shlStore = await shlClient.getUserShls();
+      return user;
+    });
   });
 
 </script>

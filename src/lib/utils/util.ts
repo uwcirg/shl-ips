@@ -59,6 +59,25 @@ export function download(filename:string, text:string) {
   document.body.removeChild(element);
 }
 
+export function getReferences(resourceContent: any, references: any[] | undefined=undefined): string[]{
+    let referenceFieldKey = "reference";
+    if (references === undefined) {
+      references = [];
+    }
+    if (typeof resourceContent === "object") {
+      for (let k in resourceContent) {
+        if (k !== "subject" && k !== "patient") {
+          if (k === referenceFieldKey && references !== undefined) {
+            references.push(resourceContent[k]);
+          } else {
+            references = getReferences(resourceContent[k], references);
+          }
+        } 
+      }
+    }
+    return references;
+  }
+
 export function getResourcesFromIPS(ips: Bundle) {
   let entries = ips.entry;
   let resources = [] as Resource[];
@@ -114,4 +133,14 @@ export async function packageSHC(content:SHCFile | Bundle | undefined): Promise<
   const shc = await signJws(content);
 
   return { verifiableCredential: [shc] };
+}
+
+// Utility function to validate a URL
+export function isValidUrl(url: string) {
+  try {
+      new URL(url);
+      return true;
+  } catch (e) {
+      return false;
+  }
 }

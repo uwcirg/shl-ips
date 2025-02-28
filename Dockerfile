@@ -14,6 +14,4 @@ RUN sed -i '/2\.11\.6/a \ \ "type": "module",' node_modules/@popperjs/core/packa
 
 RUN npm run build
 
-RUN cp build/404.html build/index.html
-
-CMD npm run build && cp build/404.html build/index.html && npm run start
+CMD npm run build && npm run start
