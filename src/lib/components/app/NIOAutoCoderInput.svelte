@@ -12,9 +12,6 @@
   export let mode: "Occupation" | "Industry";
   export let value: IOResponse;
 
-  let menu: HTMLDivElement;
-  let input: HTMLInputElement;
-  
   let defaults: NIOAutoCoderResponse = {
     Industry: [{
       Code: "000000",
@@ -30,7 +27,7 @@
   };
 
   let isOpen = false;
-  $: icon = 'search';// isOpen ? 'chevron-up' : 'chevron-down';
+  $: icon = 'search';
 
   interface IOResponse {
     Code: string;
@@ -45,18 +42,6 @@
   let codingOptionTitle: string = "";
   value = defaults[mode][0];
   let codingOptions: NIOAutoCoderResponse | undefined = defaults;
-
-  let history: Promise<NIOAutoCoderResponse>[] = [];
-  let currentQuery: Promise<void | NIOAutoCoderResponse>;
-  $: {
-    if (history.length > 0) {
-      codingOptions = undefined;
-      currentQuery = history[history.length - 1].then((r) => {
-        codingOptions = r;
-        return r;
-      });
-    }
-  }
 
   function setValue(v: IOResponse) {
     value = v;
@@ -106,7 +91,7 @@
 </script>
 
 <Dropdown {isOpen} toggle={() => (isOpen = !isOpen)}>
-    <DropdownToggle bind:this={input} tag="div" class="d-inline-block" style="width:100%">
+    <DropdownToggle tag="div" class="d-inline-block" style="width:100%">
       <div style="position:relative">
         <Input
           type="text"
@@ -125,18 +110,15 @@
           color: rgb(50, 50, 50);"/>
       </div>
     </DropdownToggle>
-    <DropdownMenu bind:this={menu} style="max-height: 400px; width:100%; overflow:hidden">
+    <DropdownMenu style="max-height: 400px; width:100%; overflow:hidden">
       {#if codingOptions}
         {#if codingOptions[mode].length === 0}
           Empty
         {:else}
           {#each codingOptions[mode] as codingOption}
             <DropdownItem style="overflow:elipsis" on:click={() => {
-              // let menu = document.querySelector("div.dropdown-menu.show");
-              // menu?.classList.remove("show");
               setValue(codingOption);
             }}>
-            <!-- <DropdownItem style="overflow:elipsis"> -->
               {codingOption.Title}
             </DropdownItem>
           {/each}
