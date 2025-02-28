@@ -470,8 +470,8 @@
       </form>
     </Row>
   {/if}
-  <span class="text-danger">{fetchError}</span>
 {/if}
+<span class="text-danger">{fetchError}</span>
 {#if $mode === "advanced"}
   <br>
   <em class="text-secondary">* Advanced features for demo purposes only</em>

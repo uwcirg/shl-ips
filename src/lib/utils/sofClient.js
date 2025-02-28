@@ -82,6 +82,9 @@ async function getResources() {
 
 async function getResourcesWithReferences(depth=1) {
     let resources = await getResources();
+    if (resources === undefined) {
+        return [];
+    }
     let allResources = [].concat(...resources);
     let referenceMap = {};
     let retrievedResources = {};

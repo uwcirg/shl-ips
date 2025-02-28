@@ -70,8 +70,10 @@
             sofHost = sofHostAuthd;
             sofHostSelection = sofHost.id;
             await fetchData();
-            sessionStorage.removeItem(key);
-            sessionStorage.removeItem('SMART_KEY');
+            if (result.resources.length > 0) {
+              sessionStorage.removeItem(key);
+              sessionStorage.removeItem('SMART_KEY');
+            }
           }
         }
       }
