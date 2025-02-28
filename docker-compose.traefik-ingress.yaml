@@ -1,6 +1,5 @@
 # docker-compose ingress overrides for traefik
 ---
-version: "3.9"
 services:
   shlips:
     labels:

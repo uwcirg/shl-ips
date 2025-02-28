@@ -16,7 +16,7 @@
     NavbarToggler,
     Row
   } from 'sveltestrap';
-  import { onMount, getContext } from 'svelte';
+  import { onMount, onDestroy, getContext } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { type Writable } from 'svelte/store';
@@ -36,8 +36,6 @@
 
   let mode: Writable<string> = getContext('mode');
 
-  let currentUser: Promise<User | undefined>;
-
   let activeItem: ("home" | "summaries" | "create" | "") = "";
   $: {
     if ($page.url.pathname.includes("home")) {
@@ -51,23 +49,21 @@
     }
   }
 
+  let haveUser = false;
+  function handleAuthenticationEvent(event) {
+    haveUser = true;
+    return;
+  }
+
   onMount(async () => {
     window.onscroll = function() {scrollFunction()};
     scrollFunction();
     $isOpen = false;
 
-    try {
-      currentUser = await authService.signinCallback();
-    } catch (error) {
-      console.warn("No authentication parameters found, checking for current user");
-    } finally {
-      currentUser = authService.getUser().then(async (user) => {
-        if (user) {
-          $shlStore = await shlClient.getUserShls();
-        }
-        return user;
-      });
-    }
+    window.addEventListener('userFound', handleAuthenticationEvent);
+  });
+  onDestroy(() => {
+    window.removeEventListener('userFound', handleAuthenticationEvent);
   });
 
   function scrollFunction() {
@@ -151,6 +147,7 @@
         <NavItem>
           <NavLink href={"/"} active={ activeItem === "home" }>Home</NavLink>
         </NavItem>
+        {#if haveUser}
         {#await authService.getProfile() then profile}
           {#if profile}
             <NavItem>
@@ -207,6 +204,11 @@
             </NavItem>
           {/if}
         {/await}
+        {:else}
+        <NavItem>
+          <NavLink on:click={() => authService.login()}><Icon name="person-circle"/> Sign In</NavLink>
+        </NavItem>
+      {/if}
       </Nav>
   </Collapse>
 </Navbar>

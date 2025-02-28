@@ -11,20 +11,20 @@ function isPathAllowed(pathname: string) {
   );
 }
 
-export const handle: Handle = async ({ event, resolve }) => {
+// export const handle: Handle = async ({ event, resolve }) => {
 
-  // Validate keycloak token
-  let authorized = false;
-  try {
-    authorized = true;
-  } catch (e) {
-    console.error(e);
-  }
+//   // Validate keycloak token
+//   let authorized = false;
+//   try {
+//     authorized = true;
+//   } catch (e) {
+//     console.error(e);
+//   }
 
-  if (!authorized && !isPathAllowed(event.url.pathname)) {
-    throw redirect(302, '/home');
-  }
+//   if (!authorized && !isPathAllowed(event.url.pathname)) {
+//     throw redirect(302, '/home');
+//   }
 
-  const response = await resolve(event);
-  return response;
-};
+//   const response = await resolve(event);
+//   return response;
+// };

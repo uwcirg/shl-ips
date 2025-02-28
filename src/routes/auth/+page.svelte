@@ -1,0 +1,35 @@
+<script lang="ts">
+  import {
+    Styles
+  } from 'sveltestrap';
+  import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
+  import { page } from '$app/stores';
+  import AuthService from '$lib/utils/AuthService';
+  import type { User } from 'oidc-client-ts';
+
+  let authService = AuthService.Instance;
+  onMount(async () => {
+    let newUser: User | undefined;
+    try {
+      newUser = await authService.signinCallback();
+      if (newUser) {
+        let redirectUrl = authService.getRedirectUrl();
+        // avoid redirecting to the same page
+        if (redirectUrl && !redirectUrl.includes($page.url.pathname)) {
+          goto(redirectUrl);
+        } else {
+          goto('/home');
+        }
+      }
+    } catch (error) {
+      console.error("No authentication parameters found.");
+      console.error(error);
+      authService.login();
+    }
+  });
+</script>
+<Styles />
+<svelte:head>
+    <title>Auth - WA Verify+</title> 
+</svelte:head>
