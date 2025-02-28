@@ -7,7 +7,14 @@
     Styles
   } from 'sveltestrap';
   import { goto } from '$app/navigation';
-
+  import { AuthService } from '$lib/utils/AuthService';
+  function login() {
+    if (AuthService.Instance.isAuthenticated()) {
+      goto('/home');
+    } else {
+      AuthService.Instance.login();
+    }
+  }
 </script>
 <Styles />
 <svelte:head>
@@ -29,7 +36,7 @@
           <Button
             color="primary"
             size="lg"
-            on:click={ () => goto('/home') }
+            on:click={ () => login() }
           >
             Get Started
           </Button>
