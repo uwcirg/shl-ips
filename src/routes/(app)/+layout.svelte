@@ -20,18 +20,13 @@
   
   onMount(async () => {
     currentUser = authService.getUser().then((user) => {
-      if (user) {
-        let now = Date.now() / 1000;
-        if ((user.expires_at ?? 0) < now) {
-          return user ?? undefined;
-        }
-      } else {
+      if (!user) {
         return authService.login().then(() => {
           return authService.getUser().then((user) => user ?? undefined);
         });
       }
+      return user;
     });
-    // Split promise to shortcut body 'await' block resolution
     currentUser.then(async (user) => {
       window.dispatchEvent(new CustomEvent('userFound', { 
         detail: { message: 'Hello from another component!' } 

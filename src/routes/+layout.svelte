@@ -5,7 +5,7 @@
     Col,
     Styles
   } from 'sveltestrap';
-  import { setContext } from 'svelte';
+  import { onMount, onDestroy, setContext } from 'svelte';
   import {writable, type Writable, readable, type Readable } from 'svelte/store';
   import { AuthService } from '$lib/utils/AuthService';
   import type { Language } from '$lib/utils/types';
@@ -96,6 +96,49 @@
     if ($mode) window.localStorage[MODE_KEY] = JSON.stringify($mode);
   }
 
+  let prevPageSize: number | undefined;
+  // Toggle class based on window width
+  function dispatchPageSize() {
+    var width = window.innerWidth
+    let border = 800;
+    if (width < border && (prevPageSize === undefined || prevPageSize >= border)) {
+      window.dispatchEvent(new CustomEvent('page-sm', {
+        detail: {}
+      }));
+    } else if (width >= border && (prevPageSize === undefined || prevPageSize < border)) {
+      window.dispatchEvent(new CustomEvent('page-md', {
+        detail: {}
+      }));
+    }
+    prevPageSize = width;
+  }
+
+  onMount(() => {
+    // Initial call to set pagination size on page load
+    dispatchPageSize()
+
+    // Call dispatchPageSize() on window resize
+    window.addEventListener('resize', dispatchPageSize);
+
+    authService.getUser().then((user) => {
+      if (user) {
+        let now = Date.now() / 1000;
+        if ((user.expires_at ?? 0) < now) {
+          return user ?? undefined;
+        }
+      }
+    }).then(async (user) => {
+      window.dispatchEvent(new CustomEvent('userFound', { 
+        detail: { message: 'Hello from another component!' } 
+      }));
+      $shlStore = await shlClient.getUserShls();
+      return user;
+    });
+  });
+  onDestroy(() => {
+    window.removeEventListener('resize', dispatchPageSize);
+  });
+
 </script>
 
 <Container class="main" fluid>
@@ -108,37 +151,6 @@
 </Container>
 
 <style>
-  :global(#nav-image) {
-    width: 240px;
-    -webkit-transition: all 0.06s linear;
-    -moz-transition: all 0.06s linear;
-    -o-transition: all 0.06s linear;
-    transition: all 0.06s linear;
-  }
-  :global(.nav-text) {
-    font-size:medium;
-    -webkit-transition: all 0.06s linear;
-    -moz-transition: all 0.06s linear;
-    -o-transition: all 0.06s linear;
-    transition: all 0.06s linear;
-  }
-  :global(.nav-link.scrolling) {
-    padding-top: 0rem !important;
-    padding-bottom: 0.25rem !important;
-  }
-  :global(#nav-image.scrolling) {
-    width: 160px !important;
-    margin-left: 10px;
-  }
-  :global(.nav-text.scrolling)  {
-    font-size: xx-small;
-    color: #000; /* Fallback for older browsers */
-    color: rgba(0, 0, 0, 0.0);
-  }
-  :global(.navbar.scrolling) {
-    padding: 0px !important;
-  }
-
   :global(.main-content) {
     flex-grow: 1;
   }

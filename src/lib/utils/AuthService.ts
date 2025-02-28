@@ -74,8 +74,12 @@ export class AuthService {
   }
 
   login(): Promise<void> {
-    let currentUrl = window.location.href.split('?')[0];
-    return this.userManager.signinRedirect({ url_state: currentUrl });
+    let currentUrl = new URL(window.location.href.split('?')[0]);
+    let redirectUrl = currentUrl.href;
+    if (currentUrl.pathname === '/') {
+      redirectUrl = '/home';
+    }
+    return this.userManager.signinRedirect({ url_state: redirectUrl });
   }
 
   renewToken(): Promise<User | null> {
