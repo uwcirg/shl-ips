@@ -15,12 +15,12 @@ if (shl) {
 }
 
 async function retrieve(){
-    const recipient = "WA Verify+ IPS Viewer";
+    const recipient = "WA Health Summary Viewer";
 
     let passcode;
     const needPasscode = shlClient.flag({ shl }).includes('P');
     if (needPasscode) {
-        passcode = prompt("Patient Summary Viewer\n----------------------\nEnter passcode for SMART Health Link\nIf no passcode was set, just click \"OK\"");
+        passcode = prompt("WA Health Summary Viewer\n----------------------\nEnter a passcode to access this SMART Health Link\nIf no passcode was set, just click \"OK\"");
     }
     $('#status').text("Retrieving contents...");
     let retrieveResult;
@@ -42,11 +42,11 @@ async function retrieve(){
             if (retrieveResult.status === 404) {
                 // Couldn't find the shl, or it's been deactivated
                 const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl })}">Manage or reactivate it here</a>`;
-                errorMsg = `<p>The requested SHL does not exist or has been deactivated.</p><p>Are you the owner of this link? ${managerLink}</p>`;
+                errorMsg = `<p>The requested SMART Health Link does not exist or has been deactivated.</p><p>Are you the owner of this link? ${managerLink}</p>`;
             } else if (retrieveResult.status === 401) {
                 // Failed the password requirement
                 while (retrieveResult.status === 401) {
-                    passcode = prompt(`Patient Summary Viewer\n----------------------\nEnter passcode for SMART Health Link\nIf no passcode was set, just click \"OK\"${retrieveResult.error.remainingAttempts !== undefined ? "\nAttempts remaining: "+retrieveResult.error.remainingAttempts : ""}`);
+                    passcode = prompt(`WA Health Summary Viewer\n----------------------\nEnter a passcode to access this SMART Health Link\nIf no passcode was set, just click \"OK\"${retrieveResult.error.remainingAttempts !== undefined ? "\nAttempts remaining: "+retrieveResult.error.remainingAttempts : ""}`);
                     try {
                         retrieveResult = await shlClient.retrieve({
                             shl,
@@ -61,7 +61,7 @@ async function retrieve(){
                 }
                 if (!retrieveResult.ok) {
                     const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl })}">Manage or reactivate it here</a>`;
-                    errorMsg = `<p>The requested SHL has been deactivated due to too many failed password attempts.</p><p>Are you the owner of this link? ${managerLink}</p>`;
+                    errorMsg = `<p>The requested SMART Health Link has been deactivated due to too many failed password attempts.</p><p>Are you the owner of this link? ${managerLink}</p>`;
                 }
             } else {
                 errorMsg = retrieveResult.error;

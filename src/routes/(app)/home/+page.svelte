@@ -8,13 +8,13 @@
 </script>
 <Styles />
 <svelte:head>
-    <title>Home - WA Verify+</title> 
+    <title>My Summaries - WA Health Summary</title> 
 </svelte:head>
 
 <div class="px-3">
   <Row>
     <p>
-      Welcome to WA Verify+, the Washington State Department of Health's platform
+      Welcome to WA Health Summary, the Washington State Department of Health's platform
       for creating and sharing your personal health summaries.
     </p>
   </Row>

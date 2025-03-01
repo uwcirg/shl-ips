@@ -10,19 +10,18 @@
 <Row>
   <Col style="margin-top: 20px; padding: 20px; border-top: 1px solid rgb(204, 204, 204);" >
     <footer>
-      This demonstration shows how to create a 
-      <a
+      This demonstration shows how a user can create a 
+      FHIR
+      <a href="https://build.fhir.org/ig/HL7/fhir-ips/" target="_blank" rel="noreferrer">
+        International Patient Summary
+      </a>
+      document and share it using a secure <a
         target="_blank"
         rel="noreferrer"
         href="https://docs.smarthealthit.org/smart-health-links/user-stories"
       >
         SMART Health Link
-      </a>
-      for any FHIR
-      <a href="https://build.fhir.org/ig/HL7/fhir-ips/" target="_blank" rel="noreferrer">
-        International Patient Summary
-      </a>
-      document. SHLinks can be shared by copy/paste, or by presenting a QR code.
+      </a>. SMART Health Links can be shared by copy/paste, or by presenting a QR code.
       {#if $mode === "advanced"}
         For more information, view the source code and license at
         <a href="https://github.com/uwcirg/shl-ips" target="_blank" rel="noreferrer">

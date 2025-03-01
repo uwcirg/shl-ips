@@ -378,7 +378,7 @@
 {#if resourcesAdded}
   {#if shlIdParam == null}
     <Row class="mt-4">
-      <h5>5. Save and create your SMART Health Link</h5>
+      <h5>5. Save and create your summary</h5>
     </Row>
     <Row class="mx-2">
       <Label>Save your summary and generate a secure link to it that you can share.</Label>
@@ -422,9 +422,9 @@
           <Col xs="auto">
           <Button color="primary" style="width:fit-content" disabled={submitting} type="submit">
               {#if !submitting}
-              Create Summary Link
+              Create Summary
               {:else}
-              Creating Link...
+              Creating...
               {/if}
           </Button>
           </Col>
@@ -441,10 +441,10 @@
     </Row>
   {:else}
     <Row class="mt-4">
-      <h5>4. Add this summary to your SMART Health Link</h5>
+      <h5>4. Include this summary in my secure sharing link</h5>
     </Row>
     <Row class="mx-2">
-      <Label>It will be shared alongside any other contents of the link.</Label>
+      <Label>This summary will be shared alongside any other summaries already included in the link.</Label>
     </Row>
     <Row class="mx-2">
       <form on:submit|preventDefault={confirmContent}>

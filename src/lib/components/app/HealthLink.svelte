@@ -206,7 +206,7 @@
                     navigator.share({
                       files: [file],
                       url: await href,
-                      text: `${(shl.label ? `${shl.label}\n\n` : "")}Here's my WA Verify+ Health Summary:\n\n`
+                      text: `${(shl.label ? `${shl.label}\n\n` : "")}Here's my WA Health Summary:\n\n`
                     });
                   } else {
                     navigator.share({ url: await href, title: shl.label });
@@ -267,7 +267,7 @@
             <Icon name="check-circle-fill" />&nbsp;Active
           </Alert>
         {/if}
-        <Label for="label">Label for SMART Health Link</Label>
+        <Label for="label">Label for Summary Link</Label>
         <Input
           name="label"
           maxlength={40}
@@ -313,15 +313,15 @@
             await shlClient.resetShl({ ...shl, passcode: shlControlled.passcode });
             $shlStore = await shlClient.getUserShls();
           }}><Icon name="lock" /> Update Passcode</Button>
-        <Button size="sm" on:click={toggle} color="danger"><Icon name="trash3" /> Delete SMART Health Link</Button>
+        <Button size="sm" on:click={toggle} color="danger"><Icon name="trash3" /> Delete Summary Link</Button>
         <Modal isOpen={open} backdrop="static" {toggle}>
-          <ModalHeader {toggle}>Delete SMART Health Link</ModalHeader>
+          <ModalHeader {toggle}>Delete Summary Link</ModalHeader>
           <ModalBody>
-            "{shl.label}" will be permanently deleted. Continue?
+            "{shl.label}" and any summaries it contains will be permanently deleted. Continue?
           </ModalBody>
           <ModalFooter>
             <Button color="secondary" on:click={toggle}>Cancel</Button>
-            <Button color="danger"  on:click={deleteShl}><Icon name="trash3" /> Yes, Delete SHL</Button>
+            <Button color="danger"  on:click={deleteShl}><Icon name="trash3" /> Yes, Delete Summary Link</Button>
           </ModalFooter>
         </Modal>
       </FormGroup>

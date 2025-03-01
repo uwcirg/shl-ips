@@ -18,7 +18,7 @@
 
   let sources: Record<string, {selected: Boolean; url: string}> = {
     "AD Vault": {selected: false, url: "https://qa-rr-fhir.maxmddirect.com"},
-    "WA Verify+ Demo Server": {selected: false, url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir"}
+    "WA Health Summary Demo Server": {selected: false, url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir"}
   };
   let selectedSource = "AD Vault";
   let processing = false;
@@ -86,7 +86,7 @@
         gender = "Female";
         dob = "1955-10-03";
         //dob = "1950-11-15";
-      } else if (selectedSource === 'WA Verify+ Demo Server') {
+      } else if (selectedSource === 'WA Health Summary Demo Server') {
         last = "Gravitate";
         first = "Maria SEATTLE";
         gender = "Female";
@@ -461,7 +461,7 @@
   {#if selectedSource}
   <FormGroup>
     <Label>Enter your information to fetch related advance directives</Label>
-    <p class="text-secondary"><em>WA Verify+ does not save this information</em></p>
+    <p class="text-secondary"><em>WA Health Summary does not save this information</em></p>
     <Row cols={{ md: 2, sm: 1 }}>
       <Col>
         <Label>Name</Label>

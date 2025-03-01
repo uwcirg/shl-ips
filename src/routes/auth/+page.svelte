@@ -41,5 +41,5 @@
 </script>
 <Styles />
 <svelte:head>
-    <title>Auth - WA Verify+</title> 
+    <title>Authenticate - WA Health Summary</title> 
 </svelte:head>

@@ -219,7 +219,7 @@
 <form on:submit|preventDefault={() => prepareIps()}>
   <FormGroup>
     <Label>Enter your information to fetch immunizations from WA IIS</Label>
-    <p class="text-secondary"><em>WA Verify+ does not save this information</em></p>
+    <p class="text-secondary"><em>WA Health Summary does not save this information</em></p>
     <Row cols={{ md: 2, sm: 1 }}>
       <Col>
         <Label>Name</Label>

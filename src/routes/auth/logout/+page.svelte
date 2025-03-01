@@ -19,7 +19,7 @@
 </script>
 
 <svelte:head>
-<title>WA Verify+ - Logout</title> 
+<title>Logout - WA Health Summary</title> 
 </svelte:head>
 
 {#if errorMsg}
