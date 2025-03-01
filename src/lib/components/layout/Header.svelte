@@ -216,7 +216,7 @@
         </Nav>
     </Collapse>
   </Navbar>
-  <Banner title="International Patient Summary Prototype"/>
+  <Banner title="Using the International Patient Summary"/>
 </Row>
 <style>
     :global(#nav-image) {
