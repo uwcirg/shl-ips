@@ -532,26 +532,12 @@
           <Col xs="auto">I work as a(n)</Col>
           <Col style="flex-grow: 1" xs="auto">
             <NIOAutoCoderInput bind:value={jobCurrent} mode="Occupation"/>
-            <!-- <Input type="select" bind:value={jobCurrent} style="max-width: 300px">
-              {#each Object.keys(jobs) as job}
-                <option value={job} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
-                  {job}
-                </option>
-              {/each}
-            </Input> -->
           </Col>
         </Row>
         <Row class="mb-2">
           <Col xs="auto">My company's primary business activity is</Col>
           <Col style="flex-grow: 1" xs="auto">
             <NIOAutoCoderInput bind:value={industryCurrent} mode="Industry"/>
-            <!-- <Input type="select" bind:value={industryCurrent} style="max-width: 300px">
-              {#each Object.keys(industries) as industry}
-                <option value={industry} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
-                  {industry}
-                </option>
-              {/each}
-            </Input> -->
           </Col>
         </Row>
         <Row class="mb-2">
@@ -574,26 +560,12 @@
           <Col xs="auto">I used to work as a(n)</Col>
           <Col style="flex-grow: 1" xs="auto">
             <NIOAutoCoderInput bind:value={jobPast} mode="Occupation"/>
-            <!-- <Input type="select" bind:value={jobPast} style="max-width: 300px">
-              {#each Object.keys(jobs) as job}
-                <option value={job} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
-                  {job}
-                </option>
-              {/each}
-            </Input> -->
           </Col>
         </Row>
         <Row class="mb-2">
           <Col xs="auto">My company's primary business activity was</Col>
           <Col style="flex-grow: 1" xs="auto">
             <NIOAutoCoderInput bind:value={industryPast} mode="Industry"/>
-            <!-- <Input type="select" bind:value={industryPast} style="max-width: 300px">
-              {#each Object.keys(industries) as industry}
-                <option value={industry} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
-                  {industry}
-                </option>
-              {/each}
-            </Input> -->
           </Col>
         </Row>
         <Row class="mb-2">
