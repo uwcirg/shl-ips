@@ -36,7 +36,7 @@
 
   let activeItem: ("home" | "summaries" | "create" | "") = "";
   $: {
-    if ($page.url.pathname.includes("home")) {
+    if ($page.url.pathname.includes("summaries")) {
       activeItem = "summaries";
     } else if ($page.url.pathname.includes("create")) {
       activeItem = "create";
