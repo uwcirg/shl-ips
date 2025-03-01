@@ -13,7 +13,7 @@
       } catch (e) {
           console.error(e);
           errorMsg = "Unable to log out.";
-          goto('/home');
+          goto('/summaries');
       }
   });
 </script>

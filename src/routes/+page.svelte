@@ -10,7 +10,7 @@
   import { AuthService } from '$lib/utils/AuthService';
   function login() {
     if (AuthService.Instance.isAuthenticated()) {
-      goto('/home');
+      goto('/summaries');
     } else {
       AuthService.Instance.login();
     }

@@ -3,5 +3,5 @@
 </script>
 
 <NavItem>
-  <NavLink href="/home">Home</NavLink>
+  <NavLink href="/">Home</NavLink>
 </NavItem>

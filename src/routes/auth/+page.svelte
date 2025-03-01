@@ -28,7 +28,7 @@
           if (redirectUrl && !redirectUrl.includes($page.url.pathname)) {
             goto(redirectUrl);
           } else {
-            goto('/home');
+            goto('/summaries');
           }
         }, 100);
       }

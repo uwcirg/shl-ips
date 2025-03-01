@@ -77,7 +77,7 @@ export class AuthService {
     let currentUrl = new URL(window.location.href.split('?')[0]);
     let redirectUrl = currentUrl.href;
     if (currentUrl.pathname === '/') {
-      redirectUrl = '/home';
+      redirectUrl = '/summaries';
     }
     return this.userManager.signinRedirect({ url_state: redirectUrl });
   }

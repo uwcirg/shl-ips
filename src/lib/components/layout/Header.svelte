@@ -155,7 +155,7 @@
             {#await authService.getProfile() then profile}
               {#if profile}
                 <NavItem>
-                  <NavLink href="/home" active={ activeItem === "summaries" }>Summaries</NavLink>
+                  <NavLink href="/summaries" active={ activeItem === "summaries" }>Summaries</NavLink>
                 </NavItem>
                 <NavItem>
                   <NavLink href="/create" active={ activeItem === "create" }>Create</NavLink>
