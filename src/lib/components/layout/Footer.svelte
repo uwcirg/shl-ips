@@ -20,10 +20,10 @@
         rel="noreferrer"
         href="https://docs.smarthealthit.org/smart-health-links/user-stories"
       >
-        SMART Health Link
-      </a>. SMART Health Links can be shared by copy/paste, or by presenting a QR code.
+        SMART Health Link (SHL)
+      </a>. SHLs can be shared by copy/paste, or by presenting a QR code.
       {#if $mode === "advanced"}
-        For more information, view the source code and license at
+        For more information, view the source code at
         <a href="https://github.com/uwcirg/shl-ips" target="_blank" rel="noreferrer">
           https://github.com/uwcirg/shl-ips
         </a>. {VERSION_STRING ? "Site version: " + VERSION_STRING : ""}

@@ -36,7 +36,7 @@
 
   let activeItem: ("home" | "summaries" | "create" | "") = "";
   $: {
-    if ($page.url.pathname.includes("home")) {
+    if ($page.url.pathname.includes("summaries")) {
       activeItem = "summaries";
     } else if ($page.url.pathname.includes("create")) {
       activeItem = "create";
@@ -216,7 +216,7 @@
         </Nav>
     </Collapse>
   </Navbar>
-  <Banner title="International Patient Summary Prototype"/>
+  <Banner title="Using the International Patient Summary"/>
 </Row>
 <style>
     :global(#nav-image) {
