@@ -17,10 +17,10 @@
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
   let sources: Record<string, {selected: Boolean; url: string}> = {
+    "WA Health Summary Demo Server": {selected: false, url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir"},
     "AD Vault": {selected: false, url: "https://qa-rr-fhir.maxmddirect.com"},
-    "WA Health Summary Demo Server": {selected: false, url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir"}
   };
-  let selectedSource = "AD Vault";
+  let selectedSource = "WA Health Summary Demo Server";
   let processing = false;
   let fetchError = '';
 
@@ -87,10 +87,14 @@
         dob = "1955-10-03";
         //dob = "1950-11-15";
       } else if (selectedSource === 'WA Health Summary Demo Server') {
-        last = "Gravitate";
-        first = "Maria SEATTLE";
+        // last = "Gravitate";
+        // first = "Maria SEATTLE";
+        // gender = "Female";
+        // dob = "1946-05-05";
+        last = "Wilson";
+        first = "Cynthia";
         gender = "Female";
-        dob = "1946-05-05";
+        dob = "1993-12-01";
       }
     }
   }
