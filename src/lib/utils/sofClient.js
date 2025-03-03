@@ -75,19 +75,19 @@ async function getResources() {
         resources = (await Promise.allSettled(['Patient', 'Immunization'].map((resourceType) => {
             return requestResources(client, resourceType);
         }))).filter(x => x.status == "fulfilled").map(x => x.value);
-    // } else if (client.state.serverUrl === "https://ihe-nimbus.epic.com/Interconnect-FHIR/api/FHIR/R4") {
-    //     resources = await client.request(`Patient/${pid}/$summary`, { flat: true }).then((result) => {
-    //         let resourcesToPass = [];
-    //         if (Array.isArray(result)) {
-    //             result.forEach(resource => {
-    //                 if (resource === undefined || resource.resourceType != resourceType) return;
-    //                 resourcesToPass.push(resource);
-    //             });
-    //         } else {
-    //             resourcesToPass.push(result);
-    //         }
-    //         return resourcesToPass;
-    //     });
+    } else if (client.state.serverUrl === "https://ihe-nimbus.epic.com/Interconnect-FHIR/api/FHIR/R4") {
+        resources = await client.request(`Patient/${pid}/$summary`).then((result) => {
+            let resourcesToPass = [];
+            if (Array.isArray(result)) {
+                result.forEach(resource => {
+                    if (resource === undefined) return;
+                    resourcesToPass.push(resource);
+                });
+            } else {
+                resourcesToPass.push(result);
+            }
+            return resourcesToPass;
+        });
     } else {
         resources = (await Promise.allSettled(SOF_PATIENT_RESOURCES.map((resourceType) => {
             return requestResources(client, resourceType);
