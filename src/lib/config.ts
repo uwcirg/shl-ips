@@ -29,10 +29,10 @@ export const SOF_HOSTS = [
   // },
   {
     id: "epic-himss",
-    name: "Epic - HIMSS Demo",
+    name: "Epic - HIMSS 2025",
     url: "https://ihe-nimbus.epic.com/Interconnect-FHIR/api/FHIR/R4",
     clientId: import.meta.env.VITE_EPIC_CLIENT_ID,
-    note: "user / pass"
+    note: "cwilson / tokay"
   },
   {
     id: "epic",
