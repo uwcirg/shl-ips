@@ -414,10 +414,18 @@
                 currentJob.resource.effectivePeriod = period;
             }
             if (jobCurrent) {
-                currentJob.resource.valueCodeableConcept.coding = jobs[jobCurrent];
+              currentJob.resource.valueCodeableConcept.coding = {
+                  system: "https://terminology.hl7.org/2.0.0/CodeSystem-PHOccupationCDCCensus2010.html",
+                  code: jobCurrent.Code,
+                  display: jobCurrent.Title
+                };
             }
             if (industryCurrent) {
-                currentJob.resource.component[0].valueCodeableConcept.coding = industries[industryCurrent];
+              currentJob.resource.component[0].valueCodeableConcept.coding = {
+                system: "https://terminology.hl7.org/2.0.0/CodeSystem-PHIndustryCDCCensus2010.html",
+                code: industryCurrent.Code,
+                display: industryCurrent.Title
+              };
             }
         } else {
             currentJob = undefined;
@@ -436,10 +444,18 @@
                 pastJob.resource.effectivePeriod = period;
             }
             if (jobPast) {
-                pastJob.resource.valueCodeableConcept.coding = jobs[jobPast];
+              pastJob.resource.valueCodeableConcept.coding = {
+                  system: "https://terminology.hl7.org/2.0.0/CodeSystem-PHOccupationCDCCensus2010.html",
+                  code: jobPast.Code,
+                  display: jobPast.Title
+                };
             }
             if (industryPast) {
-                pastJob.resource.component[0].valueCodeableConcept.coding = industries[industryPast];
+              pastJob.resource.component[0].valueCodeableConcept.coding = {
+                  system: "https://terminology.hl7.org/2.0.0/CodeSystem-PHIndustryCDCCensus2010.html",
+                  code: industryPast.Code,
+                  display: industryPast.Title
+                };
             }
         } else {
             pastJob = undefined;
