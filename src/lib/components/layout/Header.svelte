@@ -142,9 +142,10 @@
         </Col>
       </Row>
     </NavbarBrand>
+    <div>
     <NavbarToggler class="me-2" on:click={() => ($isOpen = !$isOpen)} />
     <Collapse class="flex-column ms-2" isOpen={$isOpen} navbar expand="sm" on:update={handleUpdate}>
-        <Nav class="ms-auto" navbar>
+      <Nav class="ms-auto" navbar>
           <LanguageMenu />
         </Nav>
         <Nav class="ms-auto" navbar>
@@ -215,6 +216,7 @@
         {/if}
         </Nav>
     </Collapse>
+  </div>
   </Navbar>
   <Banner title="Using the International Patient Summary"/>
 </Row>
@@ -233,7 +235,7 @@
     -o-transition: all 0.06s linear;
     transition: all 0.06s linear;
   }
-  :global(.nav-link.scrolling) {
+  div > :global(.nav-link.scrolling) {
     padding-top: 0rem !important;
     padding-bottom: 0.25rem !important;
   }
