@@ -121,6 +121,12 @@
           navOpening = false;
         }, 100);
         return;
+      } else if (event.target?.parentElement?.className?.includes('nav-link') && event.target?.parentElement?.className?.includes('dropdown-toggle')) {
+        navOpening = true;
+        setTimeout(() => {
+          navOpening = false;
+        }, 100);
+        return;
       }
       closeNav();
     });
@@ -133,6 +139,7 @@
     $isOpen = event.detail.isOpen;
   }
 </script>
+<div>
 <Row>
   <Navbar sticky="top"color="light" light expand="sm" style="border-bottom: 1px solid rgb(204, 204, 204);">
     <NavbarBrand href="https://doh.wa.gov/" target="_blank">
@@ -142,84 +149,83 @@
         </Col>
       </Row>
     </NavbarBrand>
-    <div>
     <NavbarToggler class="me-2" on:click={() => ($isOpen = !$isOpen)} />
     <Collapse class="flex-column ms-2" isOpen={$isOpen} navbar expand="sm" on:update={handleUpdate}>
       <Nav class="ms-auto" navbar>
-          <LanguageMenu />
-        </Nav>
-        <Nav class="ms-auto" navbar>
-          <NavItem>
-            <NavLink href={"/"} active={ activeItem === "home" }>Home</NavLink>
-          </NavItem>
-          {#if haveUser}
-            {#await authService.getProfile() then profile}
-              {#if profile}
-                <NavItem>
-                  <NavLink href="/summaries" active={ activeItem === "summaries" }>Summaries</NavLink>
-                </NavItem>
-                <NavItem>
-                  <NavLink href="/create" active={ activeItem === "create" }>Create</NavLink>
-                </NavItem>
-                <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
-                  <DropdownToggle color="primary" nav caret><Icon name="person-circle"/> Account</DropdownToggle>
-                  <DropdownMenu end style="max-height: 500px; overflow:auto">
-                    <DropdownItem header>Welcome, {profile.given_name ?? profile.preferred_username}</DropdownItem>
+        <LanguageMenu />
+      </Nav>
+      <Nav class="ms-auto" navbar>
+        <NavItem>
+          <NavLink href={"/"} active={ activeItem === "home" }>Home</NavLink>
+        </NavItem>
+        {#if haveUser}
+          {#await authService.getProfile() then profile}
+            {#if profile}
+              <NavItem>
+                <NavLink href="/summaries" active={ activeItem === "summaries" }>Summaries</NavLink>
+              </NavItem>
+              <NavItem>
+                <NavLink href="/create" active={ activeItem === "create" }>Create</NavLink>
+              </NavItem>
+              <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
+                <DropdownToggle color="primary" nav caret><Icon name="person-circle"/> Account</DropdownToggle>
+                <DropdownMenu end style="max-height: 500px; overflow:auto">
+                  <DropdownItem header>Welcome, {profile.given_name ?? profile.preferred_username}</DropdownItem>
+                  <DropdownItem
+                    on:click={() => {
+                      authService.logout();
+                    }}><Icon name="box-arrow-right"/> Sign Out</DropdownItem>
+                    <DropdownItem divider />
+                    <DropdownItem header>Demo Options</DropdownItem>
                     <DropdownItem
                       on:click={() => {
-                        authService.logout();
-                      }}><Icon name="box-arrow-right"/> Sign Out</DropdownItem>
-                      <DropdownItem divider />
-                      <DropdownItem header>Demo Options</DropdownItem>
-                      <DropdownItem
-                        on:click={() => {
-                          $mode = ($mode === 'advanced' ? 'normal' : 'advanced');
-                      }}>
-                        <Row class="mr-0" style="min-width:240px">
-                          <Col class="d-flex justify-content-start align-items-center pe-0">
-                            Show Advanced Features
-                          </Col>
-                          <Col class="d-flex justify-content-end ps-0">
-                            {#if $mode == 'advanced'}
-                            <Icon class="text-primary" name="toggle-on"></Icon>
-                            {:else}
-                            <Icon class="text-secondary" name="toggle-off"></Icon>
-                            {/if}
-                          </Col>
-                        </Row>
-                      </DropdownItem>
-                      <DropdownItem divider />
-                      <DropdownItem header>Your Summaries</DropdownItem>
-                      <DropdownItem on:click={() => { goto("/create") }}>
-                        <Icon name="plus-lg" /> Create New Summary
-                      </DropdownItem>
-                      {#if $shlStore.length > 0}
-                        {#each $shlStore as shl, i}
-                          <DropdownItem
-                            on:click={() => {
-                            goto('/view/' + shl.id);
-                          }}>{shl.label || `Summary ${i + 1}`}</DropdownItem>
-                        {/each}
-                      {/if}
-                    </DropdownMenu>
-                </Dropdown>
-              {:else}
-                <NavItem>
-                  <NavLink on:click={() => authService.login()}><Icon name="person-circle"/> Sign In</NavLink>
-                </NavItem>
-              {/if}
-            {/await}
-          {:else}
-          <NavItem>
-            <NavLink on:click={() => authService.login()}><Icon name="person-circle"/> Sign In</NavLink>
-          </NavItem>
-        {/if}
-        </Nav>
+                        $mode = ($mode === 'advanced' ? 'normal' : 'advanced');
+                    }}>
+                      <Row class="mr-0" style="min-width:240px">
+                        <Col class="d-flex justify-content-start align-items-center pe-0">
+                          Show Advanced Features
+                        </Col>
+                        <Col class="d-flex justify-content-end ps-0">
+                          {#if $mode == 'advanced'}
+                          <Icon class="text-primary" name="toggle-on"></Icon>
+                          {:else}
+                          <Icon class="text-secondary" name="toggle-off"></Icon>
+                          {/if}
+                        </Col>
+                      </Row>
+                    </DropdownItem>
+                    <DropdownItem divider />
+                    <DropdownItem header>Your Summaries</DropdownItem>
+                    <DropdownItem on:click={() => { goto("/create") }}>
+                      <Icon name="plus-lg" /> Create New Summary
+                    </DropdownItem>
+                    {#if $shlStore.length > 0}
+                      {#each $shlStore as shl, i}
+                        <DropdownItem
+                          on:click={() => {
+                          goto('/view/' + shl.id);
+                        }}>{shl.label || `Summary ${i + 1}`}</DropdownItem>
+                      {/each}
+                    {/if}
+                  </DropdownMenu>
+              </Dropdown>
+            {:else}
+              <NavItem>
+                <NavLink on:click={() => authService.login()}><Icon name="person-circle"/> Sign In</NavLink>
+              </NavItem>
+            {/if}
+          {/await}
+        {:else}
+        <NavItem>
+          <NavLink on:click={() => authService.login()}><Icon name="person-circle"/> Sign In</NavLink>
+        </NavItem>
+      {/if}
+      </Nav>
     </Collapse>
-  </div>
   </Navbar>
   <Banner title="Using the International Patient Summary"/>
 </Row>
+</div>
 <style>
     :global(#nav-image) {
     width: 240px;
