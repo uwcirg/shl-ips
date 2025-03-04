@@ -292,7 +292,7 @@
             name="passcode"
             type={type}
             autocomplete="off"
-            bind:value={shlControlled.passcode}
+            bind:value={shlControlled.config.passcode}
             placeholder="Assign Passcode"
           />
           <Icon name={icon}
@@ -308,9 +308,9 @@
         <Button
           size="sm"
           color="primary"
-          disabled={(shl.passcode || '') === (shlControlled.passcode || '')}
+          disabled={(shl.passcode || '') === (shlControlled.config.passcode || '')}
           on:click={async () => {
-            await shlClient.resetShl({ ...shl, passcode: shlControlled.passcode });
+            await shlClient.resetShl({ ...shl, passcode: shlControlled.config.passcode });
             $shlStore = await shlClient.getUserShls();
           }}><Icon name="lock" /> Update Passcode</Button>
         <Button size="sm" on:click={toggle} color="danger"><Icon name="trash3" /> Delete Summary Link</Button>
