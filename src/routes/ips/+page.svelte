@@ -95,12 +95,32 @@
   async function retrieve(){
     const recipient = "WA Health Summary Viewer";
 
-    let passcode;
-    const needPasscode = shlClient.flag({ shl: shl ?? "" })?.includes('P');
-    if (needPasscode) {
-      passcode = prompt("WA Health Summary Viewer\n----------------------------------------\nEnter a passcode to access this SMART Health Link\nIf no passcode was set, just click \"OK\"");
-    }
     let retrieveResult;
+    let passcode;
+    try {
+        retrieveResult = await fetch(shlClient.url({ shl: shl ?? "" }), {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({
+            passcode: "",
+            recipient: recipient,
+          }),
+        });
+      let message = await retrieveResult.text();
+      message = JSON.parse(message)?.message;
+      if (!retrieveResult.ok && retrieveResult.status === 400 && message === "Passcode required") {
+        // Failed the password requirement
+        const needPasscode = shlClient.flag({ shl: shl ?? "" })?.includes('P');
+        if (needPasscode) {
+          passcode = prompt("WA Health Summary Viewer\n----------------------------------------\nEnter a passcode to access this SMART Health Link\nIf no passcode was set, just click \"OK\"");
+        }
+      }
+    } catch (e) {
+        console.log(e);
+    }
+    
     try {
         retrieveResult = await shlClient.retrieve({
             shl: shl ?? "",
@@ -123,7 +143,7 @@
             } else if (retrieveResult.status === 401) {
                 // Failed the password requirement
                 while (retrieveResult.status === 401) {
-                  passcode = prompt(`WA Health Summary Viewer\n----------------------------------------\nEnter a passcode to access this SMART Health Link\nIf no passcode was set, just click \"OK\"${retrieveResult.error.remainingAttempts !== undefined ? "\nAttempts remaining: "+retrieveResult.error.remainingAttempts : ""}`);
+                  passcode = prompt(`WA Health Summary Viewer\n----------------------------------------\nEnter a passcode to access this SMART Health Link`);
                     try {
                         retrieveResult = await shlClient.retrieve({
                             shl: shl ?? "",
@@ -138,7 +158,7 @@
                 }
                 if (retrieveResult.error) {
                     const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl: shl ?? "" })}">Manage or reactivate it here</a>`;
-                    errorMsg = `<p>The requested SMART Health Link has been deactivated due to too many failed password attempts.</p><p>Are you the owner of this link? ${managerLink}</p>`;
+                    errorMsg = `<p>You have been locked from accessing this SMART Health Link due to too many failed password attempts.</p><p>Are you the owner of this link? ${managerLink}</p>`;
                 }
             } else {
                 errorMsg = retrieveResult.error;
