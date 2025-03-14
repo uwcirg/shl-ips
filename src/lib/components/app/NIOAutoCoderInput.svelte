@@ -7,6 +7,7 @@
     Input,
     Icon
   } from 'sveltestrap';
+  import type { IOResponse, NIOAutoCoderResponse } from '$lib/utils/types';
   import AuthService from '$lib/utils/AuthService';
 
   export let mode: "Occupation" | "Industry";
@@ -29,16 +30,6 @@
   let isOpen = false;
   $: icon = 'search';
 
-  interface IOResponse {
-    Code: string;
-    Title: string;
-    Score: number;
-  }
-  interface NIOAutoCoderResponse {
-    Industry: IOResponse[];
-    Occupation: IOResponse[];
-    Scheme: string;
-  }
   let codingOptionTitle: string = "";
   value = defaults[mode][0];
   let codingOptions: NIOAutoCoderResponse | undefined = defaults;

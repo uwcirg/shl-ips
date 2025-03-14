@@ -8,6 +8,17 @@ export interface SHLSubmitEvent {
   patientName?: string;
 }
 
+export interface IOResponse {
+  Code: string;
+  Title: string;
+  Score: number;
+}
+export interface NIOAutoCoderResponse {
+  Industry: IOResponse[];
+  Occupation: IOResponse[];
+  Scheme: string;
+}
+
 export interface ResourceRetrieveEvent {
   resources: Array<any> | undefined;
   source?: string | undefined;
