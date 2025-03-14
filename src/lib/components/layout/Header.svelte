@@ -115,13 +115,7 @@
       // Ignore clicks on the navbar toggler
       if (event.target?.className?.includes('navbar-toggler')) return;
       // Ignore clicks on the dropdown toggle menu items
-      if (event.target?.className?.includes('nav-link') && event.target?.className?.includes('dropdown-toggle')) {
-        navOpening = true;
-        setTimeout(() => {
-          navOpening = false;
-        }, 100);
-        return;
-      } else if (event.target?.parentElement?.className?.includes('nav-link') && event.target?.parentElement?.className?.includes('dropdown-toggle')) {
+      if (event.target?.closest('.nav-link') && event.target?.closest('.dropdown-toggle')) {
         navOpening = true;
         setTimeout(() => {
           navOpening = false;
@@ -169,7 +163,7 @@
               </NavItem>
               <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
                 <DropdownToggle color="primary" nav caret><Icon name="person-circle"/> Account</DropdownToggle>
-                <DropdownMenu end style="max-height: 500px; overflow:auto">
+                <DropdownMenu end style="max-height: 350px; overflow:auto">
                   <DropdownItem header>Welcome, {profile.given_name ?? profile.preferred_username}</DropdownItem>
                   <DropdownItem
                     on:click={() => {
@@ -260,24 +254,26 @@
   :global(.nav-link) {
     position: relative;
   }
-  /* using ::before because of dropdown arrow ::after pseudo element */
-  :global(.nav-link::before) {
-    content: '';
-    opacity: 0;
-    transition: all 0.2s;
-    height: 2px;
-    width: calc(100% - 2*var(--bs-navbar-nav-link-padding-x));
-    left: var(--bs-navbar-nav-link-padding-x);
-    background-color: lightgrey;
-    position: absolute;
-    bottom: 1px;
-    /* left: 0; */
-  }
-  :global(.nav-link:hover::before) {
-    opacity: 1;
-  }
-  :global(.nav-link.active::before) {
-    opacity: 1;
-    background-color: grey;
+  @media (min-width: 576px) {
+    /* using ::before because of dropdown arrow ::after pseudo element */
+    :global(.nav-link::before) {
+      content: '';
+      opacity: 0;
+      transition: all 0.2s;
+      height: 2px;
+      width: calc(100% - 2*var(--bs-navbar-nav-link-padding-x));
+      left: var(--bs-navbar-nav-link-padding-x);
+      background-color: lightgrey;
+      position: absolute;
+      bottom: 1px;
+      /* left: 0; */
+    }
+    :global(.nav-link:hover::before) {
+      opacity: 1;
+    }
+    :global(.nav-link.active::before) {
+      opacity: 1;
+      background-color: grey;
+    }
   }
 </style>

@@ -15,7 +15,7 @@
       {$locales[$locale].lang} <Icon name="globe2" />
     </span>
   </DropdownToggle>
-  <DropdownMenu end style="height: 500px; overflow:auto">
+  <DropdownMenu end style="height: 350px; overflow:auto">
     {#if $locales}
       {#each Object.values($locales) as loc}
         <DropdownItem
