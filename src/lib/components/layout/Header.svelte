@@ -217,7 +217,7 @@
       </Nav>
     </Collapse>
   </Navbar>
-  <Banner title="Using the International Patient Summary"/>
+  <Banner title="HL7 Standards-Based Patient Summary"/>
 </Row>
 </div>
 <style>
