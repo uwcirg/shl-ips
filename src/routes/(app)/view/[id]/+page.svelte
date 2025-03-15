@@ -18,6 +18,4 @@
 
 {#if shl}
   <HealthLink {shl} />
-{:else}
-  Summary not found.
 {/if}
