@@ -22,9 +22,8 @@
   import { type Writable } from 'svelte/store';
   import Banner from '$lib/components/layout/Banner.svelte';
   import LanguageMenu from '$lib/components/layout/LanguageMenu.svelte';
-  import { User } from 'oidc-client-ts';
   import { AuthService } from '$lib/utils/AuthService';
-  import { type SHLAdminParams, type SHLClient } from '$lib/utils/managementClient';
+  import { type SHLAdminParams } from '$lib/utils/managementClient';
 
   let authService = AuthService.Instance;
 
