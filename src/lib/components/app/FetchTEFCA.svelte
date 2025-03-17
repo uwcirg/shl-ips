@@ -13,6 +13,12 @@
   import { createEventDispatcher } from 'svelte';
   import { constructResourceUrl } from '$lib/utils/sofClient';
   import { SOF_PATIENT_RESOURCES } from '$lib/config';
+  import {
+    constructPatientResource,
+    buildPatientSearchQuery
+  } from '$lib/utils/util';
+  import StateInput from '$lib/components/StateInput.svelte';
+  import GenderInput from '$lib/components/GenderInput.svelte';
 
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
 
@@ -42,21 +48,6 @@
   let zip = '';
   let phone = '';
   let gender:string = '';
-  let genders: Record<string, any> = {
-    "Female": 'female',
-    "Male": 'male',
-    "Other": 'other'
-  };
-  let states: Array<string> = [
-    'AL','AK','AZ','AR','CA','CO','CT',
-    'DC','DE','FL','GA','GU','HI','ID',
-    'IL','IN','IA','KS','KY','LA','ME',
-    'MD','MA','MI','MH','MN','MP','MS',
-    'MO','MT','NE','NV','NH','NJ','NM',
-    'NY','NC','ND','OH','OK','OR','PA',
-    'PR','RI','SC','SD','TN','TX','UT',
-    'VT','VA','VI','WA','WV','WI','WY'
-  ];
 
   let result: ResourceRetrieveEvent = {
     resources: undefined
@@ -113,72 +104,6 @@
         selectedSource = "";
       }
     }
-  }
-
-  function constructPatient() {
-    let patient = {
-      resourceType: 'Patient',
-      identifier: [
-        {
-          use: 'usual',
-          type: {
-            coding: [
-              {
-                system: 'http://terminology.hl7.org/CodeSystem/v2-0203',
-                code: 'MR',
-                display: 'Medical Record Number'
-              }
-            ],
-            text: 'Medical Record Number'
-          },
-          system: 'http://hospital.smarthealthit.org',
-          value: mrn
-        }
-      ],
-      active: true,
-      name: [
-        {
-          family: last,
-          given: [first]
-        }
-      ],
-      telecom: [
-        {
-          system: 'phone',
-          value: phone,
-          use: 'home'
-        }
-      ],
-      gender: genders[gender],
-      birthDate: dob,
-      address: [
-        {
-          line: (address2 ? [address1, address2] : [address1]),
-          city: city,
-          state: state,
-          postalCode: zip,
-          country: 'US'
-        }
-      ]
-    };
-
-    return patient;
-  }
-
-  function buildPatientSearchQuery() {
-    let query = "?";
-    query += dob ? `birthdate=${dob}&` : '';
-    query += first ? `given=${first}&` : '';
-    query += last ? `family=${last}&` : '';
-    query += gender ? `gender=${genders[gender]}&` : '';
-    query += mrn ? `identifier=${mrn}&` : '';
-    query += phone ? `phone=${phone}&` : '';
-    query += address1 || address2 ? `address=${(address1+' '+address2).trim().replaceAll(' ', '+')}&` : '';
-    query += city ? `address-city=${city}&` : '';
-    query += state ? `address-state=${state}&` : '';
-    query += zip ? `address-postalcode=${zip}&` : '';
-    query = query.substring(0, query.length - 1);
-    return query;
   }
 
   async function fetchPatient(patient: any) {
@@ -280,7 +205,7 @@
     try {
       let content;
       let hostname;
-      const patient = await fetchPatient(constructPatient());
+      const patient = await fetchPatient(constructPatientResource());
       const resources = await fetchPatientData(patient.id);
       hostname = baseUrl;
       processing = false;
@@ -354,14 +279,7 @@
           <Input type="date" bind:value={dob} placeholder={dob} style="width: 165px"/>
         </FormGroup>
         <FormGroup style="font-size:small" class="text-secondary" label="Gender">
-          <!-- <Label>Gender</Label> -->
-          <Input type="select" bind:value={gender} style="width: 100px">
-            {#each Object.keys(genders) as full}
-              <option value={full} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
-                {full}
-              </option>
-            {/each}
-          </Input>
+          <GenderInput bind:value={gender} />
         </FormGroup>
         <FormGroup>
           <Label>MRN</Label>
@@ -384,13 +302,7 @@
         <Row>
           <Col xs="auto">
             <FormGroup style="font-size:small" class="text-secondary" label="State">
-              <Input type="select" bind:value={state} style="width: 80px">
-                {#each states as state}
-                  <option value={state} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
-                    {state}
-                  </option>
-                {/each}
-              </Input>
+              <StateInput bind:value={state} />
             </FormGroup>
           </Col>
           <Col>

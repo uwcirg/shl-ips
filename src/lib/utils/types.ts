@@ -73,3 +73,18 @@ export interface Language {
   lang: string;
   code: string;
 }
+
+export interface DemographicFields {
+  first?: string;
+  last?: string;
+  gender?: string;
+  dob?: string;
+  mrn?: string;
+  phone?: string;
+  address1?: string;
+  address2?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  country?: string;
+}

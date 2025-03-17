@@ -2,7 +2,8 @@ import * as jose from 'jose';
 import * as pako from 'pako';
 import issuerKeys from '$lib/utils/issuer.private.jwks.json';
 import type { SHCFile } from '$lib/utils/types';
-import type { Bundle, BundleEntry, Resource } from 'fhir/r4';
+import type { Bundle, BundleEntry, Patient, Resource } from 'fhir/r4';
+import type { DemographicFields } from '$lib/utils/types';
 
 export const base64url = jose.base64url;
 
@@ -143,4 +144,81 @@ export function isValidUrl(url: string) {
   } catch (e) {
       return false;
   }
+}
+
+export function constructPatientResource (props: DemographicFields = {}) {
+  let patient: Patient = {
+    resourceType: 'Patient',
+    active: true
+  };
+  if (props.first || props.last) {
+    patient.name = [ {} ];
+    if (props.first) patient.name[0].given = [props.first];
+    if (props.last) patient.name[0].family = props.last;
+  }
+  if (props.gender) {
+    patient.gender = props.gender;
+  }
+  if (props.phone) {
+    patient.telecom = [
+      {
+        system: 'phone',
+        value: props.phone
+      }
+    ];
+  }
+  if (props.dob) {
+    patient.birthDate = props.dob;
+  }
+  if (props.mrn) {
+    patient.identifier = [
+      {
+        use: 'usual',
+        type: {
+          coding: [
+            {
+              system: 'http://terminology.hl7.org/CodeSystem/v2-0203',
+              code: 'MR',
+              display: 'Medical Record Number'
+            }
+          ],
+          text: 'Medical Record Number'
+        },
+        system: 'http://hospital.smarthealthit.org',
+        value: props.mrn
+      }
+    ]
+  }
+  if (props.address1 || props.address2 || props.city || props.state || props.zip || props.country) {
+    patient.address = [{}];
+    if (props.address1) patient.address[0].line = [props.address1];
+    if (props.address2) patient.address[0].line = [...patient.address[0].line, props.address2];
+    if (props.city) patient.address[0].city = props.city;
+    if (props.state) patient.address[0].state = props.state;
+    if (props.zip) patient.address[0].postalCode = props.zip;
+    if (props.country) patient.address[0].country = props.country;
+  }
+  return patient;
+}
+
+export function buildPatientSearchQuery(
+  props: DemographicFields = {},
+  callback: Function = ((q: string) => q)
+) {
+  let query = "?_count=1&";
+  query += 'active=true&';
+  query += props.dob ? `birthdate=${props.dob}&` : '';
+  query += props.first ? `given=${props.first}&` : '';
+  query += props.last ? `family=${props.last}&` : '';
+  query += props.gender ? `gender=${props.gender}&` : '';
+  query += props.mrn ? `identifier=${props.mrn}&` : '';
+  query += props.phone ? `phone=${props.phone}&` : '';
+  query += props.address1 || props.address2 ? `address=${(props.address1+' '+props.address2).trim().replaceAll(' ', '+')}&` : '';
+  query += props.city ? `address-city=${props.city}&` : '';
+  query += props.state ? `address-state=${props.state}&` : '';
+  query += props.zip ? `address-postalcode=${props.zip}&` : '';
+  query = query.substring(0, query.length - 1);
+  
+  query = callback(query);
+  return query;
 }

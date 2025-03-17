@@ -2,12 +2,7 @@
   import {
     Button,
     Col,
-    Dropdown,
-    DropdownMenu,
-    DropdownItem,
-    DropdownToggle,
     FormGroup,
-    Icon,
     Input,
     Label,
     Row,
@@ -17,6 +12,11 @@
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
   import { createEventDispatcher } from 'svelte';
   import { API_BASE } from '$lib/config';
+  import {
+    constructPatientResource
+  } from '$lib/utils/util';
+  import StateInput from '$lib/components/StateInput.svelte';
+  import GenderInput from '$lib/components/GenderInput.svelte';
 
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
 
@@ -37,21 +37,6 @@
   let zip = '98195';
   let phone = '(555) 555-5555';
   let gender:string = 'Male';
-  let genders: Record<string, any> = {
-    "Female": 'female',
-    "Male": 'male',
-    "Other": 'other'
-  };
-  let states: Array<string> = [
-    'AL','AK','AZ','AR','CA','CO','CT',
-    'DC','DE','FL','GA','GU','HI','ID',
-    'IL','IN','IA','KS','KY','LA','ME',
-    'MD','MA','MI','MH','MN','MP','MS',
-    'MO','MT','NE','NV','NH','NJ','NM',
-    'NY','NC','ND','OH','OK','OR','PA',
-    'PR','RI','SC','SD','TN','TX','UT',
-    'VT','VA','VI','WA','WV','WI','WY'
-  ];
 
   let result: ResourceRetrieveEvent = {
     resources: undefined
@@ -61,8 +46,6 @@
   $: {
     setSummaryUrlValidated(defaultUrl);
   }
-  $: genderIcon = isGenderOpen ? 'chevron-up' : 'chevron-down';
-  $: stateIcon = isStateOpen ? 'chevron-up' : 'chevron-down';
 
   function setSummaryUrlValidated(url: string) {
     try {
@@ -70,108 +53,6 @@
     } catch {
       summaryUrlValidated = undefined;
     }
-  }
-
-  function setGender(g: string) {
-    gender = g;
-  }
-
-  function constructPatient() {
-    let patient = {
-      resourceType: 'Patient',
-      id: 'zhang-wei-himss-2024',
-      meta: {
-        profile: ['http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient']
-      },
-      extension: [
-        {
-          extension: [
-            {
-              url: 'ombCategory',
-              valueCoding: {
-                system: 'urn:oid:2.16.840.1.113883.6.238',
-                code: '2028-9',
-                display: 'Asian'
-              }
-            },
-            {
-              url: 'text',
-              valueString: 'Asian'
-            }
-          ],
-          url: 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-race'
-        },
-        {
-          extension: [
-            {
-              url: 'ombCategory',
-              valueCoding: {
-                system: 'urn:oid:2.16.840.1.113883.6.238',
-                code: '2186-5',
-                display: 'Not Hispanic or Latino'
-              }
-            },
-            {
-              url: 'text',
-              valueString: 'Not Hispanic or Latino'
-            }
-          ],
-          url: 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity'
-        },
-        {
-          url: 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex',
-          valueCode: genders[gender]
-        },
-        {
-          url: 'http://hl7.org/fhir/us/core/StructureDefinition/us-core-sex',
-          valueCode: '248153007'
-        }
-      ],
-      identifier: [
-        {
-          use: 'usual',
-          type: {
-            coding: [
-              {
-                system: 'http://terminology.hl7.org/CodeSystem/v2-0203',
-                code: 'MR',
-                display: 'Medical Record Number'
-              }
-            ],
-            text: 'Medical Record Number'
-          },
-          system: 'http://hospital.smarthealthit.org',
-          value: mrn
-        }
-      ],
-      active: true,
-      name: [
-        {
-          family: last,
-          given: [first]
-        }
-      ],
-      telecom: [
-        {
-          system: 'phone',
-          value: phone,
-          use: 'home'
-        }
-      ],
-      gender: genders[gender],
-      birthDate: dob,
-      address: [
-        {
-          line: (address2 ? [address1, address2] : [address1]),
-          city: city,
-          state: state,
-          postalCode: zip,
-          country: 'US'
-        }
-      ]
-    };
-    
-    return patient;
   }
 
   async function fetchIIS(patient: any) {
@@ -195,7 +76,7 @@
     try {
       let content;
       let hostname;
-      const contentResponse = await fetchIIS(constructPatient());
+      const contentResponse = await fetchIIS(constructPatientResource());
       content = await contentResponse.json();
       hostname = 'WA IIS';
       processing = false;
@@ -234,14 +115,7 @@
           <Input type="date" bind:value={dob} placeholder={dob} style="width: 165px"/>
         </FormGroup>
         <FormGroup style="font-size:small" class="text-secondary" label="Gender">
-          <!-- <Label>Gender</Label> -->
-          <Input type="select" bind:value={gender} style="width: 100px">
-            {#each Object.keys(genders) as full}
-              <option value={full} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
-                {full}
-              </option>
-            {/each}
-          </Input>
+          <GenderInput bind:value={gender} />
         </FormGroup>
         <FormGroup>
           <Label>MRN</Label>
@@ -264,13 +138,7 @@
         <Row>
           <Col xs="auto">
             <FormGroup style="font-size:small" class="text-secondary" label="State">
-              <Input type="select" bind:value={state} style="width: 80px">
-                {#each states as state}
-                  <option value={state} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
-                    {state}
-                  </option>
-                {/each}
-              </Input>
+              <StateInput bind:value={state} />
             </FormGroup>
           </Col>
           <Col>
