@@ -23,8 +23,6 @@
   let defaultUrl = 'https://35.160.125.146:8039/fhir/Patient';
   let processing = false;
   let fetchError = '';
-  let isGenderOpen = false;
-  let isStateOpen = false;
 
   let mrn = '123456789';
   let first = 'Zhang';
