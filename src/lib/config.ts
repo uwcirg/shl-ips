@@ -27,13 +27,13 @@ export const SOF_HOSTS = [
   //   clientId: import.meta.env.VITE_ECW_HIMSS_CLIENT_ID,
   //   note: "zhangwei / Cures@2022"
   // },
-  {
-    id: "epic-himss",
-    name: "Epic - HIMSS 2025",
-    url: "https://ihe-nimbus.epic.com/Interconnect-FHIR/api/FHIR/R4",
-    clientId: import.meta.env.VITE_EPIC_CLIENT_ID,
-    note: "cwilson / tokay"
-  },
+  // {
+  //   id: "epic-himss",
+  //   name: "Epic - HIMSS 2025",
+  //   url: "https://ihe-nimbus.epic.com/Interconnect-FHIR/api/FHIR/R4",
+  //   clientId: import.meta.env.VITE_EPIC_CLIENT_ID,
+  //   note: "cwilson / tokay"
+  // },
   {
     id: "epic",
     name: "Epic Demo",
