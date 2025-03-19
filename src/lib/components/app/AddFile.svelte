@@ -54,7 +54,6 @@
   let emptyResourceListHeader = "Retrieve Your Health Data";
   let fullResourceListHeader = "1. Add data from another provider"
   let addDataHeader = emptyResourceListHeader;
-  let addDataOpen = true;
   let successMessage = false;
   
   let mode: Writable<string> = getContext('mode');
@@ -86,7 +85,12 @@
   let resourcesAdded = false;
   $: {
     if ($resourcesByTypeStore) {
+      let oldvalue = resourcesAdded;
       resourcesAdded = Object.keys($resourcesByTypeStore).length > 0;
+      if (!oldvalue && resourcesAdded) {
+        // Prevent flash of AddData accordion overflow when first resources are added
+        handleAddDataAccordionOverflow();
+      }
     }
   }
 
@@ -264,8 +268,7 @@
     }, 1000);
   }
 
-  function handleAddDataAccordionOverflow({ detail }) {
-    addDataOpen = detail;
+  function handleAddDataAccordionOverflow() {
     const accordion = document.querySelector('div.add-data > div.accordion-collapse');
     if (accordion) {
       accordion.style.overflow = 'hidden';
