@@ -454,7 +454,7 @@
 <Accordion stayOpen>
   <AccordionItem active class="odh-section" header="Current work">
     <Row>
-      <Col xs="auto">I am currently</Col>
+      <Col xs="auto" class="mt-1">I am currently</Col>
       <Col xs="auto">
         <Input type="select" bind:value={status} style="max-width: 300px">
           {#each Object.keys(statuses) as stat}
@@ -472,19 +472,19 @@
       <br />
       <FormGroup>
         <Row class="mb-2">
-          <Col xs="auto">I work as a(n)</Col>
+          <Col xs="auto" class="mt-1">I work as a(n)</Col>
           <Col style="flex-grow: 1" xs="auto">
             <NIOAutoCoderInput bind:value={jobCurrent} mode="Occupation" />
           </Col>
         </Row>
         <Row class="mb-2">
-          <Col xs="auto">My company's primary business activity is</Col>
+          <Col xs="auto" class="mt-1">My company's primary business activity is</Col>
           <Col style="flex-grow: 1" xs="auto">
             <NIOAutoCoderInput bind:value={industryCurrent} mode="Industry" />
           </Col>
         </Row>
         <Row class="mb-2">
-          <Col xs="auto">I started this job</Col>
+          <Col xs="auto" class="mt-1">I started this job</Col>
           <Col xs="auto">
             <Input type={canShare ? 'month' : 'date'} bind:value={startCurrent} />
           </Col>
@@ -504,23 +504,23 @@
       <br />
       <FormGroup>
         <Row class="mb-2">
-          <Col xs="auto">I used to work as a(n)</Col>
+          <Col xs="auto" class="mt-1">I used to work as a(n)</Col>
           <Col style="flex-grow: 1" xs="auto">
             <NIOAutoCoderInput bind:value={jobPast} mode="Occupation" />
           </Col>
         </Row>
         <Row class="mb-2">
-          <Col xs="auto">My company's primary business activity was</Col>
+          <Col xs="auto" class="mt-1">My company's primary business activity was</Col>
           <Col style="flex-grow: 1" xs="auto">
             <NIOAutoCoderInput bind:value={industryPast} mode="Industry" />
           </Col>
         </Row>
         <Row class="mb-2">
-          <Col xs="auto">I started this job</Col>
+          <Col xs="auto" class="mt-1">I started this job</Col>
           <Col xs="auto">
             <Input type={canShare ? 'month' : 'date'} bind:value={startPast} />
           </Col>
-          <Col xs="auto">and stopped</Col>
+          <Col xs="auto" class="mt-1">and stopped</Col>
           <Col xs="auto">
             <Input type={canShare ? 'month' : 'date'} bind:value={endPast} />
           </Col>
@@ -540,7 +540,7 @@
       <br />
       <FormGroup>
         <Row class="mb-2">
-          <Col xs="auto">I retired {canShare ? 'in' : 'on'}</Col>
+          <Col xs="auto" class="mt-1">I retired {canShare ? 'in' : 'on'}</Col>
           <Col xs="auto">
             <Input type={canShare ? 'month' : 'date'} bind:value={startRetirement} />
           </Col>
@@ -560,13 +560,13 @@
       <br />
       <FormGroup>
         <Row class="mb-2">
-          <Col xs="auto">I started working in a combat zone</Col>
+          <Col xs="auto" class="mt-1">I started working in a combat zone</Col>
           <Col xs="auto">
             <Input type={canShare ? 'month' : 'date'} bind:value={startCombat} />
           </Col>
         </Row>
         <Row class="mb-2">
-          <Col xs="auto">and stopped</Col>
+          <Col xs="auto" class="mt-1">and stopped</Col>
           <Col xs="auto">
             <Input type={canShare ? 'month' : 'date'} bind:value={endCombat} />
           </Col>
