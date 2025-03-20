@@ -111,6 +111,10 @@
   :global(html, body) {
     height: 100%;
   }
+  /* Body font */
+  /* :global(body) {
+    font-family: 'Open Sans', sans-serif !important;
+  } */
   :global(.navbar .container-fluid) {
     padding: 0px;
   }
