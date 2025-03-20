@@ -17,6 +17,7 @@
   } from '$lib/utils/util';
   import GenderInput from '$lib/components/GenderInput.svelte';
   import StateInput from '$lib/components/StateInput.svelte';
+  import CountryInput from '$lib/components/CountryInput.svelte';
 
   export let sectionKey: string = "Advance Directives";
 
@@ -39,6 +40,7 @@
   let city = '';
   let state = '';
   let zip = '';
+  let country = '';
   let phone = '';
   let gender:string = '';
 
@@ -74,17 +76,17 @@
         //last = "Smith-Johnson";
         first = "Jenny";
         //first = "Betsy";
-        gender = "Female";
+        gender = "female";
         dob = "1955-10-03";
         //dob = "1950-11-15";
       } else if (selectedSource === 'WA Health Summary Demo Server') {
         // last = "Gravitate";
         // first = "Maria SEATTLE";
-        // gender = "Female";
+        // gender = "female";
         // dob = "1946-05-05";
         last = "Wilson";
         first = "Cynthia";
-        gender = "Female";
+        gender = "female";
         dob = "1993-12-01";
       }
     }
@@ -119,7 +121,22 @@
         }
       });
     } catch (e) {
-      let query = buildPatientSearchQuery();
+      let query = buildPatientSearchQuery(
+        {
+          first: first,
+          last: last,
+          gender: gender,
+          dob: dob,
+          mrn: mrn,
+          phone: phone,
+          address1: address1,
+          address2: address2,
+          city: city,
+          state: state,
+          zip: zip,
+          country: country,
+        }
+      );
       result = await fetch(`${sources[selectedSource].url}/Patient${query}`, {
         method: 'GET',
         headers: { accept: 'application/json' },
@@ -210,7 +227,22 @@
     try {
       let content;
       let hostname;
-      const patient = await fetchPatient(constructPatientResource());
+      const patient = await fetchPatient(constructPatientResource(
+        {
+          first: first,
+          last: last,
+          gender: gender,
+          dob: dob,
+          mrn: mrn,
+          phone: phone,
+          address1: address1,
+          address2: address2,
+          city: city,
+          state: state,
+          zip: zip,
+          country: country,
+        }
+      ));
       const contentResponse = await fetchAdvanceDirective(patient.id);
       content = await contentResponse.json();
       hostname = sources[selectedSource].url;
@@ -432,6 +464,11 @@
           <Col>
             <FormGroup style="font-size:small" class="text-secondary" label="Zip">
               <Input type="text" bind:value={zip} style="width:90px"/>
+            </FormGroup>
+          </Col>
+          <Col xs="auto">
+            <FormGroup style="font-size:small" class="text-secondary" label="Country">
+              <CountryInput bind:value={country} />
             </FormGroup>
           </Col>
         </Row>

@@ -19,10 +19,11 @@
   } from '$lib/utils/util';
   import StateInput from '$lib/components/StateInput.svelte';
   import GenderInput from '$lib/components/GenderInput.svelte';
+  import CountryInput from '$lib/components/CountryInput.svelte';
 
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
 
-  let sources = {
+  let sources: Record<string, {selected: Boolean; destination: string; url: string}> = {
     MeldOpen: {selected: false, destination: "MeldOpen", url: "https://gw.interop.community/HeliosConnectathonSa/open"},
     JMCHelios: {selected: false, destination: "JMCHelios", url: "https://gw.interop.community/JMCHeliosSTISandbox/open"},
     // Patient no longer exists
@@ -46,6 +47,7 @@
   let city = '';
   let state = '';
   let zip = '';
+  let country = '';
   let phone = '';
   let gender:string = '';
 
@@ -64,33 +66,34 @@
       city = '';
       state = '';
       zip = '';
+      country = '';
       phone = '';
       gender = '';
       if (selectedSource === 'MeldOpen') {
-        last = "BLACKSTONE";
-        first = "VERONICA";
-        gender = "Female";
+        last = "Blackstone";
+        first = "Veronica";
+        gender = "female";
         dob = "1998-06-18";
       } else if (selectedSource === 'JMCHelios') {
         last = "JMC";
         first = "Chlamydia";
-        gender = "Male";
+        gender = "male";
         dob = "2001-05-07";
       } else if (selectedSource === 'OpenEpic') {
         last = "Lopez";
         first = "Camila";
-        gender = "Female";
+        gender = "female";
         dob = "1987-09-12";
       } else if (selectedSource === 'CernerHelios') {
         last = "Hill";
         first = "Cucumber";
-        gender = "Female";
+        gender = "female";
         dob = "2023-08-29";
       } else if (selectedSource === 'PublicHapi') {
         // Patient/test data no longer available
         last = "Sanity";
         first = "TestforPatientR4";
-        gender = "Male";
+        gender = "male";
         dob = "1919-11-03";
         city = "Pune";
         state = "MH";
@@ -123,7 +126,22 @@
       headers['X-POU'] = (selectedSource === 'OpenEpic' ? 'TREAT' : 'PUBHLTH');
     }
     
-    let query = buildPatientSearchQuery();
+    let query = buildPatientSearchQuery(
+      {
+        first: first,
+        last: last,
+        gender: gender,
+        dob: dob,
+        mrn: mrn,
+        phone: phone,
+        address1: address1,
+        address2: address2,
+        city: city,
+        state: state,
+        zip: zip,
+        country: country,
+      }
+    );
     result = await fetch(`${url}/Patient${query}`, {
       method: 'GET',
       headers: headers
@@ -146,7 +164,7 @@
   async function fetchPatientData(patientId: any) {
     // let query = buildAdvanceDirectiveSearchQuery(patientId);
     let url = baseUrl;
-    let headers = {
+    let headers: Record<string, string> = {
       'Accept': 'application/json+fhir',
       'Content-Type': 'application/fhir+json; charset=UTF-8',
       'prefer': 'return=representation'
@@ -205,7 +223,22 @@
     try {
       let content;
       let hostname;
-      const patient = await fetchPatient(constructPatientResource());
+      const patient = await fetchPatient(constructPatientResource(
+        {
+          first: first,
+          last: last,
+          gender: gender,
+          dob: dob,
+          mrn: mrn,
+          phone: phone,
+          address1: address1,
+          address2: address2,
+          city: city,
+          state: state,
+          zip: zip,
+          country: country,
+        }
+      ));
       const resources = await fetchPatientData(patient.id);
       hostname = baseUrl;
       processing = false;
@@ -307,7 +340,12 @@
           </Col>
           <Col>
             <FormGroup style="font-size:small" class="text-secondary" label="Zip">
-              <Input type="text" bind:value={zip} style="width:90px"/>
+              <Input type="numeric" bind:value={zip} style="width:90px"/>
+            </FormGroup>
+          </Col>
+          <Col xs="auto">
+            <FormGroup style="font-size:small" class="text-secondary" label="Country">
+              <CountryInput bind:value={country} />
             </FormGroup>
           </Col>
         </Row>

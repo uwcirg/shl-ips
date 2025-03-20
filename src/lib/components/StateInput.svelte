@@ -2,8 +2,9 @@
   import {
     Input,
   } from 'sveltestrap';
-  export let selectedState: string;
+  export let value: string;
   let states: Array<string> = [
+    '',
     'AL','AK','AZ','AR','CA','CO','CT',
     'DC','DE','FL','GA','GU','HI','ID',
     'IL','IN','IA','KS','KY','LA','ME',
@@ -14,7 +15,7 @@
     'VT','VA','VI','WA','WV','WI','WY'
   ];
 </script>
-<Input type="select" bind:value={selectedState} style="width: 80px">
+<Input type="select" bind:value={value} style="width: 80px">
   {#each states as state}
     <option value={state} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
       {state}

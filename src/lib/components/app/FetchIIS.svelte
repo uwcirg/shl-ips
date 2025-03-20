@@ -17,6 +17,7 @@
   } from '$lib/utils/util';
   import StateInput from '$lib/components/StateInput.svelte';
   import GenderInput from '$lib/components/GenderInput.svelte';
+  import CountryInput from '$lib/components/CountryInput.svelte';
 
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
 
@@ -33,6 +34,7 @@
   let city = 'Seattle';
   let state = 'WA';
   let zip = '98195';
+  let country = 'US';
   let phone = '(555) 555-5555';
   let gender:string = 'Male';
 
@@ -74,7 +76,22 @@
     try {
       let content;
       let hostname;
-      const contentResponse = await fetchIIS(constructPatientResource());
+      const contentResponse = await fetchIIS(constructPatientResource(
+        {
+          first: first,
+          last: last,
+          gender: gender,
+          dob: dob,
+          mrn: mrn,
+          phone: phone,
+          address1: address1,
+          address2: address2,
+          city: city,
+          state: state,
+          zip: zip,
+          country: country,
+        }
+      ));
       content = await contentResponse.json();
       hostname = 'WA IIS';
       processing = false;
@@ -142,6 +159,11 @@
           <Col>
             <FormGroup style="font-size:small" class="text-secondary" label="Zip">
               <Input type="text" bind:value={zip} style="width:90px"/>
+            </FormGroup>
+          </Col>
+          <Col xs="auto">
+            <FormGroup style="font-size:small" class="text-secondary" label="Country">
+              <CountryInput bind:value={country} />
             </FormGroup>
           </Col>
         </Row>

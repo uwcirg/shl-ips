@@ -2,10 +2,11 @@
   import {
     Input,
   } from 'sveltestrap';
-  export let selectedGender: string;
+  export let value: string;
   let gender: string;
-  $: selectedGender = genders[gender];
+  $: value = genders[gender];
   let genders: Record<string, any> = {
+    "": '',
     "Female": 'female',
     "Male": 'male',
     "Other": 'other'
