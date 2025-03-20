@@ -1,8 +1,10 @@
 <script lang="ts">
   import { Badge } from 'sveltestrap';
+  import type { ResourceTemplateParams } from '$lib/utils/types';
   import type { QuestionnaireResponse } from 'fhir/r4';
 
-  export let resource: QuestionnaireResponse; // Define a prop to pass the data to the component
+  export let content: ResourceTemplateParams<QuestionnaireResponse>; // Define a prop to pass the data to the component
+  let resource: QuestionnaireResponse = content.resource;
 
 </script>
 
@@ -11,10 +13,11 @@
     font-size: 12px; /* Adjust this value as needed */
   }
 </style>
-
-<Badge color="primary">{resource.identifier.value}</Badge><br/>
-Questionnaire reference: <a href='{resource.questionnaire}' rel="noreferrer noopener" target='_blank'>{resource.questionnaire}</a><br />
-Authored: {resource.authored.split("T")[0]}
+{#if resource.identifier?.value}
+    <Badge color="primary">{resource.identifier.value}</Badge><br/>
+{/if}
+Questionnaire reference: <a href={resource.questionnaire} rel="noreferrer noopener" target='_blank'>{resource.questionnaire}</a><br />
+Authored: {resource.authored?.split("T")[0]}
 {#if resource.source}
   {#if resource.source.display}
     <br />
