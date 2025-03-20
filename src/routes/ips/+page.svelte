@@ -12,7 +12,7 @@
     TabPane,
     Row,
   } from 'sveltestrap';
-  import * as shlClient from '$lib/utils/shlClient.js';
+  import * as shlClient from '$lib/utils/shlClient';
   import { verify } from '$lib/utils/shcDecoder.js';
   import type { Bundle, Composition, Patient } from 'fhir/r4';
   
@@ -100,15 +100,15 @@
     const recipient = "WA Verify+ IPS Viewer";
 
     let passcode;
-    const needPasscode = shlClient.flag({ shl }).includes('P');
+    const needPasscode = shlClient.flag({ shl: shl ?? "" })?.includes('P');
     if (needPasscode) {
-        passcode = prompt("Enter passcode for SMART Health Link");
+      passcode = prompt("Patient Summary Viewer\n----------------------------------------\nEnter passcode for SMART Health Link\nIf no passcode was set, just click \"OK\"");
     }
     let retrieveResult;
     try {
         retrieveResult = await shlClient.retrieve({
-            shl,
-            passcode,
+            shl: shl ?? "",
+            passcode: passcode ?? "",
             recipient
         });
     } catch (e) {
@@ -122,16 +122,16 @@
         if (retrieveResult.status) {
             if (retrieveResult.status === 404) {
                 // Couldn't find the shl, or it's been deactivated
-                const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl })}">Manage or reactivate it here</a>`;
+                const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl: shl ?? "" })}">Manage or reactivate it here</a>`;
                 errorMsg = `<p>The requested SHL does not exist or has been deactivated.</p><p>Are you the owner of this link? ${managerLink}</p>`;
             } else if (retrieveResult.status === 401) {
                 // Failed the password requirement
                 while (retrieveResult.status === 401) {
-                    passcode = prompt(`Enter passcode for SMART Health Link ${retrieveResult.error.remainingAttempts !== undefined ? "\nAttempts remaining: "+retrieveResult.error.remainingAttempts : ""}`);
+                  passcode = prompt(`Patient Summary Viewer\n----------------------------------------\nEnter passcode for SMART Health Link\nIf no passcode was set, just click \"OK\"${retrieveResult.error.remainingAttempts !== undefined ? "\nAttempts remaining: "+retrieveResult.error.remainingAttempts : ""}`);
                     try {
                         retrieveResult = await shlClient.retrieve({
-                            shl,
-                            passcode,
+                            shl: shl ?? "",
+                            passcode: passcode ?? "",
                             recipient
                         });
                     } catch (e) {
@@ -141,7 +141,7 @@
                     }
                 }
                 if (retrieveResult.error) {
-                    const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl })}">Manage or reactivate it here</a>`;
+                    const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl: shl ?? "" })}">Manage or reactivate it here</a>`;
                     errorMsg = `<p>The requested SHL has been deactivated due to too many failed password attempts.</p><p>Are you the owner of this link? ${managerLink}</p>`;
                 }
             } else {
@@ -158,6 +158,9 @@
       data.forEach(ipsBundle => initLLMChat(ipsBundle)); // Call initLLMChat for each bundle
 
       shlContents = data;
+    }
+    if (retrieveResult.jsons) {
+      shlContents = [...shlContents, ...retrieveResult.jsons];
     }
 }
   // End retrieving SHL
@@ -259,19 +262,19 @@
     {#each shlContents as contents, index}
       <TabPane class={`ips${index}`} tabId={`ips${index}`} active={index === 0} style="padding-top:10px">
         <span class="smart-tab" slot="tab">{getTabLabel(contents)}</span>
-        <IPSContent content={contents} mode={$displayMode} />
+        <IPSContent bundle={contents} mode={$displayMode} />
       </TabPane>
     {/each}
     {#if SHOW_VIEWER_DEMO}
       <TabPane tabId="demo" active={shlContents.length === 0} style="padding-top:10px">
         <span class="demo-tab" slot="tab">IPS Demo</span>
-        <Demo content={shlContents[0]} mode={$displayMode} />
+        <Demo bundle={shlContents[0]} mode={$displayMode} />
       </TabPane>
     {/if}
   </TabContent>
 {:else}
   <!-- Single tab view -->
-  <IPSContent content={shlContents[0]} mode={$displayMode} />
+  <IPSContent bundle={shlContents[0]} mode={$displayMode} />
 {/if}
 
 <!-- This at least renders here and doesn't break the page...

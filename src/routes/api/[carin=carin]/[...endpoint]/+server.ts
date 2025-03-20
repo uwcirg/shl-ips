@@ -1,0 +1,127 @@
+// import fetch from 'node-fetch';
+import { json, error, Request } from '@sveltejs/kit';
+import {
+  CARIN_HOSTS,
+  REDIRECT_URI,
+  SERVER_API_BASE,
+} from '$lib/server/config';
+
+export const POST = async ({ params, request }: { params: { carin: string }; request: Request; }) => {
+
+  console.log('Checking auth');
+  const auth = request.headers.get('Authorization');
+  if (!auth || !auth.startsWith('Bearer ')) {
+    console.log('Unauthorized');
+    return error(401, { message: "Unauthorized" });
+  }
+  const authorized = await fetch(`${SERVER_API_BASE}/authcheck`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: auth,
+    },
+  });
+  if (!authorized.ok) {
+    console.log('Authorization check failed');
+    console.log(authorized.status, authorized.statusText, await authorized.text());
+    return error(401, { message: 'Authorization check failed' });
+  }
+
+  console.log('Token exchange');
+  const restPath = params.carin;
+  const { code } = await request.json();
+
+  let clientId = CARIN_HOSTS[restPath].clientId;
+  let clientSecret = CARIN_HOSTS[restPath].clientSecret;
+  let tokenEndpoint = CARIN_HOSTS[restPath].tokenEndpoint;
+
+  console.log({clientId, clientSecret, tokenEndpoint, REDIRECT_URI});
+
+  if (!(clientId && clientSecret && tokenEndpoint && REDIRECT_URI)) {
+    return error(500, { message: "Server configuration error" });
+  }
+
+  const response = await fetch(tokenEndpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
+    },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: REDIRECT_URI,
+    }),
+  });
+
+  if (!response.ok) {
+    return error(400, { message: 'Token exchange failed' });
+  }
+
+  const tokenData = await response.json();
+  return json(tokenData);
+};
+
+// export const GET = async (re: RequestEvent) => {
+//   // return new Response(JSON.stringify(re), {status: 200});
+//   const restPath = re.params.carin;
+//   const endpoint = re.params.endpoint;
+//   let baseUrl;
+//   if (restPath === 'aetna') {
+//     baseUrl = 'https://vteapif1.aetna.com/fhirdemo/v2/patientaccess';
+//   } else if (restPath === 'cpcds') {
+//     baseUrl = 'https://cpcds-server.lantanagroup.com/fhir';
+//   }
+//   const apiUrl = `${baseUrl}/${endpoint}`;
+//   // return new Response(apiUrl, {status: 200});
+  
+//   const response = await fetch(apiUrl, {
+//       method: 'GET',
+//       headers: {
+//           'Authorization': re.request.headers.get('Authorization') || '',
+//           // 'Content-Type': 'application/json'
+//       }
+//   });
+
+//   // Add CORS headers to the response
+//   return new Response(response.body, {
+//       status: response.status,
+//       headers: {
+//           'Access-Control-Allow-Origin': '*',
+//           ...Object.fromEntries(response.headers)
+//       }
+//   });
+// };
+
+
+// export async function OPTIONS({ params, request }: RequestEvent) {
+//   const restPath = params.carin;
+//   const endpoint = params.endpoint;
+//   let baseUrl;
+//   if (restPath === 'aetna') {
+//     baseUrl = 'https://vteapif1.aetna.com/fhirdemo/v2/patientaccess';
+//   } else if (restPath === 'cpcds') {
+//     baseUrl = 'https://cpcds-server.lantanagroup.com/fhir';
+//   }
+//   const apiUrl = `${baseUrl}/${endpoint}`;
+
+//     // Forward the OPTIONS request to the API
+//     // const response = await fetch(apiUrl, {
+//     //     method: 'OPTIONS',
+//     //     headers: {
+//     //         'Origin': request.headers.get('Origin') || '',
+//     //         'Access-Control-Request-Method': request.headers.get('Access-Control-Request-Method') || '',
+//     //         'Access-Control-Request-Headers': request.headers.get('Access-Control-Request-Headers') || '',
+//     //     }
+//     // });
+
+//     // Return the API's preflight response with necessary CORS headers
+//     return new Response(null, {
+//         status: 204,
+//         headers: {
+//             'Access-Control-Allow-Origin': '*', // Replace * with specific origin if needed
+//             'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+//             'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+//         }
+//     });
+// }

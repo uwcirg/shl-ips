@@ -8,6 +8,7 @@
       Input,
       Row } from 'sveltestrap';
     import { createEventDispatcher } from 'svelte';
+    import NIOAutoCoderInput from '$lib/components/app/NIOAutoCoderInput.svelte';
     import type { ResourceRetrieveEvent } from '$lib/utils/types';
 
     const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
@@ -511,7 +512,7 @@
 </script>
 
 <Accordion stayOpen>
-  <AccordionItem active header="Current work">
+  <AccordionItem active class="odh-section" header="Current work">
     <Row>
       <Col xs="auto">I am currently</Col>
       <Col xs="auto">
@@ -529,26 +530,28 @@
       <FormGroup>
         <Row class="mb-2">
           <Col xs="auto">I work as a(n)</Col>
-          <Col xs="auto">
-            <Input type="select" bind:value={jobCurrent} style="max-width: 300px">
+          <Col style="flex-grow: 1" xs="auto">
+            <NIOAutoCoderInput bind:value={jobCurrent} mode="Occupation"/>
+            <!-- <Input type="select" bind:value={jobCurrent} style="max-width: 300px">
               {#each Object.keys(jobs) as job}
                 <option value={job} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
                   {job}
                 </option>
               {/each}
-            </Input>
+            </Input> -->
           </Col>
         </Row>
         <Row class="mb-2">
           <Col xs="auto">My company's primary business activity is</Col>
-          <Col xs="auto">
-            <Input type="select" bind:value={industryCurrent} style="max-width: 300px">
+          <Col style="flex-grow: 1" xs="auto">
+            <NIOAutoCoderInput bind:value={industryCurrent} mode="Industry"/>
+            <!-- <Input type="select" bind:value={industryCurrent} style="max-width: 300px">
               {#each Object.keys(industries) as industry}
                 <option value={industry} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
                   {industry}
                 </option>
               {/each}
-            </Input>
+            </Input> -->
           </Col>
         </Row>
         <Row class="mb-2">
@@ -560,7 +563,7 @@
       </FormGroup>
     {/if}
   </AccordionItem>
-  <AccordionItem active header="Past work">
+  <AccordionItem active class="odh-section" header="Past work">
     <Row class="mx-1">
       <Input type="switch" bind:checked={workingPast} label={workingPast ? "I have a previous job" : "I do not have a previous job"} />
     </Row>
@@ -569,26 +572,28 @@
       <FormGroup>
         <Row class="mb-2">
           <Col xs="auto">I used to work as a(n)</Col>
-          <Col xs="auto">
-            <Input type="select" bind:value={jobPast} style="max-width: 300px">
+          <Col style="flex-grow: 1" xs="auto">
+            <NIOAutoCoderInput bind:value={jobPast} mode="Occupation"/>
+            <!-- <Input type="select" bind:value={jobPast} style="max-width: 300px">
               {#each Object.keys(jobs) as job}
                 <option value={job} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
                   {job}
                 </option>
               {/each}
-            </Input>
+            </Input> -->
           </Col>
         </Row>
         <Row class="mb-2">
           <Col xs="auto">My company's primary business activity was</Col>
-          <Col xs="auto">
-            <Input type="select" bind:value={industryPast} style="max-width: 300px">
+          <Col style="flex-grow: 1" xs="auto">
+            <NIOAutoCoderInput bind:value={industryPast} mode="Industry"/>
+            <!-- <Input type="select" bind:value={industryPast} style="max-width: 300px">
               {#each Object.keys(industries) as industry}
                 <option value={industry} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
                   {industry}
                 </option>
               {/each}
-            </Input>
+            </Input> -->
           </Col>
         </Row>
         <Row class="mb-2">
@@ -604,7 +609,7 @@
       </FormGroup>
     {/if}
   </AccordionItem>
-  <AccordionItem active header="Retirement date">
+  <AccordionItem active class="odh-section" header="Retirement date">
     <Row class="mx-1">
       <Input type="switch" bind:checked={retired} label={retired ? "I am retired" : "I am not retired"}/>
     </Row>
@@ -620,7 +625,7 @@
       </FormGroup>
     {/if}
   </AccordionItem>
-  <AccordionItem active header="Combat zone work">
+  <AccordionItem active class="odh-section" header="Combat zone work">
     <Row class="mx-1">
       <Input type="switch" bind:checked={combat} label={combat ? "I have worked in a combat zone" : "I have not worked in a combat zone"}/>
     </Row>
@@ -647,4 +652,9 @@
 <Button color="primary" on:click={updateOdhSection} disabled={buttonDisabled}>
   {buttonText}
 </Button>
-  
+
+<style>
+  :global(.odh-section > .accordion-collapse.show) {
+    overflow: visible !important;
+  }
+</style>

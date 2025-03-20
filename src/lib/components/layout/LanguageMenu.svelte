@@ -9,10 +9,11 @@
     let locales: Readable<Record<string, Language>> = getContext('locales');
 </script>
 
-<Dropdown nav inNavbar size="sm" direction="down">
-  <DropdownToggle color="primary" nav caret>
-    <Icon name="globe2" />
-    {$locales[$locale].lang}
+<Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
+  <DropdownToggle color="primary" class="pt-0" nav>
+    <span style="font-size:small">
+      {$locales[$locale].lang} <Icon name="globe2" />
+    </span>
   </DropdownToggle>
   <DropdownMenu end style="height: 500px; overflow:auto">
     {#if $locales}

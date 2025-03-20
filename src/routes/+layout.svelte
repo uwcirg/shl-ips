@@ -5,12 +5,17 @@
     Col,
     Styles
   } from 'sveltestrap';
-  import { setContext } from 'svelte';
+  import { onMount, onDestroy, setContext } from 'svelte';
   import {writable, type Writable, readable, type Readable } from 'svelte/store';
-  import { VERSION_STRING } from '$lib/config';
+  import { AuthService } from '$lib/utils/AuthService';
   import type { Language } from '$lib/utils/types';
+  import { SHLClient, type SHLAdminParams } from '$lib/utils/managementClient';
+  import Header from '$lib/components/layout/Header.svelte';
+  import Footer from '$lib/components/layout/Footer.svelte';
 
   const locale: Writable<string> = writable('en');
+  setContext('locale', locale);
+
   const locales: Readable<Record<string, Language>> = readable({
     am: { lang_en: 'Amharic', lang: 'አማርኛ', code: 'am' },
     ar: { lang_en: 'Arabic', lang: 'العَرَبِيةُ', code: 'ar' },
@@ -65,98 +70,94 @@
     ur: { lang_en: 'Urdu', lang: 'اُردُو', code: 'ur' },
     vi: { lang_en: 'Vietnamese', lang: 'Tiếng Việt', code: 'vi' }
   });
-
-  setContext('locale', locale);
   setContext('locales', locales);
+
+  let shlStore = writable<SHLAdminParams[]>([]);
+  setContext('shlStore', shlStore);
+
+  let authService = AuthService.Instance;
+  setContext('authService', authService);
+
+  let shlClient = new SHLClient(authService);
+  setContext('shlClient', shlClient);
+
+  let reset = writable(0);
+  setContext('reset', reset);
 
   const MODE_KEY = 'demo_mode';
   let mode = writable('normal');
   window.localStorage[MODE_KEY] ? mode.set(JSON.parse(window.localStorage[MODE_KEY])) : mode.set('normal');
+  setContext('mode', mode);
 
   let isOpen = writable(false);
   setContext('isOpen', isOpen);
-  function closeNav() {
-    $isOpen = false;
-  }
-
-  document.addEventListener('click', (event) => {
-    closeNav();
-  });
-  document.addEventListener('keydown', (event) => {
-    closeNav();
-  });
-  window.addEventListener('scroll', (event) => {
-    closeNav();
-  });
 
   $: {
     if ($mode) window.localStorage[MODE_KEY] = JSON.stringify($mode);
   }
 
-  setContext('mode', mode);
+  let prevPageSize: number | undefined;
+  // Toggle class based on window width
+  function dispatchPageSize() {
+    var width = window.innerWidth
+    let border = 800;
+    if (width < border && (prevPageSize === undefined || prevPageSize >= border)) {
+      window.dispatchEvent(new CustomEvent('page-sm', {
+        detail: {}
+      }));
+    } else if (width >= border && (prevPageSize === undefined || prevPageSize < border)) {
+      window.dispatchEvent(new CustomEvent('page-md', {
+        detail: {}
+      }));
+    }
+    prevPageSize = width;
+  }
+
+  onMount(() => {
+    // Initial call to set pagination size on page load
+    dispatchPageSize()
+
+    // Call dispatchPageSize() on window resize
+    window.addEventListener('resize', dispatchPageSize);
+
+    authService.getUser().then((user) => {
+      if (user) {
+        let now = Date.now() / 1000;
+        if ((user.expires_at ?? 0) < now) {
+          return user;
+        }
+      }
+      return undefined;
+    }).then(async (user) => {
+      if (!user) {
+        return undefined;
+      }
+      window.dispatchEvent(new CustomEvent('userFound', { 
+        detail: { message: 'Hello from another component!' } 
+      }));
+      $shlStore = await shlClient.getUserShls();
+      return user;
+    });
+  });
+  onDestroy(() => {
+    window.removeEventListener('resize', dispatchPageSize);
+  });
 
 </script>
 
 <Container class="main" fluid>
   <Styles />
-
-  <slot />
-
-  <Row>
-    <Col style="margin-top: 20px; padding: 20px; border-top: 1px solid rgb(204, 204, 204);" >
-      <footer>
-        This demonstration shows how to create a 
-        <a
-          target="_blank"
-          rel="noreferrer"
-          href="https://docs.smarthealthit.org/smart-health-links/user-stories"
-        >
-          SMART Health Link
-        </a>
-        for any FHIR
-        <a href="https://build.fhir.org/ig/HL7/fhir-ips/" target="_blank" rel="noreferrer">
-          International Patient Summary
-        </a>
-        document. SHLinks can be shared by copy/paste, or by presenting a QR code.
-        {#if $mode === "advanced"}
-          For more information, view the source code and license at
-          <a href="https://github.com/uwcirg/shl-ips" target="_blank" rel="noreferrer">
-            https://github.com/uwcirg/shl-ips
-          </a>. {VERSION_STRING ? "Site version: " + VERSION_STRING : ""}
-        {/if}
-      </footer>
-    </Col>
-  </Row>
+  <Header />
+  <div class="main-content">
+    <slot />
+  </div>
+  <Footer />
 </Container>
 
 <style>
-  :global(#nav-image) {
-    width: 240px;
-    -webkit-transition: all 0.06s linear;
-    -moz-transition: all 0.06s linear;
-    -o-transition: all 0.06s linear;
-    transition: all 0.06s linear;
+  :global(.main-content) {
+    flex-grow: 1;
   }
-  :global(.nav-text) {
-    font-size:medium;
-    -webkit-transition: all 0.06s linear;
-    -moz-transition: all 0.06s linear;
-    -o-transition: all 0.06s linear;
-    transition: all 0.06s linear;
-  }
-  :global(#nav-image.scrolling) {
-    width: 160px !important;
-    margin-left: 10px;
-  }
-  :global(.nav-text.scrolling)  {
-    font-size: xx-small;
-    color: #000; /* Fallback for older browsers */
-    color: rgba(0, 0, 0, 0.0);
-  }
-  :global(.navbar.scrolling) {
-    padding: 0px !important;
-  }
-
   :global(.main-row) {
     flex-grow: 1;
   }

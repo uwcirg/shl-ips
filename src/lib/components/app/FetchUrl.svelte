@@ -56,6 +56,8 @@
       let headers: any = { accept: 'application/fhir+json' };
       if (summaryUrlValidated?.toString().includes('meditech')) {
         headers['authorization'] = `Bearer ${BEARER_AUTHORIZATION['Meditech']}`
+      } else if (summaryUrlValidated?.toString().includes('openfhir')) {
+        headers['epic-client-id'] = `${BEARER_AUTHORIZATION['EpicHIMSS']}`;
       }
       const contentResponse = await fetch(summaryUrlValidated!, {
       headers: headers
@@ -107,7 +109,7 @@
           color: rgb(50, 50, 50);"/>
       </div>
     </DropdownToggle>
-    <DropdownMenu style="width:100%">
+    <DropdownMenu style="max-height: 400px; width:100%; overflow:scroll">
       {#if Object.keys(PATIENT_IPS).length > 0}
         <DropdownItem header>Actual Patient Data (permitted for use)</DropdownItem>
         {#each Object.entries(PATIENT_IPS) as [title, url]}

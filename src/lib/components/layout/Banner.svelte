@@ -16,7 +16,7 @@
     <Image
       alt="WA Verify Logo"
       width="200"
-      src="/img/waverifypluslogo.png"
+      src="/img/waverifypluslogo.svg"
       style="align-self: center"
     />
   </Col>
