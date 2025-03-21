@@ -53,7 +53,7 @@
       extension: [
         {
           url: 'http://hl7.org/fhir/us/odh/StructureDefinition/odh-isCurrentJob-extension',
-          valueBoolean: false
+          valueBoolean: true
         }
       ],
       status: 'final',
