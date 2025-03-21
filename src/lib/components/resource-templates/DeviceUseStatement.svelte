@@ -4,8 +4,8 @@
   import type { ResourceTemplateParams } from '$lib/utils/types';
   import DeviceTemplate from '$lib/components/resource-templates/Device.svelte';
   import { getEntry, hasChoiceDTField, choiceDTFields } from '$lib/utils/util';
-  import CodeableConcept from './CodeableConcept.svelte';
-  import Date from './Date.svelte';
+  import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
+  import Date from '$lib/components/resource-templates/Date.svelte';
 
   export let content: ResourceTemplateParams<DeviceUseStatement>; // Define a prop to pass the data to the component
 

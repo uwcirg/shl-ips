@@ -5,8 +5,8 @@
   import { getEntry } from '$lib/utils/util';
   import OccupationalData from '$lib/components/resource-templates/OccupationalData.svelte';
   import { hasChoiceDTField, choiceDTFields } from '$lib/utils/util';
-  import CodeableConcept from './CodeableConcept.svelte';
-  import Date from './Date.svelte';
+  import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
+  import Date from '$lib/components/resource-templates/Date.svelte';
   
   export let content: ResourceTemplateParams<Observation>; // Define a prop to pass the data to the component
   export let contained: Boolean = false;

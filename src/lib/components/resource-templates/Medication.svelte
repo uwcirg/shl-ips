@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Medication } from "fhir/r4";
   import type { ResourceTemplateParams } from '$lib/utils/types';
-    import CodeableConcept from './CodeableConcept.svelte';
+    import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
 
   export let content: ResourceTemplateParams<Medication>; // Define a prop to pass the data to the component
 

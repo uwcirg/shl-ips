@@ -2,8 +2,8 @@
   import { Badge } from 'sveltestrap';
   import type { Condition } from 'fhir/r4';
   import type { ResourceTemplateParams } from '$lib/utils/types';
-  import CodeableConcept from './CodeableConcept.svelte';
-  import Date from './Date.svelte';
+  import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
+  import Date from '$lib/components/resource-templates/Date.svelte';
   import { hasChoiceDTField, choiceDTFields } from '$lib/utils/util';
 
   export let content: ResourceTemplateParams<Condition>; // Define a prop to pass the data to the component
