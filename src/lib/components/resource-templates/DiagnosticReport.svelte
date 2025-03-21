@@ -1,8 +1,10 @@
 <script lang="ts">
   import { Badge } from 'sveltestrap';
   import type { BundleEntry, DiagnosticReport, Observation } from 'fhir/r4';
-  import ObservationTemplate from './Observation.svelte';
   import type { ResourceTemplateParams } from '$lib/utils/types';
+  import ObservationTemplate from '$lib/components/resource-templates/Observation.svelte';
+  import Date from '$lib/components/resource-templates/Date.svelte';
+  import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
   import { getEntry } from '$lib/utils/util';
 
   export let content: ResourceTemplateParams<DiagnosticReport>; // Define a prop to pass the data to the component
@@ -38,30 +40,12 @@
 </script>
 
 {#if resource.category?.[0].coding}
-  <Badge color="primary">{resource.category[0].coding[0].display ?? resource.category[0].coding[0].code}</Badge>
+  <Badge color="primary">
+    {resource.category[0].coding[0].display ?? resource.category[0].coding[0].code}
+  </Badge>
 {/if}
-{#if resource.code}
-  {#if resource.code.coding}
-    <Badge color="primary">{resource.code.coding[0].system} : {resource.code.coding[0].code}</Badge>
-    <br />
-    {#if resource.code.coding[0].display}
-      <strong>{resource.code.coding[0].display}</strong>
-    {:else if resource.code.text}
-      <strong>{resource.code.text}</strong>
-    {/if}
-  {:else if resource.code.text}
-    <br><strong>{resource.code.text}</strong>
-  {/if}
-{/if}
-<br>
-{#if resource.effectivePeriod}
-  Effective: {resource.effectivePeriod.start ? resource.effectivePeriod.start : ''}{resource
-    .effectivePeriod.end
-    ? ` - ${resource.effectivePeriod.end}`
-    : ''}
-{:else if resource.effectiveDateTime}
-  Date: {resource.effectiveDateTime.split('T')[0]}
-{/if}
+<CodeableConcept codeableConcept={resource.code} />
+Effective: <Date fields={{period: resource.effective, dateTime: resource.effectiveDateTime}} />
 <br>
 {#if resource.result}
   <table class="table table-bordered table-sm">

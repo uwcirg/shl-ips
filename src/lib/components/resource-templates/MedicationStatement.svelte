@@ -1,6 +1,8 @@
 <script lang="ts">
   import { Badge } from 'sveltestrap';
   import type { BundleEntry, Medication, MedicationStatement } from "fhir/r4";
+  import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
+  import Date from '$lib/components/resource-templates/Date.svelte';
   import Dosage from '$lib/components/resource-templates/Dosage.svelte';
   import MedicationTemplate from '$lib/components/resource-templates/Medication.svelte';
   import { getEntry } from '$lib/utils/util';
@@ -31,16 +33,7 @@
 {/if}
 
 {#if resource.medicationCodeableConcept}
-  {#if resource.medicationCodeableConcept.coding}  
-    <Badge color="primary">{resource.medicationCodeableConcept.coding[0].system} : {resource.medicationCodeableConcept?.coding[0].code}</Badge>
-    <br>
-    {#if resource.medicationCodeableConcept.coding[0].display}
-      <strong>{resource.medicationCodeableConcept.coding[0].display}</strong><br>
-    {/if}
-  {/if}
-  {#if resource.medicationCodeableConcept.text}
-    <strong>{resource.medicationCodeableConcept.text}</strong><br>
-  {/if}
+  <CodeableConcept codeableConcept={resource.medicationCodeableConcept} />
 {/if}
 
 {#if medication}
@@ -54,12 +47,6 @@
   {resource.reasonReference?.[0].display}<br>
 {/if}
 
-<Dosage dosage={resource.dosage?.[0]} />
+<Dosage dosage={resource.dosage} />
 
-{#if resource.effectivePeriod}
-  Effective: {resource.effectivePeriod.start ? resource.effectivePeriod.start : ''}{resource.effectivePeriod.end
-    ? ` - ${resource.effectivePeriod.end}`
-    : ''}
-{:else if resource.effectiveDateTime}
-  Date: {resource.effectiveDateTime.split("T")[0]}
-{/if}
+Effective: <Date fields={{ period: resource.effectivePeriod, dateTime: resource.effectiveDateTime }} />

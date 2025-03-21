@@ -3,7 +3,9 @@
   import type { BundleEntry, Device, DeviceUseStatement } from 'fhir/r4';
   import type { ResourceTemplateParams } from '$lib/utils/types';
   import DeviceTemplate from '$lib/components/resource-templates/Device.svelte';
-  import { getEntry } from '$lib/utils/util';
+  import { getEntry, hasChoiceDTField, choiceDTFields } from '$lib/utils/util';
+  import CodeableConcept from './CodeableConcept.svelte';
+  import Date from './Date.svelte';
 
   export let content: ResourceTemplateParams<DeviceUseStatement>; // Define a prop to pass the data to the component
 
@@ -26,14 +28,25 @@
   }
 </script>
 
-<Badge color={resource.status === 'stopped' ? 'secondary' : 'primary'}
-  >{resource.status ? `${resource.status}` : ''}</Badge
->
-<br />
+<Badge color={resource.status === 'stopped' ? 'secondary' : 'primary'}>
+  {resource.status ? `${resource.status}` : ''}
+</Badge><br>
 
 {#if device}
-  <DeviceTemplate content={{ resource: device, entries: content.entries }} />
+  <DeviceTemplate content={{ resource: device, entries: content.entries }} /><br>
 {:else if resource.device?.display}
   <strong>{resource.device?.display}</strong>
   <br>
+{/if}
+{#if resource.reasonCode}
+  Reason:<br>
+  <CodeableConcept codeableConcept={resource.reasonCode} /><br>
+{/if}
+{#if resource.bodySite}
+  Site:<br>
+  <CodeableConcept codeableConcept={resource.bodySite} /><br>
+{/if}
+
+{#if hasChoiceDTField("timing", resource)}
+  Timing: <Date fields={choiceDTFields("timing", resource)} />
 {/if}

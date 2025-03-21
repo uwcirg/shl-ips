@@ -1,7 +1,9 @@
 <script lang="ts">
   import { Badge } from 'sveltestrap';
-  import type { BundleEntry, Medication, MedicationRequest, Resource } from 'fhir/r4';
+  import type { BundleEntry, Medication, MedicationRequest } from 'fhir/r4';
   import type { ResourceTemplateParams } from '$lib/utils/types';
+  import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
+  import Date from '$lib/components/resource-templates/Date.svelte';
   import Dosage from '$lib/components/resource-templates/Dosage.svelte';
   import MedicationTemplate from '$lib/components/resource-templates/Medication.svelte';
   import { getEntry } from '$lib/utils/util';
@@ -33,21 +35,7 @@
 >
 <br />
 {#if resource.medicationCodeableConcept}
-  {#if resource.medicationCodeableConcept.coding}
-    {#if resource.medicationCodeableConcept.coding[0].system && resource.medicationCodeableConcept.coding[0].code}
-      <Badge color="primary"
-        >{resource.medicationCodeableConcept.coding[0].system} : {resource.medicationCodeableConcept
-          .coding[0].code}</Badge
-      >
-      <br />
-    {/if}
-    {#if resource.medicationCodeableConcept.coding[0].display}
-      <strong>{resource.medicationCodeableConcept.coding[0].display}</strong><br />
-    {/if}
-  {/if}
-  {#if resource.medicationCodeableConcept.text}
-    <strong>{resource.medicationCodeableConcept.text}</strong><br />
-  {/if}
+  <CodeableConcept codeableConcept={resource.medicationCodeableConcept} />
 {/if}
 
 {#if medication}
@@ -58,14 +46,10 @@
 {/if}
 
 {#if resource.authoredOn}
-  Authored: {resource.authoredOn.split('T')[0]}<br>
+  Authored: <Date fields={{ dateTime: resource.authoredOn }} /><br>
 {/if}
 {#if resource.dispenseRequest?.validityPeriod}
-  Valid: {resource.dispenseRequest?.validityPeriod.start}{resource.dispenseRequest
-    ?.validityPeriod.end
-    ? ` - ${resource.dispenseRequest?.validityPeriod.end}`
-    : ''}
-  <br />
+  Valid: <Date period fields={{ period: resource.dispenseRequest.validityPeriod }} /><br>
 {/if}
 
-<Dosage dosage={resource.dosageInstruction?.[0]} />
+<Dosage dosage={resource.dosageInstruction} />

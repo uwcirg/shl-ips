@@ -1,9 +1,8 @@
 import * as jose from 'jose';
 import * as pako from 'pako';
 import issuerKeys from '$lib/utils/issuer.private.jwks.json';
-import type { SHCFile } from '$lib/utils/types';
 import type { Bundle, BundleEntry, Patient, Resource } from 'fhir/r4';
-import type { DemographicFields } from '$lib/utils/types';
+import type { DemographicFields, DateTimeFields, SHCFile } from '$lib/utils/types';
 
 export const base64url = jose.base64url;
 
@@ -16,6 +15,50 @@ export function randomStringWithEntropy(entropy = 32): string {
 export async function base64toBlob(base64:string, type="application/octet-stream") {
   let result = await fetch(`data:${type};base64,${base64}`);
   return window.URL.createObjectURL(await result.blob());
+}
+
+// Helper function to format dates as "dd-MMM-yyyy"
+export function formatDate(dateStr?: string) {
+  if (!dateStr) {
+    return '??';
+  }
+  // Handle partial dates
+  let options: Intl.DateTimeFormatOptions = {};
+  const yearMatch = /^\d{4}/;               // "2023"
+  const yearMonthMatch = /^\d{4}-\d{2}/;    // "2023-05"
+  const fullDateMatch = /^\d{4}-\d{2}-\d{2}/; // "2023-05-10"
+  if (yearMatch.test(dateStr)) {
+    options.year = 'numeric';
+  }
+  if (yearMonthMatch.test(dateStr)) {
+    options.month = 'short';
+  }
+  if (fullDateMatch.test(dateStr)) {
+    options.day = '2-digit';
+  }
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-GB', options);
+  } catch (e) {
+    return dateStr;
+  }
+}
+
+function lowerCaseFirst(s: string) {
+  return s.charAt(0).toLowerCase() + s.slice(1);
+}
+
+export function hasChoiceDTField(prefix: string, resource: Resource): boolean {
+  return Object.keys(resource).some(k => k.startsWith(prefix));
+}
+
+export function choiceDTFields(prefix: string, resource: Resource): DateTimeFields {
+  const prefixedFields = Object.keys(resource).filter(k => k.startsWith(prefix));
+  const fields: DateTimeFields = prefixedFields.reduce((acc: DateTimeFields, k: string) => {
+    acc[lowerCaseFirst(k.replace(prefix, ''))] = resource[k];
+    return acc;
+  }, {});
+  return fields;
 }
 
 // For machine-readable content, use the reference in the Composition.section.entry to retrieve resource from Bundle

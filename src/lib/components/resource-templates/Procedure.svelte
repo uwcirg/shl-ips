@@ -1,37 +1,17 @@
 <script lang="ts">
-  import { Badge } from 'sveltestrap';
   import type { Procedure } from "fhir/r4";
   import type { ResourceTemplateParams } from '$lib/utils/types';
+  import CodeableConcept from './CodeableConcept.svelte';
+  import Date from './Date.svelte';
+  import { choiceDTFields, hasChoiceDTField } from '$lib/utils/util';
   
   export let content: ResourceTemplateParams<Procedure>; // Define a prop to pass the data to the component
   let resource: Procedure = content.resource;
 </script>
 
 {#if resource.code}
-  {#if resource.code.coding}
-    <Badge color="primary">{resource.code.coding[0].system} : {resource.code.coding[0].code}</Badge>
-    <br />
-    {#if resource.code.coding[0].display}
-      <strong>{resource.code.coding[0].display}</strong><br>
-    {:else if resource.code.text}
-      <strong>{resource.code.text}</strong><br>
-    {/if}
-  {:else if resource.code.text}
-    <strong>{resource.code.text}</strong><br>
-  {/if}
+  <CodeableConcept codeableConcept={resource.code} />
 {/if}
-{#if resource.performedDateTime}
-  Performed: {resource.performedDateTime.split("T")[0]}
-{:else if resource.performedPeriod}
-  Performed: {resource.performedPeriod.start ? resource.performedPeriod.start : ''}{resource.performedPeriod.end
-    ? ` - ${resource.performedPeriod.end}`
-    : ''}
-{:else if resource.performedString}
-  Performed: {resource.performedString}
-{:else if resource.performedAge}
-  Performed age: {resource.performedAge.value}{resource.performedAge.code}
-{:else if resource.performedRange}
-  Performed age: {resource.performedRange.low ? resource.performedRange.low : ''}{resource.performedRange.high
-    ? ` - ${resource.performedRange.high}`
-    : ''}
+{#if hasChoiceDTField("performed", resource)}
+  Performed: <Date fields={choiceDTFields("performed", resource)} />
 {/if}
