@@ -15,11 +15,11 @@
     if (fields.period) {
       let start = formatDate(fields.period.start);
       let end = formatDate(fields.period.end);
-      date = `${start} - ${end}`;
       periodStartOnly = periodStartOnly && !fields.period.end;
+      date = `${start}${fields.period.end ? ' - '+end : ""}`;
     } else if (fields.range) {
-      date = `${fields.range.low ? fields.range.low : unk}${fields.range.high ? ` - ${fields.range.high}` : unk}`;
       periodStartOnly = periodStartOnly && !fields.range.high;
+      date = `${fields.range.low ? fields.range.low : unk}${fields.range.high ? ` - ${fields.range.high}` : ''}`;
     } else if (fields.date) {
       date = formatDate(fields.date);
     } else if (fields.dateTime) {
