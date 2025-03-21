@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { Badge} from 'sveltestrap';
   import type { Medication } from "fhir/r4";
   import type { ResourceTemplateParams } from '$lib/utils/types';
     import CodeableConcept from './CodeableConcept.svelte';
@@ -7,11 +6,10 @@
   export let content: ResourceTemplateParams<Medication>; // Define a prop to pass the data to the component
 
   let resource: Medication = content.resource;
-  let codingMap = new Map();
 </script>
 
 {#if resource.code}
-  <CodeableConcept codeableConcept={resource.code} /><br>
+  <CodeableConcept codeableConcept={resource.code} />
 {/if}
 {#if resource.ingredient}
   <table class="table table-bordered table-sm">

@@ -10,7 +10,7 @@
   let resource: Immunization = content.resource;
 </script>
 {#if resource.vaccineCode}
-  <CodeableConcept codeableConcept={resource.vaccineCode} /><br>
+  <CodeableConcept codeableConcept={resource.vaccineCode} />
 {/if}
 
 {#if hasChoiceDTField("occurrence", resource)}

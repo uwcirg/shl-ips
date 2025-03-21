@@ -28,8 +28,11 @@
     }
   }
 </script>
+
 {#if resource.status}
-<Badge color={resource.status === "unknown" || resource.status === "stopped" ? "secondary" : "primary"}>{resource.status}</Badge>
+  <Badge color={resource.status === "unknown" || resource.status === "stopped" ? "secondary" : "primary"}>
+    {resource.status}
+  </Badge><br>
 {/if}
 
 {#if resource.medicationCodeableConcept}

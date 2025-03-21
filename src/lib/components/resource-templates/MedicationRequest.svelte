@@ -30,10 +30,9 @@
 </script>
 
 <Badge color="secondary">{resource.intent ? resource.intent : ''}</Badge>
-<Badge color={resource.status === 'stopped' ? 'secondary' : 'primary'}
-  >{resource.status ? `${resource.status}` : ''}</Badge
->
-<br />
+<Badge color={resource.status === 'stopped' ? 'secondary' : 'primary'}>
+  {resource.status ? `${resource.status}` : ''}
+</Badge><br>
 {#if resource.medicationCodeableConcept}
   <CodeableConcept codeableConcept={resource.medicationCodeableConcept} />
 {/if}

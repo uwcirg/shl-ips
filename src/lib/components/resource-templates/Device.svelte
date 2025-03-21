@@ -9,7 +9,7 @@
   let resource: Device = content.resource;
 </script>
 {#if resource.status}
-  <Badge color="primary">{resource.status}</Badge>
+  <Badge color="primary">{resource.status}</Badge><br>
 {/if}
 {#if resource.type}
   <CodeableConcept codeableConcept={resource.type} />

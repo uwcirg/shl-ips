@@ -8,7 +8,7 @@
   let resource: Consent = content.resource;
 </script>
 {#if resource.category?.[0]}
-  <CodeableConcept codeableConcept={resource.category?.[0]} /><br>
+  <CodeableConcept codeableConcept={resource.category?.[0]} />
 {/if}
 {#if resource.text?.div}
   {@html resource.text.div}

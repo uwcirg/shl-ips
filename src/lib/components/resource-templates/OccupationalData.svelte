@@ -12,20 +12,20 @@
   {#if resource.code.coding?.[0].code}
     {#if resource.code.coding[0].code === "74165-2"}
         <strong>Employment Status</strong><br>
-        <CodeableConcept codeableConcept={resource.valueCodeableConcept} /><br>
+        <CodeableConcept codeableConcept={resource.valueCodeableConcept} />
         {#if hasChoiceDTField("effective", resource)}
-            <Date fields={choiceDTFields("effective", resource)} />
+            <Date period fields={choiceDTFields("effective", resource)} />
         {/if}
     {:else if resource.code.coding[0].code === "87510-4"}
-        <strong>Retirement Date</strong>
+        <strong>Retired</strong>
         {#if resource.valueDateTime}
-            <br>{resource.valueDateTime}
+            <br><Date period fields={{dateTime: resource.valueDateTime}} />
         {/if}
         <br>
     {:else if resource.code.coding[0].code === "87511-2"}
         <strong>Combat Zone Period</strong><br>
         {#if resource.valuePeriod}
-            <Date fields={{period: resource.valuePeriod}} /><br>
+            <Date period fields={{period: resource.valuePeriod}} /><br>
         {/if}
     {:else if resource.code.coding[0].code === "11341-5"}
         <strong>
@@ -35,7 +35,7 @@
             }) ? " (Current)" : ""}
         </strong><br>
         {#if hasChoiceDTField("effective", resource)}
-            <Date fields={choiceDTFields("effective", resource)} />
+            <Date period fields={choiceDTFields("effective", resource)} /><br>
         {/if}
         <CodeableConcept codeableConcept={resource.valueCodeableConcept} />
         {#if resource.component}

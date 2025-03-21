@@ -40,11 +40,11 @@
 {/if}
 {#if resource.reasonCode}
   Reason:<br>
-  <CodeableConcept codeableConcept={resource.reasonCode} /><br>
+  <CodeableConcept codeableConcept={resource.reasonCode} />
 {/if}
 {#if resource.bodySite}
   Site:<br>
-  <CodeableConcept codeableConcept={resource.bodySite} /><br>
+  <CodeableConcept codeableConcept={resource.bodySite} />
 {/if}
 
 {#if hasChoiceDTField("timing", resource)}

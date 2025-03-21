@@ -42,7 +42,7 @@
 {#if resource.category?.[0].coding}
   <Badge color="primary">
     {resource.category[0].coding[0].display ?? resource.category[0].coding[0].code}
-  </Badge>
+  </Badge><br>
 {/if}
 <CodeableConcept codeableConcept={resource.code} />
 Effective: <Date fields={{period: resource.effective, dateTime: resource.effectiveDateTime}} />

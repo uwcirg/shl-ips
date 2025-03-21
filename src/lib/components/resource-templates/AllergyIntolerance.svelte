@@ -36,13 +36,13 @@
 <Badge color={badgeColor(resource.criticality ?? '')}>
   {resource.type ? `${resource.type} - ` : ''}
   criticality: {resource.criticality ?? 'unknown'}
-</Badge>
+</Badge><br>
 {#if resource.code}
-  <CodeableConcept codeableConcept={resource.code} /><br>
+  <CodeableConcept codeableConcept={resource.code} />
 {/if}
 {#if hasChoiceDTField("onset", resource)}
-  <Date period fields={choiceDTFields("onset", resource)} /><br>
+  <br><Date period fields={choiceDTFields("onset", resource)} />
 {/if}
 {#if resource.lastOccurrence}
-  Last occurrence: <Date fields={{dateTime: resource.lastOccurrence}} />
+  <br>Last occurrence: <Date fields={{dateTime: resource.lastOccurrence}} />
 {/if}

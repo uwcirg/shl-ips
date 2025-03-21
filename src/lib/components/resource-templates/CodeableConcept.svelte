@@ -1,37 +1,42 @@
 <script lang="ts">
   import { Badge} from 'sveltestrap';
   import type { CodeableConcept } from "fhir/r4";
+    import { onMount } from 'svelte';
 
   export let codeableConcept: CodeableConcept; // Define a prop to pass the data to the component
-  export let badge = false;
-  export let bold = false;
+  export let badge = true;
+  export let bold = true;
 
-  let codingMap = new Set();
+  let codeSet: Set<string> = new Set();
+  onMount(() => {
+    if (codeableConcept.coding) {
+      codeableConcept.coding.forEach(coding => {
+        if (coding.display !== undefined) {
+          codeSet.add(coding.display);
+        }
+      });
+    }
+    if (codeableConcept.text) {
+      codeSet.add(codeableConcept.text);
+    }
+    codeSet = new Set([...codeSet]);
+  })
 </script>
 
 {#if codeableConcept}
-  {#if codeableConcept.coding}
+  {#if codeableConcept.coding.length > 0}
     {#if badge}
       <Badge color="primary">{codeableConcept.coding[0].system} : {codeableConcept.coding[0].code}</Badge>
       <br>
-    {:else}
-      <br>
     {/if}
-    {#each codeableConcept.coding as coding, index}
-        {#if index == 0 && bold}
-          <strong>
-            {#if coding.display && !codingMap.has(coding.display) && codingMap.add(coding.display)}
-              {coding.display}<br>
-            {/if}
-          </strong>
+    {#if codeSet.size > 0}
+      {#each [...codeSet] as code, index}
+        {#if index === 0 && bold}
+          <strong>{code}</strong><br>
         {:else}
-          {#if coding.display && !codingMap.has(coding.display) && codingMap.add(coding.display)}
-            {coding.display}<br>
-          {/if}
+          {code}<br>
         {/if}
       {/each}
-  {/if}
-  {#if codeableConcept.text && !codingMap.has(codeableConcept.text) && codingMap.add(codeableConcept.text)}
-    {codeableConcept.text}
+    {/if}
   {/if}
 {/if}

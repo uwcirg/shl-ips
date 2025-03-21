@@ -91,12 +91,14 @@
             {#each resource.contact as contact}
                 <strong>Emergency Contact:</strong><br>
                 {#if contact.relationship}
-                    {#each contact.relationship as relationship}
+                    {#each contact.relationship as relationship, index}
                         {#if relationship.coding && relationship.coding[0].display}
                             <Badge color="secondary">{relationship.coding[0].display}</Badge>
                         {/if}
+                        {#if index < contact.relationship.length - 1}
+                            <br>
+                        {/if}
                     {/each}
-                    <br>
                 {/if}
                 {#if contact.name}
                     <strong>

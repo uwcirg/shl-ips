@@ -61,11 +61,8 @@ $: {
 {#if odhResourceCodes.includes(resource.code?.coding?.[0].code ?? "")}
   <OccupationalData {content} />
 {:else}
-  {#if !contained && resource.category?.[0].coding}
-    <Badge color="primary">{resource.category[0].coding[0].code}</Badge>
-  {/if}
   {#if resource.code}
-    <CodeableConcept codeableConcept={resource.code} /><br>
+    <CodeableConcept codeableConcept={resource.code} />
   {/if}
   {#if resource.valueCodeableConcept?.coding?.[0].display}
     {resource.valueCodeableConcept.coding[0].display}<br>

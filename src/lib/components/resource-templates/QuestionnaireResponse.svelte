@@ -14,7 +14,7 @@
   }
 </style>
 {#if resource.identifier?.value}
-    <Badge color="primary">{resource.identifier.value}</Badge><br/>
+    <Badge color="primary">{resource.identifier.value}</Badge><br>
 {/if}
 Questionnaire reference: <a href={resource.questionnaire} rel="noreferrer noopener" target='_blank'>{resource.questionnaire}</a><br />
 Authored: {resource.authored?.split("T")[0]}
