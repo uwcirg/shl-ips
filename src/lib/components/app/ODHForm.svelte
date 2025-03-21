@@ -30,14 +30,14 @@
   let status = 'Employed';
   let jobCurrent: IOResponse;
   let industryCurrent: IOResponse;
-  let startCurrent = canShare ? '2021-09' : '2021-09-07';
+  let startCurrent: string;
   let jobPast: IOResponse;
   let industryPast: IOResponse;
-  let startPast = canShare ? '2016-05' : '2016-05-05';
-  let endPast = canShare ? '2020-04' : '2020-04-15';
-  let startRetirement = canShare ? '2024-03' : '2024-03-01';
-  let startCombat = canShare ? '2016-08' : '2016-08-01';
-  let endCombat = canShare ? '2017-01' : '2017-01-01';
+  let startPast: string;
+  let endPast: string;
+  let startRetirement: string;
+  let startCombat: string;
+  let endCombat: string;
 
   // Present job resource template
   let currentJobTemplate = {
@@ -497,7 +497,7 @@
       <Input
         type="switch"
         bind:checked={workingPast}
-        label={workingPast ? 'I have a previous job' : 'I do not have a previous job'}
+        label={`I ${workingPast ? 'do not ': ''}have a previous job`}
       />
     </Row>
     {#if workingPast}
@@ -533,7 +533,7 @@
       <Input
         type="switch"
         bind:checked={retired}
-        label={retired ? 'I am retired' : 'I am not retired'}
+        label={`I am ${retired ? '' : 'not '}retired`}
       />
     </Row>
     {#if retired}
@@ -548,19 +548,19 @@
       </FormGroup>
     {/if}
   </AccordionItem>
-  <AccordionItem active class="odh-section" header="Combat zone work">
+  <AccordionItem active class="odh-section" header="Combat zone work/hazardous duty">
     <Row class="mx-1">
       <Input
         type="switch"
         bind:checked={combat}
-        label={combat ? 'I have worked in a combat zone' : 'I have not worked in a combat zone'}
+        label={`I have ${combat ? '' : 'not '}worked in a combat zone or other hazardous conditions`}
       />
     </Row>
     {#if combat}
       <br />
       <FormGroup>
         <Row class="mb-2">
-          <Col xs="auto" class="mt-1">I started working in a combat zone</Col>
+          <Col xs="auto" class="mt-1">I started working in a combat zone or other hazardous conditions</Col>
           <Col xs="auto">
             <Input type={canShare ? 'month' : 'date'} bind:value={startCombat} />
           </Col>

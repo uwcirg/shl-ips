@@ -23,7 +23,7 @@
         {/if}
         <br>
     {:else if resource.code.coding[0].code === "87511-2"}
-        <strong>Combat Zone Period</strong><br>
+        <strong>Combat Zone/Hazardous Work Period</strong><br>
         {#if resource.valuePeriod}
             <Date period fields={{period: resource.valuePeriod}} /><br>
         {/if}
