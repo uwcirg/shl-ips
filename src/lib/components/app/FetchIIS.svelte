@@ -15,9 +15,9 @@
   import {
     constructPatientResource
   } from '$lib/utils/util';
-  import StateInput from '$lib/components/StateInput.svelte';
-  import GenderInput from '$lib/components/GenderInput.svelte';
-  import CountryInput from '$lib/components/CountryInput.svelte';
+  import StateInput from '$lib/components/form/StateInput.svelte';
+  import GenderInput from '$lib/components/form/GenderInput.svelte';
+  import CountryInput from '$lib/components/form/CountryInput.svelte';
 
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
 

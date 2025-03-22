@@ -15,9 +15,9 @@
     constructPatientResource,
     buildPatientSearchQuery
   } from '$lib/utils/util';
-  import GenderInput from '$lib/components/GenderInput.svelte';
-  import StateInput from '$lib/components/StateInput.svelte';
-  import CountryInput from '$lib/components/CountryInput.svelte';
+  import GenderInput from '$lib/components/form/GenderInput.svelte';
+  import StateInput from '$lib/components/form/StateInput.svelte';
+  import CountryInput from '$lib/components/form/CountryInput.svelte';
 
   export let sectionKey: string = "Advance Directives";
 
