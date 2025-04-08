@@ -70,7 +70,8 @@ async function sendMessage() {
 
     try {
 		// FIXME config for this url...
-        const response = await fetch('https://llm-service.fl.mcjustin.dev.cirg.uw.edu/api/chat', {
+        //const response = await fetch('https://llm-service.fl.mcjustin.dev.cirg.uw.edu/api/chat', {
+        const response = await fetch('https://llm-service.ubu.mcjustin.wvp.dev.cirg.uw.edu/api/chat', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
