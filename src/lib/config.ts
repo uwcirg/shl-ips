@@ -181,3 +181,5 @@ export const EXAMPLE_IPS = {
   'Jenny Mosley': 'https://hapi.fhir.org/baseR4/Patient/patientJM1/$summary'
 };
 export const IPS_DEFAULT = 'Maria SEATTLE Gravitate';
+
+export const LLM_SERVICE_URI = import.meta.env.LLM_SERVICE_URI;

@@ -1,3 +1,7 @@
+import {
+  LLM_SERVICE_URI
+} from '$lib/config';
+
 let fhirResources = null;
 let messages = [];
 
@@ -69,9 +73,9 @@ async function sendMessage() {
     chatInput.value = '';
 
     try {
-		// FIXME config for this url...
         //const response = await fetch('https://llm-service.fl.mcjustin.dev.cirg.uw.edu/api/chat', {
-        const response = await fetch('https://llm-service.ubu.mcjustin.wvp.dev.cirg.uw.edu/api/chat', {
+        //const response = await fetch('https://llm-service.ubu.mcjustin.wvp.dev.cirg.uw.edu/api/chat', {
+        const response = await fetch(LLM_SERVICE_URI, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
