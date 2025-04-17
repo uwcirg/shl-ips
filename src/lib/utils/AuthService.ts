@@ -99,8 +99,8 @@ export class AuthService {
     return this.userManager.signoutRedirect();
   }
 
-  async isAuthenticated(): Promise<boolean> {
-    return this.getAccessToken().then((token) => token !== null);
+  async isAuthenticated(): Promise<Boolean> {
+    return this.getUser().then((user) => user !== null);
   }
 }
 

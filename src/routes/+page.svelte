@@ -10,8 +10,8 @@
   } from 'sveltestrap';
   import { goto } from '$app/navigation';
   import { AuthService } from '$lib/utils/AuthService';
-  function login() {
-    if (AuthService.Instance.isAuthenticated()) {
+  async function login() {
+    if (await AuthService.Instance.isAuthenticated()) {
       goto('/summaries');
     } else {
       AuthService.Instance.login();
