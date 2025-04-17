@@ -99,8 +99,8 @@
     processing = true;
     try {
       let resources = await getResourcesWithReferences(1);
-      const isIps = (e) => e.resourceType == 'Bundle' && e.type == 'document'; 
-      let ipsBundles = resources.filter(e => isIps);
+      const isIps = (e) => e.resourceType === 'Bundle' && e.type === 'document'; 
+      let ipsBundles = resources.filter(e => isIps(e));
       let nonIpsResources = resources.filter(e => !isIps(e));
       for (const ips of ipsBundles) {
         ipsDispatch('ips-retrieved', {ips: ipsBundles[0], source: sofHost?.url});
