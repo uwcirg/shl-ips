@@ -28,7 +28,7 @@
           if (redirectUrl && !redirectUrl.includes($page.url.pathname)) {
             goto(redirectUrl);
           } else {
-            goto('/home');
+            goto('/summaries');
           }
         }, 100);
       }
@@ -41,5 +41,5 @@
 </script>
 <Styles />
 <svelte:head>
-    <title>Auth - WA Verify+</title> 
+    <title>Authenticate - WA Health Summary</title> 
 </svelte:head>

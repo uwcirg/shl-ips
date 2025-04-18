@@ -1,4 +1,13 @@
-import type { Bundle, BundleEntry, CompositionSection, DocumentReference } from 'fhir/r4';
+import type {
+  Bundle,
+  BundleEntry,
+  CompositionSection,
+  DocumentReference,
+  Age,
+  Duration,
+  Period,
+  Range,
+} from "fhir/r4";
 
 export interface SHLSubmitEvent {
   shcs: SHCFile[];
@@ -72,4 +81,29 @@ export interface Language {
   lang_en: string;
   lang: string;
   code: string;
+}
+
+export interface DemographicFields {
+  first?: string;
+  last?: string;
+  gender?: string;
+  dob?: string;
+  mrn?: string;
+  phone?: string;
+  address1?: string;
+  address2?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  country?: string;
+}
+
+export interface DateTimeFields {
+  age?: Age;
+  date?: string;
+  dateTime?: string;
+  duration?: Duration;
+  period?: Period;
+  range?: Range;
+  string?: string;
 }

@@ -2,6 +2,9 @@
   import { Badge } from 'sveltestrap';
   import type { Condition } from 'fhir/r4';
   import type { ResourceTemplateParams } from '$lib/utils/types';
+  import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
+  import Date from '$lib/components/resource-templates/Date.svelte';
+  import { hasChoiceDTField, choiceDTFields } from '$lib/utils/util';
 
   export let content: ResourceTemplateParams<Condition>; // Define a prop to pass the data to the component
 
@@ -30,42 +33,30 @@
     {resource.verificationStatus?.coding?.[0].code ?? ''}
   </Badge>
 {/if}
-<Badge color={badgeColor(resource.severity?.text ?? '')}>severity: {resource.severity?.text ?? 'unknown'}</Badge>
-<br>
+<Badge color={badgeColor(resource.severity?.text ?? '')}>
+  severity: {resource.severity?.text ?? 'unknown'}
+</Badge>
 {#if resource.category?.[0]}
   {#if resource.category[0].coding}
-    <Badge color="primary">{resource.category[0].coding[0].system} : {resource.category[0].coding[0].code}</Badge>
-    <br />
-    {#if resource.category[0].coding[0].display}
-      <strong>{resource.category[0].coding[0].display}</strong>
-    {:else if resource.category[0].text}
-      <strong>{resource.category[0].text}</strong>
-    {/if}
-    <br>
-  {:else if resource.category[0].text}
-    <strong>{resource.category[0].text}</strong>
-    <br>
+    <Badge color="primary">
+      {resource.category[0].coding[0].system} : {resource.category[0].coding[0].code}
+    </Badge><br>
   {/if}
+{:else}
+  <br>
 {/if}
 {#if resource.code}
-  {#if resource.code.coding}
-    <Badge color="primary">{resource.code.coding[0].system} : {resource.code.coding[0].code}</Badge>
-    <br />
-    {#if resource.code.coding[0].display}
-      <strong>{resource.code.coding[0].display}</strong><br>
-    {:else if resource.code.text}
-      <strong>{resource.code.text}</strong><br>
-    {/if}
-  {:else if resource.code.text}
-    <strong>{resource.code.text}</strong><br>
-  {/if}
+  <CodeableConcept codeableConcept={resource.code} />
 {/if}
 {#if resource.bodySite?.[0]?.coding?.[0]?.display}
   Site: {resource.bodySite[0]?.coding?.[0]?.display}<br>
 {/if}
-{#if resource.onsetDateTime}
-  Since: {resource.onsetDateTime.split("T")[0]}<br>
+{#if hasChoiceDTField("onset", resource)}
+  Onset: <Date fields={choiceDTFields("onset", resource)} /><br>
+{/if}
+{#if hasChoiceDTField("abatement", resource)}
+  Abatement: <Date fields={choiceDTFields("abatement", resource)} /><br>
 {/if}
 {#if resource.recordedDate}
-  Recorded: {resource.recordedDate.split("T")[0]}<br>
+  Recorded: <Date fields={{ dateTime: resource.recordedDate }} /><br>
 {/if}

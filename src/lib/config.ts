@@ -27,13 +27,13 @@ export const SOF_HOSTS = [
   //   clientId: import.meta.env.VITE_ECW_HIMSS_CLIENT_ID,
   //   note: "zhangwei / Cures@2022"
   // },
-  {
-    id: "epic-himss",
-    name: "Epic - HIMSS Demo",
-    url: "https://ihe-nimbus.epic.com/Interconnect-FHIR/api/FHIR/R4",
-    clientId: import.meta.env.VITE_EPIC_CLIENT_ID,
-    note: "user / pass"
-  },
+  // {
+  //   id: "epic-himss",
+  //   name: "Epic - HIMSS 2025",
+  //   url: "https://ihe-nimbus.epic.com/Interconnect-FHIR/api/FHIR/R4",
+  //   clientId: import.meta.env.VITE_EPIC_CLIENT_ID,
+  //   note: "cwilson / tokay"
+  // },
   {
     id: "epic",
     name: "Epic Demo",
@@ -117,7 +117,7 @@ export const SOF_RESOURCES = [
   'PractitionerRole',  // can't search by patient; "An identifier, practitioner, organization, location, or specialty parameter is required."
   'Procedure', // TODO change to subject
   // 'Specimen', // Not in EPIC USCDI R4
-  'QuestionnaireResponse',
+  // 'QuestionnaireResponse',
 ];
 
 export const SOF_PATIENT_RESOURCES = [
@@ -140,7 +140,7 @@ export const SOF_PATIENT_RESOURCES = [
   // 'PractitionerRole',  // Pulled in via references - can't search by patient; "An identifier, practitioner, organization, location, or specialty parameter is required."
   'Procedure', // TODO change to subject
   // 'Specimen', // Not in EPIC USCDI R4
-  'QuestionnaireResponse',
+  // 'QuestionnaireResponse',
 ];
 
 export const CARIN_RESOURCES = [

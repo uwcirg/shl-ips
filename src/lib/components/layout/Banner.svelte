@@ -14,9 +14,9 @@
 >
   <Col style="max-width: 200px">
     <Image
-      alt="WA Verify Logo"
+      alt="WA Health Summary Logo"
       width="200"
-      src="/img/waverifypluslogo.svg"
+      src="/img/wa-health-summary.png"
       style="align-self: center"
     />
   </Col>

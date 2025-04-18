@@ -13,13 +13,13 @@
       } catch (e) {
           console.error(e);
           errorMsg = "Unable to log out.";
-          goto('/home');
+          goto('/summaries');
       }
   });
 </script>
 
 <svelte:head>
-<title>WA Verify+ - Logout</title> 
+<title>Logout - WA Health Summary</title> 
 </svelte:head>
 
 {#if errorMsg}

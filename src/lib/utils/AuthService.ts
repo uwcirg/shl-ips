@@ -76,8 +76,8 @@ export class AuthService {
   login(): Promise<void> {
     let currentUrl = new URL(window.location.href.split('?')[0]);
     let redirectUrl = currentUrl.href;
-    if (currentUrl.pathname === '/') {
-      redirectUrl = '/home';
+    if (currentUrl.pathname === '/' || currentUrl.pathname === '/home') {
+      redirectUrl = '/summaries';
     }
     return this.userManager.signinRedirect({ url_state: redirectUrl });
   }
@@ -99,8 +99,8 @@ export class AuthService {
     return this.userManager.signoutRedirect();
   }
 
-  async isAuthenticated(): Promise<boolean> {
-    return this.getAccessToken().then((token) => token !== null);
+  async isAuthenticated(): Promise<Boolean> {
+    return this.getUser().then((user) => user !== null);
   }
 }
 

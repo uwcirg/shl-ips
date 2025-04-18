@@ -1,7 +1,9 @@
 <script lang="ts">
-    import { Badge } from 'sveltestrap';
     import type { Observation } from "fhir/r4";
     import type { ResourceTemplateParams } from '$lib/utils/types';
+    import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
+    import Date from '$lib/components/resource-templates/Date.svelte';
+    import { hasChoiceDTField, choiceDTFields } from "$lib/utils/util";
     
     export let content: ResourceTemplateParams<Observation>; // Define a prop to pass the data to the component
     let resource: Observation = content.resource;
@@ -9,77 +11,36 @@
 
   {#if resource.code.coding?.[0].code}
     {#if resource.code.coding[0].code === "74165-2"}
-        <strong>Employment Status</strong>
-        {#if resource.valueCodeableConcept?.coding?.[0].display}
-            <br>{resource.valueCodeableConcept?.coding?.[0].display}
-        {/if}
-        <br>
-        {#if resource.effectivePeriod?.start}
-            {#if resource.effectivePeriod.end}
-                From {resource.effectivePeriod.start} - {resource.effectivePeriod.end}
-            {:else}
-                Since {resource.effectivePeriod.start}
-            {/if}
-        {:else if resource.effectiveDateTime}
-            Since {resource.effectiveDateTime.split("T")[0]}
+        <strong>Employment Status</strong><br>
+        <CodeableConcept codeableConcept={resource.valueCodeableConcept} />
+        {#if hasChoiceDTField("effective", resource)}
+            <Date period fields={choiceDTFields("effective", resource)} />
         {/if}
     {:else if resource.code.coding[0].code === "87510-4"}
-        <strong>Retirement Date</strong>
+        <strong>Retired</strong>
         {#if resource.valueDateTime}
-            <br>{resource.valueDateTime}
+            <br><Date period fields={{dateTime: resource.valueDateTime}} />
         {/if}
         <br>
     {:else if resource.code.coding[0].code === "87511-2"}
-        <strong>Combat Zone Period</strong>
-        {#if resource.valuePeriod?.start}
-            <br>
-            {#if resource.valuePeriod.end}
-                From {resource.valuePeriod.start} - {resource.valuePeriod.end}
-            {:else}
-                Since {resource.valuePeriod.start}
-            {/if}
+        <strong>Combat Zone/Hazardous Work Period</strong><br>
+        {#if resource.valuePeriod}
+            <Date period fields={{period: resource.valuePeriod}} /><br>
         {/if}
     {:else if resource.code.coding[0].code === "11341-5"}
-        <strong>Job History</strong>
-        {#if resource.effectivePeriod?.start}
-            {#if resource.effectivePeriod.end}
-                From {resource.effectivePeriod.start} - {resource.effectivePeriod.end}
-            {:else}
-                Since {resource.effectivePeriod.start}
-            {/if}
-        {:else if resource.effectiveDateTime}
-            Since {resource.effectiveDateTime.split("T")[0]}
+        <strong>
+            Job History
+            {resource.extension.find(function (e) {
+                return e.url === "http://hl7.org/fhir/us/odh/StructureDefinition/odh-isCurrentJob-extension" && e.valueBoolean;
+            }) ? " (Current)" : ""}
+        </strong><br>
+        {#if hasChoiceDTField("effective", resource)}
+            <Date period fields={choiceDTFields("effective", resource)} /><br>
         {/if}
-        {#if resource.valueCodeableConcept}
-            {#if resource.valueCodeableConcept.coding}
-                {#each resource.valueCodeableConcept.coding as coding}
-                    <Badge color="primary">{coding.system} : {coding.code}</Badge>
-                    <br />
-                    {#if coding.display}
-                        {coding.display}
-                    {/if}
-                {/each}
-            {:else if resource.valueCodeableConcept.text}
-                {resource.valueCodeableConcept.text}
-            {/if}
-        {/if}
+        <CodeableConcept codeableConcept={resource.valueCodeableConcept} />
         {#if resource.component}
-            <br>
             {#each resource.component as component}
-                <br>
-                {#if component.valueCodeableConcept}
-                    {#if component.valueCodeableConcept.coding}
-                        {#each component.valueCodeableConcept.coding as coding}
-                            <Badge color="primary">{coding.system} : {coding.code}</Badge>
-                            <br />
-                            {#if coding.display}
-                                {coding.display}
-                            {/if}
-                        {/each}
-                    {:else if component.valueCodeableConcept.text}
-                        {component.valueCodeableConcept.text}
-                    {/if}
-                {/if}
+                <CodeableConcept codeableConcept={component.valueCodeableConcept} />
                 {#if component.valueQuantity && component.code?.coding}
                     {component.valueQuantity.value}{
                         component.valueQuantity.unit ?? ""

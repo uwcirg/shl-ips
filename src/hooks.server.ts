@@ -1,7 +1,7 @@
 import { redirect, type Handle } from '@sveltejs/kit';
 
 const public_paths = [
-  '/home',
+  '/',
   '/ips'
 ];
 
@@ -22,7 +22,7 @@ function isPathAllowed(pathname: string) {
 //   }
 
 //   if (!authorized && !isPathAllowed(event.url.pathname)) {
-//     throw redirect(302, '/home');
+//     throw redirect(302, '/');
 //   }
 
 //   const response = await resolve(event);

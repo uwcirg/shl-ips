@@ -66,7 +66,7 @@
         "Patient": Patient,
         "Practitioner": Practitioner,
         "Procedure": Procedure,
-        "Occupational Data": OccupationalData,
+        "Occupational Data": Observation,
         "Advance Directives": AdvanceDirective,
         "QuestionnaireResponse": QuestionnaireResponse
     };

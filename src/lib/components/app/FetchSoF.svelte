@@ -16,6 +16,13 @@
   // For "quick sample" in demo
   import { EXAMPLE_IPS, IPS_DEFAULT } from '$lib/config';
   import type { IPSRetrieveEvent } from '$lib/utils/types';
+
+  // Demo quick sample loader
+  let defaultUrl = EXAMPLE_IPS[IPS_DEFAULT];
+  const ipsDispatch = createEventDispatcher<{'ips-retrieved': IPSRetrieveEvent}>();
+  let ipsResult: IPSRetrieveEvent = {
+    ips: undefined
+  };
   
   const authDispatch = createEventDispatcher<{'sof-auth-init': SOFAuthEvent; 'sof-auth-fail': SOFAuthEvent}>();
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
@@ -92,10 +99,16 @@
     processing = true;
     try {
       let resources = await getResourcesWithReferences(1);
-      result.resources = resources;
-      console.log(resources)
+      const isIps = (e) => e.resourceType === 'Bundle' && e.type === 'document'; 
+      let ipsBundles = resources.filter(e => isIps(e));
+      let nonIpsResources = resources.filter(e => !isIps(e));
+      for (const ips of ipsBundles) {
+        ipsDispatch('ips-retrieved', {ips: ipsBundles[0], source: sofHost?.url});
+      }
+      result.resources = nonIpsResources;
+      resourceDispatch('update-resources', result);
       processing = false;
-      return resourceDispatch('update-resources', result);
+      return;
     } catch (e: any) {
       console.log(e.message);
       fetchError = e.message;
@@ -104,12 +117,6 @@
     }
   }
 
-  // Demo quick sample loader
-  let defaultUrl = EXAMPLE_IPS[IPS_DEFAULT];
-  const ipsDispatch = createEventDispatcher<{'ips-retrieved': IPSRetrieveEvent}>();
-  let ipsResult: IPSRetrieveEvent = {
-    ips: undefined
-  };
   async function quickLoad() {
     fetchError = "";
     loadingSample = true;

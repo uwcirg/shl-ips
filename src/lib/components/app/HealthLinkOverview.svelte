@@ -46,7 +46,7 @@
   {#each $shlStore as shl, i}
     <Row style="display:flex; align-items:center; padding: 10px;">
       <Col>
-        {shl.label || `SHLink ${i + 1}`}
+        {shl.label || `My Summary ${i + 1}`}
       </Col>
       <Col>
         <Button color="primary" style="width:100%" href={'/view/' + shl.id}>View/Manage</Button>

@@ -60,6 +60,12 @@ export function flag(config: { shl: string }) {
   return parsedShl?.flag;
 }
 
+export function url(config: { shl: string }) {
+  const shlBody = config.shl.split(/^(?:.+:\/.+#)?shlink:\//)[1];
+  const parsedShl: SHLDecoded = decodeBase64urlToJson(shlBody);
+  return parsedShl?.url;
+}
+
 function needPasscode(config: { shl: string }) {
   const shlBody = config.shl.split(/^(?:.+:\/.+#)?shlink:\//)[1];
   const parsedShl: SHLDecoded = decodeBase64urlToJson(shlBody);

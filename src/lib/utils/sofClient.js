@@ -1,5 +1,9 @@
 import FHIR from 'fhirclient';
-import { SOF_REDIRECT_URI, SOF_PATIENT_RESOURCES, SOF_RESOURCES } from '$lib/config';
+import {
+    SOF_HOSTS,
+    SOF_REDIRECT_URI,
+    SOF_PATIENT_RESOURCES,
+    SOF_RESOURCES } from '$lib/config';
 import { getReferences } from '$lib/utils/util';
 
 export { authorize, getResources, getResourcesWithReferences, activePatient, constructResourceUrl };
@@ -71,6 +75,19 @@ async function getResources() {
         resources = (await Promise.allSettled(['Patient', 'Immunization'].map((resourceType) => {
             return requestResources(client, resourceType);
         }))).filter(x => x.status == "fulfilled").map(x => x.value);
+    } else if (client.state.serverUrl === "https://ihe-nimbus.epic.com/Interconnect-FHIR/api/FHIR/R4") {
+        resources = await client.request(`Patient/${pid}/$summary`).then((result) => {
+            let resourcesToPass = [];
+            if (Array.isArray(result)) {
+                result.forEach(resource => {
+                    if (resource === undefined) return;
+                    resourcesToPass.push(resource);
+                });
+            } else {
+                resourcesToPass.push(result);
+            }
+            return resourcesToPass;
+        });
     } else {
         resources = (await Promise.allSettled(SOF_PATIENT_RESOURCES.map((resourceType) => {
             return requestResources(client, resourceType);

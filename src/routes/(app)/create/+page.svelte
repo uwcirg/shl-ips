@@ -48,7 +48,7 @@
 {/if}
 
 <svelte:head>
-    <title>Create IPS - WA Verify+</title> 
+    <title>Create a Summary - WA Health Summary</title> 
 </svelte:head>
 
 <AddFile
