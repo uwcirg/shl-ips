@@ -18,13 +18,7 @@
     TabContent,
     TabPane
   } from 'sveltestrap';
-  import FetchUrl from '$lib/components/app/FetchUrl.svelte';
-  import FetchFile from '$lib/components/app/FetchFile.svelte';
-  import FetchSoF from '$lib/components/app/FetchSoF.svelte';
   import FetchAD from '$lib/components/app/FetchAD.svelte';
-  import FetchTEFCA from '$lib/components/app/FetchTEFCA.svelte';
-  import FetchCARINBB from '$lib/components/app/FetchCARINBB.svelte';
-  import ODHForm from '$lib/components/app/ODHForm.svelte';
   import ResourceSelector from '$lib/components/app/ResourceSelector.svelte';
   import {
     getResourcesFromIPS,
@@ -51,8 +45,8 @@
   let submitting = false;
   let fetchError = "";
   let currentTab: string | number = 'url';
-  let emptyResourceListHeader = "Retrieve Your Health Data";
-  let fullResourceListHeader = "1. Add data from another provider"
+  let emptyResourceListHeader = "Retrieve or Create Your Advance Care Plan";
+  let fullResourceListHeader = "1. Add another Advance Care Plan"
   let addDataHeader = emptyResourceListHeader;
   let successMessage = false;
   
@@ -303,74 +297,30 @@
   >
     <h5 slot="header" class="my-2">{addDataHeader}</h5>
     {#if !resourcesAdded}
-      <p>Select your provider below, then press "Fetch Data" to begin building your Health Summary.</p>
+      <p>Complete your demographic information below, then press "Fetch Data" to prepare your Advanced Care Plan.</p>
     {:else}
-      <p>Select another provider below, then press "Fetch Data" to add more data to your Health Summary.</p>
+      <p>Complete your demographic information below, then press "Fetch Data" to fetch your Advanced Care Plan.</p>
     {/if}
     <TabContent on:tab={(e) => {
       currentTab = e.detail;
     }}>
-      <TabPane class="smart-tab" tabId="smart" style="padding-top:10px" active>
-        <span class="smart-tab" slot="tab">SMART Patient Access</span>
-        <FetchSoF
-          on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
-          on:sof-auth-fail={ async ({ detail }) => { revertPreAuth(detail) }}
+      <TabPane class="new-acp-tab" tabId="new-acp" style="padding-top:10px" active>
+        <span class="smart-tab" slot="tab">Create an Advanced Care Plan</span>
+        <Label>Advance Care Plans help providers know more about your medical preferences</Label>
+
+      </TabPane>
+      <TabPane class="new-acp-tab" tabId="new-acp" style="padding-top:10px" active>
+        <span class="smart-tab" slot="tab">Retrieve your Advanced Care Plan</span>
+        <Label>Advance Care Plans help providers know more about your medical preferences</Label>
+        <FetchAD
           on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
-          on:ips-retrieved={ async ({ detail }) => { stageRetrievedIPS(detail) } }
-          on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }>
-        </FetchSoF>
+        />
       </TabPane>
-      {#if $mode === "advanced"}
-        <TabPane class="sof-tab" tabId="sof" style="padding-top:10px">
-          <span class="smart-tab" slot="tab">*CARIN BB</span>
-          <FetchCARINBB
-            on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
-            on:sof-auth-fail={ async ({ detail }) => { revertPreAuth(detail) }}
-            on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
-            on:ips-retrieved={ async ({ detail }) => { stageRetrievedIPS(detail) } }
-            on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }>
-          </FetchCARINBB>
-        </TabPane>
-        <TabPane class="url-tab" tabId="url" style="padding-top:10px">
-          <span class="url-tab" slot="tab">*FHIR URL</span>
-          <FetchUrl
-            on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }
-            on:ips-retrieved={ async ({ detail }) => { stageRetrievedIPS(detail) } }>
-          </FetchUrl>
-        </TabPane>
-        <TabPane class="file-tab" tabId="file" style="padding-top:10px">
-          <span class="file-tab" slot="tab">*File Upload</span>
-          <FetchFile
-            on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }
-            on:ips-retrieved={ async ({ detail }) => { stageRetrievedIPS(detail) } }>
-          </FetchFile>
-        </TabPane>
-        <TabPane class="tefca-tab" tabId="tefca" style="padding-top:10px">
-          <span class="tefca-tab" slot="tab">*TEFCA Query</span>
-          <FetchTEFCA
-            on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }>
-          </FetchTEFCA>
-      </TabPane>
-      {/if}
     </TabContent>
   </AccordionItem>
   {#if resourcesAdded}
-    <AccordionItem class="odh-data">
-      <h5 slot="header" class="my-2">2. Add health-related occupational information</h5>
-      <Label>It may be helpful to include information about the work you do in your medical summary</Label>
-      <ODHForm
-        on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
-      />
-    </AccordionItem>
-    <AccordionItem class="ad-data">
-      <h5 slot="header" class="my-2">3. Add advance directives</h5>
-      <Label>Advance directives help providers know more about your medical preferences</Label>
-      <FetchAD
-        on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
-      />
-    </AccordionItem>
     <AccordionItem active class="edit-data">
-      <h5 slot="header" class="my-2">4. Directly edit your health summary content</h5>
+      <h5 slot="header" class="my-2">2. Directly edit your health summary content</h5>
       <Label>Select which resources to include in your customized IPS</Label>
       <ResourceSelector
         bind:resourceCollection={resourceCollection}
@@ -385,14 +335,14 @@
 {#if resourcesAdded}
   {#if shlIdParam == null}
     <Row class="mt-4">
-      <h5>5. Save and create your summary</h5>
+      <h5>3. Save and create your shareable link</h5>
     </Row>
     <Row class="mx-2">
-      <Label>Save your summary and generate a secure link to it that you can share.</Label>
+      <Label>Save your Advanced Care Plan and generate a secure link to it that you can share.</Label>
     </Row>
     <Row class="mx-2">
       <FormGroup>
-        <Label>Enter a name for the Summary:</Label>
+        <Label>Enter a name for the Plan:</Label>
         <Input type="text" bind:value={label} on:input={() => { userUpdatedLabel = true }}/>
       </FormGroup>
       <FormGroup>
@@ -429,7 +379,7 @@
           <Col xs="auto">
           <Button color="primary" style="width:fit-content" disabled={submitting} type="submit">
               {#if !submitting}
-              Create Summary
+              Create ACP Link
               {:else}
               Creating...
               {/if}
@@ -448,7 +398,7 @@
     </Row>
   {:else}
     <Row class="mt-4">
-      <h5>4. Include this summary in my secure sharing link</h5>
+      <h5>3. Include this summary in my secure sharing link</h5>
     </Row>
     <Row class="mx-2">
       <Label>This summary will be shared alongside any other summaries already included in the link.</Label>
