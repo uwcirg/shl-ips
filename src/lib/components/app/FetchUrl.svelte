@@ -13,7 +13,7 @@
     Row,
     Spinner } from 'sveltestrap';
 
-  import { PATIENT_IPS, EXAMPLE_IPS, IPS_DEFAULT, BEARER_AUTHORIZATION } from '$lib/config';
+  import { PATIENT_IPS, EXAMPLE_IPS, IPS_DEFAULT, BEARER_AUTHORIZATION } from '$lib/config/config';
   import type { SHCRetrieveEvent, IPSRetrieveEvent } from '$lib/utils/types';
   import { createEventDispatcher } from 'svelte';
 
