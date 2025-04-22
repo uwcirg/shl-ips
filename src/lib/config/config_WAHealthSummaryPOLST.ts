@@ -1,7 +1,8 @@
 import AddFilePOLST from '$lib/components/app/AddFilePOLST.svelte';
 
-export const CONFIG = {
-
-  create: AddFilePOLST,
-
+export default {
+  create: {
+    title: "Create - WA Health Summary | POLST",
+    component: AddFilePOLST,
+  }
 };
