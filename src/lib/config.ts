@@ -182,4 +182,4 @@ export const EXAMPLE_IPS = {
 };
 export const IPS_DEFAULT = 'Maria SEATTLE Gravitate';
 
-export const LLM_SERVICE_URI = import.meta.env.LLM_SERVICE_URI;
+//export const LLM_SERVICE_URI = import.meta.env.LLM_SERVICE_URI;

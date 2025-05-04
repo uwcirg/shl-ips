@@ -1,6 +1,8 @@
+/**
 import {
   LLM_SERVICE_URI
 } from '$lib/config';
+*/
 
 let fhirResources = null;
 let messages = [];
