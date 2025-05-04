@@ -74,8 +74,8 @@ async function sendMessage() {
 
     try {
         //const response = await fetch('https://llm-service.fl.mcjustin.dev.cirg.uw.edu/api/chat', {
-        //const response = await fetch('https://llm-service.ubu.mcjustin.wvp.dev.cirg.uw.edu/api/chat', {
-        const response = await fetch(LLM_SERVICE_URI, {
+        const response = await fetch('https://llm-service.ubu.mcjustin.wvp.dev.cirg.uw.edu/api/chat', {
+        // const response = await fetch(LLM_SERVICE_URI, { // this didn't seem to work...
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
