@@ -216,11 +216,13 @@
     async function prepareSearchData() {
         preparing = true;
         await clearEmbeddings();
+        let bundleEntries = shlContents.resource.entry;
         //for (const resource of fhirResources) {
-        for (const resource of shlContents) {
-            const text = JSON.stringify(resource);
+        //for (const resource of shlContents) {
+        for (const entry of bundleEntries) {
+            const text = JSON.stringify(entry);
             const embedding = await createEmbedding(text);
-            await storeEmbedding(resource.id, embedding, resource);
+            await storeEmbedding(resource.id, embedding, entry);
         }
         embeddingsReady = true;
         preparing = false;
