@@ -211,12 +211,13 @@
     let searching = false;
 
     // Replace with your actual FHIR resources array
-    declare let fhirResources: any[];
+    //declare let fhirResources: any[];
 
     async function prepareSearchData() {
         preparing = true;
         await clearEmbeddings();
-        for (const resource of fhirResources) {
+        //for (const resource of fhirResources) {
+        for (const resource of shlContents) {
             const text = JSON.stringify(resource);
             const embedding = await createEmbedding(text);
             await storeEmbedding(resource.id, embedding, resource);
