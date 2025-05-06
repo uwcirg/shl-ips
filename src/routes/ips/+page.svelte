@@ -193,7 +193,57 @@
 
     return tabName;
   }
-  
+ 
+    import { onMount } from 'svelte';
+    import {
+        checkEmbeddingsExist,
+        createEmbedding,
+        clearEmbeddings,
+        storeEmbedding,
+        getAllEmbeddings,
+        cosineSimilarity
+    } from '$lib/utils/semanticSearch';
+
+    let searchText = '';
+    let searchResults = [];
+    let embeddingsReady = false;
+    let preparing = false;
+    let searching = false;
+
+    // Replace with your actual FHIR resources array
+    declare let fhirResources: any[];
+
+    async function prepareSearchData() {
+        preparing = true;
+        await clearEmbeddings();
+        for (const resource of fhirResources) {
+            const text = JSON.stringify(resource);
+            const embedding = await createEmbedding(text);
+            await storeEmbedding(resource.id, embedding, resource);
+        }
+        embeddingsReady = true;
+        preparing = false;
+    }
+
+    async function performSearch() {
+        if (!searchText) return;
+        searching = true;
+        const searchEmbedding = await createEmbedding(searchText);
+        const results = await getAllEmbeddings();
+        const scoredResults = results.map(item => ({
+            ...item,
+            similarity: cosineSimilarity(searchEmbedding, item.embedding)
+        }));
+        searchResults = scoredResults
+            .sort((a, b) => b.similarity - a.similarity)
+            .slice(0, 5);
+        searching = false;
+    }
+
+    onMount(async () => {
+        embeddingsReady = await checkEmbeddingsExist();
+    });
+ 
 </script>
 
 <Row class="mx-0 my-4">
@@ -216,6 +266,35 @@
   <input type="text" id="chat-input" placeholder="Ask a large language model about your health...">
   <button id="send-message">Send to LLM</button>
 </div>
+
+<div id="semantic-search-section" class="mt-4">
+    <h3>Semantic Search</h3>
+    <div class="mb-3">
+        <button id="prepare-search-btn" class="btn btn-primary" on:click={prepareSearchData} disabled={preparing}>
+            {preparing ? 'Preparing...' : 'Prepare data for search'}
+        </button>
+    </div>
+    <div class="mb-3">
+        <input type="text" id="search-input" class="form-control" placeholder="Enter search text..." bind:value={searchText}>
+    </div>
+    <div class="mb-3">
+        <button id="search-btn" class="btn btn-primary" on:click={performSearch} disabled={!embeddingsReady || searching}>
+            {searching ? 'Searching...' : 'Search'}
+        </button>
+    </div>
+    <div id="search-results">
+        {#each searchResults as result}
+            <div class="card mb-2">
+                <div class="card-body">
+                    <h5 class="card-title">{result.resource.resourceType} (ID: {result.resource.id})</h5>
+                    <p class="card-text">Similarity: {(result.similarity * 100).toFixed(2)}%</p>
+                    <pre class="card-text">{JSON.stringify(result.resource, null, 2)}</pre>
+                </div>
+            </div>
+        {/each}
+    </div>
+</div>
+
   </Col>
 </Row>
 <Row class="d-flex justify-content-start mx-0 pb-4">
