@@ -172,7 +172,7 @@
 
     if (ipsContent.entry) {
       for (const entry of ipsContent.entry) {
-        if (entry.resource?.resourceType === "Patient")resourceType === "Patient") {
+        if (entry.resource?.resourceType === "Patient") {
           const patient = entry.resource as Patient;
           if (patient.name?.[0].given?.[0]) {
             name = patient.name?.[0].given?.[0];
