@@ -172,7 +172,7 @@
 
     if (ipsContent.entry) {
       for (const entry of ipsContent.entry) {
-        if (entry.resource?.resourceType === "Patient") {
+        if (entry.resource?.f (entry.resource?.resourceType === "Patient")resourceType === "Patient") {
           const patient = entry.resource as Patient;
           if (patient.name?.[0].given?.[0]) {
             name = patient.name?.[0].given?.[0];
@@ -221,9 +221,10 @@
         //for (const resource of fhirResources) {
         //for (const resource of shlContents) {
         for (const entry of bundleEntries) {
+            if (entry.resource.resourceType === 'Composition') continue;
             const text = JSON.stringify(entry);
             const embedding = await createEmbedding(text);
-            await storeEmbedding(resource.id, embedding, entry);
+            await storeEmbedding(entry.resource.id, embedding, entry);
         }
         embeddingsReady = true;
         preparing = false;
