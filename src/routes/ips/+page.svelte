@@ -216,7 +216,8 @@
     async function prepareSearchData() {
         preparing = true;
         await clearEmbeddings();
-        let bundleEntries = shlContents.resource.entry;
+        let bundleEntries = shlContents[0].entry;
+        //let bundleEntries = shlContents.resource.entry;
         //for (const resource of fhirResources) {
         //for (const resource of shlContents) {
         for (const entry of bundleEntries) {
