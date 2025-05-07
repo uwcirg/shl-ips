@@ -111,6 +111,6 @@ async function sendMessage() {
         console.error('Error sending message to LLM:', error);
         row.cells[1].textContent = 'Failed to get a response. Please try again.'; // Update response cell with error message
     }
-}
+}// async function sendMessage() {
 
 export { initLLMChat };
