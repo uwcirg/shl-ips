@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { Badge } from 'sveltestrap';
   import type { BundleEntry, Observation } from "fhir/r4";
   import type { ResourceTemplateParams } from '$lib/utils/types';
   import { getEntry } from '$lib/utils/util';
@@ -36,10 +35,10 @@ $: {
         if (member.reference) {
           let memberResource;
           if (resource.contained?.[0]?.resourceType === 'Observation') {
-            // If the member observation is contained in the resource
+            // If the member observation is contained in this resource
             memberResource = resource.contained[0];
           } else {
-            // If the member observation is referenced
+            // If the member observation is a bundle reference
             memberResource = getEntry(content.entries as BundleEntry[], member.reference) as Observation;
           }
           if (memberResource) {
@@ -106,7 +105,7 @@ $: {
     </tbody>
   </table>
   {/if}
-  {#if hasChoiceDTField("effective", resource)}
+  {#if !contained && hasChoiceDTField("effective", resource)}
     Date: <Date fields={choiceDTFields("effective", resource)} />
   {/if}
 {/if}
