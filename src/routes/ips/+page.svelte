@@ -252,7 +252,7 @@
   <TabContent>
     {#each shlContents as contents, index}
       <TabPane class={`ips${index}`} tabId={`ips${index}`} active={index === 0} style="padding-top:10px">
-        <span class="smart-tab" slot="tab">{getTabLabel(contents)}</span>
+        <span slot="tab">{getTabLabel(contents)}</span>
         <IPSContent bundle={contents} mode={$displayMode} />
       </TabPane>
     {/each}

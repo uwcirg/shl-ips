@@ -122,9 +122,7 @@
   }
   $: {
     if ($mode === 'normal') {
-      if (currentTab !== "smart" && currentTab !== "ad") {
-        setTimeout(() => document.querySelector(`span.smart-tab`)?.parentElement?.click(), 1); 
-      }
+      setTimeout(() => document.querySelector(`span.default-tab`)?.parentElement?.click(), 1); 
     }
   }
 
@@ -310,8 +308,8 @@
     <TabContent on:tab={(e) => {
       currentTab = e.detail;
     }}>
-      <TabPane class="smart-tab" tabId="smart" style="padding-top:10px" active>
-        <span class="smart-tab" slot="tab">SMART Patient Access</span>
+      <TabPane class="default-tab" tabId="default" style="padding-top:10px" active>
+        <span slot="default-tab">SMART Patient Access</span>
         <FetchSoF
           on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
           on:sof-auth-fail={ async ({ detail }) => { revertPreAuth(detail) }}
@@ -321,8 +319,8 @@
         </FetchSoF>
       </TabPane>
       {#if $mode === "advanced"}
-        <TabPane class="sof-tab" tabId="sof" style="padding-top:10px">
-          <span class="smart-tab" slot="tab">*CARIN BB</span>
+        <TabPane class="carin-tab" tabId="carin" style="padding-top:10px">
+          <span class="carin-tab" slot="tab">*CARIN BB</span>
           <FetchCARINBB
             on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
             on:sof-auth-fail={ async ({ detail }) => { revertPreAuth(detail) }}
