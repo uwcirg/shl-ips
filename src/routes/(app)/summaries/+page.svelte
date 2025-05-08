@@ -5,10 +5,11 @@
     Styles
   } from 'sveltestrap';
   import HealthLinkOverview from '$lib/components/app/HealthLinkOverview.svelte';
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 </script>
 <Styles />
 <svelte:head>
-    <title>My Summaries - WA Health Summary</title> 
+    <title>My Summaries - {INSTANCE_CONFIG.title}</title> 
 </svelte:head>
 
 <div class="px-3">

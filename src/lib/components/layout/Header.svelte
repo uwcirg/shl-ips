@@ -24,6 +24,7 @@
   import LanguageMenu from '$lib/components/layout/LanguageMenu.svelte';
   import { AuthService } from '$lib/utils/AuthService';
   import { type SHLAdminParams } from '$lib/utils/managementClient';
+  import {INSTANCE_CONFIG} from '$lib/config/instance_config';
 
   let authService = AuthService.Instance;
 
@@ -216,7 +217,7 @@
       </Nav>
     </Collapse>
   </Navbar>
-  <Banner title="HL7 Standards-Based Patient Summary"/>
+  <Banner title={INSTANCE_CONFIG.header.title}/>
 </Row>
 </div>
 <style>
