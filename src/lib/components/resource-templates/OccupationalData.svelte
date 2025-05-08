@@ -9,7 +9,7 @@
     let resource: Observation = content.resource;
   </script>
 
-  {#if resource.code.coding?.[0].code}
+  {#if resource.code?.coding?.[0].code}
     {#if resource.code.coding[0].code === "74165-2"}
         <strong>Employment Status</strong><br>
         <CodeableConcept codeableConcept={resource.valueCodeableConcept} />
@@ -30,7 +30,7 @@
     {:else if resource.code.coding[0].code === "11341-5"}
         <strong>
             Job History
-            {resource.extension.find(function (e) {
+            {resource.extension?.find(function (e) {
                 return e.url === "http://hl7.org/fhir/us/odh/StructureDefinition/odh-isCurrentJob-extension" && e.valueBoolean;
             }) ? " (Current)" : ""}
         </strong><br>
