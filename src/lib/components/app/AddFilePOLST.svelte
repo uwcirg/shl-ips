@@ -18,6 +18,8 @@
     TabContent,
     TabPane
   } from 'sveltestrap';
+  import CreatePOLST from '$lib/components/app/CreatePOLST.svelte';
+  import Demographic from './Demographic.svelte';
   import FetchAD from '$lib/components/app/FetchAD.svelte';
   import ResourceSelector from '$lib/components/app/ResourceSelector.svelte';
   import {
@@ -45,8 +47,8 @@
   let submitting = false;
   let fetchError = "";
   let currentTab: string | number = 'url';
-  let emptyResourceListHeader = "Retrieve or Create Your Advance Care Plan";
-  let fullResourceListHeader = "1. Add another Advance Care Plan"
+  let emptyResourceListHeader = "Review your demographic information";
+  let fullResourceListHeader = "1. Update your demographic information"
   let addDataHeader = emptyResourceListHeader;
   let successMessage = false;
   
@@ -116,9 +118,7 @@
   }
   $: {
     if ($mode === 'normal') {
-      if (currentTab !== "smart" && currentTab !== "ad") {
-        setTimeout(() => document.querySelector(`span.smart-tab`)?.parentElement?.click(), 1); 
-      }
+      setTimeout(() => document.querySelector(`span.default-tab`)?.parentElement?.click(), 1); 
     }
   }
 
@@ -289,38 +289,44 @@
     submitting = true;
   }
 </script>
-<Accordion stayOpen>
+<Accordion>
   <AccordionItem
     active={!resourcesAdded}
     class="add-data"
     on:toggle={handleAddDataAccordionOverflow}
   >
     <h5 slot="header" class="my-2">{addDataHeader}</h5>
-    {#if !resourcesAdded}
-      <p>Complete your demographic information below, then press "Fetch Data" to prepare your Advanced Care Plan.</p>
-    {:else}
-      <p>Complete your demographic information below, then press "Fetch Data" to fetch your Advanced Care Plan.</p>
-    {/if}
-    <TabContent on:tab={(e) => {
-      currentTab = e.detail;
-    }}>
-      <TabPane class="new-acp-tab" tabId="new-acp" style="padding-top:10px" active>
-        <span class="smart-tab" slot="tab">Create an Advanced Care Plan</span>
-        <Label>Advance Care Plans help providers know more about your medical preferences</Label>
-
-      </TabPane>
-      <TabPane class="new-acp-tab" tabId="new-acp" style="padding-top:10px" active>
-        <span class="smart-tab" slot="tab">Retrieve your Advanced Care Plan</span>
-        <Label>Advance Care Plans help providers know more about your medical preferences</Label>
-        <FetchAD
-          on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
-        />
-      </TabPane>
-    </TabContent>
+    <Demographic on:update-resources={ async ({ detail }) => { handleNewResources(detail) } } />
   </AccordionItem>
   {#if resourcesAdded}
-    <AccordionItem active class="edit-data">
-      <h5 slot="header" class="my-2">2. Directly edit your health summary content</h5>
+    <AccordionItem
+      active
+      class="add-data"
+      on:toggle={handleAddDataAccordionOverflow}
+    >
+      <h5 slot="header" class="my-2">2. Create or retrieve an Advance Directive</h5>
+      <p>
+        Advance Directives help providers know more about your treatment preferences.
+      </p>
+      <TabContent on:tab={(e) => {
+        currentTab = e.detail;
+      }}>
+        <TabPane class="default-tab" tabId="create-acp" style="padding-top:10px" active>
+          <span class="default-tab" slot="tab">Create an ACPD</span>
+          <Label>To prepare a new Advanced Care Plan, complete your demographic information below.</Label>
+          <CreatePOLST></CreatePOLST>
+        </TabPane>
+        <TabPane tabId="retrieve-acp" style="padding-top:10px">
+          <span slot="tab">Search for an ACPD in the state repository</span>
+          <Label></Label>
+          <FetchAD
+            on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
+          />
+        </TabPane>
+      </TabContent>
+    </AccordionItem>
+    <AccordionItem class="edit-data">
+      <h5 slot="header" class="my-2">3. Directly edit your health summary content</h5>
       <Label>Select which resources to include in your customized IPS</Label>
       <ResourceSelector
         bind:resourceCollection={resourceCollection}
@@ -335,7 +341,7 @@
 {#if resourcesAdded}
   {#if shlIdParam == null}
     <Row class="mt-4">
-      <h5>3. Save and create your shareable link</h5>
+      <h5>4. Save and create your shareable link</h5>
     </Row>
     <Row class="mx-2">
       <Label>Save your Advanced Care Plan and generate a secure link to it that you can share.</Label>
@@ -382,36 +388,6 @@
               Create ACP Link
               {:else}
               Creating...
-              {/if}
-          </Button>
-          </Col>
-          {#if submitting}
-            <Col xs="auto" class="d-flex align-items-center px-0">
-              <Spinner color="primary" type="border" size="md"/>
-            </Col>
-            <Col xs="auto" class="d-flex align-items-center">
-              <span class="text-secondary">{status}</span>
-            </Col>
-          {/if}
-        </Row>
-      </form>
-    </Row>
-  {:else}
-    <Row class="mt-4">
-      <h5>3. Include this summary in my secure sharing link</h5>
-    </Row>
-    <Row class="mx-2">
-      <Label>This summary will be shared alongside any other summaries already included in the link.</Label>
-    </Row>
-    <Row class="mx-2">
-      <form on:submit|preventDefault={confirmContent}>
-        <Row>
-          <Col xs="auto">
-          <Button color="primary" style="width:fit-content" disabled={submitting} type="submit">
-              {#if !submitting}
-              Add Summary
-              {:else}
-              Adding...
               {/if}
           </Button>
           </Col>

@@ -15,19 +15,19 @@
     constructPatientResource,
     buildPatientSearchQuery
   } from '$lib/utils/util';
-  import GenderInput from '$lib/components/form/GenderInput.svelte';
-  import StateInput from '$lib/components/form/StateInput.svelte';
-  import CountryInput from '$lib/components/form/CountryInput.svelte';
+  import DemographicForm from '$lib/components/form/DemographicForm.svelte';
+  import type { UserDemographics } from '$lib/utils/types';
 
   export let sectionKey: string = "Advance Directives";
 
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
   let sources: Record<string, {selected: Boolean; url: string}> = {
-    "WA Health Summary Demo Server": {selected: false, url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir"},
-    "AD Vault": {selected: false, url: "https://qa-rr-fhir.maxmddirect.com"},
+    "Current User": {selected: false, url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir"},
+    "WA Health Summary Demo Patient": {selected: false, url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir"},
+    "AD Vault Demo Patient": {selected: false, url: "https://qa-rr-fhir.maxmddirect.com"},
   };
-  let selectedSource = "WA Health Summary Demo Server";
+  let selectedSource = "Current User";
   let processing = false;
   let fetchError = '';
 
@@ -42,7 +42,9 @@
   let zip = '';
   let country = '';
   let phone = '';
-  let gender:string = '';
+  let gender = '';
+
+  let demographics: UserDemographics;
 
   let sectionTemplate = {
       title: "Advance Directives",
@@ -71,7 +73,19 @@
       zip = '';
       phone = '';
       gender = '';
-      if (selectedSource === 'AD Vault') {
+      if (selectedSource === 'Current User') {
+        mrn = demographics?.mrn ?? '';
+        first = demographics?.first ?? '';
+        last = demographics?.last ?? '';
+        dob = demographics?.dob ?? '';
+        address1 = demographics?.address1 ?? '';
+        address2 = demographics?.address2 ?? '';
+        city = demographics?.city ?? '';
+        state = demographics?.state ?? '';
+        zip = demographics?.zip ?? '';
+        phone = demographics?.phone ?? '';
+        gender = demographics?.gender ?? '';
+      } else if (selectedSource === 'AD Vault') {
         last = "Mosley";
         //last = "Smith-Johnson";
         first = "Jenny";
@@ -423,55 +437,7 @@
     <p class="text-secondary"><em>WA Health Summary does not save this information</em></p>
     <Row cols={{ md: 2, sm: 1 }}>
       <Col>
-        <Label>Name</Label>
-        <FormGroup style="font-size:small" class="text-secondary" label="First">
-          <Input type="text" bind:value={first} />
-        </FormGroup>
-        <FormGroup style="font-size:small" class="text-secondary" label="Last">
-          <Input type="text" bind:value={last} />
-        </FormGroup>
-        <Label>Demographics</Label>
-        <FormGroup style="font-size:small" class="text-secondary" label="Date of Birth">
-          <Input type="date" bind:value={dob} placeholder={dob} style="width: 165px"/>
-        </FormGroup>
-        <FormGroup style="font-size:small" class="text-secondary" label="Gender">
-          <GenderInput bind:value={gender} />
-        </FormGroup>
-        <FormGroup>
-          <Label>MRN</Label>
-          <Input type="text" bind:value={mrn} style="width: 165px"/>
-        </FormGroup>
-        <Label>Contact Information</Label>
-        <FormGroup style="font-size:small" class="text-secondary" label="Phone">
-          <Input type="tel" bind:value={phone} style="width: 165px"/>
-        </FormGroup>
-        <Label>Address</Label>
-        <FormGroup style="font-size:small" class="text-secondary" label="Address Line 1">
-          <Input type="text" bind:value={address1} />
-        </FormGroup>
-        <FormGroup style="font-size:small" class="text-secondary" label="Address Line 2 (Optional)">
-          <Input type="text" bind:value={address2} />
-        </FormGroup>
-        <FormGroup style="font-size:small" class="text-secondary" label="City">
-          <Input type="text" bind:value={city} />
-        </FormGroup>
-        <Row>
-          <Col xs="auto">
-            <FormGroup style="font-size:small" class="text-secondary" label="State">
-              <StateInput bind:value={state} />
-            </FormGroup>
-          </Col>
-          <Col>
-            <FormGroup style="font-size:small" class="text-secondary" label="Zip">
-              <Input type="text" bind:value={zip} style="width:90px"/>
-            </FormGroup>
-          </Col>
-          <Col xs="auto">
-            <FormGroup style="font-size:small" class="text-secondary" label="Country">
-              <CountryInput bind:value={country} />
-            </FormGroup>
-          </Col>
-        </Row>
+        <DemographicForm bind:demographics={demographics}/>
       </Col>
     </Row>
   </FormGroup>
