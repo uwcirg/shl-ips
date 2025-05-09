@@ -164,8 +164,10 @@
                 errorMsg = retrieveResult.error;
             }
         }
-        setError(errorMsg);
-        return;
+        if (errorMsg !== "") {
+          setError(errorMsg);
+          return;
+        }
     }
     if (retrieveResult.shcs) {
       const decoded = await Promise.all(retrieveResult.shcs.map(verify));
