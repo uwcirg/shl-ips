@@ -98,16 +98,16 @@
     let retrieveResult;
     let passcode;
     try {
-        retrieveResult = await fetch(shlClient.url({ shl: shl ?? "" }), {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-          },
-          body: JSON.stringify({
-            passcode: "",
-            recipient: recipient,
-          }),
-        });
+      retrieveResult = await fetch(shlClient.url({ shl: shl ?? "" }), {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          passcode: "",
+          recipient,
+        }),
+      });
       let message = await retrieveResult.text();
       message = JSON.parse(message)?.message;
       if (!retrieveResult.ok && retrieveResult.status === 400 && message === "Passcode required") {
@@ -134,40 +134,47 @@
     }
 
     if (retrieveResult.error) {
+      try {
         let errorMsg = "";
         if (retrieveResult.status) {
-            if (retrieveResult.status === 404) {
-                // Couldn't find the shl, or it's been deactivated
-                const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl: shl ?? "" })}">Manage or reactivate it here</a>`;
-                errorMsg = `<p>This SMART Health Link does not exist or has been deactivated.</p><p>Are you the owner of this link? ${managerLink}</p>`;
-            } else if (retrieveResult.status === 401) {
-                // Failed the password requirement
-                while (retrieveResult.status === 401) {
-                  passcode = prompt(`WA Health Summary Viewer\n----------------------------------------\nEnter a passcode to access this SMART Health Link`);
-                    try {
-                        retrieveResult = await shlClient.retrieve({
-                            shl: shl ?? "",
-                            passcode: passcode ?? "",
-                            recipient
-                        });
-                    } catch (e) {
-                        // Retrieval succeeded, but there was an error parsing files etc.
-                        console.log(e);
-                        throw Error("Content parsing error");
-                    }
-                }
-                if (retrieveResult.error) {
-                    const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl: shl ?? "" })}">Manage or reactivate it here</a>`;
-                    errorMsg = `<p>You have been locked from accessing this SMART Health Link due to too many failed password attempts.</p><p>Are you the owner of this link? ${managerLink}</p>`;
-                }
-            } else {
-                errorMsg = retrieveResult.error;
+          if (retrieveResult.status === 404) {
+            // Couldn't find the shl, or it's been deactivated
+            const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl: shl ?? "" })}">Manage or reactivate it here</a>`;
+            errorMsg = `<p>This SMART Health Link does not exist or has been deactivated.</p><p>Are you the owner of this link? ${managerLink}</p>`;
+            throw Error(errorMsg);
+          } else if (retrieveResult.status === 401) {
+            // Failed the password requirement
+            while (retrieveResult.status === 401) {
+              passcode = prompt(`WA Health Summary Viewer\n----------------------------------------\nEnter a passcode to access this SMART Health Link`);
+              try {
+                retrieveResult = await shlClient.retrieve({
+                  shl: shl ?? "",
+                  passcode: passcode ?? "",
+                  recipient
+                });
+              } catch (e) {
+                // Retrieval succeeded, but there was an error parsing files etc.
+                console.log(e);
+                throw Error("Unable to parse SHL content");
+              }
             }
+            if (retrieveResult.error) {
+              const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl: shl ?? "" })}">Manage or reactivate it here</a>`;
+              errorMsg = `<p>You have been locked from accessing this SMART Health Link due to too many failed password attempts.</p><p>Are you the owner of this link? ${managerLink}</p>`;
+              throw Error(errorMsg);
+            }
+          } else {
+            errorMsg = retrieveResult.error;
+            throw Error(errorMsg);
+          }
         }
-        if (errorMsg !== "") {
-          setError(errorMsg);
+      } catch (e: any) {
+        let message = e.toString();
+        if (message !== "") {
+          setError(message);
           return;
         }
+      }
     }
     if (retrieveResult.shcs) {
       const decoded = await Promise.all(retrieveResult.shcs.map(verify));
@@ -177,7 +184,7 @@
     if (retrieveResult.jsons) {
       shlContents = [...shlContents, ...retrieveResult.jsons];
     }
-}
+  }
   // End retrieving SHL
 
   function getTabLabel(ipsContent: Bundle) {
