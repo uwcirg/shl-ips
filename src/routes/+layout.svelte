@@ -24,14 +24,15 @@
 
   const MODE_KEY = 'demo_mode';
   let mode = writable('normal');
+  // set demo mode based on local storage state
+  window.localStorage[MODE_KEY] ? mode.set(JSON.parse(window.localStorage[MODE_KEY])) : mode.set('normal');
   setContext('mode', mode);
 
   let isOpen = writable(false);
   setContext('isOpen', isOpen);
 
   $: {
-    // check window if not loaded yet
-    if ($mode && window) window.localStorage[MODE_KEY] = JSON.stringify($mode);
+    if ($mode) window.localStorage[MODE_KEY] = JSON.stringify($mode);
   }
 
   let prevPageSize: number | undefined;
@@ -52,9 +53,6 @@
   }
 
   onMount(() => {
-    // set demo mode based on local storage state
-    window.localStorage[MODE_KEY] ? mode.set(JSON.parse(window.localStorage[MODE_KEY])) : mode.set('normal');
-
     // Initial call to set pagination size on page load
     dispatchPageSize()
 
