@@ -157,7 +157,7 @@ export class IPSResourceCollection {
             }
             if (!(rh.tempId in curr[sectionKey])) {
                 curr[sectionKey][rh.tempId] = rh;
-                if (sectionKey == 'Patient' && !get(this.patientReference)) {
+                if (sectionKey == 'Patient' && (!get(this.patientReference) || rh.original_resource.id === "customPatient")) {
                     this.setSelectedPatient(rh.tempId);
                 }
             }

@@ -16,21 +16,22 @@
   import type { Patient } from 'fhir/r4';
 
   export let patient: Patient | undefined;
+  let myPatient = JSON.parse(JSON.stringify(patient));
   $: {
-    if (patient) {
-      first = patient.name?.[0].given?.[0] ?? '';
-      last = patient.name?.[0].family ?? '';
-      dob = patient.birthDate ?? '';
-      gender = patient.gender ?? '';
-      mrn = patient.identifier?.find((i) => i.type?.coding?.[0].code === 'MR')?.value ?? '';
-      phone = patient.telecom?.find((t) => t.system === 'phone')?.value ?? '';
-      email = patient.telecom?.find((t) => t.system === 'email')?.value ?? '';
-      country = patient.address?.[0].country ?? '';
-      culture = patient.extension?.find((e) => e.url === 'http://healthintersections.com.au/fhir/StructureDefinition/patient-cultural-background')?.valueCodeableConcept?.coding?.[0].code ?? '';
-      community = patient.extension?.find((e) => e.url === 'http://hl7.org.au/fhir/StructureDefinition/community-affiliation')?.valueCodeableConcept?.coding?.[0].code ?? '';
-      pronouns = patient.extension?.find((e) => e.url === 'http://hl7.org/fhir/StructureDefinition/individual-pronouns')?.valueCodeableConcept?.coding?.[0].code ?? '';
-      sexCharacteristics = patient.extension?.find((e) => e.url === 'http://hl7.org.au/fhir/StructureDefinition/sex-characteristic-variation')?.valueCodeableConcept?.coding?.[0].code ?? '';
-      religion = patient.extension?.find((e) => e.url === 'http://hl7.org/fhir/StructureDefinition/patient-religion')?.valueCodeableConcept?.coding?.[0].code ?? '';
+    if (myPatient) {
+      first = myPatient.name?.[0].given?.[0] ?? '';
+      last = myPatient.name?.[0].family ?? '';
+      dob = myPatient.birthDate ?? '';
+      gender = myPatient.gender ?? '';
+      mrn = myPatient.identifier?.find((i) => i.type?.coding?.[0].code === 'MR')?.value ?? '';
+      phone = myPatient.telecom?.find((t) => t.system === 'phone')?.value ?? '';
+      email = myPatient.telecom?.find((t) => t.system === 'email')?.value ?? '';
+      country = myPatient.address?.[0].country ?? '';
+      culture = myPatient.extension?.find((e) => e.url === 'http://healthintersections.com.au/fhir/StructureDefinition/patient-cultural-background')?.valueCodeableConcept?.coding?.[0].code ?? '';
+      community = myPatient.extension?.find((e) => e.url === 'http://hl7.org.au/fhir/StructureDefinition/community-affiliation')?.valueCodeableConcept?.coding?.[0].code ?? '';
+      pronouns = myPatient.extension?.find((e) => e.url === 'http://hl7.org/fhir/StructureDefinition/individual-pronouns')?.valueCodeableConcept?.coding?.[0].code ?? '';
+      sexCharacteristics = myPatient.extension?.find((e) => e.url === 'http://hl7.org.au/fhir/StructureDefinition/sex-characteristic-variation')?.valueCodeableConcept?.coding?.[0].code ?? '';
+      religion = myPatient.extension?.find((e) => e.url === 'http://hl7.org/fhir/StructureDefinition/patient-religion')?.valueCodeableConcept?.coding?.[0].code ?? '';
     }
   }
 
@@ -75,7 +76,7 @@
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
   function prepareIps() {
-    const resources = constructPatientResource({
+    const patient = constructPatientResource({
       first,
       last,
       dob,
@@ -93,9 +94,12 @@
       preferredLanguage,
       spokenLanguages
     });
-    resourceDispatch('update-resources', resources);
+    patient.id = "customPatient";
+    let result: ResourceRetrieveEvent = {
+      resources: [ patient ]
+    };
+    resourceDispatch('update-resources', result);
   }
-
   
 </script>
 
