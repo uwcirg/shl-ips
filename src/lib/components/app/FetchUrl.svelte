@@ -59,6 +59,9 @@
       } else if (summaryUrlValidated?.toString().includes('openfhir')) {
         headers['epic-client-id'] = `${BEARER_AUTHORIZATION['EpicHIMSS']}`;
       }
+      } else if (summaryUrlValidated?.toString().includes('Interconnect-Fhir-Oauth')) {
+        headers['authorization'] = `Bearer ${BEARER_AUTHORIZATION['EpicBearerToken']}`
+      }
       const contentResponse = await fetch(summaryUrlValidated!, {
       headers: headers
       }).then(function(response) {
