@@ -24,6 +24,7 @@
   import FetchAD from '$lib/components/app/FetchAD.svelte';
   import FetchTEFCA from '$lib/components/app/FetchTEFCA.svelte';
   import FetchCARINBB from '$lib/components/app/FetchCARINBB.svelte';
+  import PatientDataForm from '$lib/components/app/PatientDataForm.svelte';
   import ODHForm from '$lib/components/app/ODHForm.svelte';
   import ResourceSelector from '$lib/components/app/ResourceSelector.svelte';
   import {
@@ -51,8 +52,8 @@
   let submitting = false;
   let fetchError = "";
   let currentTab: string | number = 'url';
-  let emptyResourceListHeader = "Retrieve Your Health Data";
-  let fullResourceListHeader = "1. Add data from another provider"
+  let emptyResourceListHeader = "Retrieve Your Health Information";
+  let fullResourceListHeader = "1. Add information from another provider"
   let addDataHeader = emptyResourceListHeader;
   let successMessage = false;
   
@@ -353,15 +354,22 @@
     </TabContent>
   </AccordionItem>
   {#if resourcesAdded}
+    <AccordionItem class="patient-data">
+      <h5 slot="header" class="my-2">2. Add your own information <span class="text-secondary"><em>(under development)</em></span></h5>
+      <PatientDataForm
+        patient={patient}
+        on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
+      />
+    </AccordionItem>
     <AccordionItem class="odh-data">
-      <h5 slot="header" class="my-2">2. Add health-related occupational information</h5>
+      <h5 slot="header" class="my-2">3. Add health-related occupational information</h5>
       <Label>It may be helpful to include information about the work you do in your medical summary</Label>
       <ODHForm
         on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
       />
     </AccordionItem>
     <AccordionItem class="ad-data">
-      <h5 slot="header" class="my-2">3. Add advance directives</h5>
+      <h5 slot="header" class="my-2">4. Add advance directives</h5>
       <Label>Advance directives help providers know more about your medical preferences</Label>
       <FetchAD
         on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
@@ -379,7 +387,7 @@
 {#if resourcesAdded}
   {#if shlIdParam == null}
     <Row class="mt-4">
-      <h5>5. Save and create your summary</h5>
+      <h5>6. Save and create your summary</h5>
     </Row>
     <Row class="mx-2">
       <Label>Save your summary and generate a secure link to it that you can share.</Label>

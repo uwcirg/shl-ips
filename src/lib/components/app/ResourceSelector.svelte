@@ -228,7 +228,7 @@
 </Offcanvas>
 
 <AccordionItem active class="edit-data">
-    <h5 slot="header" class="my-2">4. Directly edit your health summary content</h5>
+    <h5 slot="header" class="my-2">5. Directly edit your health summary content</h5>
     <Label>Select which resources to include in your customized IPS</Label>
     {#if $resourcesByTypeStore}
     <Accordion>

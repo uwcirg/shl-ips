@@ -202,13 +202,14 @@ export function constructPatientResource (props: DemographicFields = {}) {
   if (props.gender) {
     patient.gender = props.gender;
   }
-  if (props.phone) {
-    patient.telecom = [
-      {
-        system: 'phone',
-        value: props.phone
-      }
-    ];
+  if (props.phone || props.email) {
+    patient.telecom = [];
+    if (props.phone) {
+      patient.telecom.push({ system: 'phone', value: props.phone });
+    }
+    if (props.email) {
+      patient.telecom.push({ system: 'email', value: props.email });
+    }
   }
   if (props.dob) {
     patient.birthDate = props.dob;
