@@ -50,6 +50,6 @@
   {resource.reasonReference?.[0].display}<br>
 {/if}
 
-<Dosage dosage={resource.dosages} />
+<Dosage dosages={resource.dosage} />
 
 Effective: <Date fields={{ period: resource.effectivePeriod, dateTime: resource.effectiveDateTime }} />
