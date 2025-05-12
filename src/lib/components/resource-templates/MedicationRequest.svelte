@@ -51,4 +51,4 @@
   Valid: <Date period fields={{ period: resource.dispenseRequest.validityPeriod }} /><br>
 {/if}
 
-<Dosage dosage={resource.dosageInstruction} />
+<Dosage dosages={resource.dosageInstruction} />
