@@ -1,20 +1,39 @@
 <script lang="ts">
     import { Badge, Button, Icon } from 'sveltestrap';
-    import type { Patient } from "fhir/r4";
+    import { onMount } from 'svelte';
+    import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
+    import type { CodeableConcept, Patient } from "fhir/r4";
     import type { ResourceTemplateParams } from '$lib/utils/types';
 
     export let content: ResourceTemplateParams<Patient>; // Define a prop to pass the data to the component
     let resource: Patient = content.resource;
 
     let showContact = false;
+
+    let genderIdentityCodeableConcept: CodeableConcept;
+    let pronounsCodeableConcept: CodeableConcept;
+
+    onMount(() => {
+        genderIdentityCodeableConcept = resource.extension?.find(
+            e => e.url === 'http://hl7.org/fhir/StructureDefinition/individual-genderIdentity'
+        )?.extension?.valueCodeableConcept;
+
+        pronounsCodeableConcept = resource.extension?.find(
+            e => e.url === 'http://hl7.org/fhir/StructureDefinition/individual-pronouns'
+        )?.extension?.valueCodeableConcept;
+    });
 </script>
 
 {#if resource.name}
     <strong>
         {#if resource.name[0]}
-            {resource.name[0].prefix ?? ""}
-            {resource.name[0].given ? resource.name[0].given.join(' ') : ""}
-            {resource.name[0].family ?? ""}
+            {#if resource.name[0].text}
+                {resource.name[0].text}
+            {:else}
+                {resource.name[0].prefix ?? ""}
+                {resource.name[0].given ? resource.name[0].given.join(' ') : ""}
+                {resource.name[0].family ?? ""}
+            {/if}
         <!-- TODO: This doesn't pass type checking, but may be necessary for some example data
         {:else}
             {resource.name.prefix ?? ""}
@@ -31,6 +50,12 @@
 {/if}
 {#if resource.gender}
     Gender: {resource.gender ?? ""}<br>
+{/if}
+{#if genderIdentityCodeableConcept}
+    Gender Identity: <CodeableConcept codeableConcept={genderIdentityCodeableConcept} /><br>
+{/if}
+{#if pronounsCodeableConcept}
+    Pronouns: <CodeableConcept codeableConcept={pronounsCodeableConcept} /><br>
 {/if}
 {#if resource.telecom || resource.address || resource.contact}
     <Button
@@ -74,12 +99,12 @@
                                 {line}<br />
                             {/each}
                         {/if}
-                        {address.city ?? "[Unknown City]"}{
+                        {address.city ? address.city+"," : ""}{
                             address.state
-                                ? `, ${address.state}`
+                                ? ` ${address.state}`+(address.country ? "," : "")
                                 : ''
                         }{address.country
-                            ? `, ${address.country}`
+                            ? ` ${address.country}`
                             : ''}
                         {address.postalCode ?? ""}
                     </td>
@@ -107,9 +132,6 @@
                         {contact.name.family ?? ""}
                     </strong>
                     <br>
-                {/if}
-                {#if contact.gender}
-                Gender: {contact.gender ?? ""}<br>
                 {/if}
                 {#if contact.telecom}
                     <table class="table table-bordered table-sm">
@@ -142,12 +164,12 @@
                                         {line}<br />
                                     {/each}
                                 {/if}
-                                {contact.address.city ?? "[Unknown City]"}{
+                                {contact.address.city ? contact.address.city+"," : ""}{
                                     contact.address.state
-                                        ? `, ${contact.address.state}`
+                                        ? ` ${contact.address.state}`+(contact.address.country ? "," : "")
                                         : ''
                                 }{contact.address.country
-                                    ? `, ${contact.address.country}`
+                                    ? ` ${contact.address.country}`
                                     : ''}
                                 {contact.address.postalCode ?? ""}
                             </td>

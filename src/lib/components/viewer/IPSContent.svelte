@@ -92,7 +92,8 @@
       content ["Patient"] = {
         section: {
           text: {
-            div: `<b>${patient[0].name?.[0]?.prefix ?? ""} ${patient[0].name?.[0]?.given?.join(' ') ?? ""} ${patient[0].name?.[0]?.family ?? ""}</b><br>
+            div: patient[0].text?.div ??
+                `<b>${patient[0].name?.[0]?.text ?? `${(patient[0].name?.[0]?.prefix ?? "") (patient[0].name?.[0]?.given?.join(' ') ?? "") (patient[0].name?.[0]?.family ?? "")}`}</b><br>
                   Birth Date: ${patient[0].birthDate ?? ""}<br>
                   Gender: ${patient[0].gender ?? ""}`
           }
