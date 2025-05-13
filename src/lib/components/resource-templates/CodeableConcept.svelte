@@ -37,4 +37,10 @@
       {/if}
     {/each}
   {/if}
+{:else if codeableConcept?.text}
+  {#if bold}
+    <strong>{codeableConcept.text}</strong><br>
+  {:else}
+    {codeableConcept.text}<br>
+  {/if}
 {/if}
