@@ -104,35 +104,42 @@
             'content-type': 'application/json',
           },
           body: JSON.stringify({
-            passcode: "",
             recipient: recipient,
           }),
         });
       let message = await retrieveResult.text();
       message = JSON.parse(message)?.message;
-      if (!retrieveResult.ok && retrieveResult.status === 400 && message === "Passcode required") {
+      if (!retrieveResult.ok && retrieveResult.status === 401 && message === "Passcode required") {
         // Failed the password requirement
         const needPasscode = shlClient.flag({ shl: shl ?? "" })?.includes('P');
         if (needPasscode) {
-          passcode = prompt("WA Health Summary Viewer\n----------------------------------------\nEnter a passcode to access this SMART Health Link\nIf no passcode was set, just click \"OK\"");
+          passcode = prompt("WA Health Summary Viewer\n----------------------------------------\nEnter a passcode to access this SMART Health Link");
         }
       }
     } catch (e) {
-        console.log(e);
+      let message = "Error retrieving SMART Health Link Manifest";
+      console.log(`${message}: ${e}`);
+      setError(message);
+      return;
     }
     
     try {
-        retrieveResult = await shlClient.retrieve({
-            shl: shl ?? "",
-            passcode: passcode ?? "",
-            recipient
-        });
+      retrieveResult = await shlClient.retrieve({
+          shl: shl ?? "",
+          passcode: passcode ?? "",
+          recipient
+      });
     } catch (e) {
-        // Retrieval succeeded, but there was an error parsing files, etc.
-        console.log(e);
-        throw Error("Content parsing error");
+      console.log(e);
+      setError(e.message);
+      return;
     }
 
+    if (retrieveResult === undefined) {
+      setError("Unable to retrieve SMART Health Link.");
+      return;
+    }
+ 
     if (retrieveResult.error) {
         let errorMsg = "";
         if (retrieveResult.status) {
@@ -143,7 +150,7 @@
             } else if (retrieveResult.status === 401) {
                 // Failed the password requirement
                 while (retrieveResult.status === 401) {
-                  passcode = prompt(`WA Health Summary Viewer\n----------------------------------------\nEnter a passcode to access this SMART Health Link`);
+                  passcode = prompt(`WA Health Summary Viewer\n----------------------------------------\nIncorrect passcode.\nEnter a passcode to access this SMART Health Link`);
                     try {
                         retrieveResult = await shlClient.retrieve({
                             shl: shl ?? "",
