@@ -35,7 +35,7 @@ export class AuthService {
 
   getAccessToken(): Promise<string | null> {
     return this.getUser().then((user) => {
-      if (user?.access_token) {
+      if (user?.access_token && !user.expired) {
         return user.access_token;
       } else {
         return this.renewToken().then((user) => {

@@ -58,7 +58,7 @@
   }
 
   let controller: AbortController | undefined = undefined;
-  function fetchCode(input: string) {
+  async function fetchCode(input: string) {
     processing = true;
     if (controller) {
       controller.abort();
@@ -76,13 +76,13 @@
     let api = `/api/nio-autocoder`;
     let url = `${api}?${mode === "Occupation" ? "o" : "i"}=${input}`;
 
-    return fetch(url, {
+    return AuthService.Instance.getAccessToken().then((token: string) => fetch(url, {
       signal,
       method: "GET",
       headers: {
-        "Authorization": `Bearer ${AuthService.Instance.getAccessToken()}`
+        "Authorization": `Bearer ${token}`
       }
-    }).then((response) => {
+    })).then((response) => {
       if (response.ok) {
         return response.text();
       } else {
