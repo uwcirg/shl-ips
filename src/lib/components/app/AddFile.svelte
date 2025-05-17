@@ -405,6 +405,7 @@
               maxlength={40}
               name="passcode"
               type={type}
+              autocomplete="off"
               bind:value={passcode}
               placeholder="Assign Passcode"
             />
