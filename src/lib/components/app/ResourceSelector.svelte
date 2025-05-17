@@ -78,10 +78,7 @@
     let mode: Writable<string> = getContext('mode');
 
     let reference: string;
-    let selectedPatient: string = get(resourceCollection.selectedPatient);
-    $: if (selectedPatient) {
-        resourceCollection.setSelectedPatient(selectedPatient);
-    }
+    let selectedPatient = resourceCollection.selectedPatient;
 
     // Proxy for resourceCollection's resourcesByType to allow reactive updates
     let resourcesByTypeStore: Writable<Record<string, Record<string, ResourceHelper>>>;
@@ -301,7 +298,7 @@
                                             <Row style="overflow:hidden">
                                                 <Col xs=auto class="d-flex align-items-top pt-4 pe-0">
                                                     {#if resourceType === "Patient"}
-                                                        <Input id={key} type="radio" bind:group={selectedPatient} value={key} />
+                                                        <Input id={key} type="radio" bind:group={$selectedPatient} value={key} />
                                                     {:else}
                                                         <Input id={key} type="checkbox" bind:checked={$resourcesByTypeStore[resourceType][key].include} value={key} />
                                                     {/if}
