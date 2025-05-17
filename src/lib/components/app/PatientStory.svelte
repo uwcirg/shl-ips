@@ -42,6 +42,7 @@
 </script>
 
 <form on:submit|preventDefault={() => prepareIps()}>
+  <p class="text-secondary"><em>Describe your story and goals for care.</em></p>
   <h5>My Story</h5>
   <Label class="text-secondary">Who are you? How would you describe your health? What matters to you?</Label>
   <Row>

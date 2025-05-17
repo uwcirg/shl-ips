@@ -34,12 +34,10 @@
 </script>
 
 <form on:submit|preventDefault={() => prepareIps()}>
-  <h5>Care Planning</h5>
-  <p class="text-secondary"><em>This section is under development.</em></p>
   <p class="text-secondary"><em>We intend to link to the content of a DPOA for Healthcare if one is present, and allow standalone entry of this information if not.</em></p>
   <p class="text-secondary"><em>An advance directive, such as a Provider Order for Life Sustaining Treatment (POLST), is only one type of advance care planning document, and we are working elsewhere in our IPS interface on a more general approach.</em></p>
+  <h5>Care Advocate</h5>
   <Row>
-    <Label>Care Advocate</Label>
     <Col>
       <FormGroup style="font-size:small" class="text-secondary" label="First Name">
         <Input type="text" bind:value={first} />

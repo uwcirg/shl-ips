@@ -103,6 +103,7 @@
   
 </script>
 
+<p class="text-secondary"><em>Add or update the personal information that will be shown in this Health Summary.</em></p>
 <form on:submit|preventDefault={() => prepareIps()}>
   <h5>Patient Details</h5>
   <Row>

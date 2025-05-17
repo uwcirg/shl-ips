@@ -51,9 +51,10 @@
   }
 </script>
 <form on:submit|preventDefault={() => prepareIps()}>
-  <h5>My functional and identity needs</h5>
+  <p class="text-secondary"><em>Select any identities, functional concerns, or needs you would like your carers to be aware of.</em></p>
+  <h5>Functional Identities and Concerns</h5>
   <FormGroup>
-    <Label><b>Functional / Identity Flags</b> I would like my carers to be aware of my concerns around:</Label>
+    <Label class="text-secondary">I would like my care team to be aware of my concerns around:</Label>
     <Input type="checkbox" name="concern-visual" value="true" label="Vision"/>
     <Input type="checkbox" name="concern-audio" value="true" label="Hearing / Listening"/>
     <Input type="checkbox" name="concern-cognition" value="true" label="Cognition / thinking / understanding / information processing"/>
@@ -67,8 +68,9 @@
     <Input type="checkbox" name="concern-city" value="true" label="I am from a small and/or remote community and cities and/or lots of people are an unfamiliar environment for me."/>
   </FormGroup>
   
+  <h5>Functional Needs</h5>
   <FormGroup>
-    <Label><b>I may need help with:</b></Label>
+    <Label class="text-secondary">I may need help with:</Label>
     <Input type="checkbox" name="eating" value="true" label="Eating / Drinking"/>
     <Input type="checkbox" name="toileting" value="true" label="Toileting"/>
     <Input type="checkbox" name="bed-exit" value="true" label="Getting out of bed"/>
@@ -80,7 +82,8 @@
     <Input type="checkbox" name="reading" value="true" label="Reading Documentation"/>
   </FormGroup>
   
-  <FormGroup>    
+  <h5>Functional Aids</h5>
+  <FormGroup>
     <Label><b>I have:</b></Label>
     <Input type="checkbox" name="dog" value="true" label="A Guide Dog"/>
     <Input type="checkbox" name="wheelchair" value="true" label="A Wheelchair"/>

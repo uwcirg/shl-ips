@@ -91,8 +91,8 @@
 </script>
 
 <form on:submit|preventDefault={() => prepareIps()}>
-  <h5>My Body</h5>
-  <Label class="text-secondary">You can record brief concerns about any specific part of your body here.</Label>
+  <p class="text-secondary"><em>Record brief concerns about any specific part of your body.</em></p>
+  <h5>Body Concerns</h5>
   {#each bodyPartStatuses as status, i}
     <Row>
       <Col xs="auto">
