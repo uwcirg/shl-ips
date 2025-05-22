@@ -267,13 +267,13 @@
     }, 1000);
   }
 
-  function handleAddDataAccordionOverflow() {
-    const accordion = document.querySelector('div.add-data > div.accordion-collapse');
+  function handleAddDataAccordionOverflow(accordionClass: string) {
+    const accordion = document.querySelector(`div.${accordionClass} > div.accordion-collapse`);
     if (accordion) {
       accordion.style.overflow = 'hidden';
     } else {
       setTimeout(function() {
-        const accordion = document.querySelector('div.add-data > div.accordion-collapse');
+        const accordion = document.querySelector(`div.${accordionClass} > div.accordion-collapse`);
         if (accordion) {
           accordion.style.overflow = 'visible';
         }
@@ -298,7 +298,7 @@
   <AccordionItem
     active={!resourcesAdded}
     class="add-data"
-    on:toggle={handleAddDataAccordionOverflow}
+    on:toggle={() => handleAddDataAccordionOverflow("add-data")}
   >
     <h5 slot="header" class="my-2">{addDataHeader}</h5>
     {#if !resourcesAdded}
@@ -354,7 +354,7 @@
     </TabContent>
   </AccordionItem>
   {#if resourcesAdded}
-    <AccordionItem class="patient-data">
+    <AccordionItem class="patient-data" on:toggle={() => handleAddDataAccordionOverflow("patient-data")}>
       <h5 slot="header" class="my-2">2. Add your own information <span class="text-secondary"><em>(under development)</em></span></h5>
       <PatientDataForm
         patient={patient}
