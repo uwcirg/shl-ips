@@ -10,34 +10,34 @@
     Icon,
     Spinner
   } from 'sveltestrap';
-  import type { IOResponse, NIOAutoCoderResponse } from '$lib/utils/types';
-  import AuthService from '$lib/utils/AuthService';
+  import type { Coding } from 'fhir/r4';
   import { onDestroy, onMount } from 'svelte';
 
-  export let mode: "Occupation" | "Industry";
-  export let value: IOResponse;
+  export let value: Coding;
 
-  let defaults: NIOAutoCoderResponse = {
-    Industry: [{
-      Code: "000000",
-      Title: "Not Coded – Industry",
-      Score: 1
-    }],
-    Occupation: [{
-      Code: "00-0000",
-      Title: "Not Coded – Occupation",
-      Score: 1
-    }],
-    Scheme: "NAICS 2017 and SOC 2018"
-  };
+  let defaultOptions: Coding[] = [
+    {
+      system: "http://terminology.hl7.org/CodeSystem/v2-0006",
+      code: "VAR",
+      display: "Unknown",
+    }
+  ];
 
   let isOpen = false;
   $: icon = 'search';
   let processing = false;
 
   let codingOptionTitle: string = "";
-  value = defaults[mode][0];
-  let codingOptions: NIOAutoCoderResponse | undefined = defaults;
+  let codingOptions: Coding[] | undefined = defaultOptions;
+
+  $: {
+    if (value) {
+      codingOptionTitle = value.display;
+      fetchCode(codingOptionTitle);
+    } else {
+      codingOptionTitle = "";
+    }
+  }
 
   onMount(() => {
     document.addEventListener('click', handleOutsideClick);
@@ -52,9 +52,8 @@
     }
   }
 
-  function setValue(v: IOResponse) {
+  function setValue(v: Coding) {
     value = v;
-    codingOptionTitle = v.Title;
   }
 
   let controller: AbortController | undefined = undefined;
@@ -65,24 +64,20 @@
     }
 
     if (input.trim() === "") {
-      codingOptions = defaults;
+      codingOptions = defaultOptions;
       processing = false;
-      return defaults;
+      return defaultOptions;
     }
 
     controller = new AbortController();
     const { signal } = controller;
 
-    let api = `/api/nio-autocoder`;
-    let url = `${api}?${mode === "Occupation" ? "o" : "i"}=${input}`;
+    let url = `https://tx.fhir.org/r4/ValueSet/$expand?url=http://terminology.hl7.org/ValueSet/v2-0006&_format=json&count=15&filter=${input}`;
 
-    return AuthService.Instance.getAccessToken().then((token: string) => fetch(url, {
+    return fetch(url, {
       signal,
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${token}`
-      }
-    })).then((response) => {
+      method: "GET"
+    }).then((response) => {
       if (response.ok) {
         return response.text();
       } else {
@@ -90,21 +85,20 @@
       }
     }).then((text) => {
       if (!text || text === "") {
-        return defaults;
+        return defaultOptions;
       }
       return JSON.parse(text);
     }).then((content) => {
       if (content === null) {
-        return defaults;
+        return defaultOptions;
       }
-      content[mode] = content[mode].filter((v: NIOAutoCoderResponse) => v.Code !== "000000" && v.Code !== "00-0000");
-      content[mode].push(defaults[mode][0]);
-      codingOptions = content;
+      codingOptions = content.expansion.contains.filter((c: Coding) => c.code !== "VAR");
+      codingOptions?.push(defaultOptions[0]);
       processing = false;
-      return content;
+      return codingOptions;
     }).catch((e) => {
       if (e.name === "AbortError") {
-        return Promise.resolve(defaults);
+        return Promise.resolve(defaultOptions);
       } else {
         processing = false
         return e;
@@ -119,12 +113,12 @@
       <DropdownToggle
         tag="div"
         class="d-inline-block"
-        style="width:100%">
+        style="width:250px">
         <div style="position:relative">
           <Input
-            title="Search for an {mode.toLowerCase()}"
+            title="Search for a Religion"
             type="text"
-            placeholder={`Search ${mode.toLowerCase()}...`}
+            placeholder={`Search religions...`}
             style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"
             bind:value={codingOptionTitle}
             on:input={(event) => {
@@ -154,27 +148,27 @@
     </div>
     <DropdownMenu style="max-height: 400px; width:100%; overflow:hidden">
       {#if codingOptions}
-        {#if codingOptions[mode].length === 0}
+        {#if codingOptions.length === 0}
           Empty
         {:else}
-          {#each codingOptions[mode] as codingOption, index}
-            {#if codingOptions[mode].length > 1 && (codingOption.Code === "000000" || codingOption.Code === "00-0000")}
+          {#each codingOptions as codingOption}
+            {#if codingOptions.length > 1 && (codingOption.code === "VAR")}
               <DropdownItem divider />
             {/if}
             <DropdownItem
               disabled={processing}
               style="overflow:hidden; text-overflow:ellipsis"
-              title={codingOption.Title}
+              title={codingOption.display}
               on:click={() => {
                 isOpen = false;
                 setValue(codingOption);
               }}>
-              {codingOption.Title}
+              {codingOption.display}
             </DropdownItem>
           {/each}
         {/if}
       {/if}
     </DropdownMenu>
   </Dropdown>
-  <Label class="mb-0 mx-1">{`Using "${value.Title}"`}</Label>
+  <Label class="mb-0 mx-1">{value?.display ? `Using "${value.display}"` : ''}</Label>
 </FormGroup>

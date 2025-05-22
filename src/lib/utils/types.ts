@@ -1,6 +1,7 @@
 import type {
   Bundle,
   BundleEntry,
+  Coding,
   CompositionSection,
   DocumentReference,
   Age,
@@ -86,16 +87,24 @@ export interface Language {
 export interface DemographicFields {
   first?: string;
   last?: string;
-  gender?: string;
   dob?: string;
   mrn?: string;
+  gender?: string;
+  pronouns?: Coding;
+  sexCharacteristics?: Coding;
+  email?: string;
   phone?: string;
+  preferredLanguage?: string;
+  languages?: string[];
   address1?: string;
   address2?: string;
   city?: string;
   state?: string;
   zip?: string;
   country?: string;
+  religion?: Coding;
+  culture?: string;
+  community?: string;
 }
 
 export interface DateTimeFields {
