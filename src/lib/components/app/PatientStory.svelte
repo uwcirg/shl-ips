@@ -83,7 +83,7 @@
 
   function prepareGoalResource(goal: any) {
     let goalResource = JSON.parse(JSON.stringify(goalResourceTemplate));
-    goalResource.statusDate = new Date().toISOString();
+    goalResource.statusDate = new Date().toISOString().slice(0, 10);
     goalResource.description.text = goal.value;
     goalResource.achievementStatus.coding[0] = progressCodings[goal.checked ? "in-progress" : "not-achieved"];
     return goalResource;
