@@ -38,7 +38,11 @@ export function formatDate(dateStr?: string) {
   }
   try {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-GB', options);
+    let result = date.toLocaleDateString('en-GB', options);
+    if (result === 'Invalid Date') {
+      return dateStr;
+    }
+    return result;
   } catch (e) {
     return dateStr;
   }
