@@ -5,18 +5,22 @@
     FormGroup,
     Icon,
     Input,
-    Label,
     Row,
     Spinner
   } from 'sveltestrap';
   import { createEventDispatcher } from 'svelte';
-  import { constructPatientResource } from '$lib/utils/util';
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
+  import type { CodeableConcept, Condition, MedicationStatement } from 'fhir/r4';
 
   let processing = false;
   let fetchError = '';
 
-  let entries: Record<string, {name: string; detail: string}[]> = {
+  interface HealthHistoryEntry {
+    name: string;
+    detail: string
+  };
+
+  let entries: Record<string, HealthHistoryEntry[]> = {
     problems: [
       {name: '', detail: ''}
     ],
@@ -27,12 +31,126 @@
       {name: '', detail: ''}
     ]
   };
+
+  let issueLevelOptions: Record<string, CodeableConcept|undefined> = {
+    '': undefined,
+    'Major life challenge': {
+      "system": "http://snomed.info/sct",
+      "code": "24484000",
+      "display": "Severe"
+    },
+    'Troublesome': {
+      "system": "http://snomed.info/sct",
+      "code": "6736007",
+      "display": "Moderate severity"
+    },
+    'Background, but managed': {
+      "system": "http://snomed.info/sct",
+      "code": "255604002",
+      "display": "Mild"
+    }
+  };
   
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
+  let currentConditionTemplate: Condition = {
+    resourceType: "Condition",
+    id: "cnd29",
+    clinicalStatus: {
+      coding: [
+        {
+          system: "http://terminology.hl7.org/CodeSystem/condition-clinical",
+          code: "active",
+          display: "Active"
+        }
+      ]
+    },
+    subject: {
+      reference: "Patient/pat1"
+    },
+    recordedDate: "",
+    code: {
+      text: ""
+    },
+    severity: {
+      coding: [],
+      text: ""
+    }
+  };
+
+  let medicationTemplate: MedicationStatement = {
+    resourceType: "MedicationStatement",
+    id: "med30",
+    status: "active",
+    subject: {
+      reference: "Patient/pat1"
+    },
+    effectiveDateTime: "",
+    medicationCodeableConcept: {
+      text: ""
+    },
+    dosage: [
+      {
+        text: ""
+      }
+    ]
+  }
+
+  let pastConditionTemplate: Condition = {
+    resourceType: "Condition",
+    id: "cnd31",
+    clinicalStatus: {
+      coding: [
+        {
+          system: "http://terminology.hl7.org/CodeSystem/condition-clinical",
+          code: "inactive",
+          display: "Inactive"
+        }
+      ]
+    },
+    subject: {
+      reference: "Patient/pat1"
+    },
+    recordedDate: "",
+    code: {
+      text: ""
+    },
+    onsetString: ""
+  }
+  function prepareCurrentConditionResource(entry: HealthHistoryEntry) {
+    if (entry.name === '' && entry.detail === '') return;
+    let currentCondition = JSON.parse(JSON.stringify(currentConditionTemplate));
+    currentCondition.code.text = entry.name;
+    currentCondition.severity.coding.push(issueLevelOptions[entry.detail]);
+    currentCondition.severity.text = entry.detail;
+    currentCondition.recordedDate = new Date().toISOString().slice(0, 10);;
+    return currentCondition;
+  }
+  function prepareMedicationStatementResource(entry: HealthHistoryEntry) {
+    if (entry.name === '' && entry.detail === '') return;
+    let medication = JSON.parse(JSON.stringify(medicationTemplate));
+    medication.medicationCodeableConcept.text = entry.name;
+    medication.dosage[0].text = entry.detail;
+    medication.effectiveDateTime = new Date().toISOString().slice(0, 10);;
+    return medication;
+  }
+  function preparePastConditionResource(entry: HealthHistoryEntry) {
+    if (entry.name === '' && entry.detail === '') return;
+    let pastCondition = JSON.parse(JSON.stringify(pastConditionTemplate));
+    pastCondition.code.text = entry.name;
+    pastCondition.onsetString = entry.detail;
+    pastCondition.recordedDate = new Date().toISOString().slice(0, 10);
+    return pastCondition;
+  }
 
   function prepareIps() {
-    const resources = constructPatientResource();
-    resourceDispatch('update-resources', resources);
+    const currentConditions = entries.problems.map(prepareCurrentConditionResource).filter((entry) => entry !== undefined);
+    const medications = entries.medications.map(prepareMedicationStatementResource).filter((entry) => entry !== undefined);
+    const pastConditions = entries.history.map(preparePastConditionResource).filter((entry) => entry !== undefined);
+    const resources = [...currentConditions, ...medications, ...pastConditions];
+    let result:ResourceRetrieveEvent = {
+      resources: resources
+    }
+    resourceDispatch('update-resources', result);
   }
 
   function addEntry(type: string) {
@@ -48,7 +166,7 @@
   }
 </script>
 <p class="text-secondary"><em>This section will show health issues found in your IPS, where they are from, and will let you remove existing health issues or add new issues that are important to you.</em></p>
-<form on:submit|preventDefault={() => prepareIps()}>
+<form on:submit|preventDefault={() => {}}>
   <h5>Ongoing Health Issues</h5>
   {#each entries.problems as problem, i}
     <Row class="mb-1">
@@ -60,9 +178,11 @@
       <Col xs="auto">
         <FormGroup style="font-size:small" class="text-secondary" label="Level">
           <Input type="select" bind:value={problem.detail} style="width: 200px">
-            <option>Major life challenge</option>
-            <option>Troublesome</option>
-            <option>Background, but managed</option>
+            {#each Object.keys(issueLevelOptions) as option}
+              <option style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
+                {option}
+              </option>
+            {/each}
           </Input>
         </FormGroup>
       </Col>
@@ -83,16 +203,16 @@
     </Col>
   </Row>
   <h5>Medications</h5>
-  {#each entries.medications as problem, i}
+  {#each entries.medications as medication, i}
     <Row class="mb-1">
       <Col xs="auto">
         <FormGroup style="font-size:small" class="text-secondary" label="Medication">
-          <Input type="text" bind:value={problem.name} style="width: 400px" />
+          <Input type="text" bind:value={medication.name} style="width: 400px" />
         </FormGroup>
       </Col>
       <Col xs="auto">
         <FormGroup style="font-size:small" class="text-secondary" label="Dosage">
-          <Input type="text" bind:value={problem.detail} style="width: 200px" />
+          <Input type="text" bind:value={medication.detail} style="width: 200px" />
         </FormGroup>
       </Col>
       <Col xs="auto">
@@ -113,16 +233,16 @@
   </Row>
 
   <h5>Past Events/Illnesses</h5>
-  {#each entries.history as problem, i}
+  {#each entries.history as history, i}
     <Row class="mb-1">
       <Col xs="auto">
-        <FormGroup style="font-size:small" class="text-secondary" label="Event">
-          <Input type="text" bind:value={problem.name} style="width: 400px" />
+        <FormGroup style="font-size:small" class="text-secondary" label="Event/Illness">
+          <Input type="text" bind:value={history.name} style="width: 400px" />
         </FormGroup>
       </Col>
       <Col xs="auto">
         <FormGroup style="font-size:small" class="text-secondary" label="When">
-          <Input type="text" bind:value={problem.detail} style="width: 200px" />
+          <Input type="text" bind:value={history.detail} style="width: 200px" />
         </FormGroup>
       </Col>
       <Col xs="auto">
@@ -145,7 +265,11 @@
 
   <Row>
     <Col xs="auto">
-      <Button color="primary" style="width:fit-content" disabled={processing} type="submit">
+      <Button
+        color="primary"
+        style="width:fit-content"
+        disabled={processing}
+        on:click={prepareIps}>
         {#if !processing}
           Update your conditions, medications and history
         {:else}
