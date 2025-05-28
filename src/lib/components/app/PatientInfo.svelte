@@ -34,8 +34,8 @@
       pronouns = Object.entries(pronounOptions).find(([k, v]) => v?.code === pronounsCoding?.code)?.[1] ?? pronounsCoding;
       let sexCharacteristicsCoding = myPatient.extension?.find((e) => e.url === 'http://hl7.org.au/fhir/StructureDefinition/sex-characteristic-variation')?.valueCodeableConcept?.coding?.[0] ?? '';
       sexCharacteristics = Object.entries(sexCharacteristicOptions).find(([k, v]) => v?.code === sexCharacteristicsCoding?.code)?.[1] ?? sexCharacteristicsCoding;
-      let religionCode = myPatient.extension?.find((e) => e.url === 'http://hl7.org/fhir/StructureDefinition/patient-religion')?.valueCodeableConcept?.coding?.[0].code ?? '';
-      religion = Object.values(religionOptions).find((p) => p?.code === religionCode) ?? religionOptions[''];
+      let religionCoding = myPatient.extension?.find((e) => e.url === 'http://hl7.org/fhir/StructureDefinition/patient-religion')?.valueCodeableConcept?.coding?.[0] ?? '';
+      religion = Object.values(religionOptions).find((p) => p?.code === religionCoding?.code) ?? religionCoding;
       preferredLanguage = myPatient.communication?.find((e) => e.preferred)?.language?.text ?? '';
       spokenLanguages = myPatient.communication?.filter((e) => !e.preferred).map((e) => e.language.text).join(', ') ?? '';
     }
@@ -144,7 +144,7 @@
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
   function prepareIps() {
-    let languages = spokenLanguages.split(/,?\s+/).filter((l) => l.toLowerCase() !== preferredLanguage.toLowerCase());
+    let languages = spokenLanguages?.trim().split(/,?\s+/).filter((l) => l.toLowerCase() !== preferredLanguage.toLowerCase());
     const patient = constructPatientResource({
       first,
       last,

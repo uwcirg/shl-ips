@@ -21,6 +21,7 @@ const allowableResourceTypes = [
     'DiagnosticReport',
     'DocumentReference',
     'Encounter',
+    'Goal',
     'Flag',
     'Immunization',
     'Location',

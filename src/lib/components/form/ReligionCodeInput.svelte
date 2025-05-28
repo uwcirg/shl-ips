@@ -63,7 +63,7 @@
       controller.abort();
     }
 
-    if (input.trim() === "") {
+    if (input?.trim() === "") {
       codingOptions = defaultOptions;
       processing = false;
       return defaultOptions;

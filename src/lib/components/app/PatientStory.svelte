@@ -10,8 +10,10 @@
     Spinner
   } from 'sveltestrap';
   import { createEventDispatcher } from 'svelte';
-  import { constructPatientResource } from '$lib/utils/util';
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
+  import type { Goal, CompositionSection } from 'fhir/r4';
+  
+  export let sectionKey: string = "Patient Story";
 
   let processing = false;
   let fetchError = '';
@@ -23,9 +25,85 @@
   
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
+  let sectionTemplate: CompositionSection = {
+    title: "Patient Story",
+    code: {
+      coding: [
+        {
+          system: "http://loinc.org",
+          code: "81338-6",
+          display: "Patient Story"
+        }
+      ]
+    },
+    text: {
+      status: "generated",
+      div: "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>[Patient Story]</p>\n<p><strong>Patient's Goals</strong></p>\n<ul>\n<li>Maintain blood sugar levels within normal range (in progress)</li>\n</ul>\n</div>"
+    },
+    extension: [
+      {
+        url: "http://healthintersections.com.au/fhir/StructureDefinition/patient-story",
+        valueString: ""
+      }
+    ],
+    entry: []
+  };
+  
+  let goalResourceTemplate: Goal = {
+    resourceType: "Goal",
+    lifecycleStatus: "active",
+    subject: {
+      reference: "Patient/pat1"
+    },
+    statusDate: "",
+    description: {
+      text: ""
+    },
+    achievementStatus: {
+      coding: []
+    },
+    text: {
+      status: "generated",
+      div: "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p></p><p></p></div>"
+    }
+  };
+
+  let progressCodings = {
+    "in-progress": {
+      "system": "http://terminology.hl7.org/CodeSystem/goal-achievement",
+      "code": "in-progress",
+      "display": "In Progress"
+    },
+    "not-achieved": {
+      "system": "http://terminology.hl7.org/CodeSystem/goal-achievement",
+      "code": "not-achieved",
+      "display": "Not Achieved"
+    }
+  };
+
+  function prepareGoalResource(goal: any) {
+    let goalResource = JSON.parse(JSON.stringify(goalResourceTemplate));
+    goalResource.statusDate = new Date().toISOString();
+    goalResource.description.text = goal.value;
+    goalResource.achievementStatus.coding[0] = progressCodings[goal.checked ? "in-progress" : "not-achieved"];
+    return goalResource;
+  }
+
+
+
   function prepareIps() {
-    const resources = constructPatientResource();
-    resourceDispatch('update-resources', resources);
+    const resources = goals.map(prepareGoalResource);
+    const section = JSON.parse(JSON.stringify(sectionTemplate));
+    section.text.div = `<div xmlns="http://www.w3.org/1999/xhtml"><p><strong>Patient Story</strong></p><p>${story}</p><p><strong>Patient's Goals</strong></p><ul>${goals.map(goal => `<li>${goal.value}</li>`).join('')}</ul></div>`;
+    section.extension[0].valueString = story;
+    processing = false;
+    let result:ResourceRetrieveEvent = {
+      resources: resources,
+      sectionKey: sectionKey,
+      sectionTemplate: section
+    }
+    resourceDispatch('update-resources', result);
+    console.log(resources);
   }
 
   function addGoal() {
@@ -41,7 +119,7 @@
   }
 </script>
 
-<form on:submit|preventDefault={() => prepareIps()}>
+<form on:submit|preventDefault={() => {}}>
   <p class="text-secondary"><em>Describe your story and goals for care.</em></p>
   <h5>My Story</h5>
   <Label class="text-secondary">Who are you? How would you describe your health? What matters to you?</Label>
@@ -62,7 +140,7 @@
         </FormGroup>
       </Col>
       <Col xs="auto" class="pt-1">
-        <Input type="checkbox" bind:value={goal.checked} label="Making Progress" />
+        <Input type="checkbox" bind:checked={goal.checked} label="Making Progress" />
       </Col>
       <Col xs="auto">
         <Button color="danger" outline on:click={() => removeGoal(i)}>
@@ -83,7 +161,7 @@
 
   <Row>
     <Col xs="auto">
-      <Button color="primary" style="width:fit-content" disabled={processing} type="submit">
+      <Button color="primary" style="width:fit-content" disabled={processing} on:click={prepareIps}>
         {#if !processing}
           Update your patient story and goals
         {:else}

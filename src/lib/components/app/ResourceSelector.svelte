@@ -2,7 +2,7 @@
     import { uploadResources } from '$lib/utils/resourceUploader.js';
     import { download } from '$lib/utils/util.js';
     import { createEventDispatcher, getContext } from 'svelte';
-    import { get, type Writable } from 'svelte/store';
+    import { type Writable } from 'svelte/store';
     import {
         Accordion,
         AccordionItem,
@@ -28,9 +28,10 @@
     import AllergyIntolerance from '$lib/components/resource-templates/AllergyIntolerance.svelte';
     import Condition from '$lib/components/resource-templates/Condition.svelte';
     import Device from '$lib/components/resource-templates/Device.svelte';
-    import DeviceUseStatement from '../resource-templates/DeviceUseStatement.svelte';
+    import DeviceUseStatement from '$lib/components/resource-templates/DeviceUseStatement.svelte';
     import DiagnosticReport from '$lib/components/resource-templates/DiagnosticReport.svelte';
     import Encounter from '$lib/components/resource-templates/Encounter.svelte';
+    import Goal from '$lib/components/resource-templates/Goal.svelte';
     import Immunization from '$lib/components/resource-templates/Immunization.svelte';
     import Location from '$lib/components/resource-templates/Location.svelte';
     import Medication from '$lib/components/resource-templates/Medication.svelte';
@@ -56,6 +57,7 @@
         "DiagnosticReport": DiagnosticReport,
         "DocumentReference": AdvanceDirective,
         "Encounter": Encounter,
+        "Goal": Goal,
         "Immunization": Immunization,
         "Location": Location,
         "Medication": Medication,
@@ -66,6 +68,7 @@
         "Patient": Patient,
         "Practitioner": Practitioner,
         "Procedure": Procedure,
+        "Patient Story": Goal,
         "Occupational Data": Observation,
         "Advance Directives": AdvanceDirective,
         "QuestionnaireResponse": QuestionnaireResponse
