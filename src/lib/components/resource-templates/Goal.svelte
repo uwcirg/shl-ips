@@ -68,7 +68,7 @@
 {/if}
 
 {#if resource.priority || resource.achievementStatus}
-  <br />
+  <br>
 {/if}
 
 <!-- Display description --> 
@@ -88,7 +88,7 @@
 {/if}
 
 <!-- Display timeline -->
-<br />
+<br>
 {#if startDate === '??' && dueDate === '??'}
   <em>No timeline available.</em>
 {:else}

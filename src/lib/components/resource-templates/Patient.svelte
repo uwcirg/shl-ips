@@ -96,7 +96,7 @@
                     <td>
                         {#if address.line}
                             {#each address.line as line}
-                                {line}<br />
+                                {line}<br>
                             {/each}
                         {/if}
                         {address.city ? address.city+"," : ""}{
@@ -161,7 +161,7 @@
                             <td>
                                 {#if contact.address.line}
                                     {#each contact.address.line as line}
-                                        {line}<br />
+                                        {line}<br>
                                     {/each}
                                 {/if}
                                 {contact.address.city ? contact.address.city+"," : ""}{
