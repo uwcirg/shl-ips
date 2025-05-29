@@ -54,7 +54,6 @@
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
   let currentConditionTemplate: Condition = {
     resourceType: "Condition",
-    id: "cnd29",
     clinicalStatus: {
       coding: [
         {
@@ -79,7 +78,6 @@
 
   let medicationTemplate: MedicationStatement = {
     resourceType: "MedicationStatement",
-    id: "med30",
     status: "active",
     subject: {
       reference: "Patient/pat1"
@@ -97,7 +95,6 @@
 
   let pastConditionTemplate: Condition = {
     resourceType: "Condition",
-    id: "cnd31",
     clinicalStatus: {
       coding: [
         {
@@ -116,6 +113,7 @@
     },
     onsetString: ""
   }
+
   function prepareCurrentConditionResource(entry: HealthHistoryEntry) {
     if (entry.name === '' && entry.detail === '') return;
     let currentCondition = JSON.parse(JSON.stringify(currentConditionTemplate));
@@ -125,6 +123,7 @@
     currentCondition.recordedDate = new Date().toISOString().slice(0, 10);;
     return currentCondition;
   }
+
   function prepareMedicationStatementResource(entry: HealthHistoryEntry) {
     if (entry.name === '' && entry.detail === '') return;
     let medication = JSON.parse(JSON.stringify(medicationTemplate));
@@ -133,6 +132,7 @@
     medication.effectiveDateTime = new Date().toISOString().slice(0, 10);;
     return medication;
   }
+  
   function preparePastConditionResource(entry: HealthHistoryEntry) {
     if (entry.name === '' && entry.detail === '') return;
     let pastCondition = JSON.parse(JSON.stringify(pastConditionTemplate));
