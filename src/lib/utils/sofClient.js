@@ -12,8 +12,7 @@ const patientResourceScope = SOF_PATIENT_RESOURCES.map(resourceType => `patient/
 const resourceScope = patientResourceScope.join(" ");
 const config = {
         clientId: '(ehr client id, populated later)', // clientId() is ignored at smit
-        // scope: `openid fhirUser launch/patient ${resourceScope}`,
-        scope: `openid fhirUser launch/patient patient/*.read`,
+        scope: `openid fhirUser launch/patient patient/*.read ${resourceScope}`,
         iss: '(authorization url, populated later)',
         redirect_uri: SOF_REDIRECT_URI
     };
@@ -31,7 +30,11 @@ function constructResourceUrl(resourceType, patientId, endpoint='') {
     if (endpoint) {
         endpoint = `${endpoint}/`;
     }
-    return `${endpoint}${resourceType == 'Patient' ? 'Patient/' : `${resourceType}?patient=`}${patientId}`;
+    endpoint = `${endpoint}${resourceType == 'Patient' ? 'Patient/' : `${resourceType}?patient=`}${patientId}`;
+    if (resourceType === "Observation") {
+        endpoint = `${endpoint}&category=laboratory,social-history,procedure`;
+    }
+    return endpoint;
 }
 
 async function requestResources(client, resourceType) {

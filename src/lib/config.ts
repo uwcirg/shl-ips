@@ -128,7 +128,7 @@ export const SOF_PATIENT_RESOURCES = [
   // 'Medication', // Pulled in via references - can't search by patient; "Only an _ID search is allowed."
   'Condition',
   'Encounter',
-  // 'Observation', // Handle specially for IPS codes - "Must have either code or category."
+  'Observation', // Handle specially for IPS codes - "Must have either code or category."
   // 'Organization', // Pulled in via references - can't search by patient; "Only an _ID search is allowed."
   'Immunization',
   // 'Device',
@@ -140,7 +140,7 @@ export const SOF_PATIENT_RESOURCES = [
   // 'PractitionerRole',  // Pulled in via references - can't search by patient; "An identifier, practitioner, organization, location, or specialty parameter is required."
   'Procedure', // TODO change to subject
   // 'Specimen', // Not in EPIC USCDI R4
-  // 'QuestionnaireResponse',
+  'QuestionnaireResponse',
 ];
 
 export const CARIN_RESOURCES = [

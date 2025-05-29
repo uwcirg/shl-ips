@@ -122,9 +122,7 @@
   }
   $: {
     if ($mode === 'normal') {
-      if (currentTab !== "smart" && currentTab !== "ad") {
-        setTimeout(() => document.querySelector(`span.smart-tab`)?.parentElement?.click(), 1); 
-      }
+      setTimeout(() => document.querySelector(`span.default-tab`)?.parentElement?.click(), 1); 
     }
   }
 
@@ -310,8 +308,8 @@
     <TabContent on:tab={(e) => {
       currentTab = e.detail;
     }}>
-      <TabPane class="smart-tab" tabId="smart" style="padding-top:10px" active>
-        <span class="smart-tab" slot="tab">SMART Patient Access</span>
+      <TabPane class="default-tab" tabId="default" style="padding-top:10px" active>
+        <span class="default-tab" slot="tab">SMART Patient Access</span>
         <FetchSoF
           on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
           on:sof-auth-fail={ async ({ detail }) => { revertPreAuth(detail) }}
@@ -321,8 +319,8 @@
         </FetchSoF>
       </TabPane>
       {#if $mode === "advanced"}
-        <TabPane class="sof-tab" tabId="sof" style="padding-top:10px">
-          <span class="smart-tab" slot="tab">*CARIN BB</span>
+        <TabPane class="carin-tab" tabId="carin" style="padding-top:10px">
+          <span class="carin-tab" slot="tab">*CARIN BB</span>
           <FetchCARINBB
             on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
             on:sof-auth-fail={ async ({ detail }) => { revertPreAuth(detail) }}
@@ -387,40 +385,39 @@
       <Label>Save your summary and generate a secure link to it that you can share.</Label>
     </Row>
     <Row class="mx-2">
-      <FormGroup>
-        <Label>Enter a name for the Summary:</Label>
-        <Input type="text" bind:value={label} on:input={() => { userUpdatedLabel = true }}/>
-      </FormGroup>
-      <FormGroup>
-        <Label for="passcode">Protect with Passcode (optional):</Label>
-        <div style="position:relative">
-          <Input
-            maxlength={40}
-            name="passcode"
-            type={type}
-            bind:value={passcode}
-            placeholder="Assign Passcode"
-          />
-          <Icon name={icon} 
-            style="position: absolute;
-            cursor: pointer;
-            height: 25px;
-            width: 20px;
-            top: 6px;
-            right: 10px;
-            color: rgb(50, 50, 50);"
-            onclick={() => showPassword = !showPassword}/>
-        </div>
-      </FormGroup>
-      <FormGroup>
-        <Label>Expiration</Label>
-        <Input type="radio" bind:group={expiration} value={60 * 60} label="1 hour" />
-        <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 7} label="1 week" />
-        <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 365} label="1 year" />
-        <Input type="radio" bind:group={expiration} value={-1} label="Never" />
-      </FormGroup>
-  
       <form on:submit|preventDefault={confirmContent}>
+        <FormGroup>
+          <Label>Enter a name for the Summary:</Label>
+          <Input type="text" bind:value={label} on:input={() => { userUpdatedLabel = true }}/>
+        </FormGroup>
+        <FormGroup>
+          <Label for="passcode">Protect with Passcode (optional):</Label>
+          <div style="position:relative">
+            <Input
+              maxlength={40}
+              name="passcode"
+              type={type}
+              bind:value={passcode}
+              placeholder="Assign Passcode"
+            />
+            <Icon name={icon} 
+              style="position: absolute;
+              cursor: pointer;
+              height: 25px;
+              width: 20px;
+              top: 6px;
+              right: 10px;
+              color: rgb(50, 50, 50);"
+              onclick={() => showPassword = !showPassword}/>
+          </div>
+        </FormGroup>
+        <FormGroup>
+          <Label>Expiration</Label>
+          <Input type="radio" bind:group={expiration} value={60 * 60} label="1 hour" />
+          <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 7} label="1 week" />
+          <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 365} label="1 year" />
+          <Input type="radio" bind:group={expiration} value={-1} label="Never" />
+        </FormGroup>
         <Row>
           <Col xs="auto">
           <Button color="primary" style="width:fit-content" disabled={submitting} type="submit">

@@ -497,7 +497,7 @@
       <Input
         type="switch"
         bind:checked={workingPast}
-        label={`I ${workingPast ? 'do not ': ''}have a previous job`}
+        label={`I ${workingPast ? '': 'do not '}have a previous job`}
       />
     </Row>
     {#if workingPast}
