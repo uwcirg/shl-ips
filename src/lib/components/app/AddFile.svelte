@@ -90,7 +90,7 @@
       resourcesAdded = Object.keys($resourcesByTypeStore).length > 0;
       if (!oldvalue && resourcesAdded) {
         // Prevent flash of AddData accordion overflow when first resources are added
-        handleAddDataAccordionOverflow();
+        handleAddDataAccordionOverflow('add-data');
       }
     }
   }
