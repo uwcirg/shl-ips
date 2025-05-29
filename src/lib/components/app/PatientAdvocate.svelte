@@ -29,7 +29,10 @@
 
   function prepareIps() {
     const resources = constructPatientResource();
-    resourceDispatch('update-resources', resources);
+    const result = {
+      resources: resources
+    };
+    resourceDispatch('update-resources', result);
   }
 </script>
 
