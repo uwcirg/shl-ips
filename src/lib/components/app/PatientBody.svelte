@@ -10,95 +10,423 @@
     Spinner
   } from 'sveltestrap';
   import { createEventDispatcher } from 'svelte';
-  import { constructPatientResource } from '$lib/utils/util';
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
+  import type { CodeableConcept, Condition } from 'fhir/r4';
 
   let processing = false;
   let fetchError = '';
 
-  let bodyPartStatuses: Array<{bodyPart: string; side: string; status: string}> = [
-    {bodyPart: '', side: '', status: ''}
+  interface BodyConcernEntry {
+    bodyPart: string;
+    side: string;
+    concern: string
+  }
+  let bodyPartConcerns: Array<BodyConcernEntry> = [
+    {bodyPart: '', side: '', concern: ''}
   ];
 
-  let bodyParts = [
-    "Arm",
-    "Hand",
-    "Fingers",
-    "Leg",
-    "Calf",
-    "Foot",
-    "Toe",
-    "Hip",
-    "Eye",
-    "Hypothalamus",
-    "Pituitary",
-    "Tongue",
-    "Jaw",
-    "Oesophagus",
-    "Large Colon",
-    "Stomach",
-    "Gall Bladder",
-    "Kidney",
-    "Liver",
-    "Bladder",
-    "Lung",
-    "Breasts",
-    "Ovary",
-    "Uterus",
-    "Cervix",
-    "Vagina",
-    "Penis",
-    "Prostate",
-    "Testis"
-  ];
-
-  let sides = [
-    "",
-    "Left",
-    "Right",
-    "Both"
-  ];
-
-  let statusOptions = [
-    "Present",
-    "Transplanted In /(re)constructed",
-    "Implant / Prosthesis",
-    "Missing",
-    "Not Present at Birth",
-    "Partially Surgically Removed",
-    "Lost in accident/attack",
-    "Surgically Removed"
-  ]
-    
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
+  let bodyPartOptions: Record<string, Record<string, CodeableConcept>> = {
+    "": {},
+    "Arm": {
+      "Both": {
+        system: "https://www.snomed.info/sct",
+        code: "69273007",
+        display: "Both Arms"
+      },
+      "Left": {
+        system: "https://www.snomed.info/sct",
+        code: "368208006",
+        display: "Left Arm"
+      },
+      "Right": {
+        system: "https://www.snomed.info/sct",
+        code: "368209003",
+        display: "Right Arm"
+      }
+    },
+    "Hand": {
+      "Both": {
+        system: "https://www.snomed.info/sct",
+        code: "12861001",
+        display: "Both Hands"
+      },
+      "Left": {
+        system: "https://www.snomed.info/sct",
+        code: "85151006",
+        display: "Left Hand"
+      },
+      "Right": {
+        system: "https://www.snomed.info/sct",
+        code: "78791008",
+        display: "Right Hand"
+      }
+    },
+    "Fingers": {
+      "Both": {
+        system: "https://www.snomed.info/sct",
+        code: "362779006",
+        display: "All Fingers"
+      },
+      "Left": {
+        system: "https://www.snomed.info/sct",
+        code: "786841006",
+        display: "Left Fingers"
+      },
+      "Right": {
+        system: "https://www.snomed.info/sct",
+        code: "786842004",
+        display: "Right Fingers"
+      }
+    },
+    "Leg": {
+      "Both": {
+        system: "https://www.snomed.info/sct",
+        code: "40927001",
+        display: "Both Legs"
+      },
+      "Left": {
+        system: "https://www.snomed.info/sct",
+        code: "48979004",
+        display: "Left Leg"
+      },
+      "Right": {
+        system: "https://www.snomed.info/sct",
+        code: "32696007",
+        display: "Right Leg"
+      }
+    },
+    "Foot": {
+      "Both": {
+        system: "https://www.snomed.info/sct",
+        code: "8580001",
+        display: "Both Feet"
+      },
+      "Left": {
+        system: "https://www.snomed.info/sct",
+        code: "22335008",
+        display: "Left Foot"
+      },
+      "Right": {
+        system: "https://www.snomed.info/sct",
+        code: "7769000",
+        display: "Right Foot"
+      }
+    },
+    "Toes": {
+      "Both": {
+        system: "https://www.snomed.info/sct",
+        code: "8671006",
+        display: "All Toes"
+      },
+      "Left": {
+        system: "https://www.snomed.info/sct",
+        code: "785708006",
+        display: "Left Toes"
+      },
+      "Right": {
+        system: "https://www.snomed.info/sct",
+        code: "785709003",
+        display: "Right Toes"
+      }
+    },
+    "Hip": {
+      "Both": {
+        system: "https://www.snomed.info/sct",
+        code: "29836001",
+        display: "Both Hips"
+      },
+      "Left": {
+        system: "https://www.snomed.info/sct",
+        code: "287679003",
+        display: "Left Hip"
+      },
+      "Right": {
+        system: "https://www.snomed.info/sct",
+        code: "287579007",
+        display: "Right Hip"
+      }
+    },
+    "Eye": {
+      "Both": {
+        system: "https://www.snomed.info/sct",
+        code: "40638003",
+        display: "Both Eyes"
+      },
+      "Left": {
+        system: "https://www.snomed.info/sct",
+        code: "726675003",
+        display: "Left Eye"
+      },
+      "Right": {
+        system: "https://www.snomed.info/sct",
+        code: "726680007",
+        display: "Right Eye"
+      }
+    },
+    "Hypothalamus": {
+      "": {
+        system: "https://www.snomed.info/sct",
+        code: "67923007",
+        display: "Hypothalamus"
+      }
+    },
+    "Pituitary": {
+      "": {
+        system: "https://www.snomed.info/sct",
+        code: "181125003",
+        display: "Pituitary"
+      }
+    },
+    "Tongue": {
+      "": {
+        system: "https://www.snomed.info/sct",
+        code: "32709003",
+        display: "Tongue"
+      }
+    },
+    "Jaw": {
+      "": {
+        system: "https://www.snomed.info/sct",
+        code: "661005",
+        display: "Jaw"
+      }
+    },
+    "Oesophagus": {
+      "": {
+        system: "https://www.snomed.info/sct",
+        code: "32849002",
+        display: "Oesophagus"
+      }
+    },
+    "Large Colon": {
+      "": {
+        system: "https://www.snomed.info/sct",
+        code: "71854001",
+        display: "Large Colon"
+      }
+    },
+    "Stomach": {
+      "": {
+        system: "https://www.snomed.info/sct",
+        code: "69695003",
+        display: "Stomach"
+      }
+    },
+    "Gall Bladder": {
+      "": {
+        system: "https://www.snomed.info/sct",
+        code: "28231008",
+        display: "Gall Bladder"
+      }
+    },
+    "Kidney": {
+      "Both": {
+        system: "https://www.snomed.info/sct",
+        code: "17373004",
+        display: "Both Kidneys"
+      } ,
+      "Left": {
+        system: "https://www.snomed.info/sct",
+        code: "18639004",
+        display: "Left Kidney"
+      } ,
+      "Right": {
+        system: "https://www.snomed.info/sct",
+        code: "9846003",
+        display: "Right Kidney"
+      }
+    },
+    "Liver": {
+      "": {
+        system: "https://www.snomed.info/sct",
+        code: "10200004",
+        display: "Liver"
+      }
+    },
+    "Bladder": {
+      "": {
+        system: "https://www.snomed.info/sct",
+        code: "89837001",
+        display: "Bladder"
+      }
+    },
+    "Lung": {
+      "Both": {
+        system: "https://www.snomed.info/sct",
+        code: "74101002",
+        display: "Both Lungs"
+      },
+      "Left": {
+        system: "https://www.snomed.info/sct",
+        code: "44029006",
+        display: "Left Lung"
+      },
+      "Right": {
+        system: "https://www.snomed.info/sct",
+        code: "3341006",
+        display: "Right Lung"
+      }
+    },
+    "Breast": {
+      "Both": {
+        system: "https://www.snomed.info/sct",
+        code: "63762007",
+        display: "Both Breasts"
+      },
+      "Left": {
+        system: "https://www.snomed.info/sct",
+        code: "80248007",
+        display: "Left Breast"
+      } ,
+      "Right": {
+        system: "https://www.snomed.info/sct",
+        code: "73056007",
+        display: "Right Breast"
+      }
+    },
+    "Ovary": {
+      "Both": {
+        system: "https://www.snomed.info/sct",
+        code: "83238006",
+        display: "Both Ovaries"
+      },
+      "Left": {
+        system: "https://www.snomed.info/sct",
+        code: "43981004",
+        display: "Left Ovary"
+      } ,
+      "Right": {
+        system: "https://www.snomed.info/sct",
+        code: "20837000",
+        display: "Right Ovary"
+      }
+    },
+    "Uterus": {
+      "": {
+        system: "https://www.snomed.info/sct",
+        code: "35039007",
+        display: "Uterus"
+      }
+    },
+    "Cervix": {
+      "": {
+        system: "https://www.snomed.info/sct",
+        code: "71252005",
+        display: "Cervix"
+      }
+    },
+    "Vagina": {
+      "": {
+        system: "https://www.snomed.info/sct",
+        code: "76784001",
+        display: "Vagina"
+      }
+    },
+    "Penis": {
+      "": {
+        system: "https://www.snomed.info/sct",
+        code: "18911002",
+        display: "Penis"
+      }
+    },
+    "Prostate": {
+      "": {
+        system: "https://www.snomed.info/sct",
+        code: "41216001",
+        display: "Prostate"
+      }
+    },
+    "Testicle": {
+      "Both": {
+        system: "https://www.snomed.info/sct",
+        code: "181431007",
+        display: "Both Testis"
+      },
+      "Left": {
+        system: "https://www.snomed.info/sct",
+        code: "367720001",
+        display: "Left Testicle"
+      },
+      "Right": {
+        system: "https://www.snomed.info/sct",
+        code: "367719007",
+        display: "Right Testicle"
+      }
+    }
+  };
+
+  let conditionTemplate: Condition = {
+    resourceType: "Condition",
+    clinicalStatus: {
+      coding: [
+        {
+          system: "http://terminology.hl7.org/CodeSystem/condition-clinical",
+          code: "active",
+          display: "Active"
+        }
+      ]
+    },
+    category: {
+      coding: [
+        {
+          system: "http://terminology.hl7.org/CodeSystem/condition-category",
+          code: "problem-list-item",
+        }
+      ]
+    },
+    bodySite: {
+      coding: []
+    },
+    subject: {
+      reference: "Patient/pat1"
+    },
+    recordedDate: "",
+    code: {
+      text: ""
+    }
+  };
+
+  function prepareConditionResource(entry: BodyConcernEntry) {
+    if (entry.bodyPart === '' && entry.concern === '') return;
+    let currentCondition = JSON.parse(JSON.stringify(conditionTemplate));
+    currentCondition.code.text = entry.concern;
+    currentCondition.bodySite.coding.push(bodyPartOptions[entry.bodyPart][entry.side]);
+    currentCondition.recordedDate = new Date().toISOString().slice(0, 10);;
+    return currentCondition;
+  }
+
   function prepareIps() {
-    const resources = constructPatientResource();
-    resourceDispatch('update-resources', resources);
+    const resources = bodyPartConcerns.map(prepareConditionResource).filter((entry) => entry !== undefined);
+    const result = {
+      resources: resources
+    };
+    resourceDispatch('update-resources', result);
   }
 
   function addStatus() {
-    bodyPartStatuses = [...bodyPartStatuses, {bodyPart: '', side: '', status: ''}];
+    bodyPartConcerns = [...bodyPartConcerns, {bodyPart: '', side: '', concern: ''}];
   }
 
   function removeBodyPart(i: number) {
-    bodyPartStatuses.splice(i, 1);
-    bodyPartStatuses = bodyPartStatuses;
-    if (bodyPartStatuses.length == 0) {
+    bodyPartConcerns.splice(i, 1);
+    bodyPartConcerns = bodyPartConcerns;
+    if (bodyPartConcerns.length == 0) {
       addStatus();
     }
   }
 </script>
 
-<form on:submit|preventDefault={() => prepareIps()}>
+<form on:submit|preventDefault={() => {}}>
   <p class="text-secondary"><em>Record brief concerns about any specific part of your body.</em></p>
   <h5>Body Concerns</h5>
-  {#each bodyPartStatuses as status, i}
+  {#each bodyPartConcerns as status, i}
     <Row>
       <Col xs="auto">
         <FormGroup style="font-size:small" class="text-secondary" label="Body Part">
           <Input type="select" bind:value={status.bodyPart}>
-            {#each bodyParts as bodyPart}
+            {#each Object.keys(bodyPartOptions) as bodyPart}
               <option>{bodyPart}</option>
             {/each}
           </Input>
@@ -106,10 +434,17 @@
       </Col>
       <Col xs="auto">
         <FormGroup style="font-size:small" class="text-secondary" label="Side">
-          <Input type="select" bind:value={status.side}>
-            {#each sides as side}
-              <option>{side}</option>
-            {/each}
+          <Input type="select" disabled={Object.keys(bodyPartOptions[status.bodyPart]).length < 2} bind:value={status.side} style="width:100px">
+            {#if Object.keys(bodyPartOptions[status.bodyPart]).length === 0}
+              <option disabled></option>
+              <option disabled>Both</option>
+              <option disabled>Left</option>
+              <option disabled>Right</option>
+            {:else}
+              {#each Object.keys(bodyPartOptions[status.bodyPart]) as side}
+                <option>{side}</option>
+              {/each}
+            {/if}
           </Input>
         </FormGroup>
       </Col>
@@ -120,12 +455,12 @@
               <option>{option}</option>
             {/each}
           </Input> -->
-          <Input type="text" bind:value={status.status}/>
+          <Input type="text" bind:value={status.concern}/>
         </FormGroup>
       </Col>
       <Col xs="auto">
         <Button color="danger" outline on:click={() => removeBodyPart(i)}>
-          {#if bodyPartStatuses.length > 1}
+          {#if bodyPartConcerns.length > 1}
             Remove
           {:else}
             Clear
@@ -141,7 +476,11 @@
   </Row>
   <Row>
     <Col xs="auto">
-      <Button color="primary" style="width:fit-content" disabled={processing} type="submit">
+      <Button
+        color="primary"
+        style="width:fit-content"
+        disabled={processing}
+        on:click={prepareIps}>
         {#if !processing}
         Update your body concerns
         {:else}
