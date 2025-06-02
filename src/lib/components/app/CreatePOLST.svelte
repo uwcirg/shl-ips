@@ -90,7 +90,7 @@
     };
     console.log($demographics.dob);
 
-    let name = `${$demographics.first} ${$demographics.last}`
+    let name = `${$demographics.last}, ${$demographics.first}`
     let dob = new Date($demographics.dob);
     let dobYear = dob.getFullYear().toString();
     let dobMonth = (dob.getMonth() + 1).toString();
