@@ -34,7 +34,7 @@
 
   let mode: Writable<string> = getContext('mode');
 
-  let activeItem: ("home" | "summaries" | "create" | "") = "";
+  let activeItem: ("home" | "summaries" | "provider" | "create" | "") = "";
   $: {
     if ($page.url.pathname.includes("summaries")) {
       activeItem = "summaries";
@@ -42,6 +42,8 @@
       activeItem = "create";
     } else if ($page.url.pathname === "/") {
       activeItem = "home";
+    } else if ($page.url.pathname.includes("provider")) {
+      activeItem = "provider";
     } else {
       activeItem = "";
     }
@@ -157,6 +159,9 @@
             {#if profile}
               <NavItem>
                 <NavLink href="/summaries" active={ activeItem === "summaries" }>Summaries</NavLink>
+              </NavItem>
+              <NavItem>
+                <NavLink href="/provider" active={ activeItem === "provider" }>Provider</NavLink>
               </NavItem>
               <NavItem>
                 <NavLink href="/create" active={ activeItem === "create" }>Create</NavLink>
