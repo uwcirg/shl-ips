@@ -3,7 +3,7 @@
     Button,
     Col,
     FormGroup,
-    Input,
+    Icon,
     Label,
     Row,
     Spinner
@@ -402,9 +402,9 @@
     <Col xs="auto">
       <Button color="primary" style="width:fit-content" disabled={processing} type="submit">
         {#if !processing}
-          Search Repository
+          Search Repository<Icon class="ms-2" name="search" />
         {:else}
-          Searching...
+          Searching...<Icon class="ms-2" name="search" />
         {/if}
       </Button>
     </Col>
