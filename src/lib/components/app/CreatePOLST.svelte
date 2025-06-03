@@ -484,11 +484,11 @@
         </div>
       </Col>
     </Row>
-    <Row>
+    <Row class="my-4">
       <Col xs="auto">
         <Button color="primary" style="width:fit-content" disabled={processing} on:click={submit}>
           {#if !processing}
-            Sign and Submit
+            Sign Document and Save
           {:else}
             Submitting...
           {/if}
@@ -499,6 +499,11 @@
           <Spinner color="primary" type="border" size="md"/>
         </Col>
       {/if}
+    </Row>
+    <Row>
+      <Col>
+        <span class="text-secondary"><em><strong>Plan to add eSignature, but for now users would print to confirm content, physically sign to confirm with WA regulations, then upload the final document. We see moving past upload as important for scalability, once workflows are developed and regulations support eSignature</strong></em></span>
+      </Col>
     </Row>
   {/if}
 </form>
