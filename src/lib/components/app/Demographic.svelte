@@ -6,6 +6,7 @@
   import DemographicForm from '$lib/components/form/DemographicForm.svelte';
   import AuthService from '$lib/utils/AuthService';
   import type { User } from 'oidc-client-ts';
+  import { constructPatientResource } from '$lib/utils/util';
 
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
@@ -23,50 +24,7 @@
 
   function generateIPS() {
     processing = true;
-    let patient = {
-      "resourceType" : "Patient",
-      "id" : "generatedPatient",
-      "text" : {
-        "status" : "generated",
-        "div" : ""
-      },
-      "identifier" : [{
-        "use" : "usual",
-        "type" : {
-          "coding" : [{
-            "system" : "http://terminology.hl7.org/CodeSystem/v2-0203",
-            "code" : "MR"
-          }]
-        },
-        "system" : "urn:oid:1.2.36.146.595.217.0.1",
-        "value" : $demographics.mrn,
-      }],
-      "active" : true,
-      "name" : [{
-        "use" : "official",
-        "family" : $demographics.last,
-        "given" : [$demographics.first]
-      }],
-      "telecom" : [
-      {
-        "system" : "phone",
-        "value" : $demographics.phone,
-        "use" : "home",
-        "rank" : 1
-      }],
-      "gender" : $demographics.gender,
-      "birthDate" : $demographics.dob,
-      "deceasedBoolean" : false,
-      "address" : [{
-        "use" : "home",
-        "type" : "both",
-        "text" : `${$demographics.address1} ${$demographics.address2}, ${$demographics.city}, ${$demographics.state} ${$demographics.zip} ${$demographics.country}`,
-        "line" : [$demographics.address1, $demographics.address2],
-        "city" : $demographics.city,
-        "state" : $demographics.state,
-        "postalCode" : $demographics.zip
-      }]
-    }
+    let patient = constructPatientResource($demographics);
     resourceDispatch('update-resources', {
       resources: [patient],
       hostname: 'WA Health Summary'
