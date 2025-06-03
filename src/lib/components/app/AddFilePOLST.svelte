@@ -349,7 +349,7 @@
     </AccordionItem>
   {/if}
   {#if resourcesAdded && hasAdvanceDirective}
-    <AccordionItem class="edit-data">
+    <AccordionItem class="edit-data" active>
       <h5 slot="header" class="my-2">3. Directly edit your health summary content</h5>
       <Label>Select which resources to include in your customized IPS</Label>
       <ResourceSelector
