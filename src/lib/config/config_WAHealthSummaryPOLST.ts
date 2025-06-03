@@ -15,7 +15,7 @@ export default {
     title: "My Summaries - WA Health Summary | POLST",
   },
   create: {
-    title: "Create an ACP Link - WA Health Summary | POLST",
+    title: "Create a Health Link - WA Health Summary | POLST",
     component: AddFilePOLST,
   }
 };

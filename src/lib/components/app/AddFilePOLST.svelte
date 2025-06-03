@@ -409,7 +409,7 @@
           <Col xs="auto">
           <Button color="primary" style="width:fit-content" disabled={submitting} type="submit">
               {#if !submitting}
-              Create ACP Link
+              Create Health Link
               {:else}
               Creating...
               {/if}
