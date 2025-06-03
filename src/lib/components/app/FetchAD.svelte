@@ -17,34 +17,65 @@
   } from '$lib/utils/util';
   import DemographicForm from '$lib/components/form/DemographicForm.svelte';
   import type { UserDemographics } from '$lib/utils/types';
+  import { demographics } from '$lib/stores/demographics';
+  import { writable, type Writable } from 'svelte/store';
 
   export let sectionKey: string = "Advance Directives";
 
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
-  let sources: Record<string, {selected: Boolean; url: string}> = {
-    "Current User": {selected: false, url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir"},
-    "WA Health Summary Demo Patient": {selected: false, url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir"},
-    "AD Vault Demo Patient": {selected: false, url: "https://qa-rr-fhir.maxmddirect.com"},
+  let sources: Record<string, {selected: Boolean; url: string; patient: Writable<UserDemographics>}> = {
+    "Current User": {
+      selected: false,
+      url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir",
+      patient: $demographics
+    },
+    // "WA Health Summary Demo Patient": {
+    //   selected: false,
+    //   url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir",
+    //   patient: writable({
+    //     last: "Mosley",
+    //     //last: "Smith-Johnson",
+    //     first: "Jenny",
+    //     //first: "Betsy",
+    //     gender: "female",
+    //     dob: "1955-10-03",
+    //     //dob: "1950-11-15",
+    //   })
+    // },
+    // "AD Vault Demo Patient": {
+    //   selected: false,
+    //   url: "https://qa-rr-fhir.maxmddirect.com",
+    //   patient: writable({
+    //     // last: "Gravitate",
+    //     // first: "Maria SEATTLE",
+    //     // gender: "female",
+    //     // dob: "1946-05-05",
+    //     last: "Wilson",
+    //     first: "Cynthia",
+    //     gender: "female",
+    //     dob: "1993-12-01",
+    //   })
+    // },
   };
   let selectedSource = "Current User";
   let processing = false;
   let fetchError = '';
 
-  let mrn = '';
-  let first = '';
-  let last = '';
-  let dob = '';
-  let address1 = '';
-  let address2 = '';
-  let city = '';
-  let state = '';
-  let zip = '';
-  let country = '';
-  let phone = '';
-  let gender = '';
-
-  let demographics: UserDemographics;
+  let formDemographics: Writable<UserDemographics> = writable({
+    first: '',
+    last: '',
+    gender: '',
+    dob: '',
+    mrn: '',
+    phone: '',
+    address1: '',
+    address2: '',
+    city: '',
+    state: '',
+    zip: '',
+    country: ''
+  });
 
   let sectionTemplate = {
       title: "Advance Directives",
@@ -62,47 +93,7 @@
 
   $: {
     if (selectedSource) {
-      mrn = '';
-      first = '';
-      last = '';
-      dob = '';
-      address1 = '';
-      address2 = '';
-      city = '';
-      state = '';
-      zip = '';
-      phone = '';
-      gender = '';
-      if (selectedSource === 'Current User') {
-        mrn = demographics?.mrn ?? '';
-        first = demographics?.first ?? '';
-        last = demographics?.last ?? '';
-        dob = demographics?.dob ?? '';
-        address1 = demographics?.address1 ?? '';
-        address2 = demographics?.address2 ?? '';
-        city = demographics?.city ?? '';
-        state = demographics?.state ?? '';
-        zip = demographics?.zip ?? '';
-        phone = demographics?.phone ?? '';
-        gender = demographics?.gender ?? '';
-      } else if (selectedSource === 'AD Vault') {
-        last = "Mosley";
-        //last = "Smith-Johnson";
-        first = "Jenny";
-        //first = "Betsy";
-        gender = "female";
-        dob = "1955-10-03";
-        //dob = "1950-11-15";
-      } else if (selectedSource === 'WA Health Summary Demo Server') {
-        // last = "Gravitate";
-        // first = "Maria SEATTLE";
-        // gender = "female";
-        // dob = "1946-05-05";
-        last = "Wilson";
-        first = "Cynthia";
-        gender = "female";
-        dob = "1993-12-01";
-      }
+      formDemographics = sources[selectedSource].patient;
     }
   }
 
@@ -135,22 +126,7 @@
         }
       });
     } catch (e) {
-      let query = buildPatientSearchQuery(
-        {
-          first: first,
-          last: last,
-          gender: gender,
-          dob: dob,
-          mrn: mrn,
-          phone: phone,
-          address1: address1,
-          address2: address2,
-          city: city,
-          state: state,
-          zip: zip,
-          country: country,
-        }
-      );
+      let query = buildPatientSearchQuery(formDemographics);
       result = await fetch(`${sources[selectedSource].url}/Patient${query}`, {
         method: 'GET',
         headers: { accept: 'application/json' },
@@ -241,22 +217,7 @@
     try {
       let content;
       let hostname;
-      const patient = await fetchPatient(constructPatientResource(
-        {
-          first: first,
-          last: last,
-          gender: gender,
-          dob: dob,
-          mrn: mrn,
-          phone: phone,
-          address1: address1,
-          address2: address2,
-          city: city,
-          state: state,
-          zip: zip,
-          country: country,
-        }
-      ));
+      const patient = await fetchPatient(constructPatientResource(formDemographics));
       const contentResponse = await fetchAdvanceDirective(patient.id);
       content = await contentResponse.json();
       hostname = sources[selectedSource].url;
@@ -420,8 +381,8 @@
 </script>
 
 <form on:submit|preventDefault={() => prepareIps()}>
-  <Label>Fetch Advance Directives to include in your summary</Label><br>
-  <Label>Select a source to search:</Label>
+  <Label>Search the WA state POLST repository for your existing advance directives.</Label>
+  <!-- <Label>Select a source to search:</Label>
   <FormGroup>
     <Row>
       {#each Object.keys(sources) as source}
@@ -430,25 +391,20 @@
         </Row>
       {/each}
     </Row>
-  </FormGroup>
+  </FormGroup> -->
   {#if selectedSource}
   <FormGroup>
-    <Label>Enter your information to fetch related advance directives</Label>
-    <p class="text-secondary"><em>WA Health Summary does not save this information</em></p>
-    <Row cols={{ md: 2, sm: 1 }}>
-      <Col>
-        <DemographicForm bind:demographics={demographics}/>
-      </Col>
-    </Row>
+    <!-- <p class="text-secondary"><em>WA Health Summary does not save this information</em></p> -->
+    <DemographicForm />
   </FormGroup>
   
   <Row>
     <Col xs="auto">
       <Button color="primary" style="width:fit-content" disabled={processing} type="submit">
         {#if !processing}
-          Add advance directives to Summary
+          Search Repository
         {:else}
-          Adding...
+          Searching...
         {/if}
       </Button>
     </Col>

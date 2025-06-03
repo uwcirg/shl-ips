@@ -1,4 +1,5 @@
 <script lang='ts'>
+  import * as jose from 'jose';
   import {
     Row,
     Col,
@@ -10,12 +11,30 @@
     Spinner,
     Tooltip
   } from 'sveltestrap';
+  import { createEventDispatcher } from 'svelte';
   import DemographicForm from '$lib/components/form/DemographicForm.svelte';
   import type { FormOption } from '$lib/utils/types';
   import { PDFDocument } from 'pdf-lib'
   import { demographics } from '$lib/stores/demographics';
+  import type { ResourceRetrieveEvent } from '$lib/utils/types';
+
+  const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
   let processing = false;
+
+  const forms: Record<string, any> = {
+    full: {
+      url: '/polst-form.pdf',
+      resultBytes: undefined
+    },
+    // Necessary for form flattening in preview display, as PDFLib does not support form flattening blank signatures
+    noSignature: {
+      url: '/polst-form-no-signatures.pdf',
+      resultBytes: undefined
+    }
+  }
+  let pdfPreviewSrc: string;
+  let finalizedEncoding: string;
 
   let conditionsAndGoals: string;
   let cpr: ('yes' | 'no') = 'yes';
@@ -56,7 +75,7 @@
   ]
   let additionalOrders: string;
   let discussedArtificialNutrition: ('individual' | 'hcp' | 'lmdm' | 'no');
-  let artificialNutrition: ('avoid' | 'discuss' | '');
+  let artificialNutrition: ('avoid' | 'discuss' | '') = 'discuss';
   let artificialNutritionOptions:FormOption[] = [
     {
       value: 'avoid',
@@ -70,104 +89,255 @@
     }
   ]
 
+  let dpoaName: string;
+  let dpoaRelationship: string;
+  let dpoaPhone: string;
+  let contactName: string;
+  let contactRelationship: string;
+  let contactPhone: string;
+  let hcpName: string;
+  let hcpRole: string;
+  let hcpPhone: string;
 
-  async function generateIPS() {
+  function ensureText(v: string | undefined) {
+    if (v === "" || v === undefined) {
+      // Empty string results in an undefined value
+      return ' ';
+    }
+    return v;
+  }
+  
+  async function generatePreview() {
     processing = true;
-    const formUrl = '/polst-form.pdf';
-    const formPdfBytes = await fetch(formUrl).then(res => res.arrayBuffer());
 
-    const pdfDoc = await PDFDocument.load(formPdfBytes);
+    if (pdfPreviewSrc) {
+      window.URL.revokeObjectURL(pdfPreviewSrc);
+    }
 
-    const form = pdfDoc.getForm();
+    for (const formKey of Object.keys(forms)) {
+      const formPdfBytes = await fetch(forms[formKey].url).then(res => res.arrayBuffer());
 
-    const fields = form.getFields();
+      const pdfDoc = await PDFDocument.load(formPdfBytes);
 
-    for (const field of fields) {
-      console.log(`${field.constructor.name}: ${field.getName()}`);
-      if (field.constructor.name === 'PDFRadioGroup2') {
-        console.log(`    Options: ${field.getOptions().join(', ')}`);
+      const form = pdfDoc.getForm();
+
+      let fields = form.getFields();
+
+      for (const field of fields) {
+        console.log(`${field.constructor.name}: ${field.getName()}`);
+        if (field.constructor.name === 'PDFRadioGroup2') {
+          console.log(`    Options: ${field.getOptions().join(', ')}`);
+        }
+      };
+
+      let name = `${$demographics.last ?? ""}, ${$demographics.first ?? ""}`;
+      let dob = $demographics.dob ? new Date($demographics.dob) : undefined;
+      let dobYear = dob?.getFullYear()?.toString() ?? " ";
+      let dobMonth = dob?.getMonth() ? (dob?.getMonth() + 1).toString() : " ";
+      let dobDay = dob?.getDate()?.toString() ?? " ";
+
+      form.getTextField('additionalOrders').setText(ensureText(additionalOrders));
+      // form.getSignature('mdSignature');
+      // form.getCheckBox('nutritionDiscussed').check();
+      form.getRadioGroup('nutritionPreference').select(artificialNutrition);
+      // form.getRadioGroup('nutritionPreference').acroField.setAppearanceState(artificialNutrition);
+      // form.getCheckBox('nutritionIndividual').check();
+      // form.getCheckBox('nutritionHCP').check();
+      // form.getCheckBox('nutritionLMDM').check();
+      // form.getCheckBox('reviewOutcomeNewForm').check();
+      // form.getCheckBox('reviewOutcomeFormVoided').check();
+      // form.getSignature('individualSignature');
+      form.getTextField('name').setText(ensureText(name));
+      form.getTextField('dobMonth').setText(ensureText(dobMonth));
+      form.getTextField('dobDay').setText(ensureText(dobDay));
+      form.getTextField('dobYear').setText(ensureText(dobYear));
+      form.getTextField('gender').setText(ensureText($demographics.gender));
+      form.getTextField('conditionsAndGoals').setText(ensureText(conditionsAndGoals));
+      // form.getCheckBox('discussedIndividual').check();
+      // form.getCheckBox('discussedParent').check();
+      form.getTextField('mdDate').setText(" ");
+      // form.getCheckBox('discussedGuardian').check();
+      // form.getCheckBox('discussedAgent').check();
+      form.getTextField('mdPrint').setText(" ");
+      form.getTextField('mdPhone').setText(" ");
+      // form.getCheckBox('discussedOther').check();
+      form.getTextField('individualPrint').setText(ensureText(name));
+      // form.getCheckBox('dpoah').check();
+      // form.getCheckBox('hcd').check();
+      form.getTextField('name2').setText(ensureText(name));
+      form.getTextField('dpoaName').setText(ensureText(dpoaName));
+      form.getTextField('dpoaRelationship').setText(ensureText(dpoaRelationship));
+      form.getTextField('dpoaPhone').setText(ensureText(dpoaPhone));
+      form.getTextField('contactName').setText(ensureText(contactName));
+      form.getTextField('contactRelationship').setText(ensureText(contactRelationship));
+      form.getTextField('contactPhone').setText(ensureText(contactPhone));
+      form.getTextField('hcpName').setText(ensureText(hcpName));
+      form.getTextField('hcpRole').setText(ensureText(hcpRole));
+      form.getTextField('hcpPhone').setText(ensureText(hcpPhone));
+      form.getTextField('reviewDate').setText(" ");
+      form.getTextField('reviewer').setText(" ");
+      form.getTextField('reviewLocation').setText(" ");
+      form.getTextField('agencyInfo').setText(" ");
+      form.getTextField('pronouns').setText(" ");
+      form.getTextField('individualRelationship').setText(" ");
+      form.getTextField('individualDate').setText(" ");
+      form.getTextField('individualPhone').setText(" ");
+      form.getRadioGroup('sectionACPR').select(cpr);
+      // form.getRadioGroup('sectionACPR').acroField.setAppearanceState(cpr);
+      form.getRadioGroup('sectionBMedicalInterventionLevel').select(medicalInterventions);
+      // form.getRadioGroup('sectionBMedicalInterventionLevel').acroField.setAppearanceState(medicalInterventions);
+      // form.getCheckBox('reviewOutcomeNoChange').check();
+      form.getTextField('dob2month').setText(ensureText(dobMonth));
+      form.getTextField('dob2day').setText(ensureText(dobDay));
+      form.getTextField('dob2year').setText(ensureText(dobYear));
+
+      form.updateFieldAppearances();
+
+      for (const field of fields) {
+        const name = field.getName();
+        const type = field.constructor.name;
+
+        let value: string | undefined;
+
+        if (type === 'PDFTextField2') {
+          value = (field as any).getText();
+        } else if (type === 'PDFDropdown2') {
+          value = (field as any).getSelected();
+        } else if (type === 'PDFRadioGroup2') {
+          value = (field as any).getSelected();
+          let kids = field.acroField.Kids();
+          if (kids) {
+            for (let i = 0; i < kids.size(); i++) {
+              const kid = kids.get(i);
+              const dict = kid?.dict;
+              const ap = dict?.get('AP');
+              console.log(`Kid ${i} appearance stream:`, ap?.entries ?? 'No /AP');
+            }
+          }
+        } else if (type === 'PDFCheckBox2') {
+          value = (field as any).isChecked() ? 'Checked' : 'Unchecked';
+        } else {
+          value = '[Unknown type]';
+        }
+
+        console.log(`${name} (${type}): ${value}`);
       }
-    };
-    console.log($demographics.dob);
 
-    let name = `${$demographics.last}, ${$demographics.first}`
-    let dob = new Date($demographics.dob);
-    let dobYear = dob.getFullYear().toString();
-    let dobMonth = (dob.getMonth() + 1).toString();
-    let dobDay = dob.getDate().toString();
+      if (formKey === 'noSignature') {
+        // TODO try with official adobe pdf template for /AF form flattening
+        // form.flatten(); // Optional, finalizes form
+      }
+      const pdfBytes = await pdfDoc.save();
 
-    form.getTextField('additionalOrders').setText(additionalOrders);
-    form.getSignature('mdSignature');
-    // form.getCheckBox('nutritionDiscussed').check();
-    // form.getRadioGroup('nutritionPreference').select();
-    // form.getCheckBox('nutritionIndividual').check();
-    // form.getCheckBox('nutritionHCP').check();
-    // form.getCheckBox('nutritionLMDM').check();
-    // form.getCheckBox('reviewOutcomeNewForm').check();
-    // form.getCheckBox('reviewOutcomeFormVoided').check();
-    form.getSignature('individualSignature');
-    form.getTextField('name').setText(name);
-    form.getTextField('dobMonth').setText(dobMonth);
-    form.getTextField('dobDay').setText(dobDay);
-    form.getTextField('dobYear').setText(dobYear);
-    form.getTextField('gender').setText($demographics.gender);
-    form.getTextField('conditionsAndGoals').setText(conditionsAndGoals);
-    // form.getCheckBox('discussedIndividual').check();
-    // form.getCheckBox('discussedParent').check();
-    // form.getTextField('mdDate').setText();
-    // form.getCheckBox('discussedGuardian').check();
-    // form.getCheckBox('discussedAgent').check();
-    // form.getTextField('mdPrint').setText();
-    // form.getTextField('mdPhone').setText();
-    // form.getCheckBox('discussedOther').check();
-    form.getTextField('individualPrint').setText(name);
-    // form.getCheckBox('dpoah').check();
-    // form.getCheckBox('hcd').check();
-    form.getTextField('name2').setText(name);
-    // form.getTextField('dpoaName').setText();
-    // form.getTextField('dpoaRelationship').setText();
-    // form.getTextField('dpoaPhone').setText();
-    // form.getTextField('contactName').setText();
-    // form.getTextField('contactRelationship').setText();
-    // form.getTextField('contactPhone').setText();
-    // form.getTextField('hcpName').setText();
-    // form.getTextField('hcpRole').setText();
-    // form.getTextField('hcpPhone').setText();
-    // form.getTextField('reviewDate').setText();
-    // form.getTextField('reviewer').setText();
-    // form.getTextField('reviewLocation').setText();
-    // form.getTextField('agencyInfo').setText();
-    // form.getTextField('pronouns').setText();
-    // form.getTextField('individualRelationship').setText();
-    // form.getTextField('individualDate').setText();
-    // form.getTextField('individualPhone').setText();
-    form.getRadioGroup('sectionACPR').select(cpr);
-    form.getRadioGroup('sectionBMedicalInterventionLevel').select(medicalInterventions);
-    // form.getCheckBox('reviewOutcomeNoChange').check();
-    form.getTextField('dob2month').setText(dobMonth);
-    form.getTextField('dob2day').setText(dobDay);
-    form.getTextField('dob2year').setText(dobYear);
+      forms[formKey].resultBytes = pdfBytes;
+    }
 
-    //form.flatten(); // Optional, finalizes form
+    if (forms.noSignature.resultBytes) {
+      let blob = new Blob([forms.noSignature.resultBytes], {type: "application/pdf"});
+      pdfPreviewSrc = window.URL.createObjectURL(blob);
+    }
 
-    const pdfBytes = await pdfDoc.save();
-
-    var blob = new Blob([pdfBytes], {type: "application/pdf"});
-    var link = window.URL.createObjectURL(blob);
-    window.open(link,'', 'height=650,width=840');
+    if (forms.full.resultBytes) {
+      let blob = new Blob([forms.full.resultBytes], { type: 'application/pdf' });
+      const reader = new FileReader();
+      reader.onload = () => {
+        finalizedEncoding = (reader.result as string).split(',')[1]; // remove data: URL prefix
+      };
+      reader.readAsDataURL(blob);
+    }
 
     processing = false;
   }
 
+  let sectionKey = "Advance Directives";
+
+  let sectionTemplate = {
+    title: "Advance Directives",
+    code: {
+      coding: [
+      {
+        system: "http://loinc.org",
+        code: "42348-3",
+        display: "Advance Directives"
+      }
+      ]
+    },
+    entry: []
+  };
+
+  let resourceTemplate = {
+    resourceType: "DocumentReference",
+    status: "current",
+    docStatus: "final",
+    type: {
+      coding: [
+        {
+          system: "http://loinc.org",
+          code: "100821-8",
+          display: "National POLST form: portable medical order panel"
+        }
+      ]
+    },
+    category: [
+      {
+        coding: [
+          {
+            system: "http://loinc.org",
+            code: "42348-3",
+            display: "Advance Healthcare Directive"
+          }
+        ]
+      }
+    ],
+    subject: {
+      reference: "Patient/14599"
+    },
+    date: "",
+    description: "National ePOLST Form: A Portable Medical Order\n    - Version 1",
+    securityLabel: [
+      {
+        coding: [
+          {
+            system: "http://hl7.org/fhir/v3/Confidentiality",
+            code: "N",
+            display: "normal"
+          }
+        ]
+      }
+    ],
+    content: [
+      {
+        attachment: {
+          contentType: "application/pdf",
+          creation: "",
+          data: ""  
+        }
+      }
+    ]
+  };
+
+  function submit() {
+    processing = true;
+    let resource = JSON.parse(JSON.stringify(resourceTemplate));
+    resource.content[0].attachment.data = finalizedEncoding;
+    let createdDate = new Date().toISOString().slice(0,10);
+    resource.content[0].attachment.creation = createdDate;
+    resource.date = createdDate;
+    let resources = [resource];
+    processing = false;
+    let result:ResourceRetrieveEvent = {
+      resources: resources,
+      sectionKey: sectionKey,
+      sectionTemplate: sectionTemplate
+    }
+    resourceDispatch('update-resources', result);
+  }
+
 </script>
 
-
-<form on:submit|preventDefault={() => generateIPS()}>
-  <Row>
-    <Col>
-      <DemographicForm show={['first', 'last', 'gender', 'dob', 'phone']} />
-    </Col>
-  </Row>
+<form on:submit|preventDefault={() => {}}>
+  <p>To prepare a new POLST form, specify your preferences below.</p>
+  <DemographicForm demographics={demographics} show={['first', 'last', 'gender', 'dob', 'phone']} />
   <Row>
     <Col>
       <FormGroup>
@@ -251,54 +421,54 @@
   <FormGroup style="font-size:small" class="text-secondary">
     <Row>
       <Col xs="6">
-        <Input type="text" />
+        <Input type="text" bind:value={dpoaName} />
         <Label>Legal Medical Decision Maker(s) (DPOA-HC or 7.70.065 RCW)</Label>
       </Col>
       <Col xs="3">
-        <Input type="text" />
+        <Input type="text" bind:value={dpoaRelationship} />
         <Label>Relationship</Label>
       </Col>
       <Col xs="3">
-        <Input type="phone" />
+        <Input type="phone" bind:value={dpoaPhone} />
         <Label>Phone</Label>
       </Col>
     </Row>
     <Row>
       <Col xs="6">
-        <Input type="text" />
+        <Input type="text" bind:value={contactName} />
         <Label>Other Contact Person</Label>
       </Col>
       <Col xs="3">
-        <Input type="text" />
+        <Input type="text" bind:value={contactRelationship} />
         <Label>Relationship</Label>
       </Col>
       <Col xs="3">
-        <Input type="phone" />
+        <Input type="phone" bind:value={contactPhone} />
         <Label>Phone</Label>
       </Col>
     </Row>
     <Row>
       <Col xs="6">
-        <Input type="text" />
+        <Input type="text" bind:value={hcpName} />
         <Label>Health Care Professional Completing Form</Label>
       </Col>
       <Col xs="3">
-        <Input type="text" />
+        <Input type="text" bind:value={hcpRole} />
         <Label>Relationship</Label>
       </Col>
       <Col xs="3">
-        <Input type="phone" />
+        <Input type="phone" bind:value={hcpPhone} />
         <Label>Phone</Label>
       </Col>
     </Row>
   </FormGroup>
   <Row>
     <Col xs="auto">
-      <Button color="primary" style="width:fit-content" disabled={processing} type="submit">
+      <Button color="primary" style="width:fit-content" disabled={processing} on:click={generatePreview}>
         {#if !processing}
-          Review and Sign
+          Generate Preview
         {:else}
-          Saving...
+          Generating...
         {/if}
       </Button>
     </Col>
@@ -308,4 +478,29 @@
       </Col>
     {/if}
   </Row>
+  {#if pdfPreviewSrc}
+    <Row class="mt-4">
+      <Col>
+        <div>
+          <embed src={pdfPreviewSrc} type="application/pdf" width="100%" height="800px" />
+        </div>
+      </Col>
+    </Row>
+    <Row>
+      <Col xs="auto">
+        <Button color="primary" style="width:fit-content" disabled={processing} on:click={submit}>
+          {#if !processing}
+            Sign and Submit
+          {:else}
+            Submitting...
+          {/if}
+        </Button>
+      </Col>
+      {#if processing}
+        <Col xs="auto" class="d-flex align-items-center px-0">
+          <Spinner color="primary" type="border" size="md"/>
+        </Col>
+      {/if}
+    </Row>
+  {/if}
 </form>

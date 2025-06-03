@@ -64,6 +64,15 @@
     ips: undefined
   }
 
+  let adFormType = 'POLST';
+  let formTypeOptions: Record<string, any> = {
+    "": '',
+    "POLST": '',
+    "Durable Power of Attorney for Health Care": '',
+    "Living Will": '',
+    "Advance Care Plan": ''
+  };
+
   let shcsToAdd: SHCFile[] = [];
   let singleIPS = true;
   let patientName = "";
@@ -79,6 +88,7 @@
   let resourcesByTypeStore;
   $: resourcesByTypeStore = resourceCollection.resourcesByType;
   let resourcesAdded = false;
+  let hasAdvanceDirective = false;
   $: {
     if ($resourcesByTypeStore) {
       let oldvalue = resourcesAdded;
@@ -87,6 +97,9 @@
         // Prevent flash of AddData accordion overflow when first resources are added
         handleAddDataAccordionOverflow();
       }
+
+      hasAdvanceDirective = Object.keys($resourcesByTypeStore['Advance Directives'] ?? {}).length > 0;
+      console.log(hasAdvanceDirective);
     }
   }
 
@@ -308,23 +321,34 @@
       <p>
         Advance Directives help providers know more about your treatment preferences.
       </p>
+
+      <Label>Select the type of advance directive you would like to create:</Label>
+      <Input type="select" bind:value={adFormType} class="mb-4" style="width:min-content">
+        {#each Object.entries(formTypeOptions) as [value, display]}
+          <option value={value} disabled={value !== 'POLST'} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
+            {value}
+          </option>
+        {/each}
+      </Input>
       <TabContent on:tab={(e) => {
         currentTab = e.detail;
       }}>
         <TabPane class="default-tab" tabId="create-acp" style="padding-top:10px" active>
-          <span class="default-tab" slot="tab">Create an ACPD</span>
-          <Label>To prepare a new Advanced Care Plan, complete your demographic information below.</Label>
-          <CreatePOLST></CreatePOLST>
+          <span class="default-tab" slot="tab">Create a POLST</span>
+          <CreatePOLST
+            on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
+          />
         </TabPane>
         <TabPane tabId="retrieve-acp" style="padding-top:10px">
-          <span slot="tab">Search for an ACPD in the state repository</span>
-          <Label></Label>
+          <span slot="tab">Search for a POLST in the state repository</span>
           <FetchAD
             on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
           />
         </TabPane>
       </TabContent>
     </AccordionItem>
+  {/if}
+  {#if resourcesAdded && hasAdvanceDirective}
     <AccordionItem class="edit-data">
       <h5 slot="header" class="my-2">3. Directly edit your health summary content</h5>
       <Label>Select which resources to include in your customized IPS</Label>
@@ -338,7 +362,7 @@
     </AccordionItem>
   {/if}
 </Accordion>
-{#if resourcesAdded}
+{#if resourcesAdded && hasAdvanceDirective}
   {#if shlIdParam == null}
     <Row class="mt-4">
       <h5>4. Save and create your shareable link</h5>

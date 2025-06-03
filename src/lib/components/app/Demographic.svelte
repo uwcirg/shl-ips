@@ -14,7 +14,7 @@
   let user: User | undefined;
 
   onMount(async () => {
-    if (!$demographics.first || !$demographics.last) {
+    if ($demographics.first === undefined || !$demographics.last === undefined) {
       let userAuth = await AuthService.Instance.getProfile();
       $demographics.first = userAuth.given_name || userAuth.firstName;
       $demographics.last = userAuth.family_name || userAuth.lastName;
@@ -74,10 +74,35 @@
     
     processing = false;
   }
+
+  function fillDemographics() {
+    $demographics = {
+      last: "Gravitate",
+      first: "Maria SEATTLE",
+      gender: "female",
+      dob: "1946-05-05"
+    }
+  }
 </script>
 
 <form on:submit|preventDefault={() => generateIPS()}>
   <Row>
+    <Col>
+      <p>Please update or enter your demographic information below.</p>
+      <span> Or,</span>
+      <Button
+        color="secondary"
+        class="ms-2"
+        outline
+        style="width:fit-content"
+        type="button"
+        on:click={fillDemographics}
+      >
+        Fill test patient information
+      </Button>
+    </Col>
+  </Row>
+  <Row class="mt-3">
     <Col>
       <DemographicForm />
     </Col>
