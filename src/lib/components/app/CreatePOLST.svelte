@@ -140,7 +140,6 @@
       // form.getSignature('mdSignature');
       // form.getCheckBox('nutritionDiscussed').check();
       form.getRadioGroup('nutritionPreference').select(artificialNutrition);
-      // form.getRadioGroup('nutritionPreference').acroField.setAppearanceState(artificialNutrition);
       // form.getCheckBox('nutritionIndividual').check();
       // form.getCheckBox('nutritionHCP').check();
       // form.getCheckBox('nutritionLMDM').check();
@@ -183,9 +182,7 @@
       form.getTextField('individualDate').setText(" ");
       form.getTextField('individualPhone').setText(" ");
       form.getRadioGroup('sectionACPR').select(cpr);
-      // form.getRadioGroup('sectionACPR').acroField.setAppearanceState(cpr);
       form.getRadioGroup('sectionBMedicalInterventionLevel').select(medicalInterventions);
-      // form.getRadioGroup('sectionBMedicalInterventionLevel').acroField.setAppearanceState(medicalInterventions);
       // form.getCheckBox('reviewOutcomeNoChange').check();
       form.getTextField('dob2month').setText(ensureText(dobMonth));
       form.getTextField('dob2day').setText(ensureText(dobDay));
@@ -225,7 +222,7 @@
 
       if (formKey === 'noSignature') {
         // TODO try with official adobe pdf template for /AF form flattening
-        // form.flatten(); // Optional, finalizes form
+        form.flatten(); // Optional, finalizes form
       }
       const pdfBytes = await pdfDoc.save();
 
@@ -237,8 +234,9 @@
       pdfPreviewSrc = window.URL.createObjectURL(blob);
     }
 
-    if (forms.full.resultBytes) {
-      let blob = new Blob([forms.full.resultBytes], { type: 'application/pdf' });
+    // TODO Change back to full when signing is figured out
+    if (forms.noSignature.resultBytes) {
+      let blob = new Blob([forms.noSignature.resultBytes], { type: 'application/pdf' });
       const reader = new FileReader();
       reader.onload = () => {
         finalizedEncoding = (reader.result as string).split(',')[1]; // remove data: URL prefix
