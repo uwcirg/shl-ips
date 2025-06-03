@@ -317,12 +317,10 @@
       class="add-data"
       on:toggle={handleAddDataAccordionOverflow}
     >
-      <h5 slot="header" class="my-2">2. Create or retrieve an Advance Directive</h5>
-      <p>
-        Advance Directives help providers know more about your treatment preferences.
-      </p>
+      <h5 slot="header" class="my-2">2. Create or retrieve an Advance Care Planning Document</h5>
+      <p>Advanced Care Planning Documents help providers know more about your treatment preferences.</p>
 
-      <Label>Select the type of advance directive you would like to create:</Label>
+      <Label>Select the type of Advance Care Planning Document you would like to create:</Label>
       <Input type="select" bind:value={adFormType} class="mb-4" style="width:min-content">
         {#each Object.entries(formTypeOptions) as [value, display]}
           <option value={value} disabled={value !== 'POLST'} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
