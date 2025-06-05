@@ -24,7 +24,7 @@
 
   const forms: Record<string, any> = {
     full: {
-      url: '/polst-form.pdf',
+      url: '/polst-form-signatures.pdf',
       resultBytes: undefined
     },
     // Necessary for form flattening in preview display, as PDFLib does not support form flattening blank signatures
