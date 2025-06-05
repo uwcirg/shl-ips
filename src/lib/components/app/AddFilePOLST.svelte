@@ -97,9 +97,7 @@
         // Prevent flash of AddData accordion overflow when first resources are added
         handleAddDataAccordionOverflow();
       }
-
       hasAdvanceDirective = Object.keys($resourcesByTypeStore['Advance Directives'] ?? {}).length > 0;
-      console.log(hasAdvanceDirective);
     }
   }
 
