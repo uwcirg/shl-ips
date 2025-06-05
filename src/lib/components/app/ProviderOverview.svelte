@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getContext, onMount } from 'svelte';
-  import { Button, Col, Icon, Input, Label, Row, Styles, Table } from 'sveltestrap';
+  import { Button, Col, Icon, Input, Label, Row, Styles, Table } from 'sveltestrap';;
   import type { Writable } from 'svelte/store';
   import type { SHLAdminParams } from '$lib/utils/managementClient';
 
@@ -15,7 +15,7 @@
   let searchString = "";
 
   $: {
-    if (searchString.length > 2) {
+    if (searchString.length > 1) {
       filteredPatients = patients?.filter((patient) => {
         let name = patient.name?.[0];
         if (name?.given?.[0] && name?.family) {
@@ -74,6 +74,7 @@
         <th></th>
       </tr>
     </thead>
+    <tbody class="table-group-divider">
     {#if filteredPatients?.length > 0}
       {#each filteredPatients as patient}
         <tr>
@@ -81,7 +82,7 @@
           <td>{patient.name?.[0].family}</td>
           <td>{patient.birthDate}</td>
           <td>
-            <Button size="sm" color="primary" target="_blank" href={'/patient/' + patient.id}>View</Button>
+            <Button size="sm" color="primary" target="_blank" href={'/patient/' + patient.id} style="width: 100%">View</Button>
           </td>
         </tr>
       {/each}
@@ -90,5 +91,6 @@
         <td colspan="4">No patients found</td>
       </tr>
     {/if}
+    </tbody>
   </Table>
 {/if}

@@ -303,7 +303,7 @@
                                                         <Input id={key} type="checkbox" bind:checked={$resourcesByTypeStore[resourceType][key].include} value={key} />
                                                     {/if}
                                                 </Col>
-                                                <Col class="justify-content-center align-items-center">
+                                                <Col class="resource-content justify-content-center align-items-center">
                                                     {#if resourceType in components}
                                                         <svelte:component
                                                             this={components[resourceType]}
@@ -333,45 +333,45 @@
 
 <style>
     /* Table styling */
-  :global(table) {
+  :global(.resource-content table) {
     border-collapse: collapse !important;
     width: 100% !important;
   }
 
-  :global(th) {
+  :global(.resource-content th) {
     border: 1px solid lightgray !important;
     padding: 0 7px !important;
     text-align: center !important;
   }
 
-  :global(td) {
+  :global(.resource-content td) {
     margin-left: 2em !important;
   }
 
-  :global(thead) {
+  :global(.resource-content thead) {
     background-color: #0c63e4;
     color: white;
   }
 
   /* Alternating table row coloring */
-  :global(tbody tr:nth-child(odd)) {
+  :global(.resource-content tbody tr:nth-child(odd)) {
     background-color: #fff;
     border: 1px solid lightgray;
   }
-  :global(tbody tr:nth-child(even)) {
+  :global(.resource-content tbody tr:nth-child(even)) {
     background-color: #e7f1ff;
     border: 1px solid lightgray;
   }
   
   /* Sticky table header */
-  :global(th) {
+  :global(.resource-content th) {
     background: #0c63e4;
     position: sticky;
     top: -17px;
   }
 
   /* First column of generated table is usually most important */
-  :global(td:first-child) {
+  :global(.resource-content td:first-child) {
     font-weight: bold;
   }
 
