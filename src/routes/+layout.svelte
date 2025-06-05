@@ -93,6 +93,11 @@
 </Container>
 
 <style>
+  /* Handle scroll gutter */
+  :global(.main) {
+    position: relative;
+    left: calc((100vw - 100%) / 2);
+  }
   :global(.main-content) {
     flex-grow: 1;
   }
