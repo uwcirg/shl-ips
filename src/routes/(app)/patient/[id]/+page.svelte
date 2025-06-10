@@ -27,11 +27,18 @@
     let patient = await fetch("https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/" + patientId)
       .then((response) => response.json())
       .then((data) => data);
-    let docrefs = await fetch("https://fhir.ips-demo.dev.cirg.uw.edu/fhir/DocumentReference?status=current&subject=" + patientId)
+    let docrefSummaries = await fetch("https://fhir.ips-demo.dev.cirg.uw.edu/fhir/DocumentReference?_summary=true&status=current&subject=" + patientId)
       .then((response) => response.json())
       .then((data) => data.entry)
       .then((data) => data.map((entry) => entry.resource));
-    patientData = [patient, ...docrefs];
+    patientData = [patient, ...docrefSummaries];
+    await fetch("https://fhir.ips-demo.dev.cirg.uw.edu/fhir/DocumentReference?status=current&subject=" + patientId)
+      .then((response) => response.json())
+      .then((data) => data.entry)
+      .then((data) => data.map((entry) => entry.resource))
+      .then((data) => {
+        patientData = [patient, ...data];
+      });
   });
 
   const components: Record<string, any> = {
