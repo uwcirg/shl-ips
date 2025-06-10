@@ -161,10 +161,10 @@
                 <NavLink href="/summaries" active={ activeItem === "summaries" }>Summaries</NavLink>
               </NavItem>
               <NavItem>
-                <NavLink href="/provider" active={ activeItem === "provider" }>Provider</NavLink>
-              </NavItem>
-              <NavItem>
                 <NavLink href="/create" active={ activeItem === "create" }>Create</NavLink>
+              </NavItem>
+              <NavItem style="border-left: 1px solid rgb(204, 204, 204);">
+                <NavLink href="/provider" active={ activeItem === "provider" }>Provider</NavLink>
               </NavItem>
               <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
                 <DropdownToggle color="primary" nav caret><Icon name="person-circle"/> Account</DropdownToggle>
