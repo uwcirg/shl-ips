@@ -1,4 +1,4 @@
-import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config';
+import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
 
 // Create Bundle and POST
 export async function uploadResources(resources) {

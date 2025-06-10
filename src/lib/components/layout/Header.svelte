@@ -24,6 +24,7 @@
   import LanguageMenu from '$lib/components/layout/LanguageMenu.svelte';
   import { AuthService } from '$lib/utils/AuthService';
   import { type SHLAdminParams } from '$lib/utils/managementClient';
+  import {INSTANCE_CONFIG} from '$lib/config/instance_config';
 
   let authService = AuthService.Instance;
 
@@ -33,7 +34,7 @@
 
   let mode: Writable<string> = getContext('mode');
 
-  let activeItem: ("home" | "summaries" | "create" | "") = "";
+  let activeItem: ("home" | "summaries" | "provider" | "create" | "") = "";
   $: {
     if ($page.url.pathname.includes("summaries")) {
       activeItem = "summaries";
@@ -41,6 +42,8 @@
       activeItem = "create";
     } else if ($page.url.pathname === "/") {
       activeItem = "home";
+    } else if ($page.url.pathname.includes("provider")) {
+      activeItem = "provider";
     } else {
       activeItem = "";
     }
@@ -160,6 +163,9 @@
               <NavItem>
                 <NavLink href="/create" active={ activeItem === "create" }>Create</NavLink>
               </NavItem>
+              <NavItem style="border-left: 1px solid rgb(204, 204, 204);">
+                <NavLink href="/provider" active={ activeItem === "provider" }>Provider</NavLink>
+              </NavItem>
               <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
                 <DropdownToggle color="primary" nav caret><Icon name="person-circle"/> Account</DropdownToggle>
                 <DropdownMenu end style="max-height: 350px; overflow:auto">
@@ -216,7 +222,7 @@
       </Nav>
     </Collapse>
   </Navbar>
-  <Banner title="HL7 Standards-Based Patient Summary"/>
+  <Banner title={INSTANCE_CONFIG.header.title}/>
 </Row>
 </div>
 <style>

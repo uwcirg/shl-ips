@@ -9,7 +9,10 @@
     Styles
   } from 'sveltestrap';
   import { goto } from '$app/navigation';
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import { AuthService } from '$lib/utils/AuthService';
+
+
   async function login() {
     if (await AuthService.Instance.isAuthenticated()) {
       goto('/summaries');
@@ -20,7 +23,12 @@
 </script>
 <Styles />
 <svelte:head>
-    <title>WA Health Summary</title>
+    <title>{INSTANCE_CONFIG.home.title}</title>
+    <link rel="preload" as="font" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/fonts/bootstrap-icons.woff2?8d200481aa7f02a2d63a331fc782cfaf" type="font/woff2" crossorigin="anonymous">
+    <link rel="preload" as="image" href="/img/doh_logo_doh-black.png" />
+    <link rel="preload" as="image" href={INSTANCE_CONFIG.header.logo} />
+    <link rel="preload" as="image" href="/img/qr-banner-top.png" />
+    <link rel="preload" as="image" href="/img/qr-banner-bottom.png" />
 </svelte:head>
 
 <div style="padding-left: 17px">
@@ -28,7 +36,8 @@
     <p class="text-danger info-paragraph">Demonstration/Test System - do not use with real health information</p>
   </span>
 
-    <p class="info-paragraph">WA Health Summary lets people obtain and personally control the sharing of their health information, with any health care provider, family member or other individuals of their choosing, using a simple web link or QR code.</p>
+  {@html INSTANCE_CONFIG.home.intro}
+
   <Row class="my-4 d-flex justify-content-center">
     <Card style="width: 60%" color="light">
       <CardBody>

@@ -71,15 +71,15 @@
                     <td>
                         {#if address.line}
                             {#each address.line as line}
-                                {line}<br />
+                                {line}<br>
                             {/each}
                         {/if}
-                        {address.city ?? "[Unknown City]"}{
+                        {address.city ? address.city+"," : ""}{
                             address.state
-                                ? `, ${address.state}`
+                                ? ` ${address.state}`+(address.country ? "," : "")
                                 : ''
                         }{address.country
-                            ? `, ${address.country}`
+                            ? ` ${address.country}`
                             : ''}
                         {address.postalCode ?? ""}
                     </td>
@@ -107,9 +107,6 @@
                         {contact.name.family ?? ""}
                     </strong>
                     <br>
-                {/if}
-                {#if contact.gender}
-                Gender: {contact.gender ?? ""}<br>
                 {/if}
                 {#if contact.telecom}
                     <table class="table table-bordered table-sm">
@@ -139,15 +136,15 @@
                             <td>
                                 {#if contact.address.line}
                                     {#each contact.address.line as line}
-                                        {line}<br />
+                                        {line}<br>
                                     {/each}
                                 {/if}
-                                {contact.address.city ?? "[Unknown City]"}{
+                                {contact.address.city ? contact.address.city+"," : ""}{
                                     contact.address.state
-                                        ? `, ${contact.address.state}`
+                                        ? ` ${contact.address.state}`+(contact.address.country ? "," : "")
                                         : ''
                                 }{contact.address.country
-                                    ? `, ${contact.address.country}`
+                                    ? ` ${contact.address.country}`
                                     : ''}
                                 {contact.address.postalCode ?? ""}
                             </td>

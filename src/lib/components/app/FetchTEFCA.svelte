@@ -12,7 +12,7 @@
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
   import { createEventDispatcher } from 'svelte';
   import { constructResourceUrl } from '$lib/utils/sofClient';
-  import { SOF_PATIENT_RESOURCES } from '$lib/config';
+  import { SOF_PATIENT_RESOURCES } from '$lib/config/config';
   import {
     constructPatientResource,
     buildPatientSearchQuery

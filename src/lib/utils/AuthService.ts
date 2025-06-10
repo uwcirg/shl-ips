@@ -4,7 +4,7 @@ import {
   AUTH_REDIRECT_URI,
   AUTH_SILENT_REDIRECT_URI,
   AUTH_POST_LOGOUT_URI
-} from '$lib/config';
+} from '$lib/config/config';
 import { User, UserManager } from 'oidc-client-ts';
 
 export class AuthService {

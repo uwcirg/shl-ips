@@ -1,5 +1,5 @@
 import { base64url } from '$lib/utils/util';
-import { API_BASE, VIEWER_BASE } from '$lib/config';
+import { API_BASE, VIEWER_BASE } from '$lib/config/config';
 import * as jose from 'jose';
 import type { AuthService } from './AuthService';
 

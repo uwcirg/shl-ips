@@ -4,8 +4,8 @@
     Row,
     Styles
   } from 'sveltestrap';
-  import HealthLinkOverview from '$lib/components/app/HealthLinkOverview.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
+  import ProviderOverview from '$lib/components/app/ProviderOverview.svelte';
 </script>
 <Styles />
 <svelte:head>
@@ -21,7 +21,7 @@
   </Row>
   <Row>
     <Col>
-      <HealthLinkOverview />
+      <ProviderOverview />
     </Col>
   </Row>
 </div>

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Row, Col } from 'sveltestrap';
-  import { VERSION_STRING } from '$lib/config';
+  import { VERSION_STRING } from '$lib/config/config';
   import { getContext } from 'svelte';
   import type { Writable } from 'svelte/store';
 

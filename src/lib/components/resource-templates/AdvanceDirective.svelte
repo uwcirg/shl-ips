@@ -4,7 +4,8 @@
   
   export let content: ResourceTemplateParams<DocumentReferencePOLST>; // Define a prop to pass the data to the component
 
-  let resource: DocumentReferencePOLST = content.resource;
+  let resource: DocumentReferencePOLST;
+  $: resource = content.resource;
 
   /** Determine if any extension has the revoked status
   let isRevoked = false;
@@ -172,7 +173,7 @@ Text:
     {#if content.attachment.contentType === "application/pdf" && content.attachment.data}
       <b>PDF present:</b>
       {#await base64toBlob(content.attachment.data, content.attachment.contentType)}
-        Loading PDF...
+        Loading...
       {:then url}
         <a href={url} target="_blank" rel="noopener noreferrer">View</a>
       {/await}

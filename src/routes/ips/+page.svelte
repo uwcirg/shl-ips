@@ -19,7 +19,7 @@
   import IPSContent from '$lib/components/viewer/IPSContent.svelte';
   import Demo from '$lib/components/viewer/Demo.svelte';
   
-  import { SHOW_VIEWER_DEMO } from "$lib/config";
+  import { SHOW_VIEWER_DEMO } from "$lib/config/config";
 
   let shlContents: Bundle[] = [];
 

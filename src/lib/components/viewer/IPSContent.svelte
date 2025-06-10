@@ -89,7 +89,7 @@
     }
     let patient = ips.entry?.filter((entry) => entry.resource?.resourceType === 'Patient').map((entry) => entry.resource);
     if (patient?.[0]) {
-      content ["Patient"] = {
+      content["Patient"] = {
         section: {
           text: {
             div: `<b>${patient[0].name?.[0]?.prefix ?? ""} ${patient[0].name?.[0]?.given?.join(' ') ?? ""} ${patient[0].name?.[0]?.family ?? ""}</b><br>
@@ -151,6 +151,14 @@
     }
     return result;
   };
+
+  function getSections() {
+    return Object.entries(ipsContent).sort((a, b) => {
+      if (a[0] === "Patient") { return -1; }
+      if (b[0] === "Patient") { return 1; }
+      return a[0].localeCompare(b[0]);
+    });
+  }
 
   let showInfo = false;
   let infoMessage = "";
@@ -218,7 +226,7 @@
 {#if showInfo}
   <Row class="text-info">{infoMessage}</Row>
 {/if}
-{#each Object.entries(ipsContent) as [title, sectionContent]}
+{#each getSections() as [title, sectionContent]}
   <Row class="mx-0">
     <!--wrap in accordion with title-->
     <Accordion class="mt-3">

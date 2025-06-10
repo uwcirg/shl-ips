@@ -11,7 +11,7 @@
 
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
   import { createEventDispatcher } from 'svelte';
-  import { API_BASE } from '$lib/config';
+  import { API_BASE } from '$lib/config/config';
   import {
     constructPatientResource
   } from '$lib/utils/util';
