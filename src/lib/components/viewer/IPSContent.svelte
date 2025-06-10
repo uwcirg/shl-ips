@@ -30,6 +30,7 @@
   import DeviceUseStatement from '$lib/components/resource-templates/DeviceUseStatement.svelte';
   import DiagnosticReport from '$lib/components/resource-templates/DiagnosticReport.svelte';
   import Encounter from '$lib/components/resource-templates/Encounter.svelte';
+  import Goal from '$lib/components/resource-templates/Goal.svelte';
   import Immunization from '$lib/components/resource-templates/Immunization.svelte';
   import Location from '$lib/components/resource-templates/Location.svelte';
   import Medication from '$lib/components/resource-templates/Medication.svelte';
@@ -42,6 +43,7 @@
   import Procedure from '$lib/components/resource-templates/Procedure.svelte';
   import OccupationalData from '$lib/components/resource-templates/OccupationalData.svelte';
   import QuestionnaireResponse from '$lib/components/resource-templates/QuestionnaireResponse.svelte';
+  import SectionExtension from '$lib/components/resource-templates/SectionExtension.svelte';
 
   const components: Record<string, any> = {
     "AllergyIntolerance": AllergyIntolerance,
@@ -52,6 +54,7 @@
     "DiagnosticReport": DiagnosticReport,
     "DocumentReference": AdvanceDirective,
     "Encounter": Encounter,
+    "Goal": Goal,
     "Immunization": Immunization,
     "Location": Location,
     "Medication": Medication,
@@ -90,7 +93,14 @@
     let patient = ips.entry?.filter((entry) => entry.resource?.resourceType === 'Patient').map((entry) => entry.resource);
     if (patient?.[0]) {
       content ["Patient"] = {
-        section: {},
+        section: {
+          text: {
+            div: patient[0].text?.div ??
+                `<b>${patient[0].name?.[0]?.text ?? `${(patient[0].name?.[0]?.prefix ?? "") (patient[0].name?.[0]?.given?.join(' ') ?? "") (patient[0].name?.[0]?.family ?? "")}`}</b><br>
+                  Birth Date: ${patient[0].birthDate ?? ""}<br>
+                  Gender: ${patient[0].gender ?? ""}`
+          }
+        },
         entries: patient as Resource[],
         useText: false
       }
@@ -213,48 +223,68 @@
   <Row class="text-info">{infoMessage}</Row>
 {/if}
 {#each Object.entries(ipsContent) as [title, sectionContent]}
-<Row class="mx-0">
-  <!--wrap in accordion with title-->
-  <Accordion class="mt-3">
-    <AccordionItem active class="ips-section">
-      <h6 slot="header" class="my-2">{title}</h6>
-      {#if sectionContent.useText || mode === "text"}
-        {@html sectionContent.section.text?.div}
-      {:else}
-        <Card style="width: 100%; max-width: 100%" class="mb-2">
-            {#each sectionContent.entries as resource, index}
-              <CardBody class={index > 0 ? "border-top" : ""}>
-                <Row style="overflow:hidden" class="d-flex justify-content-end align-content-center">
-                  <Col class="flex-grow-1" style="overflow:hidden">
-                    {#if mode === "app" && resource.resourceType in components}
+  <Row class="mx-0">
+    <!--wrap in accordion with title-->
+    <Accordion class="mt-3">
+      <AccordionItem active class="ips-section">
+        <h6 slot="header" class="my-2">{title}</h6>
+        {#if sectionContent.useText || mode === "text"}
+          {#if sectionContent.section.text?.div}
+            {@html sectionContent.section.text?.div}
+          {:else}
+            No text available
+          {/if}
+        {:else}
+          {#if sectionContent.section.extension}
+            {#each sectionContent.section.extension as extension}
+              <Card style="width: 100%; max-width: 100%" class="mb-2">
+                <CardBody>
+                  <Row style="overflow:hidden" class="d-flex justify-content-end align-content-center">
+                    <Col class="flex-grow-1" style="overflow:hidden">
                       <svelte:component
-                        this={components[resource.resourceType]}
-                        content={{resource: resource, entries: bundle.entry}}
+                        this={SectionExtension}
+                        content={{resource: extension, entries: bundle.entry}}
                       />
-                    {:else}
-                      {#if mode === "app"}
-                        {showInfoMessage(`Unsupported sections displayed using composition narratives`)};
-                      {/if}
-                    {/if}
-                  </Col>
-                  <Col class="d-flex flex-row-reverse justify-content-end align-items-start" style="max-width: max-content">
-                    <Button
-                        size="sm"
-                        color="secondary"
-                        outline
-                        on:click={() => setJson(resource)}
-                    >
-                      View
-                    </Button>
-                  </Col>
-                </Row>
-              </CardBody>
+                    </Col>
+                  </Row>
+                </CardBody>
+              </Card>
             {/each}
-          </Card>
-        {/if}
-    </AccordionItem>
-  </Accordion>
-</Row>
+          {/if}
+          <Card style="width: 100%; max-width: 100%" class="mb-2">
+              {#each sectionContent.entries as resource, index}
+                <CardBody class={index > 0 ? "border-top" : ""}>
+                  <Row style="overflow:hidden" class="d-flex justify-content-end align-content-center">
+                    <Col class="flex-grow-1" style="overflow:hidden">
+                      {#if mode === "app" && resource.resourceType in components}
+                        <svelte:component
+                          this={components[resource.resourceType]}
+                          content={{resource: resource, entries: bundle.entry}}
+                        />
+                      {:else}
+                        {#if mode === "app"}
+                          {showInfoMessage(`Unsupported sections displayed using composition narratives`)};
+                        {/if}
+                      {/if}
+                    </Col>
+                    <Col class="d-flex flex-row-reverse justify-content-end align-items-start" style="max-width: max-content">
+                      <Button
+                          size="sm"
+                          color="secondary"
+                          outline
+                          on:click={() => setJson(resource)}
+                      >
+                        View
+                      </Button>
+                    </Col>
+                  </Row>
+                </CardBody>
+              {/each}
+            </Card>
+          {/if}
+      </AccordionItem>
+    </Accordion>
+  </Row>
 {/each}
 
 <style>
@@ -304,7 +334,7 @@
   /* Limit height for section content window */
   :global(.ips-section > .accordion-collapse > .accordion-body) {
     overflow: auto !important;
-    max-height: 50rem !important;
+    max-height: 52rem !important;
   }
 
   .code {

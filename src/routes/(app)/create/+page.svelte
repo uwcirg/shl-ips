@@ -32,12 +32,11 @@
 
   async function newShlFromShc(details: SHLSubmitEvent): Promise<SHLAdminParams> {
     shlStatus = "Creating SHL";
-    let shlCreated = await shlClient.createShl({exp: details.exp, passcode: details.passcode });
+    let shlCreated = await shlClient.createShl({exp: details.exp, passcode: details.passcode, label: details.label, source: details.source});
+    $shlStore = await shlClient.getUserShls();
+    let fullShlCreated = $shlStore.filter((s) => s.id === shlCreated.id)[0];
     shlStatus = "Adding IPS";
-    shlCreated = await addFiles(shlCreated, details.shcs);
-    shlCreated.label = details.label;
-    shlCreated.passcode = details.passcode;
-    shlCreated.source = details.source;
+    shlCreated = await addFiles(fullShlCreated, details.shcs);
     return shlCreated;
   }
 
@@ -49,7 +48,7 @@
 {/if}
 
 <svelte:head>
-    <title>Create IPS - WA Verify+</title> 
+    <title>Create a Summary - WA Health Summary</title> 
 </svelte:head>
 
 <AddFile
@@ -58,15 +57,11 @@
     patientName = detail.patientName ?? "";
     if (shl) {
       shl = await addFiles(shl, detail.shcs);
-      $shlStore[$shlStore.findIndex(obj => obj.id === shl?.id)] = shl;
+      $shlStore = await shlClient.getUserShls();
       goto(`/view/${shl.id}`);
     } else {
       const newShl = await newShlFromShc(detail);
-      newShl.files.map(f => {
-        f.contentEncrypted = f.contentEncrypted.slice(0, 200);
-        return f;
-      });
-      $shlStore = [...$shlStore, newShl];
+      $shlStore = await shlClient.getUserShls();
       goto(`/view/${newShl.id}`);
     }
   }}

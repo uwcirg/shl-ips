@@ -8,7 +8,7 @@
 </script>
   
 <strong>{resource.name ?? ""}</strong>
-<br />
+<br>
 {#if resource.telecom}
   <table class="table table-bordered table-sm">
       <thead>
@@ -28,7 +28,7 @@
       {#if resource.address.line.length > 0}
         {#each resource.address.line as line}
           {#if line !== ""}
-            {line}<br />
+            {line}<br>
           {/if}
         {/each}
       {:else}

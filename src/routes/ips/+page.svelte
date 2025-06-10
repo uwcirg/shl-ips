@@ -12,7 +12,7 @@
     TabPane,
     Row,
   } from 'sveltestrap';
-  import * as shlClient from '$lib/utils/shlClient.js';
+  import * as shlClient from '$lib/utils/shlClient';
   import { verify } from '$lib/utils/shcDecoder.js';
   import type { Bundle, Composition, Patient } from 'fhir/r4';
   
@@ -93,41 +93,68 @@
 
   // Retrieving SHL
   async function retrieve(){
-    const recipient = "WA Verify+ IPS Viewer";
+    const recipient = "WA Health Summary Viewer";
 
-    let passcode;
-    const needPasscode = shlClient.flag({ shl }).includes('P');
-    if (needPasscode) {
-        passcode = prompt("Enter passcode for SMART Health Link");
-    }
     let retrieveResult;
+    let passcode;
     try {
-        retrieveResult = await shlClient.retrieve({
-            shl,
-            passcode,
-            recipient
+        retrieveResult = await fetch(shlClient.url({ shl: shl ?? "" }), {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({
+            recipient: recipient,
+          }),
         });
+      let message = await retrieveResult.text();
+      message = JSON.parse(message)?.message;
+      if (!retrieveResult.ok && retrieveResult.status === 401 && message === "Passcode required") {
+        // Failed the password requirement
+        const needPasscode = shlClient.flag({ shl: shl ?? "" })?.includes('P');
+        if (needPasscode) {
+          passcode = prompt("WA Health Summary Viewer\n----------------------------------------\nEnter a passcode to access this SMART Health Link");
+        }
+      }
     } catch (e) {
-        // Retrieval succeeded, but there was an error parsing files, etc.
-        console.log(e);
-        throw Error("Content parsing error");
+      let message = "Error retrieving SMART Health Link Manifest";
+      console.log(`${message}: ${e}`);
+      setError(message);
+      return;
+    }
+    
+    try {
+      retrieveResult = await shlClient.retrieve({
+          shl: shl ?? "",
+          passcode: passcode ?? "",
+          recipient
+      });
+    } catch (e) {
+      console.log(e);
+      setError(e.message);
+      return;
     }
 
+    if (retrieveResult === undefined) {
+      setError("Unable to retrieve SMART Health Link.");
+      return;
+    }
+ 
     if (retrieveResult.error) {
         let errorMsg = "";
         if (retrieveResult.status) {
             if (retrieveResult.status === 404) {
                 // Couldn't find the shl, or it's been deactivated
-                const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl })}">Manage or reactivate it here</a>`;
-                errorMsg = `<p>The requested SHL does not exist or has been deactivated.</p><p>Are you the owner of this link? ${managerLink}</p>`;
+                const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl: shl ?? "" })}">Manage or reactivate it here</a>`;
+                errorMsg = `<p>This SMART Health Link does not exist or has been deactivated.</p><p>Are you the owner of this link? ${managerLink}</p>`;
             } else if (retrieveResult.status === 401) {
                 // Failed the password requirement
                 while (retrieveResult.status === 401) {
-                    passcode = prompt(`Enter passcode for SMART Health Link ${retrieveResult.error.remainingAttempts !== undefined ? "\nAttempts remaining: "+retrieveResult.error.remainingAttempts : ""}`);
+                  passcode = prompt(`WA Health Summary Viewer\n----------------------------------------\nIncorrect passcode.\nEnter a passcode to access this SMART Health Link`);
                     try {
                         retrieveResult = await shlClient.retrieve({
-                            shl,
-                            passcode,
+                            shl: shl ?? "",
+                            passcode: passcode ?? "",
                             recipient
                         });
                     } catch (e) {
@@ -137,20 +164,25 @@
                     }
                 }
                 if (retrieveResult.error) {
-                    const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl })}">Manage or reactivate it here</a>`;
-                    errorMsg = `<p>The requested SHL has been deactivated due to too many failed password attempts.</p><p>Are you the owner of this link? ${managerLink}</p>`;
+                    const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl: shl ?? "" })}">Manage or reactivate it here</a>`;
+                    errorMsg = `<p>You have been locked from accessing this SMART Health Link due to too many failed password attempts.</p><p>Are you the owner of this link? ${managerLink}</p>`;
                 }
             } else {
                 errorMsg = retrieveResult.error;
             }
         }
-        setError(errorMsg);
-        return;
+        if (errorMsg !== "") {
+          setError(errorMsg);
+          return;
+        }
     }
     if (retrieveResult.shcs) {
       const decoded = await Promise.all(retrieveResult.shcs.map(verify));
       const data = decoded.map((e) => e.fhirBundle);
       shlContents = data;
+    }
+    if (retrieveResult.jsons) {
+      shlContents = [...shlContents, ...retrieveResult.jsons];
     }
 }
   // End retrieving SHL
@@ -229,13 +261,13 @@
   <TabContent>
     {#each shlContents as contents, index}
       <TabPane class={`ips${index}`} tabId={`ips${index}`} active={index === 0} style="padding-top:10px">
-        <span class="smart-tab" slot="tab">{getTabLabel(contents)}</span>
+        <span slot="tab">{getTabLabel(contents)}</span>
         <IPSContent bundle={contents} mode={$displayMode} />
       </TabPane>
     {/each}
     {#if SHOW_VIEWER_DEMO}
       <TabPane tabId="demo" active={shlContents.length === 0} style="padding-top:10px">
-        <span class="demo-tab" slot="tab">IPS Demo</span>
+        <span class="demo-tab" slot="tab">Demo</span>
         <Demo bundle={shlContents[0]} mode={$displayMode} />
       </TabPane>
     {/if}

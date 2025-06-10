@@ -21,6 +21,7 @@ const allowableResourceTypes = [
     'DiagnosticReport',
     'DocumentReference',
     'Encounter',
+    'Goal',
     'Flag',
     'Immunization',
     'Location',
@@ -35,7 +36,14 @@ const allowableResourceTypes = [
     // 'PractitionerRole', Not relevant to IPS
     'Procedure',
     'QuestionnaireResponse', // FIXME this is not part of IPS, should get a carve-out elsewhere...
-    'Specimen'
+    'Specimen',
+    
+    // CARIN BB resources
+    'Coverage',
+    'Practitioner',
+    'Organization',
+    'RelatedPerson',
+    'ExplanationOfBenefit',
 ];
 
 interface SerializedIPSResourceCollection {
@@ -150,7 +158,7 @@ export class IPSResourceCollection {
             }
             if (!(rh.tempId in curr[sectionKey])) {
                 curr[sectionKey][rh.tempId] = rh;
-                if (sectionKey == 'Patient' && !get(this.patientReference)) {
+                if (sectionKey == 'Patient' && (!get(this.patientReference) || rh.original_resource.id === "customPatient")) {
                     this.setSelectedPatient(rh.tempId);
                 }
             }

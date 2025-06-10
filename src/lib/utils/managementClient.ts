@@ -1,34 +1,49 @@
-import { randomStringWithEntropy, base64url } from '$lib/utils/util';
+import { base64url } from '$lib/utils/util';
 import { API_BASE, VIEWER_BASE } from '$lib/config';
 import * as jose from 'jose';
+import type { AuthService } from './AuthService';
 
-type ConfigForServer = Pick<SHLAdminParams, 'passcode' | 'exp'>;
+interface ConfigForServer extends Pick<SHLAdminParams, 'passcode' | 'exp' | 'label'> {
+  userId?: string;
+  patientId?: string;
+  pin?: string;
+  patientIdentifierSystem?: string;
+}
 
 export interface SHLAdminParams {
   id: string;
+  url: string;
   managementToken: string;
-  encryptionKey: string;
+  key: string;
   files: {
-    contentEncrypted: string;
     contentType: string;
-    date?: string;
-    label?: string;
+    contentHash: string;
+    added?: string;
+    label?: string | null;
   }[];
   passcode?: string;
   exp?: number;
+  flag?: string;
   label?: string;
   source?: string;
   v?: number;
 }
 
 export class SHLClient {
+  // TODO: commit to jwt auth
+  // use this to get token for each request
+  auth: AuthService;
+  
+  constructor(auth: AuthService) {
+    this.auth = auth;
+  }
+
   async toLink(shl: SHLAdminParams): Promise<string> {
     const shlinkJsonPayload = {
       url: `${API_BASE}/shl/${shl.id}`,
       exp: shl.exp || undefined,
-      flag: shl.passcode ? 'P' : '',
-      key: shl.encryptionKey,
-      label: shl.label
+      flag: shl.flag ?? 'P',
+      key: shl.key
     };
 
     const encodedPayload: string = base64url.encode(JSON.stringify(shlinkJsonPayload));
@@ -36,46 +51,56 @@ export class SHLClient {
     return shlinkBare;
   }
 
+  async getUserShls(): Promise<SHLAdminParams[]> {
+    let profile = await this.auth.getProfile();
+    if (!profile) return [];
+    const userId = profile.sub;
+    const res = await fetch(`${API_BASE}/user`, {
+      method: 'POST',
+      body: JSON.stringify({ userId }),
+    });
+    const shls = await res.json();
+    return shls;
+  }
+
   async createShl(config: ConfigForServer = {}): Promise<SHLAdminParams> {
-    const ek = randomStringWithEntropy();
-    const create = await fetch(`${API_BASE}/shl`, {
+    config.userId = (await this.auth.getProfile())?.sub;
+    const res = await fetch(`${API_BASE}/shl`, {
       method: 'POST',
       headers: {
-        'content-type': 'application/json'
+        "Content-Type": 'application/json',
       },
       body: JSON.stringify(config)
     });
-    const { id, managementToken } = await create.json();
-    return {
-      id,
-      managementToken,
-      encryptionKey: ek,
-      files: [],
-      ...config
-    };
+    const shlink = await res.text();
+    const payload = shlink.split('/');
+    const decodedPayload = base64url.decode(payload[payload.length - 1]);
+    const asString = new TextDecoder('utf-8').decode(decodedPayload);
+    const shl: SHLAdminParams = JSON.parse(asString);
+    return shl;
   }
 
-  async deleteShl(shl: SHLAdminParams): Promise<boolean> {
-    const req = await fetch(`${API_BASE}/shl/${shl.id}`, {
+  async deleteShl(shl: SHLAdminParams): Promise<SHLAdminParams[]> {
+    const res = await fetch(`${API_BASE}/shl/${shl.id}`, {
       method: 'DELETE',
       headers: {
-        authorization: `Bearer ${shl.managementToken}`
+        "Authorization": `Bearer ${shl.managementToken}`
       }
     });
-    const res = await req.json();
-    return true;
+    const deleted = await res.json();
+    return deleted;
   }
 
   async resetShl(shl: SHLAdminParams): Promise<boolean> {
-    const req = await fetch(`${API_BASE}/shl/${shl.id}`, {
+    const res = await fetch(`${API_BASE}/shl/${shl.id}`, {
       method: 'PUT',
-      body: JSON.stringify({ passcode: shl.passcode, exp: shl.exp }),
+      body: JSON.stringify({ passcode: shl.passcode, exp: shl.exp, label: shl.label }),
       headers: {
-        authorization: `Bearer ${shl.managementToken}`
+        "Authorization": `Bearer ${shl.managementToken}`
       }
     });
-    const res = await req.json();
-    return true;
+    const updatedShl = await res.json();
+    return updatedShl;
   }
 
   async isActive(id: string): Promise<boolean> {
@@ -95,7 +120,7 @@ export class SHLClient {
       }
     }
     if (res.ok && content !==undefined) {
-      return content;
+      return content as boolean;
     }
     if (!res.ok) {
       if (res.status === 404) {
@@ -107,17 +132,18 @@ export class SHLClient {
         return false;
       }
     }
+    return false;
   }
 
   async reactivate(shl: SHLAdminParams): Promise<boolean> {
-    const req = await fetch(`${API_BASE}/shl/${shl.id}/reactivate`, {
+    const res = await fetch(`${API_BASE}/shl/${shl.id}/reactivate`, {
       method: 'PUT',
       headers: {
-        authorization: `Bearer ${shl.managementToken}`
+        "Authorization": `Bearer ${shl.managementToken}`
       }
     });
-    const res = await req.json();
-    return res;
+    const reactivated = await res.json();
+    return reactivated;
   }
 
   async addFile(
@@ -133,31 +159,32 @@ export class SHLClient {
         alg: 'dir',
         enc: 'A256GCM'
       })
-      .encrypt(jose.base64url.decode(shl.encryptionKey));
+      .encrypt(jose.base64url.decode(shl.key));
 
-    let date = new Date().toISOString().slice(0, 10);
+    let added = new Date().toISOString().slice(0, 10);
     let label = (patientName ? patientName.charAt(0).toUpperCase() + patientName.slice(1).toLowerCase() + "'s" : "My")+ " Summary";
-    new TextEncoder().encode(contentEncrypted), shl.files.push({ contentEncrypted, contentType, date, label });
-    const add = await fetch(`${API_BASE}/shl/${shl.id}/file`, {
+    new TextEncoder().encode(contentEncrypted);
+    const res = await fetch(`${API_BASE}/shl/${shl.id}/file`, {
       method: 'POST',
       headers: {
-        'content-type': contentType,
-        authorization: `Bearer ${shl.managementToken}`
+        "Content-Type": contentType,
+        "Authorization": `Bearer ${shl.managementToken}`
       },
       body: contentEncrypted
     });
-    return shl;
+    const updatedShl = await res.json();
+    return await updatedShl;
   }
 
-  async deleteFile(shl: SHLAdminParams, contentEncrypted: string): Promise<SHLAdminParams> {
-    const req = await fetch(`${API_BASE}/shl/${shl.id}/file`, {
+  async deleteFile(shl: SHLAdminParams, contentHash: string): Promise<SHLAdminParams> {
+    const res = await fetch(`${API_BASE}/shl/${shl.id}/file`, {
       method: 'DELETE',
       headers: {
-        authorization: `Bearer ${shl.managementToken}`
+        "Authorization": `Bearer ${shl.managementToken}`
       },
-      body: contentEncrypted
+      body: contentHash
     });
-    const res = await req.json();
-    return shl;
+    const updatedShl = await res.json();
+    return updatedShl;
   }
 }

@@ -34,20 +34,20 @@
 
 <!--
 Type: {resource.resourceType}
-<br />
+<br>
 Text:
 {#if resource.text && resource.text.div}
   {resource.text.div}
 {:else}
   <i>No text provided in resource</i>
 {/if}
-<br />
+<br>
 -->
 
 {#if resource.category}
   <b>Category:</b>
   {resource.category?.[0].coding?.[0].display} (LOINC {resource.category?.[0].coding?.[0].code})
-  <br />
+  <br>
 {/if}
 {#if resource.type?.coding}
   <b>Type:</b>
@@ -58,36 +58,36 @@ Text:
   {#if resource.type?.coding?.[1]}
     {resource.type?.coding?.[1].display} (LOINC {resource.type?.coding?.[1].code})
   {/if}
-  <br />
+  <br>
 {/if}
 {#if resource.description}
   <b>Description:</b> {resource.description}
-  <br />
+  <br>
 {/if}
 {#if resource.author?.[0].display}
   <b>Author:</b> {resource.author[0].display}
-  <br />
+  <br>
 {/if}
 {#if resource.identifier?.[0].system == 'https://mydirectives.com/standards/terminology/namingSystem/setId'}
   <b>setId:</b> {resource.identifier[0].value}
-  <br />
+  <br>
 {/if}
 {#if resource.extension?.[0].url == 'http://hl7.org/fhir/us/ccda/StructureDefinition/VersionNumber'}
   <!-- As of the July '24 this is now a unix time stamp --> 
   <b>Version number:</b> {resource.extension[0].valueInteger}
-  <br />
+  <br>
 {/if}
 <!-- This is the date that the DocumentReference resource was created, not of interest.
 <b>Date:</b>
 {#if resource.date}
   {resource.date}
 {/if}
-<br />
+<br>
 -->
 
 {#if resource.status}
   <b>Status:</b> {resource.status}
-  <br />
+  <br>
 {/if}
 
 <!-- Revoke Status -->
@@ -95,22 +95,22 @@ Text:
   {#each resource.extension as ext}
     {#if ext.url == 'http://hl7.org/fhir/us/pacio-adi/StructureDefinition/adi-document-revoke-status-extension'}
       <b>Revoke Status:</b> {ext.valueCoding?.code}
-      <br />
+      <br>
     {/if}
   {/each}
 {/if}
 
 {#if resource.docStatus}
 <b>docStatus:</b> {resource.docStatus}
-<br />
+<br>
 {/if}
 {#if resource.description}
   {resource.description}
-  <br/>
+  <br>
 {/if}
 
 {#if resource.isPolst && (resource.isCpr || resource.isComfortTreatments || resource.isAdditionalTx || resource.isMedicallyAssisted)}
-  <br/>
+  <br>
   <b>POLST Details:</b>
     <ul>
       {#if resource.isCpr}
@@ -162,11 +162,11 @@ Text:
 -->
   {#if resource.content[0].attachment.creation}
     <b>Created:</b> {new Date(resource.content[0].attachment.creation).toISOString().slice(0,10)}
-    <br/>
+    <br>
   {/if}
   {#if resource.pdfSignedDate}
     <b>Digitally signed:</b> {new Date(resource.pdfSignedDate).toISOString().slice(0,10)}
-    <br/>
+    <br>
   {/if}
   {#each resource.content as content}
     {#if content.attachment.contentType === "application/pdf" && content.attachment.data}

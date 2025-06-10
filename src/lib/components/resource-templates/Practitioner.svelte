@@ -48,7 +48,7 @@
           <td>
             {#if address.line}
                 {#each address.line as line}
-                    {line}<br />
+                    {line}<br>
                 {/each}
             {/if}
             {address.city ?? "[Unknown City]"}{

@@ -2,6 +2,9 @@
   import { Badge } from 'sveltestrap';
   import type { AllergyIntolerance } from 'fhir/r4';
   import type { ResourceTemplateParams } from '$lib/utils/types';
+  import { hasChoiceDTField, choiceDTFields } from '$lib/utils/util';
+  import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
+  import Date from '$lib/components/resource-templates/Date.svelte';
   
   export let content: ResourceTemplateParams<AllergyIntolerance>; // Define a prop to pass the data to the component
 
@@ -33,18 +36,13 @@
 <Badge color={badgeColor(resource.criticality ?? '')}>
   {resource.type ? `${resource.type} - ` : ''}
   criticality: {resource.criticality ?? 'unknown'}
-</Badge>
+</Badge><br>
 {#if resource.code}
-  {#if resource.code.coding}
-    <Badge color="primary">{resource.code.coding[0].system} : {resource.code.coding[0].code}</Badge>
-    <br />
-    {#if resource.code.coding[0].display}
-      <strong>{resource.code.coding[0].display}</strong><br>
-    {:else if resource.code.text}
-      <strong>{resource.code.text}</strong><br>
-    {/if}
-  {:else if resource.code.text}
-    <strong>{resource.code.text}</strong><br>
-  {/if}
+  <CodeableConcept codeableConcept={resource.code} />
 {/if}
-{resource.onsetDateTime ? `Since ${resource.onsetDateTime.split("T")[0]}` : ''}
+{#if hasChoiceDTField("onset", resource)}
+  <Date period fields={choiceDTFields("onset", resource)} />
+{/if}
+{#if resource.lastOccurrence}
+  <br>Last occurrence: <Date fields={{dateTime: resource.lastOccurrence}} />
+{/if}

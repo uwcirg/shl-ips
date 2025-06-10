@@ -16,6 +16,13 @@
   // For "quick sample" in demo
   import { EXAMPLE_IPS, IPS_DEFAULT } from '$lib/config';
   import type { IPSRetrieveEvent } from '$lib/utils/types';
+
+  // Demo quick sample loader
+  let defaultUrl = EXAMPLE_IPS[IPS_DEFAULT];
+  const ipsDispatch = createEventDispatcher<{'ips-retrieved': IPSRetrieveEvent}>();
+  let ipsResult: IPSRetrieveEvent = {
+    ips: undefined
+  };
   
   const authDispatch = createEventDispatcher<{'sof-auth-init': SOFAuthEvent; 'sof-auth-fail': SOFAuthEvent}>();
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
@@ -40,10 +47,11 @@
     try {
       if (sofHost) {
         try {
-          authorize(sofHost.url, sofHost.clientId);
-          authDispatch('sof-auth-init');
+          sessionStorage.setItem('AUTH_METHOD', 'sof');
+          authorize(sofHost.url, sofHost.clientId);// , sofHost.clientSecret);
+          authDispatch('sof-auth-init', { data: true });
         } catch (e) {
-          authDispatch('sof-auth-fail')
+          authDispatch('sof-auth-fail', { data: false });
         }
       }
     } catch (e) {
@@ -53,18 +61,27 @@
   }
 
   onMount(async function() {
-    let key = sessionStorage.getItem('SMART_KEY');
-    if (key) {
-      let token = sessionStorage.getItem(JSON.parse(key));
-      if (token) {
-        let url = JSON.parse(token).serverUrl;
-        let sofHostAuthd = SOF_HOSTS.find(e => e.url == url);
-        if (sofHostAuthd) {
-          sofHost = sofHostAuthd;
-          sofHostSelection = sofHost.id;
-          await fetchData();
-          sessionStorage.removeItem(key);
-          sessionStorage.removeItem('SMART_KEY');
+    let method = sessionStorage.getItem('AUTH_METHOD');
+    if (method) {
+      if (method != 'sof') {
+        return;
+      }
+      sessionStorage.removeItem('AUTH_METHOD');
+      let key = sessionStorage.getItem('SMART_KEY');
+      if (key) {
+        let token = sessionStorage.getItem(JSON.parse(key));
+        if (token) {
+          let url = JSON.parse(token).serverUrl;
+          let sofHostAuthd = SOF_HOSTS.find(e => e.url == url);
+          if (sofHostAuthd) {
+            sofHost = sofHostAuthd;
+            sofHostSelection = sofHost.id;
+            await fetchData();
+            if (result.resources.length > 0) {
+              sessionStorage.removeItem(key);
+              sessionStorage.removeItem('SMART_KEY');
+            }
+          }
         }
       }
     }
@@ -82,22 +99,24 @@
     processing = true;
     try {
       let resources = await getResourcesWithReferences(1);
-      result.resources = resources;
-      console.log(resources)
+      const isIps = (e) => e.resourceType === 'Bundle' && e.type === 'document'; 
+      let ipsBundles = resources.filter(e => isIps(e));
+      let nonIpsResources = resources.filter(e => !isIps(e));
+      for (const ips of ipsBundles) {
+        ipsDispatch('ips-retrieved', {ips: ipsBundles[0], source: sofHost?.url});
+      }
+      result.resources = nonIpsResources;
+      resourceDispatch('update-resources', result);
       processing = false;
-      return resourceDispatch('update-resources', result);
-    } catch (e) {
+      return;
+    } catch (e: any) {
+      console.log(e.message);
+      fetchError = e.message;
       processing = false;
       endSession();
     }
   }
 
-  // Demo quick sample loader
-  let defaultUrl = EXAMPLE_IPS[IPS_DEFAULT];
-  const ipsDispatch = createEventDispatcher<{'ips-retrieved': IPSRetrieveEvent}>();
-  let ipsResult: IPSRetrieveEvent = {
-    ips: undefined
-  };
   async function quickLoad() {
     fetchError = "";
     loadingSample = true;

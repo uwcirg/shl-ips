@@ -2,7 +2,7 @@
     import { uploadResources } from '$lib/utils/resourceUploader.js';
     import { download } from '$lib/utils/util.js';
     import { createEventDispatcher, getContext } from 'svelte';
-    import { get, type Writable } from 'svelte/store';
+    import { type Writable } from 'svelte/store';
     import {
         Accordion,
         AccordionItem,
@@ -28,9 +28,10 @@
     import AllergyIntolerance from '$lib/components/resource-templates/AllergyIntolerance.svelte';
     import Condition from '$lib/components/resource-templates/Condition.svelte';
     import Device from '$lib/components/resource-templates/Device.svelte';
-    import DeviceUseStatement from '../resource-templates/DeviceUseStatement.svelte';
+    import DeviceUseStatement from '$lib/components/resource-templates/DeviceUseStatement.svelte';
     import DiagnosticReport from '$lib/components/resource-templates/DiagnosticReport.svelte';
     import Encounter from '$lib/components/resource-templates/Encounter.svelte';
+    import Goal from '$lib/components/resource-templates/Goal.svelte';
     import Immunization from '$lib/components/resource-templates/Immunization.svelte';
     import Location from '$lib/components/resource-templates/Location.svelte';
     import Medication from '$lib/components/resource-templates/Medication.svelte';
@@ -56,6 +57,7 @@
         "DiagnosticReport": DiagnosticReport,
         "DocumentReference": AdvanceDirective,
         "Encounter": Encounter,
+        "Goal": Goal,
         "Immunization": Immunization,
         "Location": Location,
         "Medication": Medication,
@@ -66,7 +68,8 @@
         "Patient": Patient,
         "Practitioner": Practitioner,
         "Procedure": Procedure,
-        "Occupational Data": OccupationalData,
+        "Patient Story": Goal,
+        "Occupational Data": Observation,
         "Advance Directives": AdvanceDirective,
         "QuestionnaireResponse": QuestionnaireResponse
     };
@@ -78,10 +81,7 @@
     let mode: Writable<string> = getContext('mode');
 
     let reference: string;
-    let selectedPatient: string = get(resourceCollection.selectedPatient);
-    $: if (selectedPatient) {
-        resourceCollection.setSelectedPatient(selectedPatient);
-    }
+    let selectedPatient = resourceCollection.selectedPatient;
 
     // Proxy for resourceCollection's resourcesByType to allow reactive updates
     let resourcesByTypeStore: Writable<Record<string, Record<string, ResourceHelper>>>;
@@ -228,7 +228,7 @@
 </Offcanvas>
 
 <AccordionItem active class="edit-data">
-    <h5 slot="header" class="my-2">4. Directly edit your health summary content</h5>
+    <h5 slot="header" class="my-2">5. Directly edit your health summary content</h5>
     <Label>Select which resources to include in your customized IPS</Label>
     {#if $resourcesByTypeStore}
     <Accordion>
@@ -301,7 +301,7 @@
                                             <Row style="overflow:hidden">
                                                 <Col xs=auto class="d-flex align-items-top pt-4 pe-0">
                                                     {#if resourceType === "Patient"}
-                                                        <Input id={key} type="radio" bind:group={selectedPatient} value={key} />
+                                                        <Input id={key} type="radio" bind:group={$selectedPatient} value={key} />
                                                     {:else}
                                                         <Input id={key} type="checkbox" bind:checked={$resourcesByTypeStore[resourceType][key].include} value={key} />
                                                     {/if}

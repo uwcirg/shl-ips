@@ -23,6 +23,8 @@
   import FetchSoF from '$lib/components/app/FetchSoF.svelte';
   import FetchAD from '$lib/components/app/FetchAD.svelte';
   import FetchTEFCA from '$lib/components/app/FetchTEFCA.svelte';
+  import FetchCARINBB from '$lib/components/app/FetchCARINBB.svelte';
+  import PatientDataForm from '$lib/components/app/PatientDataForm.svelte';
   import ODHForm from '$lib/components/app/ODHForm.svelte';
   import ResourceSelector from '$lib/components/app/ResourceSelector.svelte';
   import {
@@ -50,10 +52,9 @@
   let submitting = false;
   let fetchError = "";
   let currentTab: string | number = 'url';
-  let emptyResourceListHeader = "Retrieve Your Health Data";
-  let fullResourceListHeader = "1. Add data from another provider"
+  let emptyResourceListHeader = "Retrieve Your Health Information";
+  let fullResourceListHeader = "1. Add information from another provider"
   let addDataHeader = emptyResourceListHeader;
-  let addDataOpen = true;
   let successMessage = false;
   
   let mode: Writable<string> = getContext('mode');
@@ -70,7 +71,7 @@
 
   let shcsToAdd: SHCFile[] = [];
   let singleIPS = true;
-  let patientName = "My";
+  let patientName = "";
   let patient: Patient | undefined;
 
   let label = 'Health Summary ' + new Date().toISOString().slice(0, 10);
@@ -85,7 +86,12 @@
   let resourcesAdded = false;
   $: {
     if ($resourcesByTypeStore) {
+      let oldvalue = resourcesAdded;
       resourcesAdded = Object.keys($resourcesByTypeStore).length > 0;
+      if (!oldvalue && resourcesAdded) {
+        // Prevent flash of AddData accordion overflow when first resources are added
+        handleAddDataAccordionOverflow('add-data');
+      }
     }
   }
 
@@ -117,9 +123,7 @@
   }
   $: {
     if ($mode === 'normal') {
-      if (currentTab !== "smart" && currentTab !== "ad") {
-        setTimeout(() => document.querySelector(`span.smart-tab`)?.parentElement?.click(), 1); 
-      }
+      setTimeout(() => document.querySelector(`span.default-tab`)?.parentElement?.click(), 1); 
     }
   }
 
@@ -153,6 +157,10 @@
     const accordion = document.querySelector('div.add-data > div.accordion-collapse');
     if (accordion) {
       accordion.style.overflow = 'visible';
+      accordion.classList.add('at-load');
+      setTimeout(() => {
+        accordion.classList.remove('at-load');
+      }, 250);
     }
 
     document.querySelector(`span.${currentTab}-tab`)?.parentElement?.click();
@@ -260,14 +268,13 @@
     }, 1000);
   }
 
-  function handleAddDataAccordionOverflow({ detail }) {
-    addDataOpen = detail;
-    const accordion = document.querySelector('div.add-data > div.accordion-collapse');
+  function handleAddDataAccordionOverflow(accordionClass: string) {
+    const accordion = document.querySelector(`div.${accordionClass} > div.accordion-collapse`);
     if (accordion) {
       accordion.style.overflow = 'hidden';
     } else {
       setTimeout(function() {
-        const accordion = document.querySelector('div.add-data > div.accordion-collapse');
+        const accordion = document.querySelector(`div.${accordionClass} > div.accordion-collapse`);
         if (accordion) {
           accordion.style.overflow = 'visible';
         }
@@ -292,7 +299,7 @@
   <AccordionItem
     active={!resourcesAdded}
     class="add-data"
-    on:toggle={handleAddDataAccordionOverflow}
+    on:toggle={() => handleAddDataAccordionOverflow("add-data")}
   >
     <h5 slot="header" class="my-2">{addDataHeader}</h5>
     {#if !resourcesAdded}
@@ -303,8 +310,8 @@
     <TabContent on:tab={(e) => {
       currentTab = e.detail;
     }}>
-      <TabPane class="smart-tab" tabId="smart" style="padding-top:10px" active>
-        <span class="smart-tab" slot="tab">SMART Patient Access</span>
+      <TabPane class="default-tab" tabId="default" style="padding-top:10px" active>
+        <span class="default-tab" slot="tab">SMART Patient Access</span>
         <FetchSoF
           on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
           on:sof-auth-fail={ async ({ detail }) => { revertPreAuth(detail) }}
@@ -314,6 +321,16 @@
         </FetchSoF>
       </TabPane>
       {#if $mode === "advanced"}
+        <TabPane class="carin-tab" tabId="carin" style="padding-top:10px">
+          <span class="carin-tab" slot="tab">*CARIN BB</span>
+          <FetchCARINBB
+            on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
+            on:sof-auth-fail={ async ({ detail }) => { revertPreAuth(detail) }}
+            on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
+            on:ips-retrieved={ async ({ detail }) => { stageRetrievedIPS(detail) } }
+            on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }>
+          </FetchCARINBB>
+        </TabPane>
         <TabPane class="url-tab" tabId="url" style="padding-top:10px">
           <span class="url-tab" slot="tab">*FHIR URL</span>
           <FetchUrl
@@ -338,15 +355,22 @@
     </TabContent>
   </AccordionItem>
   {#if resourcesAdded}
+    <AccordionItem class="patient-data" on:toggle={() => handleAddDataAccordionOverflow("patient-data")}>
+      <h5 slot="header" class="my-2">2. Add your own information <span class="text-secondary"><em>(under development)</em></span></h5>
+      <PatientDataForm
+        patient={patient}
+        on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
+      />
+    </AccordionItem>
     <AccordionItem class="odh-data">
-      <h5 slot="header" class="my-2">2. Add health-related occupational information</h5>
+      <h5 slot="header" class="my-2">3. Add health-related occupational information</h5>
       <Label>It may be helpful to include information about the work you do in your medical summary</Label>
       <ODHForm
         on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
       />
     </AccordionItem>
     <AccordionItem class="ad-data">
-      <h5 slot="header" class="my-2">3. Add advance directives</h5>
+      <h5 slot="header" class="my-2">4. Add advance directives</h5>
       <Label>Advance directives help providers know more about your medical preferences</Label>
       <FetchAD
         on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
@@ -364,53 +388,53 @@
 {#if resourcesAdded}
   {#if shlIdParam == null}
     <Row class="mt-4">
-      <h5>5. Save and create your SMART Health Link</h5>
+      <h5>6. Save and create your summary</h5>
     </Row>
     <Row class="mx-2">
       <Label>Save your summary and generate a secure link to it that you can share.</Label>
     </Row>
     <Row class="mx-2">
-      <FormGroup>
-        <Label>Enter a name for the Summary:</Label>
-        <Input type="text" bind:value={label} on:input={() => { userUpdatedLabel = true }}/>
-      </FormGroup>
-      <FormGroup>
-        <Label for="passcode">Protect with Passcode (optional):</Label>
-        <div style="position:relative">
-          <Input
-            maxlength={40}
-            name="passcode"
-            type={type}
-            bind:value={passcode}
-            placeholder="Assign Passcode"
-          />
-          <Icon name={icon} 
-            style="position: absolute;
-            cursor: pointer;
-            height: 25px;
-            width: 20px;
-            top: 6px;
-            right: 10px;
-            color: rgb(50, 50, 50);"
-            onclick={() => showPassword = !showPassword}/>
-        </div>
-      </FormGroup>
-      <FormGroup>
-        <Label>Expiration</Label>
-        <Input type="radio" bind:group={expiration} value={60 * 60} label="1 hour" />
-        <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 7} label="1 week" />
-        <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 365} label="1 year" />
-        <Input type="radio" bind:group={expiration} value={-1} label="Never" />
-      </FormGroup>
-  
       <form on:submit|preventDefault={confirmContent}>
+        <FormGroup>
+          <Label>Enter a name for the Summary:</Label>
+          <Input type="text" bind:value={label} on:input={() => { userUpdatedLabel = true }}/>
+        </FormGroup>
+        <FormGroup>
+          <Label for="passcode">Protect with Passcode (optional):</Label>
+          <div style="position:relative">
+            <Input
+              maxlength={40}
+              name="passcode"
+              type={type}
+              autocomplete="off"
+              bind:value={passcode}
+              placeholder="Assign Passcode"
+            />
+            <Icon name={icon} 
+              style="position: absolute;
+              cursor: pointer;
+              height: 25px;
+              width: 20px;
+              top: 6px;
+              right: 10px;
+              color: rgb(50, 50, 50);"
+              onclick={() => showPassword = !showPassword}/>
+          </div>
+        </FormGroup>
+        <FormGroup>
+          <Label>Expiration</Label>
+          <Input type="radio" bind:group={expiration} value={60 * 60} label="1 hour" />
+          <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 7} label="1 week" />
+          <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 365} label="1 year" />
+          <Input type="radio" bind:group={expiration} value={-1} label="Never" />
+        </FormGroup>
         <Row>
           <Col xs="auto">
           <Button color="primary" style="width:fit-content" disabled={submitting} type="submit">
               {#if !submitting}
-              Create Summary Link
+              Create Summary
               {:else}
-              Creating Link...
+              Creating...
               {/if}
           </Button>
           </Col>
@@ -427,10 +451,10 @@
     </Row>
   {:else}
     <Row class="mt-4">
-      <h5>4. Add this summary to your SMART Health Link</h5>
+      <h5>4. Include this summary in my secure sharing link</h5>
     </Row>
     <Row class="mx-2">
-      <Label>It will be shared alongside any other contents of the link.</Label>
+      <Label>This summary will be shared alongside any other summaries already included in the link.</Label>
     </Row>
     <Row class="mx-2">
       <form on:submit|preventDefault={confirmContent}>
@@ -456,10 +480,16 @@
       </form>
     </Row>
   {/if}
-  <span class="text-danger">{fetchError}</span>
 {/if}
+<span class="text-danger">{fetchError}</span>
 {#if $mode === "advanced"}
   <br>
   <em class="text-secondary">* Advanced features for demo purposes only</em>
   <br>
 {/if}
+
+<style>
+  :global(.at-load) {
+    transition: all 0s !important;
+  }
+</style>
