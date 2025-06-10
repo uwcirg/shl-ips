@@ -10,7 +10,7 @@
 
   let resource: Condition = content.resource;
 
-  function badgeColor(severity: string) {
+  function severityBadgeColor(severity: string) {
     if (severity) {
       if (severity == 'Severe') {
         return 'danger';
@@ -21,10 +21,18 @@
       return 'secondary';
     }
   }
+
+  function statusBadgeColor(status: string) {
+    if (status == 'inactive') {
+      return 'secondary';
+    } else {
+      return 'primary';
+    }
+  }
 </script>
 
 {#if resource.clinicalStatus || resource.verificationStatus}
-  <Badge color="primary">
+  <Badge color={statusBadgeColor(resource.clinicalStatus?.coding?.[0].code ?? '')}>
     {resource.clinicalStatus?.coding?.[0].code ?? ''}
     {resource.clinicalStatus &&
       resource.verificationStatus
@@ -33,9 +41,11 @@
     {resource.verificationStatus?.coding?.[0].code ?? ''}
   </Badge>
 {/if}
-<Badge color={badgeColor(resource.severity?.text ?? '')}>
-  severity: {resource.severity?.text ?? 'unknown'}
+{#if resource.severity?.text}
+<Badge color={severityBadgeColor(resource.severity?.text ?? '')}>
+  severity: {resource.severity?.text}
 </Badge>
+{/if}
 {#if resource.category?.[0]}
   {#if resource.category[0].coding}
     <Badge color="primary">

@@ -7,12 +7,12 @@
 </script>
 
 <strong>{resource.name}</strong>
-<br />
+<br>
 {#if resource.address}
   {#if resource.address[0].line}
     {#if resource.address[0].line.length > 0}
       {#each resource.address[0].line as line}
-        {line}<br />
+        {line}<br>
       {/each}
     {:else}
       {resource.address[0].line}

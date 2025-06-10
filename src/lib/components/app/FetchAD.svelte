@@ -55,6 +55,10 @@
           }
           ]
       },
+      text: {
+              status: "generated",
+              div: "<div xmlns=\"http://www.w3.org/1999/xhtml\"><h5>Advance Directives</h5><table class=\"hapiPropertyTable\"><thead><tr><th>Scope</th><th>Status</th><th>Action Controlled</th><th>Date</th></tr></thead><tbody></tbody></table></div>"
+            },
       entry: []
   };
 

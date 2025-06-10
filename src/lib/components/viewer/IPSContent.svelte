@@ -30,6 +30,7 @@
   import DeviceUseStatement from '$lib/components/resource-templates/DeviceUseStatement.svelte';
   import DiagnosticReport from '$lib/components/resource-templates/DiagnosticReport.svelte';
   import Encounter from '$lib/components/resource-templates/Encounter.svelte';
+  import Goal from '$lib/components/resource-templates/Goal.svelte';
   import Immunization from '$lib/components/resource-templates/Immunization.svelte';
   import Location from '$lib/components/resource-templates/Location.svelte';
   import Medication from '$lib/components/resource-templates/Medication.svelte';
@@ -42,6 +43,7 @@
   import Procedure from '$lib/components/resource-templates/Procedure.svelte';
   import OccupationalData from '$lib/components/resource-templates/OccupationalData.svelte';
   import QuestionnaireResponse from '$lib/components/resource-templates/QuestionnaireResponse.svelte';
+  import SectionExtension from '$lib/components/resource-templates/SectionExtension.svelte';
 
   const components: Record<string, any> = {
     "AllergyIntolerance": AllergyIntolerance,
@@ -52,6 +54,7 @@
     "DiagnosticReport": DiagnosticReport,
     "DocumentReference": AdvanceDirective,
     "Encounter": Encounter,
+    "Goal": Goal,
     "Immunization": Immunization,
     "Location": Location,
     "Medication": Medication,
@@ -92,7 +95,8 @@
       content ["Patient"] = {
         section: {
           text: {
-            div: `<b>${patient[0].name?.[0]?.prefix ?? ""} ${patient[0].name?.[0]?.given?.join(' ') ?? ""} ${patient[0].name?.[0]?.family ?? ""}</b><br>
+            div: patient[0].text?.div ??
+                `<b>${patient[0].name?.[0]?.text ?? `${(patient[0].name?.[0]?.prefix ?? "") (patient[0].name?.[0]?.given?.join(' ') ?? "") (patient[0].name?.[0]?.family ?? "")}`}</b><br>
                   Birth Date: ${patient[0].birthDate ?? ""}<br>
                   Gender: ${patient[0].gender ?? ""}`
           }
@@ -231,6 +235,22 @@
             No text available
           {/if}
         {:else}
+          {#if sectionContent.section.extension}
+            {#each sectionContent.section.extension as extension}
+              <Card style="width: 100%; max-width: 100%" class="mb-2">
+                <CardBody>
+                  <Row style="overflow:hidden" class="d-flex justify-content-end align-content-center">
+                    <Col class="flex-grow-1" style="overflow:hidden">
+                      <svelte:component
+                        this={SectionExtension}
+                        content={{resource: extension, entries: bundle.entry}}
+                      />
+                    </Col>
+                  </Row>
+                </CardBody>
+              </Card>
+            {/each}
+          {/if}
           <Card style="width: 100%; max-width: 100%" class="mb-2">
               {#each sectionContent.entries as resource, index}
                 <CardBody class={index > 0 ? "border-top" : ""}>

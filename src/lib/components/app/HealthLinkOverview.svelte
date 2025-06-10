@@ -32,7 +32,7 @@
   </Col>
   <Col md="1"></Col>
 </Row>
-<br />
+<br>
 {#if $shlStore.length > 0}
   <Row>
     <Col>

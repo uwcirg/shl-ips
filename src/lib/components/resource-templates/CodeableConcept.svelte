@@ -9,14 +9,14 @@
 
   let codeSet: Set<string> = new Set();
   onMount(() => {
-    if (codeableConcept.coding) {
+    if (codeableConcept?.coding) {
       codeableConcept.coding.forEach(coding => {
         if (coding.display !== undefined) {
           codeSet.add(coding.display);
         }
       });
     }
-    if (codeableConcept.text) {
+    if (codeableConcept?.text) {
       codeSet.add(codeableConcept.text);
     }
     codeSet = new Set([...codeSet]);
@@ -36,5 +36,11 @@
         {code}<br>
       {/if}
     {/each}
+  {/if}
+{:else if codeableConcept?.text}
+  {#if bold}
+    <strong>{codeableConcept.text}</strong><br>
+  {:else}
+    {codeableConcept.text}<br>
   {/if}
 {/if}
