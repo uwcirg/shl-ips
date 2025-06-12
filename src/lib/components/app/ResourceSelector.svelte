@@ -161,7 +161,7 @@
             }
             return entry;
         })
-        ipsDispatch('ips-retrieved', { ips: content });
+        ipsDispatch('ips-retrieved', { ips: content, source: reference });
         // submitting = false;
     }
 

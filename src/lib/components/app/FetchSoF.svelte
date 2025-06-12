@@ -106,6 +106,85 @@
         ipsDispatch('ips-retrieved', {ips: ipsBundles[0], source: sofHost?.url});
       }
       result.resources = nonIpsResources;
+      if (sofHostSelection = SOF_HOSTS[0].id) {
+        result.resources.push({
+          resourceType: "MedicationRequest",
+          id: "b9d741c8-60cb-4389-a043-1bc3a8bf5bcb",
+          meta: {
+            versionId: "1",
+            lastUpdated: "2025-01-31T16:52:11.921+00:00",
+            source: "#QCIgkwG5aqWCboNq"
+          },
+          extension: [ {
+            url: "http://hl7.org/fhir/StructureDefinition/narrativeLink",
+            valueUrl: "urn:uuid:7d67f2d4-72a1-4cba-b680-63a9b52edfd4#MedicationRequest-https://fhir.ips-demo.dev.cirg.uw.edu/fhir/MedicationRequest/b9d741c8-60cb-4389-a043-1bc3a8bf5bcb/_history/1"
+          } ],
+          status: "active",
+          intent: "order",
+          medicationCodeableConcept: {
+            coding: [ {
+              system: "http://www.nlm.nih.gov/research/umls/rxnorm",
+              code: "214555",
+              display: "Enbrel (etanercept)"
+            } ]
+          },
+          subject: {
+            reference: "Patient/a07f4453-1523-4a2e-bc45-dcdf984e690e"
+          },
+          dosageInstruction: [ {
+            text: "50 MG/ML",
+            timing: {
+              repeat: {
+                frequency: 1,
+                period: 7,
+                periodUnit: "d"
+              }
+            },
+            doseAndRate: [ {
+              doseQuantity: {
+                value: 50,
+                unit: "MG/ML",
+                system: "http://unitsofmeasure.org",
+                code: "MG/ML"
+              }
+            } ]
+          } ],
+          dispenseRequest: {
+            validityPeriod: {
+              start: "2021-01-01"
+            }
+          }
+        });
+        result.resources.push({
+          resourceType: "AllergyIntolerance",
+          id: "c37cd7aa-7483-44ee-b5ab-4bd622102c92",
+          meta: {
+            versionId: "1",
+            lastUpdated: "2025-01-31T16:52:11.921+00:00",
+            source: "#QCIgkwG5aqWCboNq"
+          },
+          extension: [ {
+            url: "http://hl7.org/fhir/StructureDefinition/narrativeLink",
+            valueUrl: "urn:uuid:7d67f2d4-72a1-4cba-b680-63a9b52edfd4#AllergyIntolerance-https://fhir.ips-demo.dev.cirg.uw.edu/fhir/AllergyIntolerance/c37cd7aa-7483-44ee-b5ab-4bd622102c92/_history/1"
+          } ],
+          clinicalStatus: {
+            coding: [ {
+              system: "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical",
+              code: "active"
+            } ]
+          },
+          code: {
+            coding: [ {
+              system: "http://www.nlm.nih.gov/research/umls/rxnorm",
+              code: "1310605",
+              display: "Blue 1"
+            } ]
+          },
+          patient: {
+            reference: "Patient/a07f4453-1523-4a2e-bc45-dcdf984e690e"
+          }
+        });
+      }
       resourceDispatch('update-resources', result);
       processing = false;
       return;
