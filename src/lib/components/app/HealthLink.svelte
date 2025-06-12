@@ -147,7 +147,7 @@
       navigator.clipboard.writeText(text);
       sourceCopyNotice = 'Copied!';
     } else {
-      sourceCopyNotice = 'No source';
+      sourceCopyNotice = 'Copied!';
     }
     setTimeout(() => {
       sourceCopyNotice = copyNoticePrev;
