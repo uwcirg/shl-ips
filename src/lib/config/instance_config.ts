@@ -1,6 +1,6 @@
 import WAHealthSummary from '$lib/config/config_WAHealthSummary';
 import WAHealthSummaryPOLST from '$lib/config/config_WAHealthSummaryPOLST';
-import WAHealthSummaryPOLSTProvider from '$lib/config_WAHealthSummaryPOLSTProvider';
+import WAHealthSummaryPOLSTProvider from '$lib/config/config_WAHealthSummaryPOLSTProvider';
 
 const INSTANCE_ID = import.meta.env.VITE_INSTANCE_ID;
 
