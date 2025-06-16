@@ -23,7 +23,7 @@
 </script>
 <Styles />
 <svelte:head>
-    <title>{INSTANCE_CONFIG.home.title}</title>
+    <title>{INSTANCE_CONFIG.pages.home.title}</title>
     <link rel="preload" as="font" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/fonts/bootstrap-icons.woff2?8d200481aa7f02a2d63a331fc782cfaf" type="font/woff2" crossorigin="anonymous">
     <link rel="preload" as="image" href="/img/doh_logo_doh-black.png" />
     <link rel="preload" as="image" href={INSTANCE_CONFIG.header.logo} />
@@ -36,7 +36,7 @@
     <p class="text-danger info-paragraph">Demonstration/Test System - do not use with real health information</p>
   </span>
 
-  {@html INSTANCE_CONFIG.home.intro}
+  {@html INSTANCE_CONFIG.pages.home.intro}
 
   <Row class="my-4 d-flex justify-content-center">
     <Card style="width: 60%" color="light">

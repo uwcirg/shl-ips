@@ -6,6 +6,9 @@
   import type { SHLAdminParams, SHLClient } from '$lib/utils/managementClient';
   import type { SHLSubmitEvent, SHCFile } from '$lib/utils/types';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
+  import AddFile from '$lib/components/app/AddFile.svelte';
+
+  let component = INSTANCE_CONFIG.pages.create.component ?? AddFile;
 
   let shlClient: SHLClient = getContext('shlClient');
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
@@ -48,10 +51,10 @@
 {/if}
 
 <svelte:head>
-    <title>{INSTANCE_CONFIG.create.title}</title> 
+    <title>{INSTANCE_CONFIG.pages.create.title ?? "Create a Health Link"}</title>
 </svelte:head>
 
-<svelte:component this={INSTANCE_CONFIG.create.component}
+<svelte:component this={component}
   status={shlStatus}
   on:shl-submitted={async ({ detail }) => {
     patientName = detail.patientName ?? "";

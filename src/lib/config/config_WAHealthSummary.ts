@@ -13,6 +13,5 @@ export default {
   summaries: {
   },
   create: {
-    component: AddFile,
   }
 };

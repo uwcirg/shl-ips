@@ -6,6 +6,8 @@
   } from 'sveltestrap';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import ProviderOverview from '$lib/components/app/ProviderOverview.svelte';
+
+  let component = INSTANCE_CONFIG.pages.provider.component ?? ProviderOverview;
 </script>
 <Styles />
 <svelte:head>
@@ -21,7 +23,7 @@
   </Row>
   <Row>
     <Col>
-      <ProviderOverview />
+      <svelte:component this={component} />
     </Col>
   </Row>
 </div>
