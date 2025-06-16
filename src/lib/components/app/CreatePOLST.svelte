@@ -1,5 +1,4 @@
 <script lang='ts'>
-  import * as jose from 'jose';
   import {
     Row,
     Col,
@@ -138,8 +137,8 @@
 
       form.getTextField('additionalOrders').setText(ensureText(additionalOrders));
       // form.getSignature('mdSignature');
-      // form.getCheckBox('nutritionDiscussed').check();
-      form.getRadioGroup('nutritionPreference').select(artificialNutrition);
+      form.getCheckBox('nutritionDiscussed').check();
+      // form.getRadioGroup('nutritionPreference').select(artificialNutrition);
       // form.getCheckBox('nutritionIndividual').check();
       // form.getCheckBox('nutritionHCP').check();
       // form.getCheckBox('nutritionLMDM').check();
@@ -452,7 +451,7 @@
       </Col>
       <Col xs="3">
         <Input type="text" bind:value={hcpRole} />
-        <Label>Relationship</Label>
+        <Label>Role</Label>
       </Col>
       <Col xs="3">
         <Input type="phone" bind:value={hcpPhone} />
