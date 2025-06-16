@@ -15,7 +15,8 @@
   let user: User | undefined;
 
   onMount(async () => {
-    if ($demographics.first === undefined || !$demographics.last === undefined) {
+    console.log(JSON.stringify($demographics));
+    if ($demographics.first === "" || $demographics.last === "") {
       let userAuth = await AuthService.Instance.getProfile();
       $demographics.first = userAuth.given_name || userAuth.firstName;
       $demographics.last = userAuth.family_name || userAuth.lastName;
@@ -62,7 +63,7 @@
   </Row>
   <Row class="mt-3">
     <Col>
-      <DemographicForm />
+      <DemographicForm hide={['address', 'mrn']} />
     </Col>
   </Row>
   <Row>
