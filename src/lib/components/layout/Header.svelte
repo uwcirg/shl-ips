@@ -34,18 +34,15 @@
 
   let mode: Writable<string> = getContext('mode');
 
-  let activeItem: ("home" | "summaries" | "provider" | "create" | "") = "";
+  let activeItem: string = "";
   $: {
-    if ($page.url.pathname.includes("summaries")) {
-      activeItem = "summaries";
-    } else if ($page.url.pathname.includes("create")) {
-      activeItem = "create";
-    } else if ($page.url.pathname === "/") {
-      activeItem = "home";
-    } else if ($page.url.pathname.includes("provider")) {
-      activeItem = "provider";
-    } else {
-      activeItem = "";
+    activeItem = "";
+    for (const name of Object.keys(INSTANCE_CONFIG.pages)) {
+      if ($page.url.pathname.includes(name)) {
+        activeItem = name;
+      } else if ($page.url.pathname == "/") {
+        activeItem = "home";
+      }
     }
   }
 
@@ -157,15 +154,21 @@
         {#if haveUser}
           {#await authService.getProfile() then profile}
             {#if profile}
-              <NavItem>
-                <NavLink href="/summaries" active={ activeItem === "summaries" }>Summaries</NavLink>
-              </NavItem>
-              <NavItem>
-                <NavLink href="/create" active={ activeItem === "create" }>Create</NavLink>
-              </NavItem>
-              <NavItem style="border-left: 1px solid rgb(204, 204, 204);">
-                <NavLink href="/provider" active={ activeItem === "provider" }>Provider</NavLink>
-              </NavItem>
+              {#if INSTANCE_CONFIG.pages.summaries}
+                <NavItem>
+                  <NavLink href="/summaries" active={ activeItem === "summaries" }>Summaries</NavLink>
+                </NavItem>
+              {/if}
+              {#if INSTANCE_CONFIG.pages.create}
+                <NavItem>
+                  <NavLink href="/create" active={ activeItem === "create" }>Create</NavLink>
+                </NavItem>
+              {/if}
+              {#if INSTANCE_CONFIG.pages.provider}
+                <NavItem style="border-left: 1px solid rgb(204, 204, 204);">
+                  <NavLink href="/provider" active={ activeItem === "provider" }>Provider</NavLink>
+                </NavItem>
+              {/if}
               <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
                 <DropdownToggle color="primary" nav caret><Icon name="person-circle"/> Account</DropdownToggle>
                 <DropdownMenu end style="max-height: 350px; overflow:auto">
