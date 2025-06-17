@@ -41,18 +41,22 @@
           return data.entry?.[0].resource;
         }
       });
-    let docrefSummaries = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/DocumentReference?_sort=-date&_summary=true&status=current&subject.identifier=https://keycloak.cirg.uw.edu%7C${userId}`)
-      .then((response) => response.json())
-      .then((data) => data.entry)
-      .then((data) => data?.map((entry) => entry.resource));
-    patientData = [patient, ...(docrefSummaries ?? [])];
-    await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/DocumentReference?_sort=-date&status=current&subject.identifier=https://keycloak.cirg.uw.edu%7C${userId}`)
-      .then((response) => response.json())
-      .then((data) => data.entry)
-      .then((data) => data?.map((entry) => entry.resource))
-      .then((data) => {
-        patientData = [patient, ...(data ?? [])];
-      });
+    if (patient) {
+      let docrefSummaries = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/DocumentReference?_sort=-date&_summary=true&status=current&subject.identifier=https://keycloak.cirg.uw.edu%7C${userId}`)
+        .then((response) => response.json())
+        .then((data) => data.entry)
+        .then((data) => data?.map((entry) => entry.resource));
+      patientData = [patient, ...(docrefSummaries ?? [])];
+      await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/DocumentReference?_sort=-date&status=current&subject.identifier=https://keycloak.cirg.uw.edu%7C${userId}`)
+        .then((response) => response.json())
+        .then((data) => data.entry)
+        .then((data) => data?.map((entry) => entry.resource))
+        .then((data) => {
+          patientData = [patient, ...(data ?? [])];
+        });
+    } else {
+      patientData = [];
+    }
   });
 
   const components: Record<string, any> = {
@@ -144,66 +148,74 @@
     <span class="loader"></span>
   </Row>
 {:else}
-{#each patientData as resource}
-  <Row class="mx-0">
-    <!--wrap in accordion with title-->
-    <Accordion class="mt-3">
-      <AccordionItem active class="ips-section">
-        <h6 slot="header" class="my-2">{resource.resourceType}</h6>
-        <Card style="width: 100%; max-width: 100%" class="mb-2">
-          <CardBody>
-            <Row style="overflow:hidden" class="d-flex justify-content-end align-content-center">
-              <Col class="flex-grow-1" style="overflow:hidden">
-                {#if resource.resourceType in components}
-                  <svelte:component
-                    this={components[resource.resourceType]}
-                    content={{ resource: resource }}
-                  />
-                {/if}
-              </Col>
-              <Col class="d-flex flex-row-reverse justify-content-end align-items-start" style="max-width: max-content">
-                <Button
-                    size="sm"
-                    color="secondary"
-                    outline
-                    on:click={() => setJson(resource)}
-                >
-                  View
-                </Button>
-              </Col>
-            </Row>
-          </CardBody>
-          {#if resource.resourceType !== "Patient"}
-            <CardFooter>
-              <Row>
-                <Col class="flex-grow-1">
-                  <Button
-                      size="sm"
-                      color="primary"
-                      outline
-                      on:click={goto(`/view/${$shlStore.at(-1).id}`)}
-                  >
-                    <Icon name="share-fill" /> Share
-                  </Button>
-                </Col>
-                <Col class="d-flex flex-row-reverse justify-content-end align-items-end" style="max-width: max-content">
-                  <Button
-                      size="sm"
-                      color="danger"
-                      outline
-                      on:click={() => deleteResource(resource.resourceType, resource.id)}
-                  >
-                    <Icon name="trash3" /> Delete
-                  </Button>
-                </Col>
-              </Row>
-            </CardFooter>
-          {/if}
-        </Card>
-      </AccordionItem>
-    </Accordion>
-  </Row>
-{/each}
+  {#if patientData.length === 0}
+    <Row class="mx-2">
+      <Row>
+        <h5>No documents found</h5>
+      </Row>
+    </Row>
+  {:else}
+    {#each patientData as resource}
+      <Row class="mx-0">
+        <!--wrap in accordion with title-->
+        <Accordion class="mt-3">
+          <AccordionItem active class="ips-section">
+            <h6 slot="header" class="my-2">{resource.resourceType}</h6>
+            <Card style="width: 100%; max-width: 100%" class="mb-2">
+              <CardBody>
+                <Row style="overflow:hidden" class="d-flex justify-content-end align-content-center">
+                  <Col class="flex-grow-1" style="overflow:hidden">
+                    {#if resource.resourceType in components}
+                      <svelte:component
+                        this={components[resource.resourceType]}
+                        content={{ resource: resource }}
+                      />
+                    {/if}
+                  </Col>
+                  <Col class="d-flex flex-row-reverse justify-content-end align-items-start" style="max-width: max-content">
+                    <Button
+                        size="sm"
+                        color="secondary"
+                        outline
+                        on:click={() => setJson(resource)}
+                    >
+                      View
+                    </Button>
+                  </Col>
+                </Row>
+              </CardBody>
+              {#if resource.resourceType !== "Patient"}
+                <CardFooter>
+                  <Row>
+                    <Col class="flex-grow-1">
+                      <Button
+                          size="sm"
+                          color="primary"
+                          outline
+                          on:click={goto(`/view/${$shlStore.at(-1).id}`)}
+                      >
+                        <Icon name="share-fill" /> Share
+                      </Button>
+                    </Col>
+                    <Col class="d-flex flex-row-reverse justify-content-end align-items-end" style="max-width: max-content">
+                      <Button
+                          size="sm"
+                          color="danger"
+                          outline
+                          on:click={() => deleteResource(resource.resourceType, resource.id)}
+                      >
+                        <Icon name="trash3" /> Delete
+                      </Button>
+                    </Col>
+                  </Row>
+                </CardFooter>
+              {/if}
+            </Card>
+          </AccordionItem>
+        </Accordion>
+      </Row>
+    {/each}
+  {/if}
 {/if}
 
 <style>
