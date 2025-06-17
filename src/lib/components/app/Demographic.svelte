@@ -29,6 +29,7 @@
         }
       });
     console.log(JSON.stringify(patient));
+    $demographics.id = "test-patient";
     if (patient) {
       $demographics.id = patient.id;
       $demographics.first = patient.name?.[0].given?.[0];
