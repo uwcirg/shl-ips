@@ -6,6 +6,7 @@ export default {
     logo_width: "300",
     title: "For Providers",
   },
+  defaultRedirectURI: "/provider",
   pages: {
     home: {
       title: instanceTitle,

@@ -10,6 +10,7 @@ export default {
     logo_width: "300",
     title: "Provider Orders for Life-Sustaining Treatment",
   },
+  defaultRedirectURI: "/summaries",
   pages: {
     home: {
       title: instanceTitle,

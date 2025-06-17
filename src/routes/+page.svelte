@@ -15,7 +15,7 @@
 
   async function login() {
     if (await AuthService.Instance.isAuthenticated()) {
-      goto('/summaries');
+      goto(INSTANCE_CONFIG.defaultRedirectURI ?? '/summaries');
     } else {
       AuthService.Instance.login();
     }
