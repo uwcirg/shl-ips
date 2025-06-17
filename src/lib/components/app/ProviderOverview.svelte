@@ -30,11 +30,11 @@
   }
 
   onMount(async () => {
-    let localPatients = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient?_has:DocumentReference:patient:status=current&_count=1000`, {cache: "no-cache"})
+    let localPatients = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient?_has:DocumentReference:patient:status=current&_count=1000`, {cache: "no-store"})
       .then((response) => response.json())
       .then((data) => data.entry)
       .then((data) => data.map((entry) => entry.resource));
-    let externalPatients = await fetch("https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient?_has:DocumentReference:patient:status=current&_count=1000", {cache: "no-cache"})
+    let externalPatients = await fetch("https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient?_has:DocumentReference:patient:status=current&_count=1000", {cache: "no-store"})
       .then((response) => response.json())
       .then((data) => data.entry)
       .then((data) => data.map((entry) => entry.resource))

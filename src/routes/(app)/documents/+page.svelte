@@ -34,7 +34,7 @@
 
   onMount(async () => {
     let userId = (await AuthService.Instance.getProfile()).sub;
-    let patient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient?identifier=https://keycloak.cirg.uw.edu%7C${userId}`, {cache: "no-cache"})
+    let patient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient?identifier=https://keycloak.cirg.uw.edu%7C${userId}`, {cache: "no-store"})
       .then((response) => response.json())
       .then((data) => {
         if (data?.total > 0) {
@@ -42,12 +42,12 @@
         }
       });
     if (patient) {
-      let docrefSummaries = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/DocumentReference?_sort=-date&_summary=true&status=current&subject.identifier=https://keycloak.cirg.uw.edu%7C${userId}`, {cache: "no-cache"})
+      let docrefSummaries = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/DocumentReference?_sort=-date&_summary=true&status=current&subject.identifier=https://keycloak.cirg.uw.edu%7C${userId}`, {cache: "no-store"})
         .then((response) => response.json())
         .then((data) => data.entry)
         .then((data) => data?.map((entry) => entry.resource));
       patientData = [patient, ...(docrefSummaries ?? [])];
-      await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/DocumentReference?_sort=-date&status=current&subject.identifier=https://keycloak.cirg.uw.edu%7C${userId}`, {cache: "no-cache"})
+      await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/DocumentReference?_sort=-date&status=current&subject.identifier=https://keycloak.cirg.uw.edu%7C${userId}`, {cache: "no-store"})
         .then((response) => response.json())
         .then((data) => data.entry)
         .then((data) => data?.map((entry) => entry.resource))
