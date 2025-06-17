@@ -3,6 +3,7 @@
   import { Button, Col, Icon, Input, Label, Row, Styles, Table } from 'sveltestrap';;
   import type { Writable } from 'svelte/store';
   import type { SHLAdminParams } from '$lib/utils/managementClient';
+  import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
 
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
   let mode: Writable<string> = getContext('mode');
@@ -29,7 +30,11 @@
   }
 
   onMount(async () => {
-    patients = await fetch("https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient?_has:DocumentReference:patient:status=current")
+    let localPatients = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient?_has:DocumentReference:patient:status=current&_count=1000`)
+      .then((response) => response.json())
+      .then((data) => data.entry)
+      .then((data) => data.map((entry) => entry.resource));
+    let externalPatients = await fetch("https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient?_has:DocumentReference:patient:status=current&_count=1000")
       .then((response) => response.json())
       .then((data) => data.entry)
       .then((data) => data.map((entry) => entry.resource))
@@ -44,6 +49,7 @@
         }
         return Object.values(patientMap);
       });
+    patients = [...externalPatients, ...localPatients];
   });
 </script>
 
