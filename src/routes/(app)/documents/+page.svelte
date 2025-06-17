@@ -43,7 +43,7 @@
       .then((data) => data.entry)
       .then((data) => data?.map((entry) => entry.resource));
     patientData = [patient, ...(docrefSummaries ?? [])];
-    await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/DocumentReference?status=current&subject.identifier=https://keycloak.cirg.uw.edu%7C${userId}`)
+    await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/DocumentReference?_sort=-date&status=current&subject.identifier=https://keycloak.cirg.uw.edu%7C${userId}`)
       .then((response) => response.json())
       .then((data) => data.entry)
       .then((data) => data?.map((entry) => entry.resource))
