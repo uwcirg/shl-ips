@@ -21,7 +21,7 @@
       system: 'https://keycloak.cirg.uw.edu',
       value: userAuth.sub
     };
-    let patient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient?identifier=https://keycloak.cirg.uw.edu%7C${userAuth.sub}`, {cache: "no-cache"})
+    let patient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient?identifier=https://keycloak.cirg.uw.edu%7C${userAuth.sub}`, {cache: "no-store"})
       .then((response) => response.json())
       .then((data) => {
         if (data?.total > 0) {
@@ -29,7 +29,6 @@
         }
       });
     console.log(JSON.stringify(patient));
-    $demographics.id = "test-patient";
     if (patient) {
       $demographics.id = patient.id;
       $demographics.first = patient.name?.[0].given?.[0];
@@ -47,9 +46,24 @@
     $demographics.last = $demographics.last || userAuth.family_name || userAuth.lastName;
   });
 
-  function generateIPS() {
+  async function generateIPS() {
     processing = true;
     let patient = constructPatientResource($demographics);
+    if (!patient.id) {
+      let result = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/fhir+json'
+        },
+        body: JSON.stringify(patient)
+      })
+      .then((response) => response.json())
+      .then((data) => {
+        patient = data;
+        $demographics.id = data.id;
+        return data;
+      });
+    }
     resourceDispatch('update-resources', {
       resources: [patient],
       hostname: 'WA Health Summary'

@@ -6,8 +6,8 @@ export async function uploadResources(resources) {
     resources.forEach(resource => {
         let entry = {
             request: {
-                method: resource.resourceType === "Patient" && resource.id ? "PUT" : "POST",
-                url: `${resource.resourceType}${resource.resourceType === "Patient" && resource.id ? "/" + resource.id : ""}`
+                method: resource.resourceType === "Patient" ? "PUT" : "POST",
+                url: `${resource.resourceType}${resource.resourceType === "Patient" ? "/" + resource.id : ""}`
             },
             resource: resource
         };
