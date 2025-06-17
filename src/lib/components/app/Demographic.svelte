@@ -21,7 +21,7 @@
       system: 'https://keycloak.cirg.uw.edu',
       value: userAuth.sub
     };
-    let patient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient?identifier=https://keycloak.cirg.uw.edu%7C${userAuth.sub}`)
+    let patient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient?identifier=https://keycloak.cirg.uw.edu%7C${userAuth.sub}`, {cache: "no-cache"})
       .then((response) => response.json())
       .then((data) => {
         if (data?.total > 0) {

@@ -26,21 +26,21 @@
   onMount(async () => {
     let patientId = $page.params.id;
     let serverUrl = INTERMEDIATE_FHIR_SERVER_BASE;
-    let patient = await fetch(`${serverUrl}/Patient/${patientId}`)
+    let patient = await fetch(`${serverUrl}/Patient/${patientId}`, {cache: "no-cache"})
       .then((response) => {
         if (response.status !== 200) {
           serverUrl = "https://fhir.ips-demo.dev.cirg.uw.edu/fhir";
-          return fetch(`https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/${patientId}`)
+          return fetch(`https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/${patientId}`, {cache: "no-cache"})
             .then((response) => response.json());
         }
         return response.json();
       }).then((data) => data);
-    let docrefSummaries = await fetch(`${serverUrl}/DocumentReference?_sort=-date&_summary=true&status=current&subject=${patientId}`)
+    let docrefSummaries = await fetch(`${serverUrl}/DocumentReference?_sort=-date&_summary=true&status=current&subject=${patientId}`, {cache: "no-cache"})
       .then((response) => response.json())
       .then((data) => data.entry)
       .then((data) => data.map((entry) => entry.resource));
     patientData = [patient, ...docrefSummaries];
-    await fetch(`${serverUrl}/DocumentReference?_sort=-date&status=current&subject=${patientId}`)
+    await fetch(`${serverUrl}/DocumentReference?_sort=-date&status=current&subject=${patientId}`, {cache: "no-cache"})
       .then((response) => response.json())
       .then((data) => data.entry)
       .then((data) => data.map((entry) => entry.resource))
