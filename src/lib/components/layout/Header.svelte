@@ -165,7 +165,7 @@
                 </NavItem>
               {/if}
               {#if INSTANCE_CONFIG.pages.provider}
-                <NavItem style="border-left: 1px solid rgb(204, 204, 204);">
+                <NavItem>
                   <NavLink href="/provider" active={ activeItem === "provider" }>Provider</NavLink>
                 </NavItem>
               {/if}
