@@ -2,7 +2,9 @@
   import { getContext } from 'svelte';
   import { Button, Col, Icon, Row, Styles } from 'sveltestrap';
   import type { Writable } from 'svelte/store';
-  import type { SHLAdminParams } from '$lib/utils/managementClient';
+  import type { SHLAdminParams, SHLClient } from '$lib/utils/managementClient';
+
+  let shlClient: SHLClient = getContext('shlClient');
 
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
   let mode: Writable<string> = getContext('mode');
@@ -48,8 +50,14 @@
       <Col>
         {shl.label || `My Summary ${i + 1}`}
       </Col>
-      <Col>
+      <Col class="d-flex flex-grow-1">
         <Button color="primary" style="width:100%" href={'/view/' + shl.id}>View/Manage</Button>
+      </Col>
+      <Col class="d-flex" style="max-width:fit-content">
+        <Button color="danger" on:click={() => {
+          shlClient.deleteShl(shl);
+          location.reload();
+        }}><Icon name="trash3" /></Button>
       </Col>
     </Row>
   {/each}
