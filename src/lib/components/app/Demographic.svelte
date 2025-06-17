@@ -7,6 +7,7 @@
   import AuthService from '$lib/utils/AuthService';
   import type { User } from 'oidc-client-ts';
   import { constructPatientResource } from '$lib/utils/util';
+  import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
 
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
@@ -15,12 +16,34 @@
   let user: User | undefined;
 
   onMount(async () => {
-    console.log(JSON.stringify($demographics));
-    if ($demographics.first === "" || $demographics.last === "") {
-      let userAuth = await AuthService.Instance.getProfile();
-      $demographics.first = userAuth.given_name || userAuth.firstName;
-      $demographics.last = userAuth.family_name || userAuth.lastName;
+    let userAuth = await AuthService.Instance.getProfile();
+    $demographics.identifier = {
+      system: 'https://keycloak.cirg.uw.edu',
+      value: userAuth.sub
+    };
+    let patient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient?identifier=https://keycloak.cirg.uw.edu%7C${userAuth.sub}`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (data?.total > 0) {
+          return data.entry?.[0].resource;
+        }
+      });
+    console.log(JSON.stringify(patient));
+    if (patient) {
+      $demographics.id = patient.id;
+      $demographics.first = patient.name?.[0].given?.[0];
+      $demographics.last = patient.name?.[0].family;
+      $demographics.dob = patient.birthDate;
+      $demographics.gender = patient.gender;
+      $demographics.address = patient.address?.[0].line;
+      $demographics.city = patient.address?.[0].city;
+      $demographics.state = patient.address?.[0].state;
+      $demographics.zip = patient.address?.[0].postalCode;
+      $demographics.country = patient.address?.[0].country;
+      $demographics.phone = patient.telecom?.[0].value;
     }
+    $demographics.first = $demographics.first || userAuth.given_name || userAuth.firstName;
+    $demographics.last = $demographics.last || userAuth.family_name || userAuth.lastName;
   });
 
   function generateIPS() {
@@ -39,7 +62,9 @@
       last: "Gravitate",
       first: "Maria SEATTLE",
       gender: "female",
-      dob: "1946-05-05"
+      dob: "1946-05-05",
+      id: $demographics.id,
+      identifier: $demographics.identifier
     }
   }
 </script>

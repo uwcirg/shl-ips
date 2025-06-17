@@ -269,9 +269,11 @@ export class IPSResourceCollection {
         let extensionSections = get(this.extensionSections);
         Object.entries(extensionSections).forEach(([sectionKey, sectionTemplate]) => {
             // Exclude extensions from upload if attached to a custom section, but allow custom group titles w/o sections to be uploaded
-            if (sectionTemplate) {
-                delete rBT[sectionKey];
-            }
+            // **********
+            // TODO: Removed to allow Advance Directives to be uploaded
+            // if (sectionTemplate) {
+            //     delete rBT[sectionKey];
+            // }
         });
         let selectedIPSResources = this.flattenResources(rBT)
             .filter(resource => (resource as ResourceHelper).include ) as ResourceHelper[];

@@ -194,6 +194,9 @@ export function constructPatientResource (props: DemographicFields = {}) {
     resourceType: 'Patient',
     active: true
   };
+  if (props.id) {
+    patient.id = props.id;
+  }
   if (props.first || props.last) {
     patient.name = [ {} ];
     if (props.first) patient.name[0].given = [props.first];
@@ -213,8 +216,9 @@ export function constructPatientResource (props: DemographicFields = {}) {
   if (props.dob) {
     patient.birthDate = props.dob;
   }
+  let identifiers = [];
   if (props.mrn) {
-    patient.identifier = [
+    identifiers.push([
       {
         use: 'usual',
         type: {
@@ -230,8 +234,20 @@ export function constructPatientResource (props: DemographicFields = {}) {
         system: 'http://hospital.smarthealthit.org',
         value: props.mrn
       }
-    ]
+    ]);
   }
+  if (props.identifier) {
+    identifiers.push([
+      {
+        system: props.identifier.system,
+        value: props.identifier.value
+      }
+    ]);
+  }
+  if (identifiers.length > 0) {
+    patient.identifier = identifiers;
+  }
+
   if (props.address1 || props.address2 || props.city || props.state || props.zip || props.country) {
     patient.address = [{}];
     if (props.address1) patient.address[0].line = [props.address1];
