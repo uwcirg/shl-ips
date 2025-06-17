@@ -7,11 +7,12 @@
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import ProviderOverview from '$lib/components/app/ProviderOverview.svelte';
 
-  let component = INSTANCE_CONFIG.pages.provider.component ?? ProviderOverview;
+  let component = INSTANCE_CONFIG.pages?.provider?.component ?? ProviderOverview;
+  let title = INSTANCE_CONFIG.pages?.provider?.title ?? `Patients - ${INSTANCE_CONFIG.title}`;
 </script>
 <Styles />
 <svelte:head>
-    <title>My Summaries - {INSTANCE_CONFIG.title}</title> 
+    <title>{title}</title> 
 </svelte:head>
 
 <div class="px-3">

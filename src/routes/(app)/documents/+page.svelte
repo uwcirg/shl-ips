@@ -24,6 +24,9 @@
   import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
   import type { Writable } from 'svelte/store';
   import type { SHLAdminParams } from '$lib/utils/managementClient';
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
+
+  let title = INSTANCE_CONFIG.pages?.documents?.title ?? `My Documents - ${INSTANCE_CONFIG.title}`;
 
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
 
@@ -90,6 +93,8 @@
     });
   }
 </script>
+
+<svelte:head><title>{title}</title></svelte:head>
 
 <Offcanvas
     {isOpen}
