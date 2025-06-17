@@ -159,6 +159,11 @@
                   <NavLink href="/summaries" active={ activeItem === "summaries" }>Summaries</NavLink>
                 </NavItem>
               {/if}
+              {#if INSTANCE_CONFIG.pages.documents}
+                <NavItem>
+                  <NavLink href="/documents" active={ activeItem === "documents" }>Documents</NavLink>
+                </NavItem>
+              {/if}
               {#if INSTANCE_CONFIG.pages.create}
                 <NavItem>
                   <NavLink href="/create" active={ activeItem === "create" }>Create</NavLink>

@@ -24,6 +24,9 @@ export default {
       title: `Create a Health Link - ${instanceTitle}`,
       navButtonComponent: NavButtonCreate,
       component: AddFilePOLST,
+    },
+    documents: {
+      title: `My Documents - ${instanceTitle}`
     }
   }
 };
