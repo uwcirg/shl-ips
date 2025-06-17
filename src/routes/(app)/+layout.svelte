@@ -38,7 +38,7 @@
 
 </script>
 {#await currentUser}
-  Authorizing...
+  Loading...
 {:then}
   {#await authService.getProfile() then profile}
     {#if profile}
@@ -49,7 +49,7 @@
       </Row>
     {:else}
       <!-- TODO: Replace with loader animation -->
-      Authorizing...
+      Loading...
     {/if}
   {/await}
 {/await}
