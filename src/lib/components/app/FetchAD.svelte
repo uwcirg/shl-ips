@@ -19,6 +19,7 @@
   import type { UserDemographics } from '$lib/utils/types';
   import { demographics } from '$lib/stores/demographics';
   import { writable, type Writable } from 'svelte/store';
+    import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
 
   export let sectionKey: string = "Advance Directives";
 
@@ -153,9 +154,9 @@
     return query.substring(0, query.length - 1);
   }
 
-  async function fetchAdvanceDirective(patient: any) {
+  async function fetchAdvanceDirective(patient: any, url?: string) {
     let query = buildAdvanceDirectiveSearchQuery(patient);
-    return await fetch(`${sources[selectedSource].url}/DocumentReference${query}`, {
+    return await fetch(`${url ?? sources[selectedSource].url}/DocumentReference${query}`, {
         method: 'GET',
         headers: { accept: 'application/json' }
       }).then(function (response: any) {
@@ -163,7 +164,7 @@
           // make the promise be rejected if we didn't get a 2xx response
           throw new Error('Unable to fetch advance directive data', { cause: response });
         } else {
-          return response;
+          return response.json();
         }
       });
   }
@@ -218,12 +219,15 @@
       let content;
       let hostname;
       const patient = await fetchPatient(constructPatientResource(formDemographics));
-      const contentResponse = await fetchAdvanceDirective(patient.id);
-      content = await contentResponse.json();
+      content = await fetchAdvanceDirective(patient.id);
       hostname = sources[selectedSource].url;
       let resources: Array<DocumentReferencePOLST> = content.entry ? content.entry.map((e: BundleEntry) => {
         return e.resource;
       }) : [];
+      let secondContent = await fetchAdvanceDirective(patient.id, INTERMEDIATE_FHIR_SERVER_BASE);
+      resources = resources.concat(secondContent.entry ? secondContent.entry.map((e: BundleEntry) => {
+        return e.resource;
+      }) : []);
       if (resources.length === 0) {
         console.warn("No advance directives found for patient "+patient.id);
         processing = false;

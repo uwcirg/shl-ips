@@ -19,20 +19,28 @@
   import AdvanceDirective from '$lib/components/resource-templates/AdvanceDirective.svelte';
   import Patient from '$lib/components/resource-templates/Patient.svelte';
   import { onMount } from 'svelte';
+    import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
 
   let patientData: Resource[];
 
   onMount(async () => {
     let patientId = $page.params.id;
-    let patient = await fetch("https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/" + patientId)
-      .then((response) => response.json())
-      .then((data) => data);
-    let docrefSummaries = await fetch("https://fhir.ips-demo.dev.cirg.uw.edu/fhir/DocumentReference?_summary=true&status=current&subject=" + patientId)
+    let serverUrl = INTERMEDIATE_FHIR_SERVER_BASE;
+    let patient = await fetch(`${serverUrl}/Patient/${patientId}`)
+      .then((response) => {
+        if (response.status !== 200) {
+          serverUrl = "https://fhir.ips-demo.dev.cirg.uw.edu/fhir";
+          return fetch(`https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/${patientId}`)
+            .then((response) => response.json());
+        }
+        return response.json();
+      }).then((data) => data);
+    let docrefSummaries = await fetch(`${serverUrl}/DocumentReference?_sort=-date&_summary=true&status=current&subject=${patientId}`)
       .then((response) => response.json())
       .then((data) => data.entry)
       .then((data) => data.map((entry) => entry.resource));
     patientData = [patient, ...docrefSummaries];
-    await fetch("https://fhir.ips-demo.dev.cirg.uw.edu/fhir/DocumentReference?status=current&subject=" + patientId)
+    await fetch(`${serverUrl}/DocumentReference?_sort=-date&status=current&subject=${patientId}`)
       .then((response) => response.json())
       .then((data) => data.entry)
       .then((data) => data.map((entry) => entry.resource))
