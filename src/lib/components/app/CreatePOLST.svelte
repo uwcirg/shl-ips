@@ -317,7 +317,7 @@
     processing = true;
     let resource = JSON.parse(JSON.stringify(resourceTemplate));
     resource.content[0].attachment.data = finalizedEncoding;
-    let createdDate = new Date().toISOString().slice(0,10);
+    let createdDate = new Date().toISOString();
     resource.content[0].attachment.creation = createdDate;
     resource.date = createdDate;
     let resources = [resource];

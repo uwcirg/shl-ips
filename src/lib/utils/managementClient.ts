@@ -160,7 +160,7 @@ export class SHLClient {
       })
       .encrypt(jose.base64url.decode(shl.key));
 
-    let added = new Date().toISOString().slice(0, 10);
+    let added = new Date().toLocaleString();
     let label = (patientName ? patientName.charAt(0).toUpperCase() + patientName.slice(1).toLowerCase() + "'s" : "My")+ " Summary";
     new TextEncoder().encode(contentEncrypted);
     const res = await fetch(`${API_BASE}/shl/${shl.id}/file`, {

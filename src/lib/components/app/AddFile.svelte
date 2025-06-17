@@ -73,7 +73,7 @@
   let patientName = "";
   let patient: Patient | undefined;
 
-  let label = 'Health Summary ' + new Date().toISOString().slice(0, 10);
+  let label = 'Health Summary ' + new Date().toLocaleDateString();
   let expiration: number | null = -1;
   let type = 'password';
   let showPassword = false;
@@ -117,7 +117,7 @@
       } else {
         label = "My";
       }
-      label = label + " Summary Link " + new Date().toISOString().slice(0, 10);
+      label = label + " Summary Link " + new Date().toLocaleDateString();
     }
   }
   $: {

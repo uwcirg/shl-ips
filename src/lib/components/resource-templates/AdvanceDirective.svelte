@@ -162,11 +162,11 @@ Text:
 <!-- FIXME This iteration not ideal - should iterate whether pdf present or not, as created & pdfSignedDate (ill-named) actually refer to the larger context of the DR, not the pdf... as it stands the Personal Advance Care Plan Document won't show created/signed (bug), tho we don't care so much about that one in IPS. 
 -->
   {#if resource.content[0].attachment.creation}
-    <b>Created:</b> {new Date(resource.content[0].attachment.creation).toISOString().slice(0,10)}
+    <b>Created:</b> {new Date(resource.content[0].attachment.creation).toLocaleString()}
     <br/>
   {/if}
   {#if resource.pdfSignedDate}
-    <b>Digitally signed:</b> {new Date(resource.pdfSignedDate).toISOString().slice(0,10)}
+    <b>Digitally signed:</b> {new Date(resource.pdfSignedDate).toLocaleString()}
     <br/>
   {/if}
   {#each resource.content as content}
