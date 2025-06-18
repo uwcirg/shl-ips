@@ -50,19 +50,16 @@
     processing = true;
     let patient = constructPatientResource($demographics);
     if (!patient.id) {
-      let result = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient`, {
+      let newPatient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/fhir+json'
         },
         body: JSON.stringify(patient)
       })
-      .then((response) => response.json())
-      .then((data) => {
-        patient = data;
-        $demographics.id = data.id;
-        return data;
-      });
+      .then((response) => response.json());
+      patient = newPatient;
+      $demographics.id = newPatient.id;
     }
     resourceDispatch('update-resources', {
       resources: [patient],
