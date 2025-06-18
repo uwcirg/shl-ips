@@ -103,7 +103,7 @@
   </Row>
   <Row class="mt-3">
     <Col>
-      <DemographicForm hide={['address', 'mrn']} />
+       <DemographicForm />
     </Col>
   </Row>
   <Row>
