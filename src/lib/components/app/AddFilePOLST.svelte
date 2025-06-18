@@ -96,6 +96,7 @@
       if (!oldvalue && resourcesAdded) {
         // Prevent flash of AddData accordion overflow when first resources are added
         handleAddDataAccordionOverflow();
+        document.getElementsByClassName('add-demographics')?.[0]?.scrollIntoView({ behavior: 'smooth' });
       }
       hasAdvanceDirective = Object.keys($resourcesByTypeStore['Advance Directives'] ?? {}).length > 0;
     }
@@ -160,7 +161,7 @@
     sessionStorage.removeItem('LABEL');
     sessionStorage.removeItem('PASSCODE');
     sessionStorage.removeItem('EXPIRE');
-    const accordion = document.querySelector('div.add-data > div.accordion-collapse');
+    const accordion = document.querySelector('div.add-demographics > div.accordion-collapse');
     if (accordion) {
       accordion.style.overflow = 'visible';
       accordion.classList.add('at-load');
@@ -274,12 +275,12 @@
   }
 
   function handleAddDataAccordionOverflow() {
-    const accordion = document.querySelector('div.add-data > div.accordion-collapse');
+    const accordion = document.querySelector('div.add-demographics > div.accordion-collapse');
     if (accordion) {
       accordion.style.overflow = 'hidden';
     } else {
       setTimeout(function() {
-        const accordion = document.querySelector('div.add-data > div.accordion-collapse');
+        const accordion = document.querySelector('div.add-demographics > div.accordion-collapse');
         if (accordion) {
           accordion.style.overflow = 'visible';
         }
@@ -303,7 +304,7 @@
 <Accordion>
   <AccordionItem
     active={!resourcesAdded}
-    class="add-data"
+    class="add-demographics"
     on:toggle={handleAddDataAccordionOverflow}
   >
     <h5 slot="header" class="my-2">{addDataHeader}</h5>
@@ -312,7 +313,7 @@
   {#if resourcesAdded}
     <AccordionItem
       active
-      class="add-data"
+      class="add-documents"
       on:toggle={handleAddDataAccordionOverflow}
     >
       <h5 slot="header" class="my-2">2. Create or retrieve an Advance Care Planning Document</h5>
@@ -329,13 +330,13 @@
       <TabContent on:tab={(e) => {
         currentTab = e.detail;
       }}>
-        <TabPane class="default-tab" tabId="create-acp" style="padding-top:10px" active>
+        <TabPane class="default-tab" tabId="default" style="padding-top:10px" active>
           <span class="default-tab" slot="tab">Create a POLST</span>
           <CreatePOLST
             on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
           />
         </TabPane>
-        <TabPane tabId="retrieve-acp" style="padding-top:10px">
+        <TabPane tabId="retrieve-polst" style="padding-top:10px">
           <span slot="tab">Search for a POLST in the state repository</span>
           <FetchAD
             on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }

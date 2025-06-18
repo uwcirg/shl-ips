@@ -233,16 +233,16 @@
       pdfPreviewSrc = window.URL.createObjectURL(blob);
     }
 
-    // TODO Change back to full when signing is figured out
+    // TODO Change back to template w/signature when signing is figured out
     if (forms.noSignature.resultBytes) {
       let blob = new Blob([forms.noSignature.resultBytes], { type: 'application/pdf' });
       const reader = new FileReader();
       reader.onload = () => {
         finalizedEncoding = (reader.result as string).split(',')[1]; // remove data: URL prefix
+        document.getElementById("pdf-preview")?.scrollIntoView({behavior: "smooth"});
       };
       reader.readAsDataURL(blob);
     }
-
     processing = false;
   }
 
@@ -479,7 +479,7 @@
     <Row class="mt-4">
       <Col>
         <div>
-          <embed src={pdfPreviewSrc} type="application/pdf" width="100%" height="800px" />
+          <embed id="pdf-preview" src={pdfPreviewSrc} type="application/pdf" width="100%" height="800px" />
         </div>
       </Col>
     </Row>
