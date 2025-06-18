@@ -121,7 +121,8 @@
       }).then(function (response: any) {
         if (!response.ok) {
           // make the promise be rejected if we didn't get a 2xx response
-          throw new Error('Unable to fetch patient data', { cause: response });
+          // throw new Error('Unable to fetch patient data', { cause: response });
+          console.error(`Failed to fetch patient from ${url}`);
         } else {
           return response;
         }
@@ -134,7 +135,8 @@
       }).then(function (response: any) {
         if (!response.ok) {
           // make the promise be rejected if we didn't get a 2xx response
-          throw new Error('Unable to fetch patient data', { cause: response });
+          // throw new Error('Unable to fetch patient data', { cause: response });
+          console.error(`Failed to fetch patient from ${url}`);
         } else {
           return response;
         }
@@ -162,7 +164,8 @@
       }).then(function (response: any) {
         if (!response.ok) {
           // make the promise be rejected if we didn't get a 2xx response
-          throw new Error('Unable to fetch advance directive data', { cause: response });
+          // throw new Error('Unable to fetch advance directive data', { cause: response });
+          console.error(`Failed to fetch resource from ${url}`);
         } else {
           return response.json();
         }
