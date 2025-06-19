@@ -8,6 +8,8 @@
     Accordion,
     AccordionItem,
     Button,
+    Card,
+    CardBody,
     Col,
     FormGroup,
     Icon,
@@ -38,6 +40,7 @@
   } from '$lib/utils/types';
   import type { Patient } from 'fhir/r4';
   import { IPSResourceCollection } from '$lib/utils/IPSResourceCollection.js';
+  import UploadDocument from '$lib/components/app/UploadDocument.svelte';
  
   export let status = "";
   
@@ -64,7 +67,7 @@
     ips: undefined
   }
 
-  let adFormType = 'POLST';
+  let adFormType = '';
   let formTypeOptions: Record<string, any> = {
     "": '',
     "POLST": '',
@@ -72,6 +75,8 @@
     "Living Will": '',
     "Advance Care Plan": ''
   };
+
+  let polstUploadType = '';
 
   let shcsToAdd: SHCFile[] = [];
   let singleIPS = true;
@@ -320,7 +325,7 @@
       <h5 slot="header" class="my-2">2. Create or retrieve an Advance Care Planning Document</h5>
       <p>Advanced Care Planning Documents help providers know more about your treatment preferences.</p>
 
-      <Label>Select the type of Advance Care Planning Document you would like to create:</Label>
+      <Label>Select the type of Advance Care Planning Document you would like to share:</Label>
       <Input type="select" bind:value={adFormType} class="mb-4" style="width:min-content">
         {#each Object.entries(formTypeOptions) as [value, display]}
           <option value={value} disabled={value !== 'POLST'} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
@@ -328,22 +333,53 @@
           </option>
         {/each}
       </Input>
-      <TabContent on:tab={(e) => {
-        currentTab = e.detail;
-      }}>
-        <TabPane class="default-tab" tabId="default" style="padding-top:10px" active>
-          <span class="default-tab" slot="tab">Create a POLST</span>
-          <CreatePOLST
-            on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
-          />
-        </TabPane>
-        <TabPane tabId="retrieve-polst" style="padding-top:10px">
-          <span slot="tab">Search for a POLST in the state repository</span>
-          <FetchAD
-            on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
-          />
-        </TabPane>
-      </TabContent>
+      {#if adFormType === 'POLST'}
+        <Row>
+          <FormGroup>
+            <Input type="radio" bind:group={polstUploadType} value="upload" label="I have a signed POLST PDF to upload from my device" />
+            <Input type="radio" bind:group={polstUploadType} value="retrieve" label="I have a POLST in the WA State POLST Repository" />
+            <Input type="radio" bind:group={polstUploadType} value="create" label="I would like to create a new POLST" />
+          </FormGroup>
+        </Row>
+        {#if polstUploadType === 'upload'}
+        <Row>
+          <Col>
+            <h5>Upload a signed POLST document from your device</h5>
+            <Card class="mb-4">
+              <CardBody>
+                <UploadDocument on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }/>
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+        {:else if polstUploadType === 'retrieve'}
+        <Row>
+          <Col>
+            <h5>Search for your POLST in the state repository</h5>
+            <Card class="mb-4">
+              <CardBody>
+                <FetchAD
+                  on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
+                />
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+        {:else if polstUploadType === 'create'}
+        <Row>
+          <Col>
+            <h5>Create a POLST to sign</h5>
+            <Card class="mb-4">
+              <CardBody>
+                <CreatePOLST
+                  on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
+                />
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+        {/if}
+      {/if}
     </AccordionItem>
   {/if}
   {#if resourcesAdded && hasAdvanceDirective}
