@@ -130,9 +130,10 @@
       };
 
       let name = `${$demographics.last ?? ""}, ${$demographics.first ?? ""}`;
-      let dob = $demographics.dob ? new Date($demographics.dob) : undefined;
+      // Parse date in local time by appending plain time suffix
+      let dob = $demographics.dob ? new Date($demographics.dob+"T00:00:00") : undefined;
       let dobYear = dob?.getFullYear()?.toString() ?? " ";
-      let dobMonth = dob?.getMonth() ? (dob?.getMonth() + 1).toString() : " ";
+      let dobMonth = dob?.getMonth() !== undefined ? (dob?.getMonth() + 1).toString() : " ";
       let dobDay = dob?.getDate()?.toString() ?? " ";
 
       form.getTextField('additionalOrders').setText(ensureText(additionalOrders));
