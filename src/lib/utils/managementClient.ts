@@ -57,6 +57,7 @@ export class SHLClient {
     const res = await fetch(`${API_BASE}/user`, {
       method: 'POST',
       body: JSON.stringify({ userId }),
+      cache: 'no-store'
     });
     const shls = await res.json();
     return shls;

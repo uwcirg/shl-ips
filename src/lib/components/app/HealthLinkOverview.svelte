@@ -54,9 +54,11 @@
         <Button color="primary" style="width:100%" href={'/view/' + shl.id}>View/Manage</Button>
       </Col>
       <Col class="d-flex" style="max-width:fit-content">
-        <Button color="danger" on:click={() => {
-          shlClient.deleteShl(shl);
-          location.reload();
+        <Button color="danger" on:click={async function () {
+          let success = await shlClient.deleteShl(shl);
+          if (success) {
+            $shlStore = await shlClient.getUserShls();
+          }
         }}><Icon name="trash3" /></Button>
       </Col>
     </Row>
