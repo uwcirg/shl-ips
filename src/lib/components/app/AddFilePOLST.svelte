@@ -200,6 +200,7 @@
         // Trigger update in ResourceSelector
         resourceCollection.addResources(resourceResult.resources, resourceResult.sectionKey, resourceResult.sectionTemplate);
         showSuccessMessage();
+        setTimeout(() => (document.querySelector(`div.edit-data > button.accordion-button`) as HTMLButtonElement)?.click(), 100);
       }
     } catch (e) {
       console.log('Failed', e);
