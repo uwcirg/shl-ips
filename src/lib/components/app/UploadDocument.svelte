@@ -18,8 +18,10 @@
 
     let fileData: Record<string, string> = {};
     $: {
+        let filename: string;
         if (uploadFiles) {
-            fetchError = "";
+            processing = true;
+            fileData = {};
             for (let i = 0; i < uploadFiles.length; i++) {
                 const file = uploadFiles[i];
                 if (file instanceof File) {
@@ -27,6 +29,21 @@
                         fetchError = `${file.name} is not a PDF`;
                         continue;
                     }
+                    filename = file.name;
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        let encoding = (reader.result as string).split(',')[1]; // remove data: URL prefix
+                        let resource = JSON.parse(JSON.stringify(resourceTemplate));
+                        resource.content[0].attachment.data = encoding;
+                        let createdDate = new Date().toISOString();
+                        resource.content[0].attachment.creation = createdDate;
+                        resource.date = createdDate;
+                        fileData[filename] = resource;
+                        if (uploadFiles && i === uploadFiles.length - 1) {
+                            processing = false;
+                        }
+                    };
+                    reader.readAsDataURL(file);
                 }
             }
         }
@@ -107,39 +124,14 @@
         processing = true;
         fetchError = "";
         try {
-            let content;
-            let filename: string;
-            if (uploadFiles) {
-                for (let i = 0; i < uploadFiles.length; i++) {
-                    const file = uploadFiles[i];
-                    if (file instanceof File) {
-                        if (file.type !== 'application/pdf') {
-                            fetchError = `${file.name} is not a PDF`;
-                            continue;
-                        }
-                        filename = file.name;
-                        const reader = new FileReader();
-                        reader.onload = () => {
-                            let encoding = (reader.result as string).split(',')[1]; // remove data: URL prefix
-                            let resource = JSON.parse(JSON.stringify(resourceTemplate));
-                            resource.content[0].attachment.data = encoding;
-                            let createdDate = new Date().toISOString();
-                            resource.content[0].attachment.creation = createdDate;
-                            resource.date = createdDate;
-                            fileData[filename] = resource;
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                }
-            }
-            processing = false;
             let resources = Object.values(fileData);
-            let result:ResourceRetrieveEvent = {
+            processing = false;
+            resourceResult = {
                 resources: resources,
                 sectionKey: sectionKey,
                 sectionTemplate: sectionTemplate
             }
-            resourceDispatch('update-resources', result);
+            resourceDispatch('update-resources', resourceResult);
         } catch (e) {
             processing = false;
             console.log('Failed', e);
