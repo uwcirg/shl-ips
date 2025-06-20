@@ -19,7 +19,7 @@
   import type { UserDemographics } from '$lib/utils/types';
   import { demographics } from '$lib/stores/demographics';
   import { writable, type Writable } from 'svelte/store';
-    import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
+  import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
 
   export let sectionKey: string = "Advance Directives";
 
@@ -62,6 +62,7 @@
   let selectedSource = "Current User";
   let processing = false;
   let fetchError = '';
+  let message = '';
 
   let formDemographics: Writable<UserDemographics> = writable({
     first: '',
@@ -111,10 +112,11 @@
     }
   }
 
-  async function fetchPatient(patient: any) {
+  async function fetchPatient(patient: any, url?: string) {
     let result;
+    let baseUrl = url ?? sources[selectedSource].url;
     try {
-      result = await fetch(`${sources[selectedSource].url}/Patient/$match`, {
+      result = await fetch(`${baseUrl}/Patient/$match`, {
         method: 'POST',
         headers: { accept: 'application/json' },
         body: JSON.stringify(patient)
@@ -122,29 +124,34 @@
         if (!response.ok) {
           // make the promise be rejected if we didn't get a 2xx response
           // throw new Error('Unable to fetch patient data', { cause: response });
-          console.error(`Failed to fetch patient from ${url}`);
+          console.warn(`Patient match failed at ${baseUrl}`);
         } else {
           return response;
         }
       });
     } catch (e) {
       let query = buildPatientSearchQuery(formDemographics);
-      result = await fetch(`${sources[selectedSource].url}/Patient${query}`, {
+      result = await fetch(`${baseUrl}/Patient${query}`, {
         method: 'GET',
         headers: { accept: 'application/json' },
       }).then(function (response: any) {
         if (!response.ok) {
           // make the promise be rejected if we didn't get a 2xx response
           // throw new Error('Unable to fetch patient data', { cause: response });
-          console.error(`Failed to fetch patient from ${url}`);
+          console.warn(`No matching patient found at ${baseUrl}`);
+          return null;
         } else {
           return response;
         }
       });
     }
+    if (!result) {
+      return null;
+    }
     let body = await result.json();
     if (body.resourceType == 'Bundle' && (body.total == 0 || body.entry.length === 0)) {
-      throw new Error('Unable to find patient');
+      console.warn('No matching patients found');
+      return null;
     }
     let patient_response = body.entry[0].resource;
     return patient_response;
@@ -165,7 +172,7 @@
         if (!response.ok) {
           // make the promise be rejected if we didn't get a 2xx response
           // throw new Error('Unable to fetch advance directive data', { cause: response });
-          console.error(`Failed to fetch resource from ${url}`);
+          console.warn(`No advance directives found at ${url} for patient ${patient.id}`);
         } else {
           return response.json();
         }
@@ -221,18 +228,26 @@
     try {
       let content;
       let hostname;
-      const patient = await fetchPatient(constructPatientResource(formDemographics));
-      content = await fetchAdvanceDirective(patient.id);
-      hostname = sources[selectedSource].url;
-      let resources: Array<DocumentReferencePOLST> = content.entry ? content.entry.map((e: BundleEntry) => {
-        return e.resource;
-      }) : [];
-      let secondContent = await fetchAdvanceDirective(patient.id, INTERMEDIATE_FHIR_SERVER_BASE);
-      resources = resources.concat(secondContent.entry ? secondContent.entry.map((e: BundleEntry) => {
-        return e.resource;
-      }) : []);
+      let resources: Array<DocumentReferencePOLST> = [];
+      const patient = constructPatientResource(formDemographics);
+      const patientFound = await fetchPatient(patient);
+      if (patientFound) {
+        content = await fetchAdvanceDirective(patientFound.id);
+        hostname = sources[selectedSource].url;
+        resources = content?.entry ? content.entry.map((e: BundleEntry) => {
+          return e.resource;
+        }) : [];
+      }
+      const secondPatientFound = await fetchPatient(patient, INTERMEDIATE_FHIR_SERVER_BASE);
+      if (secondPatientFound) {
+        let secondContent = await fetchAdvanceDirective(secondPatientFound.id, INTERMEDIATE_FHIR_SERVER_BASE);
+        resources = resources.concat(secondContent.entry ? secondContent.entry.map((e: BundleEntry) => {
+          return e.resource;
+        }) : []);
+      }
       if (resources.length === 0) {
         console.warn("No advance directives found for patient "+patient.id);
+        message = "No advance directives found.";
         processing = false;
         return;
       }
@@ -423,5 +438,11 @@
   </Row>
   {/if}
 </form>
-
-<span class="text-danger">{fetchError}</span>
+<Row>
+  {#if message}
+    <span>{message}</span>
+  {/if}
+  {#if fetchError}
+    <span class="text-danger">{fetchError}</span>
+  {/if}
+</Row>
