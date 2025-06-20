@@ -16,27 +16,130 @@
     let processing = false;
     let fetchError = "";
 
+    let fileData: Record<string, string> = {};
+    $: {
+        if (uploadFiles) {
+            fetchError = "";
+            for (let i = 0; i < uploadFiles.length; i++) {
+                const file = uploadFiles[i];
+                if (file instanceof File) {
+                    if (file.type !== 'application/pdf') {
+                        fetchError = `${file.name} is not a PDF`;
+                        continue;
+                    }
+                }
+            }
+        }
+    }
+
     let resourceResult: ResourceRetrieveEvent = {
         resource: undefined
     };
+
+    let sectionKey = "Advance Directives";
+
+    let sectionTemplate = {
+      title: "Advance Directives",
+      code: {
+        coding: [
+            {
+                system: "http://loinc.org",
+                code: "42348-3",
+                display: "Advance Directives"
+            }
+            ]
+        },
+        entry: []
+    };
+    let resourceTemplate = {
+        resourceType: "DocumentReference",
+        status: "current",
+        docStatus: "final",
+        type: {
+        coding: [
+            {
+            system: "http://loinc.org",
+            code: "100821-8",
+            display: "National POLST form: portable medical order panel"
+            }
+        ]
+        },
+        category: [
+        {
+            coding: [
+            {
+                system: "http://loinc.org",
+                code: "42348-3",
+                display: "Advance Healthcare Directive"
+            }
+            ]
+        }
+        ],
+        subject: {
+        reference: "Patient/14599"
+        },
+        date: "",
+        description: "National ePOLST Form: A Portable Medical Order\n    - Version 1",
+        securityLabel: [
+        {
+            coding: [
+            {
+                system: "http://hl7.org/fhir/v3/Confidentiality",
+                code: "N",
+                display: "normal"
+            }
+            ]
+        }
+        ],
+        content: [
+        {
+            attachment: {
+            contentType: "application/pdf",
+            creation: "",
+            data: ""  
+            }
+        }
+        ]
+    };
+
   
     async function retrieveDocument() {
         processing = true;
         fetchError = "";
         try {
             let content;
-            let filename;
-    
-            if (uploadFiles?.[0] instanceof File) {
-                filename = uploadFiles[0].name;
-                content = await uploadFiles[0].arrayBuffer();
+            let filename: string;
+            if (uploadFiles) {
+                for (let i = 0; i < uploadFiles.length; i++) {
+                    const file = uploadFiles[i];
+                    if (file instanceof File) {
+                        if (file.type !== 'application/pdf') {
+                            fetchError = `${file.name} is not a PDF`;
+                            continue;
+                        }
+                        filename = file.name;
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                            let encoding = (reader.result as string).split(',')[1]; // remove data: URL prefix
+                            let resource = JSON.parse(JSON.stringify(resourceTemplate));
+                            resource.content[0].attachment.data = encoding;
+                            let createdDate = new Date().toISOString();
+                            resource.content[0].attachment.creation = createdDate;
+                            resource.date = createdDate;
+                            fileData[filename] = resource;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }
             }
             processing = false;
-            resourceResult = {
-                resources: content,
-                source: filename
-            };
-            resourceDispatch('update-resources', resourceResult);
+            let resources = Object.values(fileData);
+            let result:ResourceRetrieveEvent = {
+                resources: resources,
+                sectionKey: sectionKey,
+                sectionTemplate: sectionTemplate
+            }
+            resourceDispatch('update-resources', result);
         } catch (e) {
             processing = false;
             console.log('Failed', e);
