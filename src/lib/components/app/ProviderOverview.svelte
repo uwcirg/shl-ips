@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getContext, onMount } from 'svelte';
-  import { Button, Col, Icon, Input, Label, Row, Styles, Table } from 'sveltestrap';;
+  import { Button, Col, Input, Row, Table } from 'sveltestrap';;
   import type { Writable } from 'svelte/store';
   import type { SHLAdminParams } from '$lib/utils/managementClient';
   import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
@@ -52,8 +52,6 @@
     patients = [...externalPatients, ...localPatients];
   });
 </script>
-
-<Styles />
 
 <Row>
   <Col>

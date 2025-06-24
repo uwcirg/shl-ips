@@ -1,7 +1,4 @@
 <script lang="ts">
-  import {
-    Styles
-  } from 'sveltestrap';
   import { onMount, getContext } from 'svelte';
   import { goto } from '$app/navigation';
   import { page, type Writable } from '$app/stores';
@@ -21,7 +18,7 @@
       if (newUser) {
         setTimeout(async () => {
           window.dispatchEvent(new CustomEvent('userFound', { 
-            detail: { message: 'Hello from another component!' } 
+            detail: { message: 'Hello from the auth page component!' } 
           }));
           $shlStore = await shlClient.getUserShls();
           let redirectUrl = authService.getRedirectUrl();
@@ -40,7 +37,6 @@
     }
   });
 </script>
-<Styles />
 <svelte:head>
     <title>Authenticate - WA Health Summary</title> 
 </svelte:head>

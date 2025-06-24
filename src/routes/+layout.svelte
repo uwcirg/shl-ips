@@ -71,7 +71,7 @@
         return undefined;
       }
       window.dispatchEvent(new CustomEvent('userFound', { 
-        detail: { message: 'Hello from another component!' } 
+        detail: { message: 'Hello from the base routes component!' } 
       }));
       $shlStore = await shlClient.getUserShls();
       return user;

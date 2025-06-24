@@ -26,8 +26,6 @@
   import type { SHLAdminParams } from '$lib/utils/managementClient';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 
-  let title = INSTANCE_CONFIG.pages?.documents?.title ?? `My Documents - ${INSTANCE_CONFIG.title}`;
-
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
 
   let patientData: Resource[];
@@ -98,7 +96,9 @@
   }
 </script>
 
-<svelte:head><title>{title}</title></svelte:head>
+<svelte:head>
+  <title>My Documents - {INSTANCE_CONFIG.title}</title>
+</svelte:head>
 
 <Offcanvas
     {isOpen}

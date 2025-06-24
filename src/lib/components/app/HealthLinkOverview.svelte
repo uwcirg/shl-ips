@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getContext } from 'svelte';
-  import { Button, Col, Icon, Row, Styles } from 'sveltestrap';
+  import { Button, Col, Icon, Row } from 'sveltestrap';
   import type { Writable } from 'svelte/store';
   import type { SHLAdminParams, SHLClient } from '$lib/utils/managementClient';
 
@@ -17,8 +17,6 @@
         : 'Summaries you have created';
   }
 </script>
-
-<Styles />
 
 <p>Start creating a new sharable summary by clicking the button below.</p>
 

@@ -1,18 +1,16 @@
 <script lang="ts">
   import {
     Col,
-    Row,
-    Styles
+    Row
   } from 'sveltestrap';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import ProviderOverview from '$lib/components/app/ProviderOverview.svelte';
 
   let component = INSTANCE_CONFIG.pages?.provider?.component ?? ProviderOverview;
-  let title = INSTANCE_CONFIG.pages?.provider?.title ?? `Patients - ${INSTANCE_CONFIG.title}`;
 </script>
-<Styles />
+
 <svelte:head>
-    <title>{title}</title> 
+  <title>Patients - {INSTANCE_CONFIG.title}</title> 
 </svelte:head>
 
 <div class="px-3">

@@ -45,14 +45,14 @@
 
 </script>
 
+<svelte:head>
+    <title>Create a Health Link - {INSTANCE_CONFIG.title}</title>
+</svelte:head>
+
 {#if shl}
 <h4>Add another summary to "{shl.label}"</h4>
 <br>
 {/if}
-
-<svelte:head>
-    <title>{INSTANCE_CONFIG.pages.create.title ?? "Create a Health Link"}</title>
-</svelte:head>
 
 <svelte:component this={component}
   status={shlStatus}

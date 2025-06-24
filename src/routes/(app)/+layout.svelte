@@ -1,12 +1,10 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
   import { getContext, onMount, setContext } from 'svelte';
   import { type Writable } from 'svelte/store';
   import {
     Col,
     Row
   } from 'sveltestrap';
-  import { page } from '$app/stores';
   import { AuthService } from '$lib/utils/AuthService';
   import { User } from 'oidc-client-ts';
   import { type SHLAdminParams, type SHLClient } from '$lib/utils/managementClient';
@@ -29,7 +27,7 @@
     });
     currentUser.then(async (user) => {
       window.dispatchEvent(new CustomEvent('userFound', { 
-        detail: { message: 'Hello from another component!' } 
+        detail: { message: 'Hello from the app routes component!' } 
       }));
       $shlStore = await shlClient.getUserShls();
       return user;

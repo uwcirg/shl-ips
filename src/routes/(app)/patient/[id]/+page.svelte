@@ -19,7 +19,8 @@
   import AdvanceDirective from '$lib/components/resource-templates/AdvanceDirective.svelte';
   import Patient from '$lib/components/resource-templates/Patient.svelte';
   import { onMount } from 'svelte';
-    import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
+  import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 
   let patientData: Resource[];
 
@@ -79,6 +80,10 @@
       isOpen = !isOpen;
   }
 </script>
+
+<svelte:head>
+  <title>Patient Documents - {INSTANCE_CONFIG.title}</title>
+</svelte:head>
 
 <Offcanvas
     {isOpen}
