@@ -279,7 +279,6 @@
         }
       }, 500);
     }
-    
   }
 
   function updateStatus(newStatus: string) {

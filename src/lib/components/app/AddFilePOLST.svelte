@@ -16,9 +16,7 @@
     Input,
     Label,
     Row,
-    Spinner,
-    TabContent,
-    TabPane
+    Spinner
   } from 'sveltestrap';
   import CreatePOLST from '$lib/components/app/CreatePOLST.svelte';
   import Demographic from './Demographic.svelte';
@@ -100,7 +98,7 @@
       resourcesAdded = Object.keys($resourcesByTypeStore).length > 0;
       if (!oldvalue && resourcesAdded) {
         // Prevent flash of AddData accordion overflow when first resources are added
-        handleAddDataAccordionOverflow();
+        handleAddDataAccordionOverflow('add-demographics');
         document.getElementsByClassName('add-demographics')?.[0]?.scrollIntoView({ behavior: 'smooth' });
       }
       hasAdvanceDirective = Object.keys($resourcesByTypeStore['Advance Directives'] ?? {}).length > 0;
@@ -280,19 +278,18 @@
     }, 1000);
   }
 
-  function handleAddDataAccordionOverflow() {
-    const accordion = document.querySelector('div.add-demographics > div.accordion-collapse');
+  function handleAddDataAccordionOverflow(accordionClass: string) {
+    const accordion = document.querySelector(`div.${accordionClass} > div.accordion-collapse`);
     if (accordion) {
       accordion.style.overflow = 'hidden';
     } else {
       setTimeout(function() {
-        const accordion = document.querySelector('div.add-demographics > div.accordion-collapse');
+        const accordion = document.querySelector(`div.${accordionClass} > div.accordion-collapse`);
         if (accordion) {
           accordion.style.overflow = 'visible';
         }
       }, 500);
     }
-    
   }
 
   function updateStatus(newStatus: string) {
@@ -311,7 +308,7 @@
   <AccordionItem
     active={!resourcesAdded}
     class="add-demographics"
-    on:toggle={handleAddDataAccordionOverflow}
+    on:toggle={handleAddDataAccordionOverflow("add-demographics")}
   >
     <h5 slot="header" class="my-2">{addDataHeader}</h5>
     <Demographic on:update-resources={ async ({ detail }) => { handleNewResources(detail) } } />
@@ -320,7 +317,7 @@
     <AccordionItem
       active
       class="add-documents"
-      on:toggle={handleAddDataAccordionOverflow}
+      on:toggle={handleAddDataAccordionOverflow("add-documents")}
     >
       <h5 slot="header" class="my-2">2. Create or retrieve an Advance Care Planning Document</h5>
       <p>Advanced Care Planning Documents help providers know more about your treatment preferences.</p>
@@ -405,40 +402,40 @@
       <Label>Save your Advanced Care Plan and generate a secure link to it that you can share.</Label>
     </Row>
     <Row class="mx-2">
-      <FormGroup>
-        <Label>Enter a name for the Plan:</Label>
-        <Input type="text" bind:value={label} on:input={() => { userUpdatedLabel = true }}/>
-      </FormGroup>
-      <FormGroup>
-        <Label for="passcode">Protect with Passcode (optional):</Label>
-        <div style="position:relative">
-          <Input
-            maxlength={40}
-            name="passcode"
-            type={type}
-            bind:value={passcode}
-            placeholder="Assign Passcode"
-          />
-          <Icon name={icon} 
-            style="position: absolute;
-            cursor: pointer;
-            height: 25px;
-            width: 20px;
-            top: 6px;
-            right: 10px;
-            color: rgb(50, 50, 50);"
-            onclick={() => showPassword = !showPassword}/>
-        </div>
-      </FormGroup>
-      <FormGroup>
-        <Label>Expiration</Label>
-        <Input type="radio" bind:group={expiration} value={60 * 60} label="1 hour" />
-        <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 7} label="1 week" />
-        <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 365} label="1 year" />
-        <Input type="radio" bind:group={expiration} value={-1} label="Never" />
-      </FormGroup>
-  
       <form on:submit|preventDefault={confirmContent}>
+        <FormGroup>
+          <Label>Enter a name for the Plan:</Label>
+          <Input type="text" bind:value={label} on:input={() => { userUpdatedLabel = true }}/>
+        </FormGroup>
+        <FormGroup>
+          <Label for="passcode">Protect with Passcode (optional):</Label>
+          <div style="position:relative">
+            <Input
+              maxlength={40}
+              name="passcode"
+              type={type}
+              autocomplete="off"
+              bind:value={passcode}
+              placeholder="Assign Passcode"
+            />
+            <Icon name={icon} 
+              style="position: absolute;
+              cursor: pointer;
+              height: 25px;
+              width: 20px;
+              top: 6px;
+              right: 10px;
+              color: rgb(50, 50, 50);"
+              onclick={() => showPassword = !showPassword}/>
+          </div>
+        </FormGroup>
+        <FormGroup>
+          <Label>Expiration</Label>
+          <Input type="radio" bind:group={expiration} value={60 * 60} label="1 hour" />
+          <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 7} label="1 week" />
+          <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 365} label="1 year" />
+          <Input type="radio" bind:group={expiration} value={-1} label="Never" />
+        </FormGroup>
         <Row>
           <Col xs="auto">
           <Button color="primary" style="width:fit-content" disabled={submitting} type="submit">
