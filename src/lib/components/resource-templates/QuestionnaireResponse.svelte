@@ -16,14 +16,14 @@
 {#if resource.identifier?.value}
     <Badge color="primary">{resource.identifier.value}</Badge><br>
 {/if}
-Questionnaire reference: <a href={resource.questionnaire} rel="noreferrer noopener" target='_blank'>{resource.questionnaire}</a><br />
+Questionnaire reference: <a href={resource.questionnaire} rel="noreferrer noopener" target='_blank'>{resource.questionnaire}</a><br>
 Authored: {resource.authored?.split("T")[0]}
 {#if resource.source}
   {#if resource.source.display}
-    <br />
+    <br>
     Source: {resource.source.display}
   {:else}
-    <br />
+    <br>
     Source: (unknown)
   {/if}
 {/if}
@@ -40,7 +40,7 @@ Authored: {resource.authored?.split("T")[0]}
                     <!-- Render answers if present -->
                     {#if item.answer}
                         {#each item.answer as ans}
-                            {ans.valueString ?? ans.valueCoding?.display ?? "No answer text"}<br/>
+                            {ans.valueString ?? ans.valueCoding?.display ?? "No answer text"}<br>
                         {/each}
                     {/if}
                 </td>
@@ -55,7 +55,7 @@ Authored: {resource.authored?.split("T")[0]}
                                         <td>
                                             {#if subitem.answer}
                                                 {#each subitem.answer as subAns}
-                                                    {subAns.valueString ?? subAns.valueCoding?.display ?? "No sub-answer text"}<br/>
+                                                    {subAns.valueString ?? subAns.valueCoding?.display ?? "No sub-answer text"}<br>
                                                 {/each}
                                             {/if}
                                         </td>

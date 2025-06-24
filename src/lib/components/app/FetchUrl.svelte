@@ -16,6 +16,7 @@
   import { PATIENT_IPS, EXAMPLE_IPS, IPS_DEFAULT, BEARER_AUTHORIZATION } from '$lib/config/config';
   import type { SHCRetrieveEvent, IPSRetrieveEvent } from '$lib/utils/types';
   import { createEventDispatcher } from 'svelte';
+  import AuthService from '$lib/utils/AuthService';
 
   const shcDispatch = createEventDispatcher<{'shc-retrieved': SHCRetrieveEvent}>();
   const ipsDispatch = createEventDispatcher<{'ips-retrieved': IPSRetrieveEvent}>();
@@ -54,13 +55,21 @@
       let content;
       let hostname;
       let headers: any = { accept: 'application/fhir+json' };
+      let url;
       if (summaryUrlValidated?.toString().includes('meditech')) {
-        headers['authorization'] = `Bearer ${BEARER_AUTHORIZATION['Meditech']}`
+        url = "/api/url_bearer/meditech?url=" + encodeURIComponent(summaryUrlValidated.toString());
+        headers["Authorization"] = `Bearer ${await AuthService.Instance.getAccessToken()}`
+      } else if (summaryUrlValidated?.toString().includes('Interconnect-Fhir-Oauth')) {
+        url = "/api/url_bearer/epic?url=" + encodeURIComponent(summaryUrlValidated.toString());
+        headers["Authorization"] = `Bearer ${await AuthService.Instance.getAccessToken()}`
       } else if (summaryUrlValidated?.toString().includes('openfhir')) {
         headers['epic-client-id'] = `${BEARER_AUTHORIZATION['EpicHIMSS']}`;
+      } else {
+        url = summaryUrlValidated;
       }
-      const contentResponse = await fetch(summaryUrlValidated!, {
-      headers: headers
+
+      const contentResponse = await fetch(url!, {
+        headers: headers
       }).then(function(response) {
         if (!response.ok) {
           // make the promise be rejected if we didn't get a 2xx response

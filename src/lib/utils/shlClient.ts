@@ -69,11 +69,7 @@ export function url(config: { shl: string }) {
 function needPasscode(config: { shl: string }) {
   const shlBody = config.shl.split(/^(?:.+:\/.+#)?shlink:\//)[1];
   const parsedShl: SHLDecoded = decodeBase64urlToJson(shlBody);
-  if (parsedShl.flag?.includes('P')) {
-    return true;
-  }
-
-  return false;
+  return parsedShl.flag?.includes('P');
 }
 
 export function id(config: { shl: string }) {
@@ -113,7 +109,7 @@ export async function retrieve(configIncoming: SHLinkConnectRequest | {state: st
     };
   } else {
     const decryptionKey = Buffer.from(parsedShl.key, 'base64');
-    const allFiles = (manifestResponseContent as SHLManifestFile).files
+    const shcFiles = (manifestResponseContent as SHLManifestFile).files
       .filter((f) => f.contentType === 'application/smart-health-card')
       .map(async (f) =>  {
         if (f.embedded !== undefined) {
@@ -123,13 +119,13 @@ export async function retrieve(configIncoming: SHLinkConnectRequest | {state: st
         }
       });
 
-    const allFilesDecrypted = allFiles.map(async (f) => {
+    const shcFilesDecrypted = shcFiles.map(async (f) => {
       const decrypted = await jose.compactDecrypt(await f, decryptionKey);
       const decoded = new TextDecoder().decode(decrypted.plaintext);
       return decoded;
     });
 
-    const shcs = (await Promise.all(allFilesDecrypted)).flatMap((f) => JSON.parse(f)['verifiableCredential'] as string);
+    const shcs = (await Promise.all(shcFilesDecrypted)).flatMap((f) => JSON.parse(f)['verifiableCredential'] as string);
 
     const jsonFiles = (manifestResponseContent as SHLManifestFile).files
       .filter((f) => f.contentType === 'application/fhir+json')
@@ -141,13 +137,13 @@ export async function retrieve(configIncoming: SHLinkConnectRequest | {state: st
         }
       });
 
-    const allJsonFilesDecrypted = jsonFiles.map(async (f) => {
+    const jsonFilesDecrypted = jsonFiles.map(async (f) => {
       const decrypted = await jose.compactDecrypt(await f, decryptionKey);
       const decoded = new TextDecoder().decode(decrypted.plaintext);
       return decoded;
     });
 
-    const jsons = (await Promise.all(allJsonFilesDecrypted)).flatMap((f) => JSON.parse(f));
+    const jsons = (await Promise.all(jsonFilesDecrypted)).flatMap((f) => JSON.parse(f));
 
     
     const result: SHLinkConnectResponse = { shcs, jsons, state: btoa(JSON.stringify(config))};

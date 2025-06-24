@@ -36,3 +36,12 @@ export const CARIN_HOSTS: Record<string, any> = {
     clientSecret: process.env.INFERNO_CLIENT_SECRET,
   }
 }
+
+export const URL_BEARER_HOSTS: Record<string, any> = {
+  meditech: {
+    token: process.env.MEDITECH_BEARER_TOKEN
+  },
+  epic: {
+    token: process.env.EPIC_BEARER_TOKEN
+  }
+}

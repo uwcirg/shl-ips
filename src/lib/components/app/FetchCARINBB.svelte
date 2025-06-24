@@ -128,7 +128,7 @@
         sessionStorage.removeItem(key);
         sessionStorage.removeItem('SMART_KEY');
         // Send the code to the server for token exchange
-        let tokenResult = await fetch(`/api/${sofHostSelection}`, {
+        let tokenResult = await fetch(`/api/carin/${sofHostSelection}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

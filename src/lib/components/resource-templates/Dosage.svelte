@@ -39,8 +39,10 @@
           </tr>
       </tbody>
       </table>
+    {:else}
+      <br>
     {/if}
   {/each}
 {:else}
-  <span class="text-muted">No dosage information</span>
+  <span class="text-muted">No dosage information</span><br>
 {/if}

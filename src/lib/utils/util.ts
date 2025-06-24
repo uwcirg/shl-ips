@@ -38,7 +38,11 @@ export function formatDate(dateStr?: string) {
   }
   try {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-GB', options);
+    let result = date.toLocaleDateString('en-GB', options);
+    if (result === 'Invalid Date') {
+      return dateStr;
+    }
+    return result;
   } catch (e) {
     return dateStr;
   }
@@ -205,13 +209,25 @@ export function constructPatientResource (props: DemographicFields = {}) {
   if (props.gender) {
     patient.gender = props.gender;
   }
-  if (props.phone) {
-    patient.telecom = [
-      {
-        system: 'phone',
-        value: props.phone
-      }
-    ];
+  if (props.phone || props.email) {
+    patient.telecom = [];
+    if (props.phone) {
+      patient.telecom.push({ system: 'phone', value: props.phone });
+    }
+    if (props.email) {
+      patient.telecom.push({ system: 'email', value: props.email });
+    }
+  }
+  if (props.preferredLanguage || props.languages) {
+    patient.communication = [];
+    if (props.preferredLanguage) {
+      patient.communication.push({ preferred: true, language: { text: props.preferredLanguage } });
+    }
+    if (props.languages) {
+      props.languages.forEach(lang => {
+        patient.communication.push({ language: { text: lang } });
+      });
+    }
   }
   if (props.dob) {
     patient.birthDate = props.dob;
@@ -257,6 +273,48 @@ export function constructPatientResource (props: DemographicFields = {}) {
     if (props.zip) patient.address[0].postalCode = props.zip;
     if (props.country) patient.address[0].country = props.country;
   }
+  
+  let extensions = [];
+  if (props.religion) {
+    extensions.push({
+      "url" : "http://hl7.org/fhir/StructureDefinition/patient-religion",
+      "valueCodeableConcept" : {
+        "coding" : [ props.religion ]
+      }
+    });
+  }
+  if (props.culture) {
+    extensions.push({
+      "url" : "http://healthintersections.com.au/fhir/StructureDefinition/patient-cultural-background",
+      "valueString" : props.culture
+    });
+  }
+  if (props.community) {
+    extensions.push({
+      "url" : "http://hl7.org.au/fhir/StructureDefinition/community-affiliation",
+      "valueString" : props.community
+    });
+  }
+  if (props.pronouns) {
+    extensions.push({
+      "url" : "http://hl7.org/fhir/StructureDefinition/individual-pronouns",
+      "valueCodeableConcept" : {
+        "coding" : [ props.pronouns ]
+      }
+    });
+  }
+  if (props.sexCharacteristics) {
+    extensions.push({
+      "url" : "http://hl7.org.au/fhir/StructureDefinition/sex-characteristic-variation",
+      "valueCodeableConcept" : {
+        "coding" : [ props.sexCharacteristics ]
+      }
+    });
+  }
+  if (extensions.length > 0) {
+    patient.extension = extensions;
+  }
+
   return patient;
 }
 

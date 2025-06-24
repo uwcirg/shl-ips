@@ -24,6 +24,7 @@
 
   const MODE_KEY = 'demo_mode';
   let mode = writable('normal');
+  // set demo mode based on local storage state
   window.localStorage[MODE_KEY] ? mode.set(JSON.parse(window.localStorage[MODE_KEY])) : mode.set('normal');
   setContext('mode', mode);
 

@@ -469,7 +469,7 @@
       </Col>
     </Row>
     {#if working}
-      <br />
+      <br>
       <FormGroup>
         <Row class="mb-2">
           <Col xs="auto" class="mt-1">I work as a(n)</Col>
@@ -497,11 +497,11 @@
       <Input
         type="switch"
         bind:checked={workingPast}
-        label={`I ${workingPast ? 'do not ': ''}have a previous job`}
+        label={`I ${workingPast ? '': 'do not '}have a previous job`}
       />
     </Row>
     {#if workingPast}
-      <br />
+      <br>
       <FormGroup>
         <Row class="mb-2">
           <Col xs="auto" class="mt-1">I used to work as a(n)</Col>
@@ -537,7 +537,7 @@
       />
     </Row>
     {#if retired}
-      <br />
+      <br>
       <FormGroup>
         <Row class="mb-2">
           <Col xs="auto" class="mt-1">I retired {canShare ? 'in' : 'on'}</Col>
@@ -557,7 +557,7 @@
       />
     </Row>
     {#if combat}
-      <br />
+      <br>
       <FormGroup>
         <Row class="mb-2">
           <Col xs="auto" class="mt-1">I started working in a combat zone or other hazardous conditions</Col>
@@ -575,7 +575,7 @@
     {/if}
   </AccordionItem>
 </Accordion>
-<br />
+<br>
 <Button color="primary" on:click={updateOdhSection} disabled={buttonDisabled}>
   {buttonText}
 </Button>

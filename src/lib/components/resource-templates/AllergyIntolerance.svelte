@@ -41,7 +41,7 @@
   <CodeableConcept codeableConcept={resource.code} />
 {/if}
 {#if hasChoiceDTField("onset", resource)}
-  <br><Date period fields={choiceDTFields("onset", resource)} />
+  <Date period fields={choiceDTFields("onset", resource)} />
 {/if}
 {#if resource.lastOccurrence}
   <br>Last occurrence: <Date fields={{dateTime: resource.lastOccurrence}} />

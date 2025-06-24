@@ -95,7 +95,8 @@ export const CARIN_HOSTS = [
 
 export const BEARER_AUTHORIZATION = {
   'Meditech': import.meta.env.VITE_MEDITECH_BEARER_TOKEN,
-  'EpicHIMSS': import.meta.env.VITE_EPIC_CLIENT_ID
+  'EpicHIMSS': import.meta.env.VITE_EPIC_CLIENT_ID,
+  'EpicBearerToken': import.meta.env.VITE_EPIC_BEARER_TOKEN
 }
 export const SOF_REDIRECT_URI = '/create';
 export const SOF_RESOURCES = [
@@ -128,7 +129,7 @@ export const SOF_PATIENT_RESOURCES = [
   // 'Medication', // Pulled in via references - can't search by patient; "Only an _ID search is allowed."
   'Condition',
   'Encounter',
-  // 'Observation', // Handle specially for IPS codes - "Must have either code or category."
+  'Observation', // Handle specially for IPS codes - "Must have either code or category."
   // 'Organization', // Pulled in via references - can't search by patient; "Only an _ID search is allowed."
   'Immunization',
   // 'Device',
@@ -140,7 +141,7 @@ export const SOF_PATIENT_RESOURCES = [
   // 'PractitionerRole',  // Pulled in via references - can't search by patient; "An identifier, practitioner, organization, location, or specialty parameter is required."
   'Procedure', // TODO change to subject
   // 'Specimen', // Not in EPIC USCDI R4
-  // 'QuestionnaireResponse',
+  'QuestionnaireResponse',
 ];
 
 export const CARIN_RESOURCES = [
@@ -163,6 +164,7 @@ export const PATIENT_IPS = {
   'Peter Kieth Jordan': 'https://terminz.azurewebsites.net/fhir/Patient/$summary?profile=http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips&identifier=https://standards.digital.health.nz/ns/nhi-id|NNJ9186&_format=json'
 }
 export const EXAMPLE_IPS = {
+  'Epic $summary Connectathon 2025-05': 'https://connectathon.epic.com/Interconnect-Fhir-Oauth/api/FHIR/R4/Patient/e5ZHnklVuYuT85PnDVOepOg3/$summary',
   'Epic HIMSS': 'https://ihe-nimbus.epic.com/Interconnect-FHIR-Open/api/FHIR/R4/Patient/e1o-b5iIsAPxRiD2Ct8KekQ3/$summary',
   'Maria SEATTLE Gravitate': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/14599/$summary',
   'Peter Kieth Jordan': 'https://raw.githubusercontent.com/jddamore/IPSviewer/4eedba9df34afbf3eb20d98c49d36afc7f9ce104/samples/connectathon_Jan2025/new_IPS_Example.json',
