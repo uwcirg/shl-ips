@@ -22,7 +22,7 @@
   } from 'sveltestrap';
   import CreatePOLST from '$lib/components/app/CreatePOLST.svelte';
   import Demographic from './Demographic.svelte';
-  import FetchAD from '$lib/components/app/FetchAD.svelte';
+  import FetchADPOLST from '$lib/components/app/FetchADPOLST.svelte';
   import ResourceSelector from '$lib/components/app/ResourceSelector.svelte';
   import {
     getResourcesFromIPS,
@@ -358,7 +358,7 @@
             <h5>Search for your POLST in the state repository</h5>
             <Card class="mb-4">
               <CardBody>
-                <FetchAD
+                <FetchADPOLST
                   on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
                 />
               </CardBody>
