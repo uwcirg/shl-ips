@@ -4,6 +4,7 @@
     Col,
     FormGroup,
     Icon,
+    Input,
     Label,
     Row,
     Spinner
@@ -19,47 +20,46 @@
   import type { UserDemographics } from '$lib/utils/types';
   import { demographics } from '$lib/stores/demographics';
   import { writable, type Writable } from 'svelte/store';
-  import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
 
   export let sectionKey: string = "Advance Directives";
 
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
   let sources: Record<string, {selected: Boolean; url: string; patient: Writable<UserDemographics>}> = {
-    "Current User": {
+    "WA Health Summary - POLST Server": {
       selected: false,
       url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir",
-      patient: $demographics
+      patient: demographics
     },
-    // "WA Health Summary Demo Patient": {
-    //   selected: false,
-    //   url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir",
-    //   patient: writable({
-    //     last: "Mosley",
-    //     //last: "Smith-Johnson",
-    //     first: "Jenny",
-    //     //first: "Betsy",
-    //     gender: "female",
-    //     dob: "1955-10-03",
-    //     //dob: "1950-11-15",
-    //   })
-    // },
-    // "AD Vault Demo Patient": {
-    //   selected: false,
-    //   url: "https://qa-rr-fhir.maxmddirect.com",
-    //   patient: writable({
-    //     // last: "Gravitate",
-    //     // first: "Maria SEATTLE",
-    //     // gender: "female",
-    //     // dob: "1946-05-05",
-    //     last: "Wilson",
-    //     first: "Cynthia",
-    //     gender: "female",
-    //     dob: "1993-12-01",
-    //   })
-    // },
+    "WA POLST Repository Demo": {
+      selected: false,
+      url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir",
+      patient: writable({
+        // last: "Gravitate",
+        // first: "Maria SEATTLE",
+        // gender: "female",
+        // dob: "1946-05-05",
+        last: "Wilson",
+        first: "Cynthia",
+        gender: "female",
+        dob: "1993-12-01",
+      })
+    },
+    "AD Vault Sandbox": {
+      selected: false,
+      url: "https://qa-rr-fhir.maxmddirect.com",
+      patient: writable({
+        last: "Mosley",
+        //last: "Smith-Johnson",
+        first: "Jenny",
+        //first: "Betsy",
+        gender: "female",
+        dob: "1955-10-03",
+        //dob: "1950-11-15",
+      })
+    },
   };
-  let selectedSource = "Current User";
+  let selectedSource = "WA Health Summary - POLST Server";
   let processing = false;
   let fetchError = '';
   let message = '';
@@ -90,6 +90,10 @@
           }
           ]
       },
+      text: {
+              status: "generated",
+              div: "<div xmlns=\"http://www.w3.org/1999/xhtml\"><h5>Advance Directives</h5><table class=\"hapiPropertyTable\"><thead><tr><th>Scope</th><th>Status</th><th>Action Controlled</th><th>Date</th></tr></thead><tbody></tbody></table></div>"
+            },
       entry: []
   };
 
@@ -113,38 +117,21 @@
   }
 
   async function fetchPatient(patient: any, url?: string) {
-    let result;
     let baseUrl = url ?? sources[selectedSource].url;
-    try {
-      result = await fetch(`${baseUrl}/Patient/$match`, {
-        method: 'POST',
-        headers: { accept: 'application/json' },
-        body: JSON.stringify(patient)
-      }).then(function (response: any) {
-        if (!response.ok) {
-          // make the promise be rejected if we didn't get a 2xx response
-          // throw new Error('Unable to fetch patient data', { cause: response });
-          console.warn(`Patient match failed at ${baseUrl}`);
-        } else {
-          return response;
-        }
-      });
-    } catch (e) {
-      let query = buildPatientSearchQuery(formDemographics);
-      result = await fetch(`${baseUrl}/Patient${query}`, {
-        method: 'GET',
-        headers: { accept: 'application/json' },
-      }).then(function (response: any) {
-        if (!response.ok) {
-          // make the promise be rejected if we didn't get a 2xx response
-          // throw new Error('Unable to fetch patient data', { cause: response });
-          console.warn(`No matching patient found at ${baseUrl}`);
-          return null;
-        } else {
-          return response;
-        }
-      });
-    }
+    let query = buildPatientSearchQuery($formDemographics);
+    let result = await fetch(`${baseUrl}/Patient${query}`, {
+      method: 'GET',
+      headers: { accept: 'application/json' },
+    }).then(function (response: any) {
+      if (!response.ok) {
+        // make the promise be rejected if we didn't get a 2xx response
+        // throw new Error('Unable to fetch patient data', { cause: response });
+        console.warn(`No matching patient found at ${baseUrl}`);
+        return null;
+      } else {
+        return response;
+      }
+    });
     if (!result) {
       return null;
     }
@@ -229,7 +216,7 @@
       let content;
       let hostname;
       let resources: Array<DocumentReferencePOLST> = [];
-      const patient = constructPatientResource(formDemographics);
+      const patient = constructPatientResource($formDemographics);
       const patientFound = await fetchPatient(patient);
       if (patientFound) {
         content = await fetchAdvanceDirective(patientFound.id);
@@ -237,13 +224,6 @@
         resources = content?.entry ? content.entry.map((e: BundleEntry) => {
           return e.resource;
         }) : [];
-      }
-      const secondPatientFound = await fetchPatient(patient, INTERMEDIATE_FHIR_SERVER_BASE);
-      if (secondPatientFound) {
-        let secondContent = await fetchAdvanceDirective(secondPatientFound.id, INTERMEDIATE_FHIR_SERVER_BASE);
-        resources = resources.concat(secondContent.entry ? secondContent.entry.map((e: BundleEntry) => {
-          return e.resource;
-        }) : []);
       }
       if (resources.length === 0) {
         console.warn("No advance directives found for patient "+patient.id);
@@ -403,8 +383,8 @@
 </script>
 
 <form on:submit|preventDefault={() => prepareIps()}>
-  <Label>Search the WA state POLST repository for your existing advance directives.</Label>
-  <!-- <Label>Select a source to search:</Label>
+  <p>Search a POLST repository for your existing advance directives.</p>
+  <Label>Select a source to search:</Label>
   <FormGroup>
     <Row>
       {#each Object.keys(sources) as source}
@@ -413,11 +393,10 @@
         </Row>
       {/each}
     </Row>
-  </FormGroup> -->
+  </FormGroup>
   {#if selectedSource}
   <FormGroup>
-    <!-- <p class="text-secondary"><em>WA Health Summary does not save this information</em></p> -->
-    <DemographicForm />
+    <DemographicForm demographics={formDemographics}/>
   </FormGroup>
   
   <Row>

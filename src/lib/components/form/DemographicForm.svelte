@@ -10,7 +10,7 @@
   export let show: Array<DemographicFieldNames>;
   export let hide: Array<DemographicFieldNames>;
 
-  export let demographics: UserDemographics = $demographicStore;
+  export let demographics: UserDemographics = demographicStore;
 
   function showField(key: DemographicFieldNames): boolean {
     return (show === undefined || show.includes(key)) && !hide?.includes(key);
@@ -22,12 +22,12 @@
   <Label>Name</Label>
   {#if showField('first')}
     <FormGroup style="font-size:small" class="text-secondary" label="First">
-      <Input type="text" bind:value={$demographicStore.first} />
+      <Input type="text" bind:value={$demographics.first} />
     </FormGroup>
   {/if}
   {#if showField('last')}
     <FormGroup style="font-size:small" class="text-secondary" label="Last">
-      <Input type="text" bind:value={$demographicStore.last} />
+      <Input type="text" bind:value={$demographics.last} />
     </FormGroup>
   {/if}
 {/if}
@@ -35,53 +35,53 @@
   <Label>Demographics</Label>
   {#if showField('dob')}
     <FormGroup style="font-size:small" class="text-secondary" label="Date of Birth">
-      <Input type="date" bind:value={$demographicStore.dob} placeholder={$demographicStore.dob} style="width: 165px"/>
+      <Input type="date" bind:value={$demographics.dob} placeholder={$demographics.dob} style="width: 165px"/>
     </FormGroup>
   {/if}
   {#if showField('gender')}
     <FormGroup style="font-size:small" class="text-secondary" label="Gender">
-      <GenderInput bind:value={$demographicStore.gender} />
+      <GenderInput bind:value={$demographics.gender} />
     </FormGroup>
   {/if}
 {/if}
 {#if showField('mrn')}
   <FormGroup>
     <Label>MRN</Label>
-    <Input type="text" bind:value={$demographicStore.mrn} style="width: 165px"/>
+    <Input type="text" bind:value={$demographics.mrn} style="width: 165px"/>
   </FormGroup>
 {/if}
 {#if showField('phone') || showField('address')}
   <Label>Contact Information</Label>
   {#if showField('phone')}
   <FormGroup style="font-size:small" class="text-secondary" label="Phone">
-    <Input type="tel" bind:value={$demographicStore.phone} style="width: 165px"/>
+    <Input type="tel" bind:value={$demographics.phone} style="width: 165px"/>
   </FormGroup>
   {/if}
   {#if showField('address')}
     <Label>Address</Label>
     <FormGroup style="font-size:small" class="text-secondary" label="Address Line 1">
-      <Input type="text" bind:value={$demographicStore.address1} />
+      <Input type="text" bind:value={$demographics.address1} />
     </FormGroup>
     <FormGroup style="font-size:small" class="text-secondary" label="Address Line 2">
-      <Input type="text" bind:value={$demographicStore.address2} />
+      <Input type="text" bind:value={$demographics.address2} />
     </FormGroup>
     <FormGroup style="font-size:small" class="text-secondary" label="City">
-      <Input type="text" bind:value={$demographicStore.city} />
+      <Input type="text" bind:value={$demographics.city} />
     </FormGroup>
     <Row>
       <Col xs="auto">
         <FormGroup style="font-size:small" class="text-secondary" label="State">
-          <StateInput bind:value={$demographicStore.state} />
+          <StateInput bind:value={$demographics.state} />
         </FormGroup>
       </Col>
       <Col xs="auto">
         <FormGroup style="font-size:small" class="text-secondary" label="Zip">
-          <Input type="text" bind:value={$demographicStore.zip} style="width:90px"/>
+          <Input type="text" bind:value={$demographics.zip} style="width:90px"/>
         </FormGroup>
       </Col>
       <Col xs="auto">
         <FormGroup style="font-size:small" class="text-secondary" label="Country">
-          <CountryInput bind:value={$demographicStore.country} />
+          <CountryInput bind:value={$demographics.country} />
         </FormGroup>
       </Col>
     </Row>

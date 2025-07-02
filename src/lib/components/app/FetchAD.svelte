@@ -3,6 +3,7 @@
     Button,
     Col,
     FormGroup,
+    Icon,
     Input,
     Label,
     Row,
@@ -15,34 +16,68 @@
     constructPatientResource,
     buildPatientSearchQuery
   } from '$lib/utils/util';
-  import GenderInput from '$lib/components/form/GenderInput.svelte';
-  import StateInput from '$lib/components/form/StateInput.svelte';
-  import CountryInput from '$lib/components/form/CountryInput.svelte';
+  import DemographicForm from '$lib/components/form/DemographicForm.svelte';
+  import type { UserDemographics } from '$lib/utils/types';
+  import { demographics } from '$lib/stores/demographics';
+  import { writable, type Writable } from 'svelte/store';
 
   export let sectionKey: string = "Advance Directives";
 
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
-  let sources: Record<string, {selected: Boolean; url: string}> = {
-    "WA Health Summary Demo Server": {selected: false, url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir"},
-    "AD Vault": {selected: false, url: "https://qa-rr-fhir.maxmddirect.com"},
+  let sources: Record<string, {selected: Boolean; url: string; patient: Writable<UserDemographics>}> = {
+    "Current User": {
+      selected: false,
+      url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir",
+      patient: demographics
+    },
+    "WA Health Summary Demo Patient": {
+      selected: false,
+      url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir",
+      patient: writable({
+        // last: "Gravitate",
+        // first: "Maria SEATTLE",
+        // gender: "female",
+        // dob: "1946-05-05",
+        last: "Wilson",
+        first: "Cynthia",
+        gender: "female",
+        dob: "1993-12-01",
+      })
+    },
+    "AD Vault Demo Patient": {
+      selected: false,
+      url: "https://qa-rr-fhir.maxmddirect.com",
+      patient: writable({
+        last: "Mosley",
+        //last: "Smith-Johnson",
+        first: "Jenny",
+        //first: "Betsy",
+        gender: "female",
+        dob: "1955-10-03",
+        //dob: "1950-11-15",
+      })
+    },
   };
-  let selectedSource = "WA Health Summary Demo Server";
+  let selectedSource = "Current User";
   let processing = false;
   let fetchError = '';
+  let message = '';
 
-  let mrn = '';
-  let first = '';
-  let last = '';
-  let dob = '';
-  let address1 = '';
-  let address2 = '';
-  let city = '';
-  let state = '';
-  let zip = '';
-  let country = '';
-  let phone = '';
-  let gender:string = '';
+  let formDemographics: Writable<UserDemographics> = writable({
+    first: '',
+    last: '',
+    gender: '',
+    dob: '',
+    mrn: '',
+    phone: '',
+    address1: '',
+    address2: '',
+    city: '',
+    state: '',
+    zip: '',
+    country: ''
+  });
 
   let sectionTemplate = {
       title: "Advance Directives",
@@ -64,35 +99,7 @@
 
   $: {
     if (selectedSource) {
-      mrn = '';
-      first = '';
-      last = '';
-      dob = '';
-      address1 = '';
-      address2 = '';
-      city = '';
-      state = '';
-      zip = '';
-      phone = '';
-      gender = '';
-      if (selectedSource === 'AD Vault') {
-        last = "Mosley";
-        //last = "Smith-Johnson";
-        first = "Jenny";
-        //first = "Betsy";
-        gender = "female";
-        dob = "1955-10-03";
-        //dob = "1950-11-15";
-      } else if (selectedSource === 'WA Health Summary Demo Server') {
-        // last = "Gravitate";
-        // first = "Maria SEATTLE";
-        // gender = "female";
-        // dob = "1946-05-05";
-        last = "Wilson";
-        first = "Cynthia";
-        gender = "female";
-        dob = "1993-12-01";
-      }
+      formDemographics = sources[selectedSource].patient;
     }
   }
 
@@ -109,53 +116,29 @@
     }
   }
 
-  async function fetchPatient(patient: any) {
-    let result;
-    try {
-      result = await fetch(`${sources[selectedSource].url}/Patient/$match`, {
-        method: 'POST',
-        headers: { accept: 'application/json' },
-        body: JSON.stringify(patient)
-      }).then(function (response: any) {
-        if (!response.ok) {
-          // make the promise be rejected if we didn't get a 2xx response
-          throw new Error('Unable to fetch patient data', { cause: response });
-        } else {
-          return response;
-        }
-      });
-    } catch (e) {
-      let query = buildPatientSearchQuery(
-        {
-          first: first,
-          last: last,
-          gender: gender,
-          dob: dob,
-          mrn: mrn,
-          phone: phone,
-          address1: address1,
-          address2: address2,
-          city: city,
-          state: state,
-          zip: zip,
-          country: country,
-        }
-      );
-      result = await fetch(`${sources[selectedSource].url}/Patient${query}`, {
-        method: 'GET',
-        headers: { accept: 'application/json' },
-      }).then(function (response: any) {
-        if (!response.ok) {
-          // make the promise be rejected if we didn't get a 2xx response
-          throw new Error('Unable to fetch patient data', { cause: response });
-        } else {
-          return response;
-        }
-      });
+  async function fetchPatient(patient: any, url?: string) {
+    let baseUrl = url ?? sources[selectedSource].url;
+    let query = buildPatientSearchQuery(formDemographics);
+    let result = await fetch(`${baseUrl}/Patient${query}`, {
+      method: 'GET',
+      headers: { accept: 'application/json' },
+    }).then(function (response: any) {
+      if (!response.ok) {
+        // make the promise be rejected if we didn't get a 2xx response
+        // throw new Error('Unable to fetch patient data', { cause: response });
+        console.warn(`No matching patient found at ${baseUrl}`);
+        return null;
+      } else {
+        return response;
+      }
+    });
+    if (!result) {
+      return null;
     }
     let body = await result.json();
     if (body.resourceType == 'Bundle' && (body.total == 0 || body.entry.length === 0)) {
-      throw new Error('Unable to find patient');
+      console.warn('No matching patients found');
+      return null;
     }
     let patient_response = body.entry[0].resource;
     return patient_response;
@@ -167,17 +150,18 @@
     return query.substring(0, query.length - 1);
   }
 
-  async function fetchAdvanceDirective(patient: any) {
+  async function fetchAdvanceDirective(patient: any, url?: string) {
     let query = buildAdvanceDirectiveSearchQuery(patient);
-    return await fetch(`${sources[selectedSource].url}/DocumentReference${query}`, {
+    return await fetch(`${url ?? sources[selectedSource].url}/DocumentReference${query}`, {
         method: 'GET',
         headers: { accept: 'application/json' }
       }).then(function (response: any) {
         if (!response.ok) {
           // make the promise be rejected if we didn't get a 2xx response
-          throw new Error('Unable to fetch advance directive data', { cause: response });
+          // throw new Error('Unable to fetch advance directive data', { cause: response });
+          console.warn(`No advance directives found at ${url} for patient ${patient.id}`);
         } else {
-          return response;
+          return response.json();
         }
       });
   }
@@ -231,22 +215,7 @@
     try {
       let content;
       let hostname;
-      const patient = await fetchPatient(constructPatientResource(
-        {
-          first: first,
-          last: last,
-          gender: gender,
-          dob: dob,
-          mrn: mrn,
-          phone: phone,
-          address1: address1,
-          address2: address2,
-          city: city,
-          state: state,
-          zip: zip,
-          country: country,
-        }
-      ));
+      const patient = await fetchPatient(constructPatientResource($formDemographics));
       const contentResponse = await fetchAdvanceDirective(patient.id);
       content = await contentResponse.json();
       hostname = sources[selectedSource].url;
@@ -422,80 +391,27 @@
     </Row>
   </FormGroup>
   {#if selectedSource}
-  <FormGroup>
-    <Label>Enter your information to fetch related advance directives</Label>
-    <p class="text-secondary"><em>WA Health Summary does not save this information</em></p>
-    <Row cols={{ md: 2, sm: 1 }}>
-      <Col>
-        <Label>Name</Label>
-        <FormGroup style="font-size:small" class="text-secondary" label="First">
-          <Input type="text" bind:value={first} />
-        </FormGroup>
-        <FormGroup style="font-size:small" class="text-secondary" label="Last">
-          <Input type="text" bind:value={last} />
-        </FormGroup>
-        <Label>Demographics</Label>
-        <FormGroup style="font-size:small" class="text-secondary" label="Date of Birth">
-          <Input type="date" bind:value={dob} placeholder={dob} style="width: 165px"/>
-        </FormGroup>
-        <FormGroup style="font-size:small" class="text-secondary" label="Gender">
-          <GenderInput bind:value={gender} />
-        </FormGroup>
-        <FormGroup>
-          <Label>MRN</Label>
-          <Input type="text" bind:value={mrn} style="width: 165px"/>
-        </FormGroup>
-        <Label>Contact Information</Label>
-        <FormGroup style="font-size:small" class="text-secondary" label="Phone">
-          <Input type="tel" bind:value={phone} style="width: 165px"/>
-        </FormGroup>
-        <Label>Address</Label>
-        <FormGroup style="font-size:small" class="text-secondary" label="Address Line 1">
-          <Input type="text" bind:value={address1} />
-        </FormGroup>
-        <FormGroup style="font-size:small" class="text-secondary" label="Address Line 2 (Optional)">
-          <Input type="text" bind:value={address2} />
-        </FormGroup>
-        <FormGroup style="font-size:small" class="text-secondary" label="City">
-          <Input type="text" bind:value={city} />
-        </FormGroup>
-        <Row>
-          <Col xs="auto">
-            <FormGroup style="font-size:small" class="text-secondary" label="State">
-              <StateInput bind:value={state} />
-            </FormGroup>
-          </Col>
-          <Col>
-            <FormGroup style="font-size:small" class="text-secondary" label="Zip">
-              <Input type="text" bind:value={zip} style="width:90px"/>
-            </FormGroup>
-          </Col>
-          <Col xs="auto">
-            <FormGroup style="font-size:small" class="text-secondary" label="Country">
-              <CountryInput bind:value={country} />
-            </FormGroup>
-          </Col>
-        </Row>
+    <FormGroup>
+      <Label>Enter your information to fetch related advance directives</Label>
+      <DemographicForm demographics={formDemographics}/>
+    </FormGroup>
+    
+    <Row>
+      <Col xs="auto">
+        <Button color="primary" style="width:fit-content" disabled={processing} type="submit">
+          {#if !processing}
+            Add advance directives to Summary
+          {:else}
+            Adding...
+          {/if}
+        </Button>
       </Col>
+      {#if processing}
+        <Col xs="auto" class="d-flex align-items-center px-0">
+          <Spinner color="primary" type="border" size="md"/>
+        </Col>
+      {/if}
     </Row>
-  </FormGroup>
-  
-  <Row>
-    <Col xs="auto">
-      <Button color="primary" style="width:fit-content" disabled={processing} type="submit">
-        {#if !processing}
-          Add advance directives to Summary
-        {:else}
-          Adding...
-        {/if}
-      </Button>
-    </Col>
-    {#if processing}
-      <Col xs="auto" class="d-flex align-items-center px-0">
-        <Spinner color="primary" type="border" size="md"/>
-      </Col>
-    {/if}
-  </Row>
   {/if}
 </form>
 
