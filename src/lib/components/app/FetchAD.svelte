@@ -165,7 +165,7 @@
 
   function buildAdvanceDirectiveSearchQuery(patient_id: any) {
     let query = "?";
-    query += patient_id ? `subject=${patient_id}&` : '';
+    query += patient_id ? `_count=1000&subject=${patient_id}&` : '';
     return query.substring(0, query.length - 1);
   }
 
