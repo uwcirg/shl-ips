@@ -25,7 +25,9 @@
 
   let sources: Record<string, {selected: Boolean; url: string}> = {
     "WA Health Summary Demo Server": {selected: false, url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir"},
-    "AD Vault": {selected: false, url: "https://qa-rr-fhir.maxmddirect.com"},
+    "AD Vault": {selected: false, url: "https://qa-rr-fhir2.maxmddirect.com"}, // 2025-07 Connectathon
+    "PACIO Sandbox": {selected: false, url: "https://gw.interop.community/paciosandbox/open"} // 2025-07 Connectathon
+    //"AD Vault": {selected: false, url: "https://qa-rr-fhir.maxmddirect.com"},
   };
   let selectedSource = "WA Health Summary Demo Server";
   let processing = false;
@@ -75,14 +77,14 @@
       zip = '';
       phone = '';
       gender = '';
-      if (selectedSource === 'AD Vault') {
-        last = "Mosley";
-        //last = "Smith-Johnson";
-        first = "Jenny";
-        //first = "Betsy";
+      if ((selectedSource === 'AD Vault') || (selectedSource === 'PACIO Sandbox')) {
+        //last = "Mosley";
+        last = "Smith-Johnson";
+        //first = "Jenny";
+        first = "Betsy";
         gender = "female";
-        dob = "1955-10-03";
-        //dob = "1950-11-15";
+        //dob = "1955-10-03";
+        dob = "1950-11-15";
       } else if (selectedSource === 'WA Health Summary Demo Server') {
         // last = "Gravitate";
         // first = "Maria SEATTLE";
