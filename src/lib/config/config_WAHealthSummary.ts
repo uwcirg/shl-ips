@@ -9,12 +9,14 @@ export default {
     title: "HL7 Standards-Based Patient Summary",
   },
   defaultRedirectURI: "/summaries",
-  home: {
-    introComponent: Introduction
-  },
-  summaries: {
-  },
-  create: {
-    component: AddFile
+  pages: {
+    home: {
+      introComponent: Introduction
+    },
+    summaries: {
+    },
+    create: {
+      component: AddFile
+    }
   }
 };
