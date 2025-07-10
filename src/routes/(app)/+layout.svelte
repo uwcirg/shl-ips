@@ -51,3 +51,9 @@
     {/if}
   {/await}
 {/await}
+
+<style>
+  .main-row {
+    flex-grow: 1;
+  }
+</style>

@@ -23,9 +23,6 @@
 
 <svelte:head>
     <title>{INSTANCE_CONFIG.title}</title>
-    <link rel="preload" as="font" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/fonts/bootstrap-icons.woff2?8d200481aa7f02a2d63a331fc782cfaf" type="font/woff2" crossorigin="anonymous">
-    <link rel="preload" as="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" />
-    <link rel="preload" as="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css" />
     <link rel="preload" as="image" href="/img/doh_logo_doh-black.png" />
     <link rel="preload" as="image" href={INSTANCE_CONFIG.header.logo} />
 </svelte:head>

@@ -95,14 +95,11 @@
 
 <style>
   /* Handle scroll gutter */
-  :global(.main) {
+  .main {
     position: relative;
     left: calc((100vw - 100%) / 2);
   }
-  :global(.main-content) {
-    flex-grow: 1;
-  }
-  :global(.main-row) {
+  .main-content {
     flex-grow: 1;
   }
 
