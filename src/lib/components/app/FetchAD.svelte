@@ -290,13 +290,21 @@
         }
       });
 
+      // If the DR has type w/ coding[].system == "http://loinc.org" and coding[].code == "106233-0",
+      // then it is a digital signature ("Authenticity information") and should be not be displayed.
+      // FIXME may be better to do this when we forEach above.
+      const nonSignatureDR = (dr: DocumentReferencePOLST) => 
+        (!dr.type | !dr.type.coding | 
+        !dr.type.coding.some(coding => coding.system === 'http://loinc.org' && coding.code === '106233-0'));
+      resources = resources.filter(nonSignatureDR);
+
       // July '24: unlike the May '24 connectathon, signature DR's now have resource.category defined.
       // The ADI team is planning to add a code for these later, but for the time being they suggest
       // that we identify these by: "description": "JWS of the FHIR Document",
       // FIXME may be better to do this when we iterate for the TODO above.
-      const nonSignatureDR = (dr: DocumentReferencePOLST) => dr.description !== 'JWS of the FHIR Document';
+      //const nonSignatureDR = (dr: DocumentReferencePOLST) => dr.description !== 'JWS of the FHIR Document';
       // Filter out signature resources
-      resources = resources.filter(nonSignatureDR);
+      //resources = resources.filter(nonSignatureDR);
 
       // if one of the DR's `content` elements has attachment.contentType = 'application/pdf', download if possible, put base64 of pdf in DR.content.attachment.data
       const hasPdfContent = (dr: DocumentReferencePOLST) => dr.content && dr.content.some(content => content.attachment && content.attachment.contentType === 'application/pdf' && !content.attachment.data);
