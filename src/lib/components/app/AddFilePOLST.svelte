@@ -352,7 +352,7 @@
         {:else if polstUploadType === 'retrieve'}
         <Row>
           <Col>
-            <h5>Search for your POLST in the state repository</h5>
+            <h5>Search for your POLST in a state repository</h5>
             <Card class="mb-4">
               <CardBody>
                 <FetchADPOLST
