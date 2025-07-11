@@ -10,7 +10,8 @@
   export let content: ResourceTemplateParams<Observation>; // Define a prop to pass the data to the component
   export let contained: Boolean = false;
 
-  let resource: Observation = content.resource;
+  let resource: Observation;
+$: if (content) resource = content.resource;
 
   const odhResourceCodes = [
     "74165-2", // Employment status
