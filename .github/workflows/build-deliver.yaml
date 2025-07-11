@@ -9,6 +9,11 @@ jobs:
     steps:
       - name: Checkout git commit
         uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+
+      - name: Set environment variable for version from git output
+        run: echo "VITE_APP_VERSION_STRING=$(git describe --always --tags).$(date +'%Y%m%d.%H%M%S')"" >> $GITHUB_ENV
 
       - name: Publish to GitHub Container Registry
         # TODO: pin to hash
@@ -25,3 +30,4 @@ jobs:
 
           # create docker image tags to match git tags
           tag_names: true
+          buildargs: VITE_APP_VERSION_STRING

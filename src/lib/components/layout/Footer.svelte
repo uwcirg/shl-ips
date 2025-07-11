@@ -22,12 +22,10 @@
       >
         SMART Health Link (SHL)
       </a>. SHLs can be shared by copy/paste, or by presenting a QR code.
-      {#if $mode === "advanced"}
-        For more information, view the source code at
-        <a href="https://github.com/uwcirg/shl-ips" target="_blank" rel="noreferrer">
-          https://github.com/uwcirg/shl-ips
-        </a>. {VERSION_STRING ? "Site version: " + VERSION_STRING : ""}
-      {/if}
+      For more information, view the source code at
+      <a href="https://github.com/uwcirg/shl-ips" target="_blank" rel="noreferrer">
+        https://github.com/uwcirg/shl-ips
+      </a>. {VERSION_STRING ? "Site version: " + VERSION_STRING : ""}
     </footer>
   </Col>
 </Row>
