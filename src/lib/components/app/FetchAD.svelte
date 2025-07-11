@@ -273,6 +273,32 @@
       // Get the date from when it was signed, and show that in the card for the DocumentReference
       // that it applies to.
       // That date will be in content.attachment.creation (Lisa to add the evening of 2024-07-17).
+      for (let i = resources.length - 1; i >= 0; i--) {
+        const dr = resources[i];
+
+        if (dr.relatesTo?.[0]?.code === 'signs' &&
+          dr.relatesTo[0].target?.reference) {
+
+          const targetId = dr.relatesTo[0].target.reference.slice(18); // “DocumentReference/”
+          const pdfSignDate =
+            dr.content?.[0]?.attachment?.creation
+            ?? '(missing from content.attachment.creation in signature DocumentReference)';
+
+          const resourceSigned = resources.find(r => r.id === targetId);
+          if (resourceSigned) {
+            // ad‑hoc property
+            (resourceSigned as any).pdfSignedDate = pdfSignDate;
+          }
+
+          resources.splice(i, 1);           // ← remove this signature DocumentReference
+        }
+      }
+
+// Force reactivity (needed for plain let resources = [] in a component)
+resources = [...resources];
+
+
+      /**
       resources.forEach((dr: DocumentReferencePOLST) => {
         if (dr.relatesTo && dr.relatesTo[0] && dr.relatesTo[0].code && dr.relatesTo[0].code == 'signs'
           && dr.relatesTo[0].target && dr.relatesTo[0].target.reference) {
@@ -297,7 +323,7 @@
         (!dr.type | !dr.type.coding | 
         !dr.type.coding.some(coding => coding.system === 'http://loinc.org' && coding.code === '106233-0'));
       resources = resources.filter(nonSignatureDR);
-
+**/
       // July '24: unlike the May '24 connectathon, signature DR's now have resource.category defined.
       // The ADI team is planning to add a code for these later, but for the time being they suggest
       // that we identify these by: "description": "JWS of the FHIR Document",
