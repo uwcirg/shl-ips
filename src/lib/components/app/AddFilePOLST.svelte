@@ -3,7 +3,7 @@
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { getContext } from 'svelte';
-  import { type Writable } from 'svelte/store';
+  import { writable, type Writable } from 'svelte/store';
   import {
     Accordion,
     AccordionItem,
@@ -21,6 +21,7 @@
   import CreatePOLST from '$lib/components/app/CreatePOLST.svelte';
   import Demographic from './Demographic.svelte';
   import FetchADPOLST from '$lib/components/app/FetchADPOLST.svelte';
+  import AdvancedDirectiveSearch from '$lib/components/app/AdvancedDirectiveSearch.svelte';
   import ResourceSelector from '$lib/components/app/ResourceSelector.svelte';
   import {
     getResourcesFromIPS,
@@ -65,9 +66,8 @@
     ips: undefined
   }
 
-  let adFormType = '';
+  let adFormType = 'POLST';
   let formTypeOptions: Record<string, any> = {
-    "": '',
     "POLST": '',
     "Durable Power of Attorney for Health Care": '',
     "Living Will": '',
@@ -333,48 +333,115 @@
       {#if adFormType === 'POLST'}
         <Row>
           <FormGroup>
-            <Input type="radio" bind:group={polstUploadType} value="upload" label="I have a signed POLST PDF to upload from my device" />
-            <Input type="radio" bind:group={polstUploadType} value="retrieve" label="I have a POLST in the WA State POLST Repository" />
             <Input type="radio" bind:group={polstUploadType} value="create" label="I would like to create a new POLST" />
+            <Input type="radio" bind:group={polstUploadType} value="upload" label="I have a signed POLST PDF to upload from my device" />
+            <Input type="radio" bind:group={polstUploadType} value="waStateRepo" label="I have a POLST in the WA State POLST Repository (search for demo patient)" />
+            <Input type="radio" bind:group={polstUploadType} value="adVault" label="I have a POLST in the AD Vault (search for demo patient)" />
           </FormGroup>
         </Row>
         {#if polstUploadType === 'upload'}
-        <Row>
-          <Col>
-            <h5>Upload a signed POLST document from your device</h5>
-            <Card class="mb-4">
-              <CardBody>
-                <UploadDocument on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }/>
-              </CardBody>
-            </Card>
-          </Col>
-        </Row>
+          <Row>
+            <Col>
+              <h5>Upload a signed POLST document from your device</h5>
+              <Card class="mb-4">
+                <CardBody>
+                  <UploadDocument on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }/>
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
         {:else if polstUploadType === 'retrieve'}
-        <Row>
-          <Col>
-            <h5>Search for your POLST in a state repository</h5>
-            <Card class="mb-4">
-              <CardBody>
-                <FetchADPOLST
-                  on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
-                />
-              </CardBody>
-            </Card>
-          </Col>
-        </Row>
+          <Row>
+            <Col>
+              <h5>Search for your POLST in a state repository</h5>
+              <Card class="mb-4">
+                <CardBody>
+                  <FetchADPOLST
+                    on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
+                  />
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
+        {:else if polstUploadType === 'adVault'}
+          <Row>
+            <Col>
+              <h5>Search for your POLST in the AD Vault repository</h5>
+              <Card class="mb-4">
+                <CardBody>
+                  <AdvancedDirectiveSearch
+                    description="Search the AD Vault repository for a demo patient's advance directive documents."
+                    sources = {{
+                      "AD Vault Sandbox": {
+                        url: "https://qa-rr-fhir.maxmddirect.com",
+                        patients: [
+                          {
+                            last: "Mosley",
+                            //last: "Smith-Johnson",
+                            first: "Jenny",
+                            //first: "Betsy",
+                            gender: "female",
+                            dob: "1955-10-03",
+                            //dob: "1950-11-15",
+                          },
+                          {
+                            // last: "Mosley",
+                            last: "Smith-Johnson",
+                            // first: "Jenny",
+                            first: "Betsy",
+                            gender: "female",
+                            // dob: "1955-10-03",
+                            dob: "1950-11-15",
+                          }
+                        ],
+                        patient: writable({})
+                      }
+                    }}
+                    on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
+                  />
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
+        {:else if polstUploadType === 'waStateRepo'}
+          <Row>
+            <Col>
+              <h5>Search for your POLST in the WA State POLST repository</h5>
+              <Card class="mb-4">
+                <CardBody>
+                  <AdvancedDirectiveSearch
+                    description="Search the WA State POLST repository for a demo patient's advance directive documents."
+                    sources = {{
+                      "WA POLST Repository Demo": {
+                        url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir",
+                        patients: [{
+                          last: "Wilson",
+                          first: "Cynthia",
+                          gender: "female",
+                          dob: "1993-12-01",
+                        }],
+                        patient: writable({})
+                      }
+                    }}
+                    on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
+                  />
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
         {:else if polstUploadType === 'create'}
-        <Row>
-          <Col>
-            <h5>Create a POLST to sign</h5>
-            <Card class="mb-4">
-              <CardBody>
-                <CreatePOLST
-                  on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
-                />
-              </CardBody>
-            </Card>
-          </Col>
-        </Row>
+          <Row>
+            <Col>
+              <h5>Create a POLST to sign</h5>
+              <Card class="mb-4">
+                <CardBody>
+                  <CreatePOLST
+                    on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
+                  />
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
         {/if}
       {/if}
     </AccordionItem>
