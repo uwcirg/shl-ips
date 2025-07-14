@@ -84,8 +84,8 @@
 <form on:submit|preventDefault={() => generateIPS()}>
   <Row>
     <Col>
-      <p>Please update or enter your demographic information below.</p>
-      <span> Or,</span>
+      <p>Please review your demographic information below.</p>
+      <!-- <span> Or,</span>
       <Button
         color="secondary"
         class="ms-2"
@@ -95,7 +95,7 @@
         on:click={fillDemographics}
       >
         Fill test patient information
-      </Button>
+      </Button> -->
     </Col>
   </Row>
   <Row class="mt-3">
@@ -107,7 +107,7 @@
     <Col xs="auto">
       <Button color="primary" style="width:fit-content" disabled={processing} type="submit">
         {#if !processing}
-          Continue
+          Save
         {:else}
           Saving...
         {/if}
