@@ -7,15 +7,8 @@
   let shlClient: SHLClient = getContext('shlClient');
 
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
-  let mode: Writable<string> = getContext('mode');
 
-  let title: string;
-  $: {
-    title =
-      $mode === 'advanced'
-        ? 'Summaries created and stored on this account'
-        : 'Summaries you have created';
-  }
+  let title: string = 'QR Code Summaries created and shared by me';
 </script>
 
 <p>Start creating a new sharable summary by clicking the button below.</p>
