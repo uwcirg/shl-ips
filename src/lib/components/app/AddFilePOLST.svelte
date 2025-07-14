@@ -20,6 +20,7 @@
   } from 'sveltestrap';
   import CreatePOLST from '$lib/components/app/CreatePOLST.svelte';
   import Demographic from './Demographic.svelte';
+  import AddStoredResources from '$lib/components/app/AddStoredResources.svelte';
   import FetchADPOLST from '$lib/components/app/FetchADPOLST.svelte';
   import AdvancedDirectiveSearch from '$lib/components/app/AdvancedDirectiveSearch.svelte';
   import ResourceSelector from '$lib/components/app/ResourceSelector.svelte';
@@ -335,6 +336,7 @@
           <FormGroup>
             <Input type="radio" bind:group={polstUploadType} value="create" label="I would like to create a new POLST" />
             <Input type="radio" bind:group={polstUploadType} value="upload" label="I have a signed POLST PDF to upload from my device" />
+            <Input type="radio" bind:group={polstUploadType} value="WAHSP" label="I have my POLST in my WA Health Summary | POLST" />
             <Input type="radio" bind:group={polstUploadType} value="waStateRepo" label="I have a POLST in the WA State POLST Repository (search for demo patient)" />
             <Input type="radio" bind:group={polstUploadType} value="adVault" label="I have a POLST in the AD Vault (search for demo patient)" />
           </FormGroup>
@@ -350,13 +352,13 @@
               </Card>
             </Col>
           </Row>
-        {:else if polstUploadType === 'retrieve'}
+        {:else if polstUploadType === 'WAHSP'}
           <Row>
             <Col>
-              <h5>Search for your POLST in a state repository</h5>
+              <h5>Add POLSTs from my WA Health Summary</h5>
               <Card class="mb-4">
                 <CardBody>
-                  <FetchADPOLST
+                  <AddStoredResources
                     on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
                   />
                 </CardBody>
