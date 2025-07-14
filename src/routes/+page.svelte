@@ -53,15 +53,15 @@
     <Accordion>
       <AccordionItem>
         <h5 slot="header">How does this work?</h5>
-        <p class="info-paragraph">We use the SMART Health Links and International Patient Summary standards to make this feasible, verifiable, and secure. In the U.S., the federal 21st Century Cures Act gives all residents the right to an electronic copy of their health information. WA Health Summary lets you access that information and share it as you see fit, building on the ideas and technologies of the WA Verify COVID-19 vaccination verification system, which was used by almost two million people from 2021-2023.</p>
+        <p class="info-paragraph">We use the SMART Health Links and International Patient Summary standards to make this feasible, verifiable, and secure. In the U.S., the federal 21st Century Cures Act gives all residents the right to an electronic copy of their health information. WA Health Summary lets you access that information and share it as you see fit.</p>
       </AccordionItem>
       <AccordionItem>
         <h5 slot="header">How did WA Health Summary begin?</h5>
-        <p class="info-paragraph">Since 2021, WA Verify has made it easy for people receiving COVID-19 vaccinations in Washington State to access and share that information using SMART Health Card QR codes.</p>
+        <p class="info-paragraph">Begining in 2021, WA Verify made it easy for people receiving COVID-19 vaccinations in Washington State to access and share that information using SMART Health Card QR codes.  WA Health Summary builds on the ideas and technologies of WA Verify, which was used by almost two million people from 2021-2023</p>
           
-        <p class="info-paragraph">Now, using SMART Health Links, WA Health Summary is exploring personally-controlled access to and sharing of health data by WA State residents to meet needs such as travel, emergency records access, school enrollment, etc.</p>
+        <p class="info-paragraph">Now, using SMART Health Links, WA Health Summary enables personally-controlled access to, and sharing of, health data by WA State residents to meet needs such as travel, emergency records access, school enrollment, etc.</p>
 
-        <p class="info-paragraph">WA Health Summary allows people to access, augment, and electively share their own health data using the International Patient Summary (IPS) standard. They might choose to do so to verify immunizations, to summarize traveler health information, to have a medical summary in the event they require urgent or emergency care, or for routine sharing of their full history with others.</p>
+        <p class="info-paragraph">WA Health Summary lets people access, augment, and electively share their own health data using the International Patient Summary (IPS) standard. They might choose to do so to verify immunizations, to summarize traveler health information, to have a medical summary in the event they require urgent or emergency care, or for routine sharing of their full history with others.</p>
       </AccordionItem>
       <AccordionItem>
         <h5 slot="header">What is the International Patient Summary?</h5>
@@ -70,11 +70,3 @@
     </Accordion>
   </Row>
 </div>
-
-<style>
-  :global(.info-paragraph) {
-    font-size: 16px;
-    font-weight: 200;
-    font-family: Verdana, sans-serif;
-  }
-</style>
