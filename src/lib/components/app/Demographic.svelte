@@ -82,22 +82,7 @@
 </script>
 
 <form on:submit|preventDefault={() => generateIPS()}>
-  <Row>
-    <Col>
-      <p>Please review your demographic information below.</p>
-      <!-- <span> Or,</span>
-      <Button
-        color="secondary"
-        class="ms-2"
-        outline
-        style="width:fit-content"
-        type="button"
-        on:click={fillDemographics}
-      >
-        Fill test patient information
-      </Button> -->
-    </Col>
-  </Row>
+  <p>Please review your demographic information below.</p>
   <Row class="mt-3">
     <Col>
        <DemographicForm />
