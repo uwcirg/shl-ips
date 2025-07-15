@@ -15,7 +15,7 @@
   import type {
     Resource
   } from "fhir/r4";
-  import { download } from '$lib/utils/util';
+  import { constructPatientResource, download } from '$lib/utils/util';
   import AdvanceDirective from '$lib/components/resource-templates/AdvanceDirective.svelte';
   import Patient from '$lib/components/resource-templates/Patient.svelte';
   import { goto } from '$app/navigation';
@@ -25,8 +25,10 @@
   import type { Writable } from 'svelte/store';
   import type { SHLAdminParams } from '$lib/utils/managementClient';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
+  import { demographics } from '$lib/stores/demographics';
 
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
+  let mode: Writable<string> = getContext('mode');
 
   let patientData: Resource[];
 
@@ -92,6 +94,43 @@
       method: "DELETE"
     }).then(() => {
       location.reload();
+    });
+  }
+
+  async function resetPatientResource() {
+    let userAuth = await AuthService.Instance.getProfile();
+    $demographics.identifier = {
+      system: 'https://keycloak.cirg.uw.edu',
+      value: userAuth.sub
+    };
+    let patient = patientData[0];
+    if (patient.resourceType !== "Patient") {
+      return;
+    }
+
+    $demographics.id = patient.id;
+    $demographics.first = userAuth.given_name || userAuth.firstName;
+    $demographics.last = userAuth.family_name || userAuth.lastName;
+    delete $demographics.dob
+    delete $demographics.gender;
+    delete $demographics.address;
+    delete $demographics.city;
+    delete $demographics.state;
+    delete $demographics.zip;
+    delete $demographics.country;
+    delete $demographics.phone;
+
+    let newPatient = constructPatientResource($demographics);
+    newPatient.id = patient.id;
+
+    fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient/${newPatient.id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/fhir+json",
+      },
+      body: JSON.stringify(newPatient),
+    }).then(() => {
+      patientData[0] = newPatient;
     });
   }
 </script>
@@ -207,6 +246,34 @@
                         <Icon name="trash3" /> Delete
                       </Button>
                     </Col>
+                  </Row>
+                </CardFooter>
+              {:else}
+                <CardFooter>
+                  <Row>
+                    <Col class="flex-grow-1">
+                      <Button
+                          size="sm"
+                          color="primary"
+                          outline
+                          on:click={() => {goto(`/account`)}}
+                      >
+                        <Icon name="pencil-square" /> Edit
+                      </Button>
+                      
+                    </Col>
+                    {#if $mode === "advanced"}
+                      <Col class="d-flex flex-row-reverse justify-content-end align-items-end" style="max-width: max-content">
+                        <Button
+                            size="sm"
+                            color="danger"
+                            outline
+                            on:click={() => resetPatientResource()}
+                        >
+                          <Icon name="backspace" /> Reset
+                        </Button>
+                      </Col>
+                    {/if}
                   </Row>
                 </CardFooter>
               {/if}
