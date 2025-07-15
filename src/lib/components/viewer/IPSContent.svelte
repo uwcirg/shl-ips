@@ -92,11 +92,12 @@
     }
     let patient = ips.entry?.filter((entry) => entry.resource?.resourceType === 'Patient').map((entry) => entry.resource);
     if (patient?.[0]) {
+      let patientName = patient[0].name?.[0]?.text ?? `${(patient[0].name?.[0]?.prefix ?? "") (patient[0].name?.[0]?.given?.join(' ') ?? "") (patient[0].name?.[0]?.family ?? "")}`;
       content["Patient"] = {
         section: {
           text: {
             div: patient[0].text?.div ??
-                `<b>${patient[0].name?.[0]?.text ?? `${(patient[0].name?.[0]?.prefix ?? "") (patient[0].name?.[0]?.given?.join(' ') ?? "") (patient[0].name?.[0]?.family ?? "")}`}</b><br>
+                `<b>${patientName}</b><br>
                   Birth Date: ${patient[0].birthDate ?? ""}<br>
                   Gender: ${patient[0].gender ?? ""}`
           }
