@@ -296,9 +296,8 @@
         }
       }
 
-// Force reactivity (needed for plain let resources = [] in a component)
-resources = [...resources];
-
+      // Force reactivity (needed for plain let resources = [] in a component)
+      resources = [...resources];
 
       /**
       resources.forEach((dr: DocumentReferencePOLST) => {
@@ -338,7 +337,7 @@ resources = [...resources];
       const hasPdfContent = (dr: DocumentReferencePOLST) => dr.content && dr.content.some(content => content.attachment && content.attachment.contentType === 'application/pdf' && !content.attachment.data);
 
       // if one of the DR's
-      const isPolst = (dr: DocumentReferencePOLST) => dr.type && dr.type.coding && dr.type.coding.some(coding => coding.system === 'http://loinc.org' && coding.code === '100821-8');
+      const isPolst = (dr: DocumentReferencePOLST) => dr.type && dr.type.coding && dr.type.coding.some(coding => coding.system === 'http://loinc.org' && (coding.code === '100821-8' || coding.code === '93037-0'));
 
       for (let dr of resources) {
         // If this DR is a POLST, add the following chain of queries:
