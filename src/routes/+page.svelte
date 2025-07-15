@@ -29,7 +29,7 @@
 
 <div style="padding-left: 17px">
   <span style="margin: 50px 0px;">
-    <p class="text-danger info-paragraph">Demonstration/Test System - do not use with real health information</p>
+    <p class="text-danger info-paragraph">Demonstration/Test System - all information on this system is test data</p>
   </span>
 
   <svelte:component this={INSTANCE_CONFIG.pages?.home?.introComponent} />
