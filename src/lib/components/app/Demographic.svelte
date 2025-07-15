@@ -8,6 +8,7 @@
   import type { User } from 'oidc-client-ts';
   import { constructPatientResource } from '$lib/utils/util';
   import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
+  import type { Patient } from 'fhir/r4';
 
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
@@ -45,7 +46,23 @@
     $demographics.first = $demographics.first || userAuth.given_name || userAuth.firstName;
     $demographics.last = $demographics.last || userAuth.family_name || userAuth.lastName;
   });
-
+  
+  function compareDemographicsToPatient(patient: Patient) {
+    return (
+      $demographics.id == patient.id &&
+      $demographics.first == patient.name?.[0].given?.[0] &&
+      $demographics.last == patient.name?.[0].family &&
+      $demographics.dob == patient.birthDate &&
+      $demographics.gender == patient.gender &&
+      $demographics.address == patient.address?.[0].line &&
+      $demographics.city == patient.address?.[0].city &&
+      $demographics.state == patient.address?.[0].state &&
+      $demographics.zip == patient.address?.[0].postalCode &&
+      $demographics.country == patient.address?.[0].country &&
+      $demographics.phone == patient.telecom?.[0].value
+    );
+  }
+  
   async function generateIPS() {
     processing = true;
     let patient = constructPatientResource($demographics);
@@ -60,6 +77,16 @@
       .then((response) => response.json());
       patient = newPatient;
       $demographics.id = newPatient.id;
+    } else if (compareDemographicsToPatient(patient)) {
+      let updatedPatient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient/${patient.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/fhir+json'
+        },
+        body: JSON.stringify(patient)
+      })
+      .then((response) => response.json());
+      patient = updatedPatient;
     }
     resourceDispatch('update-resources', {
       resources: [patient],
