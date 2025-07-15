@@ -44,6 +44,8 @@
         {/if}
     </strong>
     <br>
+{:else }
+    <em>(No name)</em><br>
 {/if}
 
 {#if resource.birthDate}
