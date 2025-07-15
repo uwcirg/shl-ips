@@ -204,7 +204,10 @@
         // Trigger update in ResourceSelector
         resourceCollection.addResources(resourceResult.resources, resourceResult.sectionKey, resourceResult.sectionTemplate);
         showSuccessMessage();
-        (document.querySelector(`div.edit-data button`) as HTMLButtonElement)?.click();
+        if (document.querySelector(`div.edit-data > div.accordion-collapse.show`)?.length === 0) {
+          (document.querySelector(`div.edit-data button`) as HTMLButtonElement)?.click();
+          document.querySelector(`div.edit-data > div.accordion-collapse`)?.scrollIntoView({ behavior: 'smooth' });
+        }
       }
     } catch (e) {
       console.log('Failed', e);
