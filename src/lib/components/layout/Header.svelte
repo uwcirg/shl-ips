@@ -230,7 +230,7 @@
       </Nav>
     </Collapse>
   </Navbar>
-  <Banner title={INSTANCE_CONFIG.header.title}/>
+  <Banner title={INSTANCE_CONFIG.header.title} style={INSTANCE_CONFIG.header.title_style}/>
 </Row>
 </div>
 <style>

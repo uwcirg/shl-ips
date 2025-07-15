@@ -2,6 +2,7 @@
   import { Row, Col, Image } from 'sveltestrap';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   export let title = 'International Patient Summary';
+  export let style = "vertical-align: middle;font-size: 18px;display: inline-block;padding-left: 17px;font-family: Verdana, sans-serif;color: rgb(34, 72, 156);"
 </script>
 
 <Row
@@ -22,15 +23,7 @@
     />
   </Col>
   <Col>
-    <div
-      style="
-      vertical-align: middle;
-      font-size: 18px;
-      display: inline-block;
-      padding-left: 17px;
-      font-family: Verdana, sans-serif;
-      color: rgb(34, 72, 156);"
-    >
+    <div style={style}>
       {title}
     </div>
   </Col>
