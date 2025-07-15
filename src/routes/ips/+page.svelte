@@ -19,7 +19,7 @@
   import IPSContent from '$lib/components/viewer/IPSContent.svelte';
   import Demo from '$lib/components/viewer/Demo.svelte';
   
-  import { SHOW_VIEWER_DEMO } from "$lib/config";
+  import { SHOW_VIEWER_DEMO } from "$lib/config/config";
 
   let shlContents: Bundle[] = [];
 
@@ -276,49 +276,3 @@
   <!-- Single tab view -->
   <IPSContent bundle={shlContents[0]} mode={$displayMode} />
 {/if}
-
-<style lang="css">
-  :global(.loader) {
-    width: 100%;
-    height: 150px;
-    margin: 40px;
-    display: block;
-    position: relative;
-    background: #FFF;
-    box-sizing: border-box;
-  }
-  :global(.loader::after) {
-    content: '';  
-    width: calc(100% - 30px);
-    height: calc(100% - 30px);
-    top: 15px;
-    left: 15px;
-    position: absolute;
-    background-image: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.5) 50%, transparent 80%),
-    linear-gradient(#DDD 56px, transparent 0), /* box 1 */
-    linear-gradient(#DDD 24px, transparent 0), /* box 2 */
-    linear-gradient(#DDD 18px, transparent 0), /* box 3 */
-    linear-gradient(#DDD 66px, transparent 0); /* box 4 */
-    background-repeat: no-repeat;
-    background-size: 75px 130px, /* wave */
-            55px 56px, /* box 1 */
-            160px 30px, /* box 2 */
-            220px 20px, /* box 3 */
-            290px 56px; /* box 4 */
-    background-position: 0% 0, /* box 1 */
-              0px 0px, /* box 1 */
-              70px 5px, /* box 1 */
-              70px 38px, /* box 1 */
-              0px 66px; /* box 1 */
-    box-sizing: border-box;
-    animation: animloader 1s linear infinite;
-  }
-  @keyframes -global-animloader {
-    0% {
-      background-position: 0% 0, 0 0, 70px 5px, 70px 38px, 0px 66px;
-    }
-    100% {
-      background-position: 150% 0, 0 0, 70px 5px, 70px 38px, 0px 66px;
-    }
-  }
-</style>

@@ -9,7 +9,7 @@
     Spinner } from 'sveltestrap';
   import { page } from '$app/stores';
 
-  import { CARIN_HOSTS, CARIN_RESOURCES } from '$lib/config';
+  import { CARIN_HOSTS, CARIN_RESOURCES } from '$lib/config/config';
   import type { ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from '$lib/utils/types';
   import { getReferences } from '$lib/utils/util';
   import { authorize } from '$lib/utils/sofClient.js';

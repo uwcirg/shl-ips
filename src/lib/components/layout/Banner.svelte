@@ -1,6 +1,8 @@
 <script lang="ts">
   import { Row, Col, Image } from 'sveltestrap';
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   export let title = 'International Patient Summary';
+  export let style = "vertical-align: middle;font-size: 18px;display: inline-block;padding-left: 17px;font-family: Verdana, sans-serif;color: rgb(34, 72, 156);"
 </script>
 
 <Row
@@ -12,24 +14,16 @@
     border-bottom: 1px solid rgb(204, 204, 204);"
   class="d-flex justify-content-between align-items-center"
 >
-  <Col style="max-width: 200px">
+  <Col style={`max-width:${INSTANCE_CONFIG.header.logo_width}px`}>
     <Image
       alt="WA Health Summary Logo"
-      width="200"
-      src="/img/wa-health-summary.png"
+      width={INSTANCE_CONFIG.header.logo_width}
+      src={INSTANCE_CONFIG.header.logo}
       style="align-self: center"
     />
   </Col>
   <Col>
-    <div
-      style="
-      vertical-align: middle;
-      font-size: 18px;
-      display: inline-block;
-      padding-left: 17px;
-      font-family: Verdana, sans-serif;
-      color: rgb(34, 72, 156);"
-    >
+    <div style={style}>
       {title}
     </div>
   </Col>

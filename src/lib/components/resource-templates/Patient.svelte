@@ -6,7 +6,8 @@
     import type { ResourceTemplateParams } from '$lib/utils/types';
 
     export let content: ResourceTemplateParams<Patient>; // Define a prop to pass the data to the component
-    let resource: Patient = content.resource;
+    let resource: Patient;
+    $: if (content) resource = content.resource;
 
     let showContact = false;
 
@@ -43,6 +44,8 @@
         {/if}
     </strong>
     <br>
+{:else }
+    <em>(No name)</em><br>
 {/if}
 
 {#if resource.birthDate}

@@ -1,4 +1,4 @@
-import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config';
+import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
 
 // Create Bundle and POST
 export async function uploadResources(resources) {
@@ -6,8 +6,8 @@ export async function uploadResources(resources) {
     resources.forEach(resource => {
         let entry = {
             request: {
-                method: "POST",
-                url: resource.resourceType
+                method: resource.resourceType === "Patient" ? "PUT" : "POST",
+                url: `${resource.resourceType}${resource.resourceType === "Patient" ? "/" + resource.id : ""}`
             },
             resource: resource
         };

@@ -72,7 +72,7 @@
         return undefined;
       }
       window.dispatchEvent(new CustomEvent('userFound', { 
-        detail: { message: 'Hello from another component!' } 
+        detail: { message: 'Hello from the base routes component!' } 
       }));
       $shlStore = await shlClient.getUserShls();
       return user;
@@ -94,10 +94,12 @@
 </Container>
 
 <style>
-  :global(.main-content) {
-    flex-grow: 1;
+  /* Handle scroll gutter */
+  .main {
+    position: relative;
+    left: calc((100vw - 100%) / 2);
   }
-  :global(.main-row) {
+  .main-content {
     flex-grow: 1;
   }
 

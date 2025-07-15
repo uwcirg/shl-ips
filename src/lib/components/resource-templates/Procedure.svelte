@@ -6,7 +6,8 @@
   import { choiceDTFields, hasChoiceDTField } from '$lib/utils/util';
   
   export let content: ResourceTemplateParams<Procedure>; // Define a prop to pass the data to the component
-  let resource: Procedure = content.resource;
+  let resource: Procedure;
+$: if (content) resource = content.resource;
 </script>
 
 {#if resource.code}
