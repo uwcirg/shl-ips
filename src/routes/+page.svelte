@@ -28,10 +28,6 @@
 </svelte:head>
 
 <div style="padding-left: 17px">
-  <span style="margin: 50px 0px;">
-    <p class="text-danger info-paragraph">Demonstration/Test System - all information on this system is test data</p>
-  </span>
-
   <svelte:component this={INSTANCE_CONFIG.pages?.home?.introComponent} />
 
   <Row class="my-4 d-flex justify-content-center">
@@ -52,7 +48,7 @@
   <Row>
     <Accordion>
       <AccordionItem>
-        <h5 slot="header">How does this work?</h5>
+        <h5 slot="header">How does WA Health Summary work?</h5>
         <p class="info-paragraph">We use the SMART Health Links and International Patient Summary standards to make this feasible, verifiable, and secure. In the U.S., the federal 21st Century Cures Act gives all residents the right to an electronic copy of their health information. WA Health Summary lets you access that information and share it as you see fit.</p>
       </AccordionItem>
       <AccordionItem>
