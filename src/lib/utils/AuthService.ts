@@ -4,8 +4,9 @@ import {
   AUTH_REDIRECT_URI,
   AUTH_SILENT_REDIRECT_URI,
   AUTH_POST_LOGOUT_URI
-} from '$lib/config';
+} from '$lib/config/config';
 import { User, UserManager } from 'oidc-client-ts';
+import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 
 export class AuthService {
   private static _instance: AuthService;
@@ -77,7 +78,7 @@ export class AuthService {
     let currentUrl = new URL(window.location.href.split('?')[0]);
     let redirectUrl = currentUrl.href;
     if (currentUrl.pathname === '/' || currentUrl.pathname === '/home') {
-      redirectUrl = '/summaries';
+      redirectUrl = INSTANCE_CONFIG.defaultRedirectURI ?? '/summaries';
     }
     return this.userManager.signinRedirect({ url_state: redirectUrl });
   }

@@ -3,7 +3,8 @@
   import type { ResourceTemplateParams } from '$lib/utils/types';
   
   export let content: ResourceTemplateParams<Organization>; // Define a prop to pass the data to the component
-  let resource: Organization = content.resource;
+  let resource: Organization;
+$: if (content) resource = content.resource;
 </script>
 
 <strong>{resource.name}</strong>

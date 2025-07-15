@@ -4,6 +4,8 @@
   import type { Writable } from 'svelte/store';
   import HealthLink from '$lib/components/app/HealthLink.svelte';
   import type { SHLAdminParams } from '$lib/utils/managementClient';
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
+
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
   let shl: SHLAdminParams | undefined;
   $: {
@@ -12,7 +14,9 @@
 </script>
 
 <svelte:head>
-    <title>{shl?.label ?? "My Summary"} - WA Health Summary</title> 
+    <title>My Health Link - {INSTANCE_CONFIG.title}</title>
+    <link rel="preload" as="image" href="/img/qr-banner-top.png" />
+    <link rel="preload" as="image" href="/img/qr-banner-bottom.png" />
 </svelte:head>
 
 

@@ -37,7 +37,7 @@
               {/if}
             </td>
           </tr>
-      </tbody>
+        </tbody>
       </table>
     {:else}
       <br>

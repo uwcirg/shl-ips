@@ -4,7 +4,8 @@
   import type { QuestionnaireResponse } from 'fhir/r4';
 
   export let content: ResourceTemplateParams<QuestionnaireResponse>; // Define a prop to pass the data to the component
-  let resource: QuestionnaireResponse = content.resource;
+  let resource: QuestionnaireResponse;
+$: if (content) resource = content.resource;
 
 </script>
 

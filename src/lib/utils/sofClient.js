@@ -3,7 +3,7 @@ import {
     SOF_HOSTS,
     SOF_REDIRECT_URI,
     SOF_PATIENT_RESOURCES,
-    SOF_RESOURCES } from '$lib/config';
+    SOF_RESOURCES } from '$lib/config/config';
 import { getReferences } from '$lib/utils/util';
 
 export { authorize, getResources, getResourcesWithReferences, activePatient, constructResourceUrl };

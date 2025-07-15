@@ -3,19 +3,18 @@
     Input,
   } from 'sveltestrap';
   export let value: string;
-  let gender: string;
-  $: value = genders[gender];
-  let genders: Record<string, any> = {
+
+  let genderOptions: Record<string, any> = {
     "": '',
-    "Female": 'female',
-    "Male": 'male',
-    "Other": 'other'
+    "female": 'Female',
+    "male": 'Male',
+    "other": 'Other'
   };
 </script>
-<Input type="select" bind:value={gender} style="width: 100px">
-  {#each Object.keys(genders) as full}
-    <option value={full} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
-      {full}
+<Input type="select" bind:value={value} style="width: 100px">
+  {#each Object.entries(genderOptions) as [value, display]}
+    <option value={value} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
+      {display}
     </option>
   {/each}
 </Input>

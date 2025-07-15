@@ -11,6 +11,7 @@ export default defineConfig(({ mode }) => {
 		plugins: [sveltekit()],
 		server: {
 			host: true,
+			allowedHosts: [process.env.SERVER_NAME ?? 'localhost'],
 			port: process.env.DEV_SERVER_PORT ? process.env.DEV_SERVER_PORT : 3000
 		},
 		build: {

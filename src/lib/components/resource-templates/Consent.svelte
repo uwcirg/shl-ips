@@ -5,7 +5,8 @@
 
   export let content: ResourceTemplateParams<Consent>; // Define a prop to pass the data to the component
 
-  let resource: Consent = content.resource;
+  let resource: Consent;
+$: if (content) resource = content.resource;
 </script>
 {#if resource.category?.[0]}
   <CodeableConcept codeableConcept={resource.category?.[0]} />

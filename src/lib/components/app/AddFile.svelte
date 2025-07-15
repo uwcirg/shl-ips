@@ -74,7 +74,7 @@
   let patientName = "";
   let patient: Patient | undefined;
 
-  let label = 'Health Summary ' + new Date().toISOString().slice(0, 10);
+  let label = 'Health Summary ' + new Date().toLocaleDateString();
   let expiration: number | null = -1;
   let type = 'password';
   let showPassword = false;
@@ -118,7 +118,7 @@
       } else {
         label = "My";
       }
-      label = label + " Summary Link " + new Date().toISOString().slice(0, 10);
+      label = label + " Summary Link " + new Date().toLocaleDateString();
     }
   }
   $: {
@@ -279,7 +279,6 @@
         }
       }, 500);
     }
-    
   }
 
   function updateStatus(newStatus: string) {
@@ -375,13 +374,17 @@
         on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
       />
     </AccordionItem>
-    <ResourceSelector
-      bind:resourceCollection={resourceCollection}
-      bind:submitting={submitting}
-      on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }
-      on:status-update={ ({ detail }) => { updateStatus(detail) } }
-      on:error={ ({ detail }) => { showError(detail) } }
-    />
+    <AccordionItem active class="edit-data">
+      <h5 slot="header" class="my-2">5. Directly edit your health summary content</h5>
+      <Label>Select which resources to include in your customized IPS</Label>
+      <ResourceSelector
+        bind:resourceCollection={resourceCollection}
+        bind:submitting={submitting}
+        on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }
+        on:status-update={ ({ detail }) => { updateStatus(detail) } }
+        on:error={ ({ detail }) => { showError(detail) } }
+      />
+    </AccordionItem>
   {/if}
 </Accordion>
 {#if resourcesAdded}

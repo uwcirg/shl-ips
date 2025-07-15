@@ -183,7 +183,7 @@
         </CardTitle>
         {#if shl.exp}
           <CardSubtitle color="success">
-            Expires: {new Date(shl.exp * 1000).toISOString().slice(0, 10)}
+            Expires: {new Date(shl.exp * 1000).toLocaleDateString()}
           </CardSubtitle>
         {/if}
       </CardHeader>

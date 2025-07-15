@@ -8,13 +8,13 @@
     Row,
     Spinner } from 'sveltestrap';
 
-  import { SOF_HOSTS } from '$lib/config';
+  import { SOF_HOSTS } from '$lib/config/config';
   import type { ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from '$lib/utils/types';
   import { authorize, getResourcesWithReferences } from '$lib/utils/sofClient.js';
   import { createEventDispatcher, onMount } from 'svelte';
 
   // For "quick sample" in demo
-  import { EXAMPLE_IPS, IPS_DEFAULT } from '$lib/config';
+  import { EXAMPLE_IPS, IPS_DEFAULT } from '$lib/config/config';
   import type { IPSRetrieveEvent } from '$lib/utils/types';
 
   // Demo quick sample loader

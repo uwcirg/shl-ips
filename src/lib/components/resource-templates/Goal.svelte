@@ -6,7 +6,8 @@
 
   export let content: ResourceTemplateParams<Goal>;
 
-  let resource: Goal = content.resource;
+  let resource: Goal;
+$: if (content) resource = content.resource;
 
   // Extract start and due dates
   let startDate = '??';
