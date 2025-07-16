@@ -336,7 +336,7 @@
       // if one of the DR's `content` elements has attachment.contentType = 'application/pdf', download if possible, put base64 of pdf in DR.content.attachment.data
       const hasPdfContent = (dr: DocumentReferencePOLST) => dr.content && dr.content.some(content => content.attachment && content.attachment.contentType === 'application/pdf' && !content.attachment.data);
 
-      // if one of the DR's
+      // TODO 2025-07 cthon, 100821-8 may no longer be a valid code for these... note that 93037-0 refers to a PMO (of which POLST is a sub-type) 
       const isPolst = (dr: DocumentReferencePOLST) => dr.type && dr.type.coding && dr.type.coding.some(coding => coding.system === 'http://loinc.org' && (coding.code === '100821-8' || coding.code === '93037-0'));
 
       for (let dr of resources) {
