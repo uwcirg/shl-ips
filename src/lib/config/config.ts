@@ -57,27 +57,60 @@ export const SOF_HOSTS = [
   },
 ];
 
+export const CARIN_RESOURCES = [
+  'Patient',
+  'Coverage',
+  'Practitioner',
+  'Organization',
+  'RelatedPerson',
+  'ExplanationOfBenefit',
+  'Procedure',
+  'MedicationRequest',
+  'Immunization',
+  'CareTeam',
+  'Condition',
+  'CarePlan',
+  'Observation',
+  'AllergyIntolerance',
+  'Goal',
+  'DocumentReference',
+  'List',
+];
+
 export const CARIN_HOSTS = [
+  // {
+  //   id: "acentra",
+  //   name: "Acentra",
+  //   url: "https://sb.fhir.mhbapp.com/pa/api/v1",
+  //   clientId: import.meta.env.VITE_ACENTRA_CLIENT_ID,
+  //   scope: "openid launch/patient patient/*.read",
+  //   note: "VTETestUser01 / FHIRdemo2020"
+  // },
   {
     id: "aetna",
     name: "AETNA Insurance Sandbox",
     url: "https://vteapif1.aetna.com/fhirdemo/v2/patientaccess",
     clientId: import.meta.env.VITE_AETNA_CLIENT_ID,
+    scope: "openid launch/patient patient/Patient.read patient/Coverage.read patient/ExplanationOfBenefit.read",
     note: "VTETestUser01 / FHIRdemo2020"
   },
+  // {
+  //   id: "humana",
+  //   name: "Humana",
+  //   url: "https://sandbox-fhir.humana.com/api",
+  //   clientId: import.meta.env.VITE_HUMANA_CLIENT_ID,
+  //   // scope: "openid launch/patient patient/Patient.read patient/Coverage.read patient/ExplanationOfBenefit.read",
+  //   scope: "openid launch/patient patient/Patient.read patient/Coverage.read patient/ExplanationOfBenefit.read patient/Procedure.read patient/MedicationRequest.read patient/Immunization.read patient/CareTeam.read patient/Condition.read patient/CarePlan.read patient/Observation.read patient/AllergyIntolerance.read patient/Goal.read patient/DocumentReference.read patient/List.read",
+  //   note: "HUser00007 / PW00007!"
+  // },
   {
-    id: "cpcds",
-    name: "CPCDS Demo",
-    url: "https://cpcds-server.lantanagroup.com/fhir",
-    clientId: import.meta.env.VITE_CPCDS_CLIENT_ID,
-    note: "Patient1 / password"
-  },
-  {
-    id: "inferno",
-    name: "Inferno Test Suite",
-    url: "https://inferno-qa.healthit.gov/suites/custom/c4bb_v200_client",
-    clientId: import.meta.env.VITE_INFERNO_CLIENT_ID,
-    note: "Credentials provided"
+    id: "bluebutton",
+    name: "Blue Button 2.0 Sandbox",
+    url: "https://sandbox.bluebutton.cms.gov/v3/fhir",
+    // url: "https://sandbox.bluebutton.cms.gov/v2/fhir",
+    clientId: import.meta.env.VITE_BLUE_BUTTON_CLIENT_ID,
+    scope: "openid launch/patient patient/Patient.read patient/Coverage.read patient/ExplanationOfBenefit.read",
+    note: "BBUser09001 / PW09001!"
   },
   // {
   //   id: "carefirst",
@@ -91,12 +124,29 @@ export const CARIN_HOSTS = [
   //   clientId: import.meta.env.VITE_CAREFIRST_CLIENT_ID,
   //   note: "Credentials provided"
   // },
+  // Connectathon Testing Servers
+  //////////////////////////////////////////////////////////////////////////////
+  // {
+  //   id: "cpcds",
+  //   name: "CPCDS Demo",
+  //   url: "https://cpcds-server.lantanagroup.com/fhir",
+  //   clientId: import.meta.env.VITE_CPCDS_CLIENT_ID,
+  //   scope: "openid fhirUser launch/patient patient/*.read",
+  //   note: "Patient1 / password"
+  // },
+  // {
+  //   id: "inferno",
+  //   name: "Inferno Test Suite",
+  //   url: "https://inferno.healthit.gov/suites/custom/c4bb_v200_client/fhir",
+  //   clientId: import.meta.env.VITE_INFERNO_CLIENT_ID,
+  //   scope: 'openid fhirUser launch/patient patient/*.read',
+  //   note: "Credentials provided"
+  // },
+  /////////////////////////////////////////////////////////////////////////////
 ]
 
 export const BEARER_AUTHORIZATION = {
-  'Meditech': import.meta.env.VITE_MEDITECH_BEARER_TOKEN,
-  'EpicHIMSS': import.meta.env.VITE_EPIC_CLIENT_ID,
-  'EpicBearerToken': import.meta.env.VITE_EPIC_BEARER_TOKEN
+  'EpicHIMSS': import.meta.env.VITE_EPIC_CLIENT_ID
 }
 export const SOF_REDIRECT_URI = '/create';
 export const SOF_RESOURCES = [
@@ -142,15 +192,6 @@ export const SOF_PATIENT_RESOURCES = [
   'Procedure', // TODO change to subject
   // 'Specimen', // Not in EPIC USCDI R4
   'QuestionnaireResponse',
-];
-
-export const CARIN_RESOURCES = [
-  'Patient',
-  'Coverage',
-  'Practitioner',
-  'Organization',
-  'RelatedPerson',
-  'ExplanationOfBenefit',
 ];
 
 export const VIEWER_BASE = new URL(

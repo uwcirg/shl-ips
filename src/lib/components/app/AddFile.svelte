@@ -51,7 +51,7 @@
   const shlDispatch = createEventDispatcher<{ 'shl-submitted': SHLSubmitEvent }>();
   let submitting = false;
   let fetchError = "";
-  let currentTab: string | number = 'url';
+  let currentTab: string | number = 'default';
   let emptyResourceListHeader = "Retrieve Your Health Information";
   let fullResourceListHeader = "1. Add information from another provider"
   let addDataHeader = emptyResourceListHeader;
@@ -127,7 +127,7 @@
     }
   }
 
-  onMount(() => {
+  onMount(async function() {
     if (sessionStorage.getItem('URL')) {
       let url = sessionStorage.getItem('URL') ?? '/create';
       let currentUrl = window.location.href.split('?')[0];
@@ -162,8 +162,8 @@
         accordion.classList.remove('at-load');
       }, 250);
     }
-
-    document.querySelector(`span.${currentTab}-tab`)?.parentElement?.click();
+    let tab = document.querySelector(`span.${currentTab}-tab`)?.parentElement
+    tab?.click();
   });
   
   async function preAuthRedirectHandler(details: SOFAuthEvent|undefined) {

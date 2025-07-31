@@ -193,6 +193,18 @@ export function isValidUrl(url: string) {
   }
 }
 
+// TODO: figure something else out if more search params need to be saved, or other pages/applications need it.
+export function clearURLOfParams(url: URL) {
+  if (!url) return url;
+  let params = url.searchParams;
+  let newParams = new URLSearchParams();
+  if (params.has('shlid')) {
+    newParams.set('shlid', params.get('shlid')!);
+  }
+  url.search = newParams.toString();
+  return url;
+}
+
 export function constructPatientResource (props: DemographicFields = {}) {
   let patient: Patient = {
     resourceType: 'Patient',

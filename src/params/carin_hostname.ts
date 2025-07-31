@@ -7,6 +7,7 @@ export const ALLOWED = <const> [
 	'cpcds',
 	'humana',
 	'inferno',
+	'bluebutton',
 ];
 
 export const match = ((param: string): param is typeof ALLOWED[number] => {
