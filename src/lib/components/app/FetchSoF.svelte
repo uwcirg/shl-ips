@@ -10,8 +10,10 @@
 
   import { SOF_HOSTS } from '$lib/config';
   import type { ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from '$lib/utils/types';
-  import { authorize, getResourcesWithReferences } from '$lib/utils/sofClient.js';
+  import { authorize, endSession, getResourcesWithReferences } from '$lib/utils/sofClient.js';
   import { createEventDispatcher, onMount } from 'svelte';
+  import { clearURLOfParams } from '$lib/utils/util';
+  import { page } from '$app/stores';
 
   // For "quick sample" in demo
   import { EXAMPLE_IPS, IPS_DEFAULT } from '$lib/config';
@@ -77,23 +79,11 @@
             sofHost = sofHostAuthd;
             sofHostSelection = sofHost.id;
             await fetchData();
-            if (result.resources.length > 0) {
-              sessionStorage.removeItem(key);
-              sessionStorage.removeItem('SMART_KEY');
-            }
           }
         }
       }
     }
   });
-
-  function endSession() {
-    let key = sessionStorage.getItem('SMART_KEY');
-    if (key) {
-      sessionStorage.removeItem(JSON.parse(key));
-      sessionStorage.removeItem('SMART_KEY');
-    }
-  }
 
   async function fetchData() {
     processing = true;
@@ -107,12 +97,13 @@
       }
       result.resources = nonIpsResources;
       resourceDispatch('update-resources', result);
-      processing = false;
       return;
     } catch (e: any) {
       console.log(e.message);
       fetchError = e.message;
+    } finally {
       processing = false;
+      window.history.replaceState(null, "", clearURLOfParams($page.url));
       endSession();
     }
   }

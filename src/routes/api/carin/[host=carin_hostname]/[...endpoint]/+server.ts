@@ -8,7 +8,7 @@ import {
 export const POST = async ({ params, request }: { params: { host: string }; request: Request; }) => {
   console.log('Token exchange');
   const restPath = params.host;
-  const { code } = await request.json();
+  const { code, code_verifier } = await request.json();
 
   let clientId = CARIN_HOSTS[restPath].clientId;
   let clientSecret = CARIN_HOSTS[restPath].clientSecret;
@@ -20,16 +20,27 @@ export const POST = async ({ params, request }: { params: { host: string }; requ
     throw error(500, { message: "Server configuration error" });
   }
 
-  return await fetch(tokenEndpoint, {
+  const basicAuthToken = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+  console.log(basicAuthToken);
+
+  const response = await fetch(tokenEndpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
+      Authorization: `Basic ${basicAuthToken}`,
     },
     body: new URLSearchParams({
       grant_type: 'authorization_code',
       code,
+      code_verifier,
       redirect_uri: REDIRECT_URI,
     }),
   });
+  if (response.ok) {
+    let data = await response.text();
+    return json(JSON.parse(data));
+  } else {
+    return response;
+    // throw error(500, { message: "Token exchange failed" });
+  }
 };

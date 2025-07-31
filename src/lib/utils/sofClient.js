@@ -6,20 +6,23 @@ import {
     SOF_RESOURCES } from '$lib/config';
 import { getReferences } from '$lib/utils/util';
 
-export { authorize, getResources, getResourcesWithReferences, activePatient, constructResourceUrl };
+export { authorize, endSession, getResources, getResourcesWithReferences, activePatient, constructResourceUrl };
 
 const patientResourceScope = SOF_PATIENT_RESOURCES.map(resourceType => `patient/${resourceType}.read`);
 const resourceScope = patientResourceScope.join(" ");
 const config = {
         clientId: '(ehr client id, populated later)', // clientId() is ignored at smit
-        scope: `openid fhirUser launch/patient patient/*.read ${resourceScope}`,
+        scope: `openid fhirUser launch/patient patient/*.read`,
         iss: '(authorization url, populated later)',
         redirect_uri: SOF_REDIRECT_URI
     };
 
 let client;
 
-function authorize(inputFhirUrl, clientId) {
+async function authorize(inputFhirUrl, clientId, scope) {
+    if (scope) {
+        config.scope = scope;
+    }
     config.iss = inputFhirUrl;
     config.clientId = clientId ?? "no clientId configured";
     config.pkceMode = "ifSupported";
@@ -35,6 +38,14 @@ function constructResourceUrl(resourceType, patientId, endpoint='') {
         endpoint = `${endpoint}&category=laboratory,social-history,procedure`;
     }
     return endpoint;
+}
+
+function endSession() {
+let key = sessionStorage.getItem('SMART_KEY');
+if (key) {
+    sessionStorage.removeItem(JSON.parse(key));
+    sessionStorage.removeItem('SMART_KEY');
+}
 }
 
 async function requestResources(client, resourceType) {
