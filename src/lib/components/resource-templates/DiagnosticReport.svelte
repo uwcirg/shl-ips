@@ -10,7 +10,7 @@
   export let content: ResourceTemplateParams<DiagnosticReport>; // Define a prop to pass the data to the component
 
   let resource: DiagnosticReport;
-$: if (content) resource = content.resource;
+  $: if (content) resource = content.resource;
 
   let results: Observation[] | undefined = [];
 

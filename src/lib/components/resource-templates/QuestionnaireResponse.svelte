@@ -5,7 +5,7 @@
 
   export let content: ResourceTemplateParams<QuestionnaireResponse>; // Define a prop to pass the data to the component
   let resource: QuestionnaireResponse;
-$: if (content) resource = content.resource;
+  $: if (content) resource = content.resource;
 
 </script>
 

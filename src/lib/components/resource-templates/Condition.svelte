@@ -9,7 +9,7 @@
   export let content: ResourceTemplateParams<Condition>; // Define a prop to pass the data to the component
 
   let resource: Condition;
-$: if (content) resource = content.resource;
+  $: if (content) resource = content.resource;
 
   function severityBadgeColor(severity: string) {
     if (severity) {

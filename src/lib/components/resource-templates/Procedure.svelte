@@ -7,7 +7,7 @@
   
   export let content: ResourceTemplateParams<Procedure>; // Define a prop to pass the data to the component
   let resource: Procedure;
-$: if (content) resource = content.resource;
+  $: if (content) resource = content.resource;
 </script>
 
 {#if resource.code}

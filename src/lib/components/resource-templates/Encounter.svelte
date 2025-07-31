@@ -7,7 +7,7 @@
   export let content: ResourceTemplateParams<Encounter>; // Define a prop to pass the data to the component
 
   let resource: Encounter;
-$: if (content) resource = content.resource;
+  $: if (content) resource = content.resource;
 </script>
 
 {#if resource.period?.start}

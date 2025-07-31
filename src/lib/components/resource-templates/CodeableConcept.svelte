@@ -1,14 +1,14 @@
 <script lang="ts">
   import { Badge} from 'sveltestrap';
   import type { CodeableConcept } from "fhir/r4";
-  import { onMount } from 'svelte';
 
   export let codeableConcept: CodeableConcept; // Define a prop to pass the data to the component
   export let badge = true;
   export let bold = true;
 
-  let codeSet: Set<string> = new Set();
-  onMount(() => {
+  let codeSet: Set<string>;
+  $: if (codeableConcept) {
+    codeSet = new Set();
     if (codeableConcept?.coding) {
       codeableConcept.coding.forEach(coding => {
         if (coding.display !== undefined) {
@@ -20,7 +20,7 @@
       codeSet.add(codeableConcept.text);
     }
     codeSet = new Set([...codeSet]);
-  })
+  }
 </script>
 
 {#if codeableConcept?.coding?.length > 0}

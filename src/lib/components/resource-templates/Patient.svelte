@@ -6,15 +6,15 @@
     import type { ResourceTemplateParams } from '$lib/utils/types';
 
     export let content: ResourceTemplateParams<Patient>; // Define a prop to pass the data to the component
-    let resource: Patient;
-    $: if (content) resource = content.resource;
 
     let showContact = false;
-
+    
+    let resource: Patient;
     let genderIdentityCodeableConcept: CodeableConcept;
     let pronounsCodeableConcept: CodeableConcept;
 
-    onMount(() => {
+    $: if (content) {
+        resource = content.resource;
         genderIdentityCodeableConcept = resource.extension?.find(
             e => e.url === 'http://hl7.org/fhir/StructureDefinition/individual-genderIdentity'
         )?.extension?.valueCodeableConcept;
@@ -22,7 +22,7 @@
         pronounsCodeableConcept = resource.extension?.find(
             e => e.url === 'http://hl7.org/fhir/StructureDefinition/individual-pronouns'
         )?.extension?.valueCodeableConcept;
-    });
+    }
 </script>
 
 {#if resource.name}

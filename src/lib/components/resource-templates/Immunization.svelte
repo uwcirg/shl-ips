@@ -8,7 +8,7 @@
   export let content: ResourceTemplateParams<Immunization>; // Define a prop to pass the data to the component
 
   let resource: Immunization;
-$: if (content) resource = content.resource;
+  $: if (content) resource = content.resource;
 </script>
 {#if resource.vaccineCode}
   <CodeableConcept codeableConcept={resource.vaccineCode} />

@@ -7,7 +7,7 @@
     
     export let content: ResourceTemplateParams<Observation>; // Define a prop to pass the data to the component
     let resource: Observation;
-$: if (content) resource = content.resource;
+    $: if (content) resource = content.resource;
   </script>
 
   {#if resource.code?.coding?.[0].code}

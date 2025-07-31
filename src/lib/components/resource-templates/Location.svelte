@@ -5,7 +5,7 @@
   export let content: ResourceTemplateParams<Location>; // Define a prop to pass the data to the component
 
   let resource: Location;
-$: if (content) resource = content.resource;
+  $: if (content) resource = content.resource;
 </script>
   
 <strong>{resource.name ?? ""}</strong>

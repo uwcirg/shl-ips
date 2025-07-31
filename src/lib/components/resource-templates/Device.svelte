@@ -7,7 +7,7 @@
   export let content: ResourceTemplateParams<Device>; // Define a prop to pass the data to the component
 
   let resource: Device;
-$: if (content) resource = content.resource;
+  $: if (content) resource = content.resource;
 </script>
 {#if resource.status}
   <Badge color="primary">{resource.status}</Badge><br>

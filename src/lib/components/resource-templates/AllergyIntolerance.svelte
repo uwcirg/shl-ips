@@ -9,7 +9,7 @@
   export let content: ResourceTemplateParams<AllergyIntolerance>; // Define a prop to pass the data to the component
 
   let resource: AllergyIntolerance;
-$: if (content) resource = content.resource;
+  $: if (content) resource = content.resource;
 
   function badgeColor(criticality: string) {
     if (criticality) {
