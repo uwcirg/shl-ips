@@ -240,7 +240,6 @@
                             {#if resourceType === "Patient"}
                                 Patients
                                 <Badge
-                                    positioned
                                     class="mx-1"
                                     color={patientBadgeColor}
                                 >
@@ -253,7 +252,6 @@
                                     {`${resourceType}s`}
                                 {/if}
                                 <Badge
-                                    positioned
                                     class="mx-1"
                                     color={
                                         Object.values($resourcesByTypeStore[resourceType])
