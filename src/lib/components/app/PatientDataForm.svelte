@@ -1,5 +1,5 @@
 <script lang='ts'>
-  import { TabContent, TabPane } from 'sveltestrap';
+  import { TabContent, TabPane } from '@sveltestrap/sveltestrap';
   import { createEventDispatcher } from 'svelte';
   import type { ResourceHelper, ResourceRetrieveEvent } from '$lib/utils/types';
   import PatientInfo from '$lib/components/app/PatientInfo.svelte';

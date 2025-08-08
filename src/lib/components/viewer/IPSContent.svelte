@@ -10,7 +10,7 @@
     Icon,
     Offcanvas,
     Row,
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import type {
     Bundle,
     Composition,
@@ -95,6 +95,7 @@
       content ["Patient"] = {
         section: {
           text: {
+            status: 'generated',
             div: patient[0].text?.div ??
                 `<b>${patient[0].name?.[0]?.text ?? `${(patient[0].name?.[0]?.prefix ?? "") (patient[0].name?.[0]?.given?.join(' ') ?? "") (patient[0].name?.[0]?.family ?? "")}`}</b><br>
                   Birth Date: ${patient[0].birthDate ?? ""}<br>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Badge } from 'sveltestrap';
+  import { Badge } from '@sveltestrap/sveltestrap';
   import type { ResourceTemplateParams } from '$lib/utils/types';
   import type { QuestionnaireResponse } from 'fhir/r4';
 

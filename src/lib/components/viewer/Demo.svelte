@@ -13,7 +13,7 @@
     Input,
     Label,
     Row
-  } from "sveltestrap";
+  } from '@sveltestrap/sveltestrap';
   import { onMount } from "svelte";
   import type { Bundle } from "fhir/r4";
   import IpsContent from "$lib/components/viewer/IPSContent.svelte";
@@ -205,17 +205,21 @@
                 <col span="1" style="width: 25%;">
             </colgroup>
               <thead>
-                <th>Section</th>
-                <th class="tdCenter">Entries</th>
-                <th class="tdCenter">Narrative</th>
+                <tr>
+                  <th>Section</th>
+                  <th class="tdCenter">Entries</th>
+                  <th class="tdCenter">Narrative</th>
+                </tr>
               </thead>
-              {#each checksResult.data as result}
-              <tr>
-                <td>{result.display}</td>
-                <td class="tdCenter" style="color:{result.entriesColor}">{result.entries}</td>
-                <td class="tdCenter" style="color:{result.narrativeColor}">{result.narrative}</td>
-              </tr>
-              {/each}
+              <tbody>
+                {#each checksResult.data as result}
+                <tr>
+                  <td>{result.display}</td>
+                  <td class="tdCenter" style="color:{result.entriesColor}">{result.entries}</td>
+                  <td class="tdCenter" style="color:{result.narrativeColor}">{result.narrative}</td>
+                </tr>
+                {/each}
+              </tbody>
             </table>
             <ul class="list-group">
               {#each checksResult.errors as error}

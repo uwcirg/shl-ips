@@ -11,7 +11,7 @@
     Input,
     Label,
     Row,
-    Spinner } from 'sveltestrap';
+    Spinner } from '@sveltestrap/sveltestrap';
 
   import { PATIENT_IPS, EXAMPLE_IPS, IPS_DEFAULT, BEARER_AUTHORIZATION } from '$lib/config';
   import type { SHCRetrieveEvent, IPSRetrieveEvent } from '$lib/utils/types';

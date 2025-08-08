@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Row, Col, Image } from 'sveltestrap';
+  import { Row, Col, Image } from '@sveltestrap/sveltestrap';
   export let title = 'International Patient Summary';
 </script>
 

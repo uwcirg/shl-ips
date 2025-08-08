@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Accordion, AccordionItem, Button, Col, FormGroup, Input, Row } from 'sveltestrap';
+  import { Accordion, AccordionItem, Button, Col, FormGroup, Input, Row } from '@sveltestrap/sveltestrap';
   import { createEventDispatcher } from 'svelte';
   import NIOAutoCoderInput from '$lib/components/form/NIOAutoCoderInput.svelte';
   import type { IOResponse, ResourceRetrieveEvent } from '$lib/utils/types';
