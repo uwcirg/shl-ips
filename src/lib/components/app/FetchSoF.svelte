@@ -6,7 +6,7 @@
     Input,
     Label,
     Row,
-    Spinner } from 'sveltestrap';
+    Spinner } from '@sveltestrap/sveltestrap';
 
   import { SOF_HOSTS } from '$lib/config';
   import type { ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from '$lib/utils/types';

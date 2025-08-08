@@ -23,7 +23,7 @@
     ModalHeader,
     ModalFooter,
     Row
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import { goto } from '$app/navigation';
   import type { Writable } from 'svelte/store';
   import type { SHLAdminParams, SHLClient } from '$lib/utils/managementClient';
@@ -171,7 +171,7 @@
 {/if}
 
 <!-- Placeholder elements for QR Code image construction -->
-<canvas id="qrcode" class="img-fluid" style="display: none;"/>
+<canvas id="qrcode" class="img-fluid" style="display: none;"></canvas>
 
 <Row cols={{ md: 2, xs: 1 }}>
   <Col class="d-flex justify-content-center">
@@ -304,7 +304,7 @@
             top: 6px;
             right: 10px;
             color: rgb(50, 50, 50);"
-            onclick={() => showPassword = !showPassword}/>
+            on:click={() => showPassword = !showPassword}/>
         </div>
         <Button
           size="sm"
@@ -372,23 +372,6 @@
 </Row>
 
 <style>
-  img.qr {
-    height: 100%;
-  }
-  p.logo {
-    position: relative;
-    width: 250px;
-    height: 250px;
-  }
-  img.logo {
-    position: absolute;
-    background: white;
-    width: 100px;
-    left: calc(50% - 50px);
-    top: calc(50% - 1em);
-    border: 2px solid white;
-    box-sizing: border-box;
-  }
   :global(.shlbutton) {
     width: 300px !important;
   }

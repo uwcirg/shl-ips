@@ -1,14 +1,12 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import { getContext, onMount, setContext } from 'svelte';
+  import { getContext, onMount } from 'svelte';
   import { type Writable } from 'svelte/store';
   import {
     Col,
     Row
-  } from 'sveltestrap';
-  import { page } from '$app/stores';
+  } from '@sveltestrap/sveltestrap';
   import { AuthService } from '$lib/utils/AuthService';
-  import { User } from 'oidc-client-ts';
+  import type { User } from 'oidc-client-ts';
   import { type SHLAdminParams, type SHLClient } from '$lib/utils/managementClient';
 
   let authService = AuthService.Instance;

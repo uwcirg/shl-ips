@@ -18,7 +18,7 @@
         Input,
         Offcanvas,
         Label,
-        Row } from 'sveltestrap';
+        Row } from '@sveltestrap/sveltestrap';
     import { ResourceHelper } from '$lib/utils/ResourceHelper.js';
     import type { IPSResourceCollection } from '$lib/utils/IPSResourceCollection.js';
     import type { IPSRetrieveEvent } from '$lib/utils/types.js';

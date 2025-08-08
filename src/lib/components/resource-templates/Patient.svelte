@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { Badge, Button, Icon } from 'sveltestrap';
+    import { Badge, Button, Icon } from '@sveltestrap/sveltestrap';
     import { onMount } from 'svelte';
-    import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
+    import CodeableConceptTemplate from '$lib/components/resource-templates/CodeableConcept.svelte';
     import type { CodeableConcept, Patient } from "fhir/r4";
     import type { ResourceTemplateParams } from '$lib/utils/types';
 
@@ -10,17 +10,17 @@
 
     let showContact = false;
 
-    let genderIdentityCodeableConcept: CodeableConcept;
-    let pronounsCodeableConcept: CodeableConcept;
+    let genderIdentityCodeableConcept: CodeableConcept | undefined;
+    let pronounsCodeableConcept: CodeableConcept | undefined;
 
     onMount(() => {
         genderIdentityCodeableConcept = resource.extension?.find(
             e => e.url === 'http://hl7.org/fhir/StructureDefinition/individual-genderIdentity'
-        )?.extension?.valueCodeableConcept;
+        )?.extension?.[0]?.valueCodeableConcept;
 
         pronounsCodeableConcept = resource.extension?.find(
             e => e.url === 'http://hl7.org/fhir/StructureDefinition/individual-pronouns'
-        )?.extension?.valueCodeableConcept;
+        )?.extension?.[0]?.valueCodeableConcept;
     });
 </script>
 
@@ -52,10 +52,10 @@
     Gender: {resource.gender ?? ""}<br>
 {/if}
 {#if genderIdentityCodeableConcept}
-    Gender Identity: <CodeableConcept codeableConcept={genderIdentityCodeableConcept} /><br>
+    Gender Identity: <CodeableConceptTemplate codeableConcept={genderIdentityCodeableConcept} /><br>
 {/if}
 {#if pronounsCodeableConcept}
-    Pronouns: <CodeableConcept codeableConcept={pronounsCodeableConcept} /><br>
+    Pronouns: <CodeableConceptTemplate codeableConcept={pronounsCodeableConcept} /><br>
 {/if}
 {#if resource.telecom || resource.address || resource.contact}
     <Button
@@ -72,13 +72,15 @@
                 <thead>
                     <tr><th colspan="3">Contact Information</th></tr>
                 </thead>
-                {#each resource.telecom as telecom}
-                    <tr>
-                        <td>{telecom.system ?? ""}</td>
-                        <td>{telecom.use ?? ""}</td>
-                        <td>{telecom.value ?? ""}</td>
-                    </tr>
-                {/each}
+                <tbody>
+                    {#each resource.telecom as telecom}
+                        <tr>
+                            <td>{telecom.system ?? ""}</td>
+                            <td>{telecom.use ?? ""}</td>
+                            <td>{telecom.value ?? ""}</td>
+                        </tr>
+                    {/each}
+                </tbody>
             </table>
         {/if}
         {#if resource.address}
@@ -90,26 +92,28 @@
                     </tr>
                     <tr></tr>
                 </thead>
-                {#each resource.address as address}
-                    <tr>
-                    <td>{address.use ?? ""}</td>
-                    <td>
-                        {#if address.line}
-                            {#each address.line as line}
-                                {line}<br>
-                            {/each}
-                        {/if}
-                        {address.city ? address.city+"," : ""}{
-                            address.state
-                                ? ` ${address.state}`+(address.country ? "," : "")
-                                : ''
-                        }{address.country
-                            ? ` ${address.country}`
-                            : ''}
-                        {address.postalCode ?? ""}
-                    </td>
-                    </tr>
-                {/each}
+                <tbody>
+                    {#each resource.address as address}
+                        <tr>
+                        <td>{address.use ?? ""}</td>
+                        <td>
+                            {#if address.line}
+                                {#each address.line as line}
+                                    {line}<br>
+                                {/each}
+                            {/if}
+                            {address.city ? address.city+"," : ""}{
+                                address.state
+                                    ? ` ${address.state}`+(address.country ? "," : "")
+                                    : ''
+                            }{address.country
+                                ? ` ${address.country}`
+                                : ''}
+                            {address.postalCode ?? ""}
+                        </td>
+                        </tr>
+                    {/each}
+                </tbody>
             </table>
         {/if}
         {#if resource.contact}
@@ -138,13 +142,15 @@
                         <thead>
                             <tr><th colspan="3">Contact Information</th></tr>
                         </thead>
-                        {#each contact.telecom as telecom}
-                            <tr>
-                                <td>{telecom.system ?? ""}</td>
-                                <td>{telecom.use ?? ""}</td>
-                                <td>{telecom.value ?? ""}</td>
-                            </tr>
-                        {/each}
+                        <tbody>
+                            {#each contact.telecom as telecom}
+                                <tr>
+                                    <td>{telecom.system ?? ""}</td>
+                                    <td>{telecom.use ?? ""}</td>
+                                    <td>{telecom.value ?? ""}</td>
+                                </tr>
+                            {/each}
+                        </tbody>
                     </table>
                 {/if}
                 {#if contact.address}
@@ -156,24 +162,26 @@
                             </tr>
                             <tr></tr>
                         </thead>
-                        <tr>
-                            <td>{contact.address.use ?? ""}</td>
-                            <td>
-                                {#if contact.address.line}
-                                    {#each contact.address.line as line}
-                                        {line}<br>
-                                    {/each}
-                                {/if}
-                                {contact.address.city ? contact.address.city+"," : ""}{
-                                    contact.address.state
-                                        ? ` ${contact.address.state}`+(contact.address.country ? "," : "")
-                                        : ''
-                                }{contact.address.country
-                                    ? ` ${contact.address.country}`
-                                    : ''}
-                                {contact.address.postalCode ?? ""}
-                            </td>
+                        <tbody>
+                            <tr>
+                                <td>{contact.address.use ?? ""}</td>
+                                <td>
+                                    {#if contact.address.line}
+                                        {#each contact.address.line as line}
+                                            {line}<br>
+                                        {/each}
+                                    {/if}
+                                    {contact.address.city ? contact.address.city+"," : ""}{
+                                        contact.address.state
+                                            ? ` ${contact.address.state}`+(contact.address.country ? "," : "")
+                                            : ''
+                                    }{contact.address.country
+                                        ? ` ${contact.address.country}`
+                                        : ''}
+                                    {contact.address.postalCode ?? ""}
+                                </td>
                             </tr>
+                        </tbody>
                     </table>
                 {/if}
             {/each}

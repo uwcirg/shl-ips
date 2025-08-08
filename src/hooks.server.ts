@@ -1,4 +1,4 @@
-import { error, Handle, Request } from '@sveltejs/kit';
+import { error, type Handle } from '@sveltejs/kit';
 import { SERVER_API_BASE } from '$lib/server/config';
 
 const authenticatedAPIs = [

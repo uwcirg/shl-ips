@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Badge} from 'sveltestrap';
+  import { Badge} from '@sveltestrap/sveltestrap';
   import type { CodeableConcept } from "fhir/r4";
   import { onMount } from 'svelte';
 

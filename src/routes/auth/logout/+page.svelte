@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { Alert } from 'sveltestrap';
+  import { Alert } from '@sveltestrap/sveltestrap';
   import { goto } from '$app/navigation';
   import { AuthService } from '$lib/utils/AuthService';
 

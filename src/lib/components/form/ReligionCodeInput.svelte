@@ -9,7 +9,7 @@
     Input,
     Icon,
     Spinner
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import type { Coding } from 'fhir/r4';
   import { onDestroy, onMount } from 'svelte';
 

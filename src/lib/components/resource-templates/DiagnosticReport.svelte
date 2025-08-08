@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Badge } from 'sveltestrap';
+  import { Badge } from '@sveltestrap/sveltestrap';
   import type { BundleEntry, DiagnosticReport, Observation } from 'fhir/r4';
   import type { ResourceTemplateParams } from '$lib/utils/types';
   import ObservationTemplate from '$lib/components/resource-templates/Observation.svelte';
@@ -55,12 +55,14 @@ Effective: <Date fields={{period: resource.effective, dateTime: resource.effecti
     <tbody>
     {#each results as result}
       <tr>
-        <div class="ml-4">
-          <ObservationTemplate
-            content={{ resource: result, entries: content.entries }}
-            contained={resource.effectiveDateTime !== undefined || resource.effectivePeriod !== undefined}
-          />
-        </div>
+        <td>
+          <div class="ml-4">
+            <ObservationTemplate
+              content={{ resource: result, entries: content.entries }}
+              contained={resource.effectiveDateTime !== undefined || resource.effectivePeriod !== undefined}
+            />
+          </div>
+        </td>
       </tr>
     {/each}
     {#each resource.result as result}

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { formatDate } from '$lib/utils/util';
-  import { Badge } from 'sveltestrap';
+  import { Badge } from '@sveltestrap/sveltestrap';
   import type { Goal } from 'fhir/r4';
   import type { ResourceTemplateParams } from '$lib/utils/types';
 

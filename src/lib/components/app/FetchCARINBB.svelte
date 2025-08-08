@@ -6,7 +6,7 @@
     Input,
     Label,
     Row,
-    Spinner } from 'sveltestrap';
+    Spinner } from '@sveltestrap/sveltestrap';
   import { page } from '$app/stores';
 
   import { CARIN_HOSTS, CARIN_RESOURCES } from '$lib/config';

@@ -7,7 +7,7 @@
     CardBody,
     Row,
     Styles
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import { goto } from '$app/navigation';
   import { AuthService } from '$lib/utils/AuthService';
   async function login() {

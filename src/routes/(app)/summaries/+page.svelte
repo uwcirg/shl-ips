@@ -3,7 +3,7 @@
     Col,
     Row,
     Styles
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import HealthLinkOverview from '$lib/components/app/HealthLinkOverview.svelte';
 </script>
 <Styles />

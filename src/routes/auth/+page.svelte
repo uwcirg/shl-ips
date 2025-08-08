@@ -1,7 +1,7 @@
 <script lang="ts">
   import {
     Styles
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import { onMount, getContext } from 'svelte';
   import { goto } from '$app/navigation';
   import { page, type Writable } from '$app/stores';

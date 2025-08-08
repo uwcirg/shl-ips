@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getContext } from 'svelte';
-  import { Button, Col, Icon, Row, Styles } from 'sveltestrap';
+  import { Button, Col, Icon, Row, Styles } from '@sveltestrap/sveltestrap';
   import type { Writable } from 'svelte/store';
   import type { SHLAdminParams } from '$lib/utils/managementClient';
 

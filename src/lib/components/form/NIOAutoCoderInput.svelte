@@ -9,7 +9,7 @@
     Input,
     Icon,
     Spinner
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import type { IOResponse, NIOAutoCoderResponse } from '$lib/utils/types';
   import AuthService from '$lib/utils/AuthService';
   import { onDestroy, onMount } from 'svelte';
