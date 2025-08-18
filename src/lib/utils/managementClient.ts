@@ -25,6 +25,7 @@ export interface SHLAdminParams {
   exp?: number;
   flag?: string;
   label?: string;
+  source?: string;
   v?: number;
 }
 
