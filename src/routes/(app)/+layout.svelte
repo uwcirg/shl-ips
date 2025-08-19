@@ -17,21 +17,15 @@
   let currentUser: Promise<User | undefined>;
   
   onMount(async () => {
-    currentUser = authService.getUser().then((user) => {
-      if (!user) {
-        return authService.login().then(() => {
-          return authService.getUser().then((user) => user ?? undefined);
-        });
-      }
-      return user;
-    });
-    currentUser.then(async (user) => {
-      window.dispatchEvent(new CustomEvent('userFound', { 
-        detail: { message: 'Hello from the app routes component!' } 
-      }));
-      $shlStore = await shlClient.getUserShls();
-      return user;
-    });
+    currentUser = await authService.getUser();
+    if (!currentUser) {
+      await authService.login();
+      currentUser = await authService.getUser();
+    }
+    window.dispatchEvent(new CustomEvent('userFound', { 
+      detail: { message: 'Hello from the app routes component!' } 
+    }));
+    $shlStore = await shlClient.getUserShls();
   });
 
 </script>
