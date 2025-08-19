@@ -310,4 +310,10 @@ export class IPSResourceCollection {
         }
         return IRC;
     }
+
+    clear() {
+        this.resourcesByType.set({});
+        this.extensionSections.set({});
+        this.selectedPatient.set('');
+    }
 }
