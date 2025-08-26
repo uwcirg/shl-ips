@@ -11,8 +11,8 @@
 
   import { CARIN_HOSTS, CARIN_RESOURCES } from '$lib/config';
   import type { ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from '$lib/utils/types';
-  import { getReferences } from '$lib/utils/util';
-  import { authorize } from '$lib/utils/sofClient.js';
+  import { clearURLOfParams, getReferences } from '$lib/utils/util';
+  import { authorize, endSession } from '$lib/utils/sofClient.js';
   import { createEventDispatcher, onMount } from 'svelte';
   import type { BundleEntry, Resource } from 'fhir/r4';
   import AuthService from '$lib/utils/AuthService';
@@ -48,7 +48,15 @@
       if (sofHost) {
         try {
           sessionStorage.setItem('AUTH_METHOD', 'carinbb');
-          authorize(sofHost.url, sofHost.clientId);
+          let scope;
+          if (sofHost.scope) {
+            scope = sofHost.scope;
+          } else {
+            const patientResourceScope = CARIN_RESOURCES.map(resourceType => `patient/${resourceType}.read`);
+            const resourceScope = patientResourceScope.join(" ");
+            scope = `openid fhirUser launch/patient ${resourceScope}`;
+          }
+          authorize(sofHost.url, sofHost.clientId, scope);
           authDispatch('sof-auth-init', { data: true });
         } catch (e) {
           authDispatch('sof-auth-fail', { data: false });
@@ -99,6 +107,7 @@
       if (method != 'carinbb') {
         return;
       }
+      processing = true;
       sessionStorage.removeItem('AUTH_METHOD');
       try {
         let key = sessionStorage.getItem('SMART_KEY');
@@ -111,12 +120,14 @@
           throw Error('No code found in authentication response url');
         }
 
-        let token = sessionStorage.getItem(JSON.parse(key));
-        if (!token) {
+        let tokenString = sessionStorage.getItem(JSON.parse(key));
+        if (!tokenString) {
           throw Error('No SMART token found in storage');
         }
+        const token = JSON.parse(tokenString);
+        const code_verifier = token.codeVerifier;
 
-        let url = JSON.parse(token).serverUrl;
+        const url = token.serverUrl;
         let sofHostAuthd = CARIN_HOSTS.find(e => e.url == url);
         if (!sofHostAuthd) {
           throw Error(`No registered SMART host found matching ${url}`);
@@ -125,8 +136,6 @@
         sofHost = sofHostAuthd;
         sofHostSelection = sofHost.id;
 
-        sessionStorage.removeItem(key);
-        sessionStorage.removeItem('SMART_KEY');
         // Send the code to the server for token exchange
         let tokenResult = await fetch(`/api/carin/${sofHostSelection}`, {
           method: 'POST',
@@ -134,9 +143,10 @@
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${await AuthService.Instance.getAccessToken()}`,
           },
-          body: JSON.stringify({ code }),
+          body: JSON.stringify({ code, code_verifier }),
         })
-          .then(response => response.json());
+          .then(response => response.text())
+          .then(response => JSON.parse(response));
         const accessToken = tokenResult.access_token;
         const patientId = tokenResult.patient;
         console.log('Access Token:', accessToken);
@@ -150,7 +160,7 @@
             return patientData;
           });
             
-        let resources = (await Promise.allSettled(["ExplanationOfBenefit"].map((resourceType: string) => {
+        let resources = (await Promise.allSettled(CARIN_RESOURCES.map((resourceType: string) => {
           return fetch(`${url}/${resourceType}?patient=${patientId}`, {
             headers: { Authorization: `Bearer ${accessToken}` },
           })
@@ -177,9 +187,11 @@
         console.log(result);
       } catch (e) {
         console.log('Failed', e);
-        fetchError = "Error fetching CARIN BB data";
-        const shlid = $page.url.searchParams.get('shlid');
-        window.history.replaceState(null, "", $page.url.href.split("?")[0] + (shlid ? `?shlid=${shlid}` : ""));
+        fetchError = "Error fetching Insurance data";
+      } finally {
+        processing = false;
+        window.history.replaceState(null, "", clearURLOfParams($page.url));
+        endSession();
       }
     }
   });
@@ -187,7 +199,7 @@
 </script>
 <form on:submit|preventDefault={() => prepareIps()}>
   <FormGroup>
-      <Label>Fetch CARIN BB data via SMART authorization</Label>
+      <Label>Fetch CARIN Insurance data via SMART authorization</Label>
     {#each CARIN_HOSTS as host}
       <Row class="mx-2">
         <Input type="radio" bind:group={sofHostSelection} value={host.id} label={host.name} />

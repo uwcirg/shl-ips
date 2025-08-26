@@ -34,6 +34,11 @@ export const CARIN_HOSTS: Record<string, any> = {
     tokenEndpoint: process.env.INFERNO_TOKEN_ENDPOINT,
     clientId: process.env.VITE_INFERNO_CLIENT_ID,
     clientSecret: process.env.INFERNO_CLIENT_SECRET,
+  },
+  bluebutton: {
+    tokenEndpoint: process.env.BLUE_BUTTON_TOKEN_ENDPOINT,
+    clientId: process.env.VITE_BLUE_BUTTON_CLIENT_ID,
+    clientSecret: process.env.BLUE_BUTTON_CLIENT_SECRET,
   }
 }
 
