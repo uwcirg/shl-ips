@@ -299,7 +299,7 @@
         {#each searchResults as result}
             <div class="card mb-2">
                 <div class="card-body">
-                    <h5 class="card-title">{result.resource.resourceType} (ID: {result.resource.id})</h5>
+                    <h5 class="card-title">{result.resource.resource.resourceType} (ID: {result.resource.resource.id})</h5>
                     <p class="card-text">Similarity: {(result.similarity * 100).toFixed(2)}%</p>
                     <pre class="card-text">{JSON.stringify(result.resource, null, 2)}</pre>
                 </div>
