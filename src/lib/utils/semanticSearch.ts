@@ -59,7 +59,7 @@ export async function storeEmbedding(id: string, embedding: number[], resource: 
     const transaction = db.transaction(EMBEDDINGS_STORE_NAME, 'readwrite');
     const store = transaction.objectStore(EMBEDDINGS_STORE_NAME);
     return new Promise<void>((resolve, reject) => {
-        const request = store.add({ id, embedding, resource });
+        const request = store.put({ id, embedding, resource });
         request.onsuccess = () => resolve();
         request.onerror = () => reject(request.error);
     });

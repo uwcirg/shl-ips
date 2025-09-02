@@ -215,19 +215,27 @@
 
     async function prepareSearchData() {
         preparing = true;
-        await clearEmbeddings();
-        let bundleEntries = shlContents[0].entry;
-        //let bundleEntries = shlContents.resource.entry;
-        //for (const resource of fhirResources) {
-        //for (const resource of shlContents) {
-        for (const entry of bundleEntries) {
-            if (entry.resource.resourceType === 'Composition') continue;
-            const text = JSON.stringify(entry);
-            const embedding = await createEmbedding(text);
-            await storeEmbedding(entry.resource.id, embedding, entry);
+        try {
+            await clearEmbeddings();
+            if (!shlContents || shlContents.length === 0) {
+                throw new Error('No IPS contents available to index');
+            }
+            const bundle = shlContents[0];
+            const bundleEntries = bundle?.entry ?? [];
+            for (const entry of bundleEntries) {
+                if (!entry?.resource) continue;
+                if (entry.resource.resourceType === 'Composition') continue;
+                const text = JSON.stringify(entry);
+                const embedding = await createEmbedding(text);
+                const key = `${entry.resource.resourceType}/${entry.resource.id ?? crypto.randomUUID?.() ?? Math.random().toString(36).slice(2)}`;
+                await storeEmbedding(key, embedding, entry);
+            }
+            embeddingsReady = await checkEmbeddingsExist();
+        } catch (e) {
+            console.error('Failed to prepare semantic search data', e);
+        } finally {
+            preparing = false;
         }
-        embeddingsReady = true;
-        preparing = false;
     }
 
     async function performSearch() {
