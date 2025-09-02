@@ -126,32 +126,46 @@
       headers['X-POU'] = (selectedSource === 'OpenEpic' ? 'TREAT' : 'PUBHLTH');
     }
     
-    let query = buildPatientSearchQuery(
-      {
-        first: first,
-        last: last,
-        gender: gender,
-        dob: dob,
-        mrn: mrn,
-        phone: phone,
-        address1: address1,
-        address2: address2,
-        city: city,
-        state: state,
-        zip: zip,
-        country: country,
-      }
-    );
-    result = await fetch(`${url}/Patient${query}`, {
-      method: 'GET',
-      headers: headers
+    result = await fetch(`${url}/Patient/$match`, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(patient)
     }).then(function (response: any) {
       if (!response.ok) {
-        // make the promise be rejected if we didn't get a 2xx response
+        // reject the promise if we didn't get a 2xx response
         throw new Error('Unable to fetch patient data', { cause: response });
       } else {
         return response;
       }
+    }).catch(function (error: any) {
+      console.warn(error);
+      let query = buildPatientSearchQuery(
+        {
+          first: first,
+          last: last,
+          gender: gender,
+          dob: dob,
+          mrn: mrn,
+          phone: phone,
+          address1: address1,
+          address2: address2,
+          city: city,
+          state: state,
+          zip: zip,
+          country: country,
+        }
+      );
+      result = fetch(`${url}/Patient${query}`, {
+        method: 'GET',
+        headers: headers
+      }).then(function (response: any) {
+        if (!response.ok) {
+          // reject the promise if we didn't get a 2xx response
+          throw new Error('Unable to fetch patient data', { cause: response });
+        } else {
+          return response;
+        }
+      });
     });
     let body = await result.json();
     if (body.resourceType == 'Bundle' && (body.total == 0 || body.entry.length === 0)) {
