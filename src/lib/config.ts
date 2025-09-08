@@ -126,22 +126,22 @@ export const CARIN_HOSTS = [
   // },
   // Connectathon Testing Servers
   //////////////////////////////////////////////////////////////////////////////
-  // {
-  //   id: "cpcds",
-  //   name: "CPCDS Demo",
-  //   url: "https://cpcds-server.lantanagroup.com/fhir",
-  //   clientId: import.meta.env.VITE_CPCDS_CLIENT_ID,
-  //   scope: "openid fhirUser launch/patient patient/*.read",
-  //   note: "Patient1 / password"
-  // },
-  // {
-  //   id: "inferno",
-  //   name: "Inferno Test Suite",
-  //   url: "https://inferno.healthit.gov/suites/custom/c4bb_v200_client/fhir",
-  //   clientId: import.meta.env.VITE_INFERNO_CLIENT_ID,
-  //   scope: 'openid fhirUser launch/patient patient/*.read',
-  //   note: "Credentials provided"
-  // },
+  {
+    id: "cpcds",
+    name: "CPCDS Demo",
+    url: "https://cpcds-server.lantanagroup.com/fhir",
+    clientId: import.meta.env.VITE_CPCDS_CLIENT_ID,
+    scope: "openid fhirUser launch/patient patient/*.read",
+    note: "Patient1 / password"
+  },
+  {
+    id: "inferno",
+    name: "Inferno Test Suite",
+    url: "https://inferno.healthit.gov/suites/custom/c4bb_v200_client/fhir",
+    clientId: import.meta.env.VITE_INFERNO_CLIENT_ID,
+    scope: 'openid fhirUser launch/patient patient/*.read',
+    note: "Credentials provided"
+  },
   /////////////////////////////////////////////////////////////////////////////
 ]
 
