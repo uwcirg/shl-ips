@@ -7,7 +7,7 @@ ENV NODE_ENV=production
 WORKDIR /opt/app
 
 COPY package*.json .
-RUN npm install --clean-install
+RUN npm clean-install
 
 COPY . .
 
