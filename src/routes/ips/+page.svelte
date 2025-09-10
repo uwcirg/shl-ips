@@ -57,6 +57,7 @@
   }
 
   let showLlmChat = false;
+  let chatVisible = false;
 
   let displayModeText:string;
   $: {
@@ -193,12 +194,79 @@
 
     return tabName;
   }
-  
+ 
+    import { onMount } from 'svelte';
+    import {
+        checkEmbeddingsExist,
+        createEmbedding,
+        clearEmbeddings,
+        storeEmbedding,
+        getAllEmbeddings,
+        cosineSimilarity
+    } from '$lib/utils/semanticSearch';
+
+    let searchText = '';
+    let searchResults = [];
+    let embeddingsReady = false;
+    let preparing = false;
+    let searching = false;
+    let preparationCompleted = false;
+
+    // Replace with your actual FHIR resources array
+    //declare let fhirResources: any[];
+
+    async function prepareSearchData() {
+        preparing = true;
+        try {
+            await clearEmbeddings();
+            if (!shlContents || shlContents.length === 0) {
+                throw new Error('No IPS contents available to index');
+            }
+            const bundle = shlContents[0];
+            const bundleEntries = bundle?.entry ?? [];
+            for (const entry of bundleEntries) {
+                if (!entry?.resource) continue;
+                if (entry.resource.resourceType === 'Composition') continue;
+                const text = JSON.stringify(entry);
+                const embedding = await createEmbedding(text);
+                const key = `${entry.resource.resourceType}/${entry.resource.id ?? crypto.randomUUID?.() ?? Math.random().toString(36).slice(2)}`;
+                await storeEmbedding(key, embedding, entry);
+            }
+            embeddingsReady = await checkEmbeddingsExist();
+            preparationCompleted = true;
+        } catch (e) {
+            console.error('Failed to prepare semantic search data', e);
+        } finally {
+            preparing = false;
+        }
+    }
+
+    async function performSearch() {
+        if (!searchText) return;
+        searching = true;
+        const searchEmbedding = await createEmbedding(searchText);
+        const results = await getAllEmbeddings();
+        const scoredResults = results.map(item => ({
+            ...item,
+            similarity: cosineSimilarity(searchEmbedding, item.embedding)
+        }));
+        searchResults = scoredResults
+            .sort((a, b) => b.similarity - a.similarity)
+            .slice(0, 5);
+        searching = false;
+    }
+
+    onMount(async () => {
+        embeddingsReady = await checkEmbeddingsExist();
+    });
+ 
 </script>
 
 <Row class="mx-0 my-4">
   <Col>
-<div id="llm-chat-content" style="display: block; margin: 30px;">
+<div id="llm-chat-content" style="display: block;">
+  <h5>Ask a large language model about your health records</h5>
+  {#if chatVisible}
   <table id="chat-messages" style="width: 100%; border-collapse: collapse;">
     <thead>
       <tr>
@@ -213,9 +281,39 @@
         <!-- Messages will be appended here -->
     </tbody>
   </table>
-  <input type="text" id="chat-input" placeholder="Ask a large language model about your health...">
-  <button id="send-message">Send to LLM</button>
+  {/if}
+  <input type="text" id="chat-input" placeholder="Ask a large language model about your health records...">
+  <button id="send-message" on:click={() => { if (!chatVisible) chatVisible = true; }}>Send to LLM</button>
 </div>
+
+<div id="semantic-search-section" class="mt-4">
+    <h5>Semantic Search</h5>
+    <div class="mb-3">
+        <button id="prepare-search-btn" class="btn btn-primary" on:click={prepareSearchData} disabled={preparing || preparationCompleted}>
+            {preparing ? 'Preparing...' : preparationCompleted ? 'Data prepared' : 'Prepare data for search'}
+        </button>
+    </div>
+    <div class="mb-3">
+        <input type="text" id="search-input" class="form-control" placeholder="Enter search text..." bind:value={searchText}>
+    </div>
+    <div class="mb-3">
+        <button id="search-btn" class="btn btn-primary" on:click={performSearch} disabled={!embeddingsReady || searching}>
+            {searching ? 'Searching...' : 'Search'}
+        </button>
+    </div>
+    <div id="search-results">
+        {#each searchResults as result}
+            <div class="card mb-2">
+                <div class="card-body">
+                    <h5 class="card-title">{result.resource.resource.resourceType} (ID: {result.resource.resource.id})</h5>
+                    <p class="card-text">Similarity: {(result.similarity * 100).toFixed(2)}%</p>
+                    <pre class="card-text">{JSON.stringify(result.resource, null, 2)}</pre>
+                </div>
+            </div>
+        {/each}
+    </div>
+</div>
+
   </Col>
 </Row>
 <Row class="d-flex justify-content-start mx-0 pb-4">
