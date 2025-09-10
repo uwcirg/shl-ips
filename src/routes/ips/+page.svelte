@@ -57,6 +57,7 @@
   }
 
   let showLlmChat = false;
+  let chatVisible = false;
 
   let displayModeText:string;
   $: {
@@ -262,6 +263,8 @@
 <Row class="mx-0 my-4">
   <Col>
 <div id="llm-chat-content" style="display: block; margin: 30px;">
+  <h5>Ask a large language model about your health records</h5>
+  {#if chatVisible}
   <table id="chat-messages" style="width: 100%; border-collapse: collapse;">
     <thead>
       <tr>
@@ -276,12 +279,13 @@
         <!-- Messages will be appended here -->
     </tbody>
   </table>
-  <input type="text" id="chat-input" placeholder="Ask a large language model about your health...">
-  <button id="send-message">Send to LLM</button>
+  {/if}
+  <input type="text" id="chat-input" placeholder="Ask a large language model about your health records...">
+  <button id="send-message" on:click={() => { if (!chatVisible) chatVisible = true; }}>Send to LLM</button>
 </div>
 
 <div id="semantic-search-section" class="mt-4">
-    <h3>Semantic Search</h3>
+    <h5>Semantic Search</h5>
     <div class="mb-3">
         <button id="prepare-search-btn" class="btn btn-primary" on:click={prepareSearchData} disabled={preparing}>
             {preparing ? 'Preparing...' : 'Prepare data for search'}
