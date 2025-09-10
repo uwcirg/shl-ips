@@ -36,8 +36,11 @@ export const SOF_HOSTS = [
   // },
   {
     id: "epic",
-    name: "Epic Demo",
-    url: "https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4",
+    //name: "Epic Demo",
+    //url: "https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4",
+    name: "Epic, UW Medicine Epic (production)",
+    // per https://open.epic.com/MyApps/Endpoints :
+    url: "https://fhir.epic.medical.washington.edu/FHIR-Proxy/api/FHIR/R4",
     clientId: import.meta.env.VITE_EPIC_CLIENT_ID,
     note: "fhircamila / epicepic1 <br> <a style='color: grey; font-size: small' href='https://fhir.epic.com/Documentation?docId=testpatients' target='_blank' rel='noreferrer'>More credentials <span style='vertical-align: text-bottom; font-size: x-small' class='bi-chevron-double-right' /></a>"
   },
@@ -221,3 +224,5 @@ export const EXAMPLE_IPS = {
   'Jenny Mosley': 'https://hapi.fhir.org/baseR4/Patient/patientJM1/$summary'
 };
 export const IPS_DEFAULT = 'Maria SEATTLE Gravitate';
+
+//export const LLM_SERVICE_URI = import.meta.env.LLM_SERVICE_URI;

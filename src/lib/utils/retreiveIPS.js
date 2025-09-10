@@ -71,6 +71,7 @@ async function retrieve(){
         $("#ips-loader").hide();
         return;
     }
+    // TODO look at these in the debugger... actually, is this used at all?
     const decoded = await Promise.all(retrieveResult.shcs.map(verify));
     const data = decoded.map((e) => e.fhirBundle);
     prepareSHLContents(data);
