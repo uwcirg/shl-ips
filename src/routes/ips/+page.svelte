@@ -210,6 +210,7 @@
     let embeddingsReady = false;
     let preparing = false;
     let searching = false;
+    let preparationCompleted = false;
 
     // Replace with your actual FHIR resources array
     //declare let fhirResources: any[];
@@ -232,6 +233,7 @@
                 await storeEmbedding(key, embedding, entry);
             }
             embeddingsReady = await checkEmbeddingsExist();
+            preparationCompleted = true;
         } catch (e) {
             console.error('Failed to prepare semantic search data', e);
         } finally {
@@ -262,7 +264,7 @@
 
 <Row class="mx-0 my-4">
   <Col>
-<div id="llm-chat-content" style="display: block; margin: 30px;">
+<div id="llm-chat-content" style="display: block;">
   <h5>Ask a large language model about your health records</h5>
   {#if chatVisible}
   <table id="chat-messages" style="width: 100%; border-collapse: collapse;">
@@ -287,8 +289,8 @@
 <div id="semantic-search-section" class="mt-4">
     <h5>Semantic Search</h5>
     <div class="mb-3">
-        <button id="prepare-search-btn" class="btn btn-primary" on:click={prepareSearchData} disabled={preparing}>
-            {preparing ? 'Preparing...' : 'Prepare data for search'}
+        <button id="prepare-search-btn" class="btn btn-primary" on:click={prepareSearchData} disabled={preparing || preparationCompleted}>
+            {preparing ? 'Preparing...' : preparationCompleted ? 'Data prepared' : 'Prepare data for search'}
         </button>
     </div>
     <div class="mb-3">
