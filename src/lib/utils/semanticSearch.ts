@@ -30,7 +30,8 @@ export async function checkEmbeddingsExist(): Promise<boolean> {
 
 export async function createEmbedding(textSource: string): Promise<number[]> {
     //const response = await fetch('https://api.openai.com/v1/embeddings', {
-    const response = await fetch('https://llm-service.ubu.mcjustin.wvp.dev.cirg.uw.edu/api/embedding', {
+    //const response = await fetch('https://llm-service.ubu.mcjustin.wvp.dev.cirg.uw.edu/api/embedding', {
+    const response = await fetch('https://llm-service.ubu.mcjustin.dev.cirg.uw.edu/api/embedding', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
