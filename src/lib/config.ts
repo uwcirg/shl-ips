@@ -110,7 +110,7 @@ export const CARIN_HOSTS = [
     // url: "https://sandbox.bluebutton.cms.gov/v2/fhir",
     clientId: import.meta.env.VITE_BLUE_BUTTON_CLIENT_ID,
     scope: "openid launch/patient patient/Patient.read patient/Coverage.read patient/ExplanationOfBenefit.read",
-    note: "BBUser09002 / PW09002!"
+    note: "BBUser09001 / PW09001!"
   },
   // {
   //   id: "carefirst",
