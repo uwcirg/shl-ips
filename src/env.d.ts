@@ -54,6 +54,10 @@ interface ImportMetaEnv {
     readonly INFERNO_CLIENT_SECRET: string
     readonly INFERNO_TOKEN_ENDPOINT: string
 
+    readonly VITE_ONYX_CLIENT_ID: string
+    readonly ONYX_CLIENT_SECRET: string
+    readonly ONYX_TOKEN_ENDPOINT: string
+
     readonly VITE_BLUE_BUTTON_CLIENT_ID: string
     readonly BLUE_BUTTON_CLIENT_SECRET: string
     readonly BLUE_BUTTON_TOKEN_ENDPOINT: string

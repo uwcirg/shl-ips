@@ -142,6 +142,14 @@ export const CARIN_HOSTS = [
     scope: 'openid fhirUser launch/patient patient/*.read',
     note: "Credentials provided"
   },
+  {
+    id: "onyx",
+    name: "ONYX",
+    url: "https://api-dmdh-alpha.safhir.io/v1/api/carin-bb/",
+    clientId: import.meta.env.VITE_ONYX_CLIENT_ID,
+    scope: 'openid fhirUser launch/patient patient/*.read',
+    note: "Credentials provided?"
+  },
   /////////////////////////////////////////////////////////////////////////////
 ]
 

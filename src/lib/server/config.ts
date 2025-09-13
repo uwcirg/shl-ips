@@ -35,6 +35,11 @@ export const CARIN_HOSTS: Record<string, any> = {
     clientId: process.env.VITE_INFERNO_CLIENT_ID,
     clientSecret: process.env.INFERNO_CLIENT_SECRET,
   },
+  onyx: {
+    tokenEndpoint: process.env.ONYX_TOKEN_ENDPOINT,
+    clientId: process.env.VITE_ONYX_CLIENT_ID,
+    clientSecret: process.env.ONYX_CLIENT_SECRET,
+  },
   bluebutton: {
     tokenEndpoint: process.env.BLUE_BUTTON_TOKEN_ENDPOINT,
     clientId: process.env.VITE_BLUE_BUTTON_CLIENT_ID,
