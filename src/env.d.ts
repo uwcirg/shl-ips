@@ -18,6 +18,7 @@ interface ImportMetaEnv {
 
     // SMART on FHIR client configurations
     readonly VITE_EPIC_HIMSS_CLIENT_ID: string
+    readonly VITE_EPIC_CTHON_2025_09_CLIENT_ID: string
     readonly VITE_ECW_HIMSS_CLIENT_ID: string
     readonly VITE_EPIC_CLIENT_ID: string
     readonly VITE_CERNER_CLIENT_ID: string

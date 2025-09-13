@@ -35,10 +35,10 @@ export const SOF_HOSTS = [
   //   note: "cwilson / tokay"
   // },
   {
-    id: "epic-himss",
+    id: "epic-cthon-2025-09",
     name: "Epic - 2025-09 Connectathon",
     url: "https://connectathon.epic.com/Interconnect-Fhir-OAuth/api/FHIR/R4",
-    clientId: import.meta.env.VITE_EPIC_CLIENT_ID,
+    clientId: import.meta.env.VITE_EPIC_CTHON_2025_09_CLIENT_ID,
     note: "jwjips / epic"
   },
   {
