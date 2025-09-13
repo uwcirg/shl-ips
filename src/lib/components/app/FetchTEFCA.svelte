@@ -126,18 +126,16 @@
       headers['X-POU'] = (selectedSource === 'OpenEpic' ? 'TREAT' : 'PUBHLTH');
     }
     
-    result = await fetch(`${url}/Patient/$match`, {
-      method: 'POST',
-      headers: headers,
-      body: JSON.stringify(patient)
-    }).then(function (response: any) {
-      if (!response.ok) {
-        // reject the promise if we didn't get a 2xx response
-        throw new Error('Unable to fetch patient data', { cause: response });
-      } else {
-        return response;
+    try {
+      result = await fetch(`${url}/Patient/$match`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(patient)
+      });
+      if (!result.ok) {
+        throw new Error('Unable to fetch patient data with $match', { cause: result });
       }
-    }).catch(function (error: any) {
+    } catch (error) {
       console.warn(error);
       let query = buildPatientSearchQuery(
         {
@@ -155,18 +153,15 @@
           country: country,
         }
       );
-      result = fetch(`${url}/Patient${query}`, {
+      result = await fetch(`${url}/Patient${query}`, {
         method: 'GET',
         headers: headers
-      }).then(function (response: any) {
-        if (!response.ok) {
-          // reject the promise if we didn't get a 2xx response
-          throw new Error('Unable to fetch patient data', { cause: response });
-        } else {
-          return response;
-        }
       });
-    });
+      if (!result.ok) {
+        throw new Error('Unable to fetch patient data', { cause: result });
+      }
+    }
+
     let body = await result.json();
     if (body.resourceType == 'Bundle' && (body.total == 0 || body.entry.length === 0)) {
       throw new Error('Unable to find patient');
