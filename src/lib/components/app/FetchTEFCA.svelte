@@ -26,6 +26,8 @@
   let sources: Record<string, {selected: Boolean; destination: string; url: string}> = {
     MeldOpen: {selected: false, destination: "MeldOpen", url: "https://gw.interop.community/HeliosConnectathonSa/open"},
     JMCHelios: {selected: false, destination: "JMCHelios", url: "https://gw.interop.community/JMCHeliosSTISandbox/open"},
+    OSPHL_USECASE1: {selected: false, destination: "OSPHL_USECASE1", url: "https://gw.interop.community/OSPHLUseCase1/open"},
+    CDC_SEP_HL7_Connectathon: {selected: false, destination: "CDC_SEP_HL7_Connectathon", url: "https://gw.interop.community/CDCSepHL7Connectatho/open"},
     // Patient no longer exists
     // PublicHapi: {selected: false, destination: "PublicHapi", url: "http://hapi.fhir.org/baseR4"},
     OpenEpic: {selected: false, destination: "OpenEpic", url: ""},
@@ -75,10 +77,10 @@
         gender = "female";
         dob = "1998-06-18";
       } else if (selectedSource === 'JMCHelios') {
-        last = "JMC";
-        first = "Chlamydia";
-        gender = "male";
-        dob = "2001-05-07";
+        last = "Quintana";
+        first = "Lena";
+        gender = "female";
+        dob = "1955-05-21";
       } else if (selectedSource === 'OpenEpic') {
         last = "Lopez";
         first = "Camila";
@@ -97,6 +99,16 @@
         dob = "1919-11-03";
         city = "Pune";
         state = "MH";
+      } else if (selectedSource === 'OSPHL_USECASE1') {
+        last = "Quintana";
+        first = "Lena";
+        gender = "female";
+        dob = "1955-05-21";
+      } else if (selectedSource === 'CDC_SEP_HL7_Connectathon') {
+        last = "Shaw";
+        first = "Linda";
+        gender = "female";
+        dob = "1982-07-23";
       }
     }
   }
