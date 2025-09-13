@@ -151,6 +151,15 @@ export const CARIN_HOSTS = [
     note: "Credentials provided?"
   },
   /////////////////////////////////////////////////////////////////////////////
+  {
+    id: "deloitte",
+    name: "DELOITTE",
+    url: "https://deloitte.connectathons.com/",
+    clientId: import.meta.env.VITE_DELOITTE_CLIENT_ID,
+    scope: 'openid fhirUser launch/patient patient/*.read',
+    note: "norma_sparks / UserPass123!"
+  },
+  /////////////////////////////////////////////////////////////////////////////
 ]
 
 export const BEARER_AUTHORIZATION = {
