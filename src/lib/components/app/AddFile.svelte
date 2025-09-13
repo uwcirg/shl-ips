@@ -332,7 +332,7 @@
           </FetchCARINBB>
         </TabPane>
         <TabPane class="insurance-tab" tabId="insurance" style="padding-top:10px">
-          <span class="insurance-tab" slot="tab">*Carin Insurance Card</span>
+          <span class="insurance-tab" slot="tab">*CARIN Insurance Card</span>
           <FetchInsuranceCard>
           </FetchInsuranceCard>
           <!--
