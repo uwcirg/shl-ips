@@ -148,12 +148,12 @@ export const CARIN_HOSTS = [
     url: "https://api-dmdh-alpha.safhir.io/v1/api/carin-bb/",
     clientId: import.meta.env.VITE_ONYX_CLIENT_ID,
     scope: 'openid fhirUser launch/patient patient/*.read',
-    note: "Credentials provided?"
+    note: "test30081@dmd.com / Track@04"
   },
   /////////////////////////////////////////////////////////////////////////////
   {
     id: "deloitte",
-    name: "DELOITTE",
+    name: "Deloitte’s State Medicaid Agency",
     url: "https://deloitte.connectathons.com/",
     clientId: import.meta.env.VITE_DELOITTE_CLIENT_ID,
     scope: 'openid fhirUser launch/patient patient/*.read',
