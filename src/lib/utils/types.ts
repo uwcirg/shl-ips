@@ -39,6 +39,10 @@ export interface IPSRetrieveEvent {
   ips: Bundle | undefined;
   source?: string | undefined;
 }
+export interface InsurcardRetrieveEvent {
+  insurcard: Bundle | undefined;
+  source?: string | undefined;
+}
 export interface SOFAuthEvent {
   data: any | undefined;
 }

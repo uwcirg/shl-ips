@@ -24,6 +24,7 @@
   import FetchAD from '$lib/components/app/FetchAD.svelte';
   import FetchTEFCA from '$lib/components/app/FetchTEFCA.svelte';
   import FetchCARINBB from '$lib/components/app/FetchCARINBB.svelte';
+  import FetchInsuranceCard from '$lib/components/app/FetchInsuranceCard.svelte';
   import PatientDataForm from '$lib/components/app/PatientDataForm.svelte';
   import ODHForm from '$lib/components/app/ODHForm.svelte';
   import ResourceSelector from '$lib/components/app/ResourceSelector.svelte';
@@ -329,6 +330,18 @@
             on:ips-retrieved={ async ({ detail }) => { stageRetrievedIPS(detail) } }
             on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }>
           </FetchCARINBB>
+        </TabPane>
+        <TabPane class="insurance-tab" tabId="insurance" style="padding-top:10px">
+          <span class="insurance-tab" slot="tab">*Carin Insurance Card</span>
+          <FetchInsuranceCard>
+          </FetchInsuranceCard>
+          <!--
+          <FetchInsuranceCard
+            on:insurcard-retrieved={ async ({ detail }) => { handleInsurcardResultUpdate(detail) } }
+            on:shc-retrieved={ async ({ detail }) => { handleSHCResultUpdate(detail) } }
+            on:ips-retrieved={ async ({ detail }) => { stageRetrievedIPS(detail) } }>
+            </FetchInsuranceCard>
+          -->
         </TabPane>
         <TabPane class="url-tab" tabId="url" style="padding-top:10px">
           <span class="url-tab" slot="tab">*FHIR URL</span>
