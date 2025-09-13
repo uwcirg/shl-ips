@@ -6,7 +6,7 @@
     Input,
     Label,
     Row,
-    Spinner } from 'sveltestrap';
+    Spinner } from '@sveltestrap/sveltestrap';
 
   import type { InsurcardRetrieveEvent } from '$lib/utils/types';
   import { createEventDispatcher } from 'svelte';
