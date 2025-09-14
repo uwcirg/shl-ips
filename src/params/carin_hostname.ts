@@ -9,6 +9,7 @@ export const ALLOWED = <const> [
 	'inferno',
 	'onyx',
 	'deloitte',
+	'smilecarinbb',
 	'bluebutton',
 ];
 

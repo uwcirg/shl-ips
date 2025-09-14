@@ -40,6 +40,11 @@ export const CARIN_HOSTS: Record<string, any> = {
     clientId: process.env.VITE_ONYX_CLIENT_ID,
     clientSecret: process.env.ONYX_CLIENT_SECRET,
   },
+  smilecarinbb: {
+    tokenEndpoint: process.env.SMILECARINBB_TOKEN_ENDPOINT,
+    clientId: process.env.VITE_SMILECARINBB_CLIENT_ID,
+    clientSecret: process.env.SMILECARINBB_CLIENT_SECRET,
+  },
   deloitte: {
     tokenEndpoint: process.env.DELOITTE_TOKEN_ENDPOINT,
     clientId: process.env.VITE_DELOITTE_CLIENT_ID,

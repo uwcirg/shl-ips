@@ -59,6 +59,10 @@ interface ImportMetaEnv {
     readonly ONYX_CLIENT_SECRET: string
     readonly ONYX_TOKEN_ENDPOINT: string
 
+    readonly VITE_SMILECARINBB_CLIENT_ID: string
+    readonly SMILECARINBB_CLIENT_SECRET: string
+    readonly SMILECARINBB_TOKEN_ENDPOINT: string
+
     readonly VITE_DELOITTE_CLIENT_ID: string
     readonly DELOITTE_CLIENT_SECRET: string
     readonly DELOITTE_TOKEN_ENDPOINT: string
