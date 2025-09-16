@@ -1,32 +1,8 @@
 import { base64url } from '$lib/utils/util';
-import { API_BASE, VIEWER_BASE } from '$lib/config/config';
+import { API_BASE } from '$lib/config/config';
 import * as jose from 'jose';
 import type { AuthService } from './AuthService';
-
-interface ConfigForServer extends Pick<SHLAdminParams, 'passcode' | 'exp' | 'label'> {
-  userId?: string;
-  patientId?: string;
-  pin?: string;
-  patientIdentifierSystem?: string;
-}
-
-export interface SHLAdminParams {
-  id: string;
-  url: string;
-  managementToken: string;
-  key: string;
-  files: {
-    contentType: string;
-    contentHash: string;
-    added?: string;
-    label?: string | null;
-  }[];
-  passcode?: string;
-  exp?: number;
-  flag?: string;
-  label?: string;
-  v?: number;
-}
+import type { ConfigForServer, SHLAdminParams } from '$lib/utils/types';
 
 export class SHLClient {
   // TODO: commit to jwt auth
@@ -37,23 +13,13 @@ export class SHLClient {
     this.auth = auth;
   }
 
-  async toLink(shl: SHLAdminParams): Promise<string> {
-    const shlinkJsonPayload = {
-      url: `${API_BASE}/shl/${shl.id}`,
-      exp: shl.exp || undefined,
-      flag: shl.flag ?? 'P',
-      key: shl.key
-    };
-
-    const encodedPayload: string = base64url.encode(JSON.stringify(shlinkJsonPayload));
-    const shlinkBare = VIEWER_BASE + `shlink:/` + encodedPayload;
-    return shlinkBare;
+  getSHLUrl(shl: SHLAdminParams): string {
+    return `${API_BASE}/shl/${shl.id}`;
   }
 
   async getUserShls(): Promise<SHLAdminParams[]> {
-    let profile = await this.auth.getProfile();
-    if (!profile) return [];
-    const userId = profile.sub;
+    const userId = await this.auth.userId.get();
+    if (!userId) return [];
     const res = await fetch(`${API_BASE}/user`, {
       method: 'POST',
       body: JSON.stringify({ userId }),
@@ -64,7 +30,7 @@ export class SHLClient {
   }
 
   async createShl(config: ConfigForServer = {}): Promise<SHLAdminParams> {
-    config.userId = (await this.auth.getProfile())?.sub;
+    config.userId = await this.auth.userId.get();
     const res = await fetch(`${API_BASE}/shl`, {
       method: 'POST',
       headers: {
