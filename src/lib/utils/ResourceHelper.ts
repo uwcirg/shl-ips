@@ -1,18 +1,25 @@
 import type { Resource } from 'fhir/r4';
 
+export interface SerializedResourceHelper {
+    resource: Resource;
+    include: boolean;
+    inject: boolean;
+}
+
 export class ResourceHelper {
     tempId: string;
     original_resource: Resource;
     simple_resource: Resource;
     resource: Resource;
-    include: boolean = true;
-    inject: boolean = false;
+    include: boolean;
+    inject: boolean;
 
-    // Constructor
-    constructor(resource: Resource) {
+    constructor(resource: Resource, inject?: boolean, include?: boolean) {
         this.original_resource = resource;
+        this.include = include ?? true;
+        this.inject = inject ?? false;
         this.simple_resource = this.simplify(resource);
-        this.resource = resource;
+        this.resource = JSON.parse(JSON.stringify(resource)) as Resource;
         this.tempId = this.hash(this.simple_resource);
     }
 
@@ -48,5 +55,19 @@ export class ResourceHelper {
             }
         }
         return obj;
+    }
+
+    toJSON() {
+        const jsonOutput: SerializedResourceHelper = {
+            resource: this.original_resource,
+            include: this.include,
+            inject: this.inject
+        }
+        return JSON.stringify(jsonOutput);
+    }
+
+    static fromJSON(json: string) {
+        const data: SerializedResourceHelper = JSON.parse(json);
+        return new ResourceHelper(data.resource, data.inject, data.include);
     }
 }
