@@ -4,31 +4,36 @@
     Styles
   } from 'sveltestrap';
   import { onMount, onDestroy, setContext } from 'svelte';
-  import {writable } from 'svelte/store';
+  import { writable, type Writable } from 'svelte/store';
   import { AuthService } from '$lib/utils/AuthService';
-  import { SHLClient, type SHLAdminParams } from '$lib/utils/managementClient';
+  import { SHLClient } from '$lib/utils/managementClient';
+  import { FHIRDataService } from '$lib/utils/FHIRDataService';
+  import { SHLStore } from '$lib/utils/SHLStore';
   import Header from '$lib/components/layout/Header.svelte';
   import Footer from '$lib/components/layout/Footer.svelte';
 
-  let shlStore = writable<SHLAdminParams[]>([]);
-  setContext('shlStore', shlStore);
-
-  let authService = AuthService.Instance;
+  let authService: AuthService = new AuthService();
   setContext('authService', authService);
 
-  let shlClient = new SHLClient(authService);
+  let fhirDataService: FHIRDataService = new FHIRDataService(authService);
+  setContext('fhirDataService', fhirDataService);
+
+  let shlClient: SHLClient = new SHLClient(authService);
   setContext('shlClient', shlClient);
 
-  let reset = writable(0);
+  let shlStore: SHLStore = new SHLStore(shlClient);
+  setContext('shlStore', shlStore);
+
+  let reset: Writable<number> = writable(0);
   setContext('reset', reset);
 
   const MODE_KEY = 'demo_mode';
-  let mode = writable('normal');
+  let mode: Writable<string> = writable('normal');
   // set demo mode based on local storage state
   window.localStorage[MODE_KEY] ? mode.set(JSON.parse(window.localStorage[MODE_KEY])) : mode.set('normal');
   setContext('mode', mode);
 
-  let isOpen = writable(false);
+  let isOpen: Writable<boolean> = writable(false);
   setContext('isOpen', isOpen);
 
   $: {
