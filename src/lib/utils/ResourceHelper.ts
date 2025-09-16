@@ -2,6 +2,7 @@ import type { Resource } from 'fhir/r4';
 
 export interface SerializedResourceHelper {
     resource: Resource;
+    categories: string[];
     include: boolean;
     inject: boolean;
 }
@@ -11,16 +12,18 @@ export class ResourceHelper {
     original_resource: Resource;
     simple_resource: Resource;
     resource: Resource;
+    categories: Set<string>;
     include: boolean;
     inject: boolean;
 
-    constructor(resource: Resource, inject?: boolean, include?: boolean) {
+    constructor(resource: Resource, categories?: string[], inject?: boolean, include?: boolean) {
         this.original_resource = resource;
         this.include = include ?? true;
         this.inject = inject ?? false;
         this.simple_resource = this.simplify(resource);
         this.resource = JSON.parse(JSON.stringify(resource)) as Resource;
         this.tempId = this.hash(this.simple_resource);
+        this.categories = new Set(categories ?? []);
     }
 
     hash(value: any) {
@@ -60,6 +63,7 @@ export class ResourceHelper {
     toJSON() {
         const jsonOutput: SerializedResourceHelper = {
             resource: this.original_resource,
+            categories: Array.from(this.categories),
             include: this.include,
             inject: this.inject
         }
@@ -68,6 +72,6 @@ export class ResourceHelper {
 
     static fromJSON(json: string) {
         const data: SerializedResourceHelper = JSON.parse(json);
-        return new ResourceHelper(data.resource, data.inject, data.include);
+        return new ResourceHelper(data.resource, data.categories, data.inject, data.include);
     }
 }
