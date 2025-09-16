@@ -5,13 +5,24 @@ import {
   AUTH_SILENT_REDIRECT_URI,
   AUTH_POST_LOGOUT_URI
 } from '$lib/config/config';
+import { derived, writable, type Writable, type Readable } from 'svelte/store';
 import { User, UserManager } from 'oidc-client-ts';
 import { INSTANCE_CONFIG } from '$lib/config/instance_config';
+import type { IAuthService } from '$lib/utils/types';
 
-export class AuthService {
-  private static _instance: AuthService;
-  userManager: UserManager;
-  redirect_url: string = "";
+export class AuthService implements IAuthService {
+  private userManager: UserManager;
+  protected redirect_url: string = "";
+
+  private _user: Writable<User | null> = writable(null);
+  public readonly user: Readable<User | null> = derived(this._user, ($user) => $user);
+  public readonly userId: Readable<string> = derived(this._user, ($user) => $user?.sub ?? "");
+
+  private _authenticated: Writable<boolean> = writable(false);
+  public readonly authenticated: Readable<boolean> = derived(this._authenticated, ($authenticated) => $authenticated);
+
+  private _error: Writable<any> = writable(null);
+  public readonly error: Readable<any> = derived(this._error, ($error) => $error);
 
   private constructor() {
     const settings = {
@@ -21,37 +32,40 @@ export class AuthService {
       silent_redirect_uri: AUTH_SILENT_REDIRECT_URI,
       post_logout_redirect_uri: AUTH_POST_LOGOUT_URI,
       // iframeScriptOrigin: "http://localhost:3000",
-      scope: "openid online_access",
+      scope: "openid profile online_access",
     };
     this.userManager = new UserManager(settings);
   }
 
-  public static get Instance(): AuthService {
-    return this._instance || (this._instance = new this());
+  private handleError(error: unknown) {
+    this._error.set(error);
+    console.error(error);
+    this.userManager.clearStaleState();
+    this.logout();
   }
 
-  getUser(): Promise<User | null> {
-    return this.userManager.getUser();
+  async getUser(): Promise<User | null> {
+    const user = await this.userManager.getUser();
+    return user;
   }
 
-  getAccessToken(): Promise<string | null> {
-    return this.getUser().then((user) => {
-      if (user?.access_token && !user.expired) {
+  async getAccessToken(): Promise<string | undefined> {
+    try {
+      const user = await this.getUser();
+      if (user && !user.expired && user?.access_token) {
         return user.access_token;
       } else {
-        return this.renewToken().then((user) => {
-          return user?.access_token ?? null;
-        }).catch((error) => {
-          console.error(error);
-          this.logout();
-          return null;
-        });
-      }
-    });
+        const user = await this.renewToken();
+        return user?.access_token;
+      } 
+    } catch (error) {
+      this.handleError(error);
+    }
   }
 
   async getProfile(): Promise<any | undefined> {
-    return (await this.userManager.getUser())?.profile;
+    const user = await this.getUser();
+    return user?.profile;
   }
 
   getRedirectUrl(): string {
@@ -60,48 +74,56 @@ export class AuthService {
     return url;
   }
 
-  signinCallback(): Promise<User | undefined> {
-    return this.userManager.signinCallback().then((user) => {
-      if (user) {
-        this.redirect_url = user.url_state ?? "";
-        this.storeUser(user);
+  async signinCallback(): Promise<User | undefined> {
+    try {
+      const user = await this.userManager.signinCallback();
+      if (!user) {
+        throw Error('User not found');
       }
+      this.redirect_url = user.url_state ?? "";
+      this.storeUser(user);
       return user;
-    });
+    } catch (error) {
+      this.handleError(error);
+    }
   }
 
   storeUser(user: User): void {
+    if (!user) {
+      this._user.set(null);
+      this._authenticated.set(false);
+      this.userManager.clearStaleState();
+      return;
+    }
+    this._user.set(user);
+    this._authenticated.set(true);
     this.userManager.storeUser(user);
   }
 
-  login(): Promise<void> {
+  async login(): Promise<void> {
     let currentUrl = new URL(window.location.href.split('?')[0]);
     let redirectUrl = currentUrl.href;
     if (currentUrl.pathname === '/' || currentUrl.pathname === '/home') {
       redirectUrl = INSTANCE_CONFIG.defaultRedirectURI ?? '/summaries';
     }
-    return this.userManager.signinRedirect({ url_state: redirectUrl });
+    return await this.userManager.signinRedirect({ url_state: redirectUrl });
   }
 
-  renewToken(): Promise<User | null> {
-    return this.userManager.signinSilent().then((user) => {
+  async renewToken(): Promise<User | null> {
+    try {
+      const user = await this.userManager.signinSilent();
       if (user) {
         this.storeUser(user);
       }
       return user;
-    }).catch((error) => {
-      console.error(error);
-      this.logout();
-      return null;
-    });
+    } catch (error) {
+      this.handleError(error);
+    }
   }
 
-  logout(): Promise<void> {
-    return this.userManager.signoutRedirect();
-  }
-
-  async isAuthenticated(): Promise<Boolean> {
-    return this.getUser().then((user) => user !== null);
+  async logout(): Promise<void> {
+    this.storeUser(null);
+    await this.userManager.signoutRedirect();
   }
 }
 
