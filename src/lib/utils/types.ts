@@ -6,9 +6,42 @@ import type {
   DocumentReference,
   Age,
   Duration,
+  Patient,
   Period,
   Range,
 } from "fhir/r4";
+import type { Readable, Writable } from "svelte/store";
+import type { User } from "oidc-client-ts";
+import type { ResourceHelper } from "$lib/utils/ResourceHelper";
+
+export interface SHLAdminParams {
+  id: string;
+  url: string;
+  managementToken: string;
+  key: string;
+  files: SHLFile[];
+  passcode?: string;
+  exp?: number;
+  flag?: string;
+  label?: string;
+  v?: number;
+}
+
+export interface SHLFile {
+  contentType: string;
+  contentHash: string;
+  added?: string;
+  label?: string | null;
+}
+
+export interface MutableSHLAdminParams extends Pick<SHLAdminParams, "passcode" | "exp" | "label"> {} 
+
+export interface ConfigForServer extends MutableSHLAdminParams {
+  userId?: string;
+  patientId?: string;
+  pin?: string;
+  patientIdentifierSystem?: string;
+}
 
 export interface SHLSubmitEvent {
   shcs: SHCFile[];
@@ -19,6 +52,9 @@ export interface SHLSubmitEvent {
   patientName?: string;
 }
 
+export interface ResourceHelperMap extends Record<string, ResourceHelper> {}
+
+export interface CategorizedResourceHelperMap extends Record<string, ResourceHelperMap> {}
 
 export interface ResourceTemplateParams<T> {
   resource: T;
@@ -137,4 +173,28 @@ export interface FormOption {
   value: string;
   subtitle?: string;
   info?: string;
+}
+
+export interface IAuthService {
+  user: Writable<User | null>;
+  authenticated: Writable<boolean>;
+  error: Writable<any>;
+
+  getUser(): Promise<User | null>;
+  getAccessToken(): Promise<string | undefined>;
+  getProfile(): Promise<any | undefined>;
+  getRedirectUrl(): string;
+  signinCallback(): Promise<User | undefined>;
+  storeUser(user: User): void;
+  login(): Promise<void>;
+  renewToken(): Promise<User | null>;
+  logout(): Promise<void>;
+  isAuthenticated(): Promise<boolean | undefined>;
+}
+
+export interface IResourceCollection {
+  resourcesByType: Writable<CategorizedResourceHelperMap>;
+  selectedPatient: Writable<string>;
+  patientReference: Readable<string>;
+  patient: Readable<Patient | undefined>;
 }
