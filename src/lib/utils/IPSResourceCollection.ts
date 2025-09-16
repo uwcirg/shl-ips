@@ -7,7 +7,10 @@
 
 import { ResourceHelper } from "$lib/utils/ResourceHelper";
 import type { Resource, Bundle, Composition,CompositionSection, FhirResource } from "fhir/r4";
-import { writable, derived, get, type Writable, type Readable } from "svelte/store";
+import { derived, writable, get, type Writable, type Readable } from "svelte/store";
+import type { CategorizedResourceHelperMap } from "$lib/types";
+import { ResourceCollection, SerializedResourceCollection } from "$lib/utils/ResourceCollection";
+import { ResourceHelperMap } from "./types";
 
 // This is both allowable and reverse order of loading
 const allowableResourceTypes = [
@@ -46,41 +49,34 @@ const allowableResourceTypes = [
     'ExplanationOfBenefit',
 ];
 
-interface SerializedIPSResourceCollection {
-    resourcesByType: Record<string, Record<string, ResourceHelper>>;
+export interface SerializedIPSResourceCollection extends SerializedResourceCollection {
     extensionSections: Record<string, CompositionSection|false>;
 }
 
 export class IPSResourceCollection {
-    resourcesByType: Writable<Record<string, Record<string, ResourceHelper>>>;
-    selectedPatient: Writable<string>;
+    collection: ResourceCollection;
+    selectedPatient: Readable<string>;
     patientReference: Readable<string>;
+    resourcesByType: Readable<CategorizedResourceHelperMap>;
     extensionSections: Writable<Record<string, CompositionSection|false>>;
 
     constructor();
     constructor(r: Resource | Resource[] | null);
     constructor(r: Resource | Resource[] | null = null) {
-        this.resourcesByType = writable({} as Record<string, Record<string, ResourceHelper>>);
-        this.selectedPatient = writable('');
-        this.patientReference = derived(this.selectedPatient, ($selectedPatient) => {
-            if ($selectedPatient) {
-                let patients = get(this.resourcesByType)['Patient'];
-                if (!patients) {
-                    throw Error('No patients exist');
+        this.collection = new ResourceCollection(r);
+        this.extensionSections = writable({});
+        this.resourcesByType = derived(this.collection.resources, ($resources) => {
+            let resourcesByType: Record<string, ResourceHelperMap> = {};
+            for (const rh of Object.values($resources) as ResourceHelper[]) {
+                if (!(rh.resourceType in resourcesByType)) {
+                    resourcesByType[rh.resourceType] = {};
                 }
-                return `Patient/${patients[$selectedPatient].resource.id}`;
-            } else {
-                return '';
+                resourcesByType[rh.resourceType][rh.tempId] = rh;
             }
+            return resourcesByType;
         });
-        this.extensionSections = writable({} as Record<string, CompositionSection|false>);
-        if (r) {
-            if (Array.isArray(r)) {
-                this.addResources(r);
-            } else {
-                this.addResource(r);
-            }
-        }
+        this.selectedPatient = derived(this.collection.selectedPatient, ($selectedPatient) => $selectedPatient);
+        this.patientReference = derived(this.collection.patientReference, ($patientReference) => $patientReference);
     }
 
     /**
@@ -102,34 +98,14 @@ export class IPSResourceCollection {
         }
     }
 
-    /**
-     * Sets the patient reference on each resource in the list of resources.
-     * @param resources The list of resources to set the patient references on.
-     * @returns The list of resources with the patient references set.
-    */
-    _updatePatientRefs() {
-        this.resourcesByType.update((currState:Record<string, Record<string, ResourceHelper>>) => {
-            let newPatientRef = get(this.patientReference);
-            let newState = {} as Record<string, Record<string, ResourceHelper>>;
-            let types = Object.keys(currState);
-            for (let i=0; i<types.length; i++) {
-                let type = types[i];
-                let ids = Object.keys(currState[type]);
-                for (let j=0; j<ids.length; j++) {
-                    let id = ids[j];
-                    let newVal = currState[type][id];
-                    if (newVal.resource.subject) {
-                        newVal.resource.subject.reference = newPatientRef;
-                    } else if (newVal.resource.patient) {
-                        newVal.resource.patient.reference = newPatientRef;
-                    }
-                    if (newState[type] === undefined) {
-                        newState[type] = {};
-                    }
-                    newState[type][id] = newVal;
-                }
+    addSection(sectionKey: string, sectionTemplate?: CompositionSection) {
+        this.extensionSections.update((curr) => {
+            if (sectionTemplate) {
+                curr[sectionKey] = sectionTemplate;
+            } else {
+                curr[sectionKey] = false;
             }
-            return newState;
+            return curr;
         });
     }
 
@@ -138,32 +114,8 @@ export class IPSResourceCollection {
      * exists in the list, it will not be added again.
      * @param resource The resource to add.
      */
-    addResource(resource: Resource, key?:string, sectionTemplate?:CompositionSection) {
-        let rh = new ResourceHelper(resource);
-        let sectionKey:string = key ?? resource.resourceType;
-        if (sectionKey !== resource.resourceType) {
-            // Custom section
-            this.extensionSections.update((curr) => {
-                if (sectionTemplate) {
-                    curr[sectionKey] = sectionTemplate;
-                } else {
-                    curr[sectionKey] = false;
-                }
-                return curr;
-            })
-        }
-        this.resourcesByType.update((curr) => {
-            if (!(sectionKey in curr)) {
-                curr[sectionKey] = {};
-            }
-            if (!(rh.tempId in curr[sectionKey])) {
-                curr[sectionKey][rh.tempId] = rh;
-                if (sectionKey == 'Patient' && (!get(this.patientReference) || rh.original_resource.id === "customPatient")) {
-                    this.setSelectedPatient(rh.tempId);
-                }
-            }
-            return curr;
-        });
+    addResource(resource: Resource, sectionKey?: string) {
+        this.collection.addResource(resource, sectionKey);
     }
 
     /**
@@ -173,25 +125,15 @@ export class IPSResourceCollection {
      */
 
     // May want to add signature accepting a sectionKey function to handle more complex cases
-    addResources(resources:Resource[], sectionKey?:string, sectionTemplate?:CompositionSection) {
+    addResources(resources:Resource[], sectionKey?: string) {
         resources = resources.filter(r => {
             if (!this._validateResource(r)) {
-                console.warn("Invalid resource: " + JSON.stringify(r));
+                console.warn("Invalid IPS resource: " + JSON.stringify(r));
                 return false;
             }
             return true;
         });
-        resources.forEach(r => this.addResource(r, sectionKey, sectionTemplate));
-        let sp = get(this.selectedPatient);
-        if (sp) {
-            this.setSelectedPatient(sp);
-        } else {
-            let patients = get(this.resourcesByType)['Patient'];
-            if (!patients) {
-                throw Error('No patients exist');
-            }
-            this.setSelectedPatient(Object.keys(patients)[0]);
-        }
+        resources.forEach(r => this.addResource(r, sectionKey));
     }
 
     extendIPS(ips: Bundle) {
@@ -200,10 +142,10 @@ export class IPSResourceCollection {
         }
         
         let composition = ips.entry[0].resource as Composition;
-        let extensionSections = get(this.extensionSections);
+        const extensionSections = get(this.extensionSections);
         Object.keys(extensionSections).forEach((key) => {
             let sectionToUse = extensionSections[key];
-            if (sectionToUse === false) {
+            if (!sectionToUse) {
                 return;
             }
             let addingNewSection = true;
@@ -215,21 +157,21 @@ export class IPSResourceCollection {
                     }
                 });
             }
-            
-            if (sectionToUse.entry === undefined) {
-                sectionToUse.entry = [];
-            }
-            Object.values(get(this.resourcesByType)[key]).forEach((rh:ResourceHelper) => {
-                if (rh.include) {
-                    let entry = {
-                        resource: rh.resource as FhirResource,
-                        fullUrl: `urn:uuid:${rh.resource.id}`
-                    }
-                    ips.entry?.push(entry);
-                    sectionToUse.entry?.push({
-                        reference: `${entry.fullUrl}`
-                    });
+            sectionToUse.entry = sectionToUse.entry ?? [];
+            // let sectionResources = Object.values(get(this.resourcesByType)[key]);
+            let sectionResources = get(this.collection.categories)[key]
+                .map(tempId => get(this.collection.resources)[tempId])
+                .filter(rh => rh.include);
+            sectionResources.forEach((rh:ResourceHelper) => {
+                let entry = {
+                    resource: rh.resource as FhirResource,
+                    fullUrl: `urn:uuid:${rh.resource.id}`
                 }
+                let entryReference = {
+                    reference: `${entry.fullUrl}`
+                }
+                ips.entry?.push(entry);
+                sectionToUse.entry?.push(entryReference);
             });
             if (addingNewSection && sectionToUse.entry.length > 0) {
                 composition.section?.push(sectionToUse);
@@ -237,20 +179,6 @@ export class IPSResourceCollection {
         });
         
         return ips;
-    }
-
-    setSelectedPatient(p: string) {
-        if (!("Patient" in get(this.resourcesByType))) {
-            throw Error('No patients exist');
-        }
-        this.resourcesByType.update((curr) => {
-            Object.entries(curr["Patient"]).forEach(([id, rh]) => {
-                rh.include = (id == p);
-            });
-            return curr;
-        })
-        this.selectedPatient.set(p);
-        this._updatePatientRefs();
     }
 
     getResourcesByType() {
@@ -266,7 +194,7 @@ export class IPSResourceCollection {
      * @returns The list of selected resources.
      */
     getSelectedIPSResources(): ResourceHelper[] {
-        let rBT = JSON.parse(JSON.stringify(get(this.resourcesByType)));
+        let rBT = get(this.resourcesByType);
         let extensionSections = get(this.extensionSections);
         Object.entries(extensionSections).forEach(([sectionKey, sectionTemplate]) => {
             // Exclude extensions from upload if attached to a custom section, but allow custom group titles w/o sections to be uploaded
@@ -286,27 +214,22 @@ export class IPSResourceCollection {
     }
 
     toJson(): string {
-        let resourcesByType = get(this.resourcesByType);
         let extensionSections = get(this.extensionSections);
+        let serializedCollection = JSON.parse(this.collection.toJson());
         let output:SerializedIPSResourceCollection = {
-            resourcesByType: resourcesByType,
+            ...serializedCollection,
             extensionSections: extensionSections
-        }
+        };
         return JSON.stringify(output);
     }
 
     static fromJson(json:string) {
         let data:SerializedIPSResourceCollection = JSON.parse(json);
-        let IRC = new IPSResourceCollection();
-        if (data.resourcesByType) {
-            IRC.resourcesByType.set(data.resourcesByType);
-        }
-        if (data.extensionSections) {
-            IRC.extensionSections.set(data.extensionSections);
-        }
-        if (data.resourcesByType['Patient']) {
-            let selectedPatient = Object.values(data.resourcesByType['Patient']).filter(rh => rh.include);
-            IRC.setSelectedPatient(selectedPatient[0].tempId);
+        let { extensionSections, ...serializedCollection} = data;
+        let IRC = new IPSResourceCollection(); 
+        IRC.collection = ResourceCollection.fromJson(JSON.stringify(serializedCollection));
+        if (extensionSections) {
+            IRC.extensionSections.set(extensionSections);
         }
         return IRC;
     }
