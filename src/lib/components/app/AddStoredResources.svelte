@@ -18,16 +18,12 @@
   } from "fhir/r4";
   import { download } from '$lib/utils/util';
   import { createEventDispatcher } from 'svelte';
-  import type { ResourceRetrieveEvent } from '$lib/utils/types';
+  import type { IAuthService, ResourceRetrieveEvent } from '$lib/utils/types';
   import AdvanceDirective from '$lib/components/resource-templates/AdvanceDirective.svelte';
-  import Patient from '$lib/components/resource-templates/Patient.svelte';
-  import { goto } from '$app/navigation';
   import { getContext, onMount } from 'svelte';
-  import AuthService from '$lib/utils/AuthService';
   import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
   import type { Writable } from 'svelte/store';
   import type { SHLAdminParams } from '$lib/utils/managementClient';
-  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
@@ -35,6 +31,7 @@
   let processing = false;
   let message = '';
 
+  let authService: IAuthService = getContext('authService');
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
 
   let patientData: Resource[];
@@ -59,7 +56,7 @@
   };
 
   onMount(async () => {
-    let userId = (await AuthService.Instance.getProfile()).sub;
+    let userId = authService.userId.get();
     let patient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient?identifier=https://keycloak.cirg.uw.edu%7C${userId}`, {cache: "no-store"})
       .then((response) => response.json())
       .then((data) => {

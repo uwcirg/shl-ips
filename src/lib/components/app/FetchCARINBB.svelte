@@ -8,14 +8,15 @@
     Row,
     Spinner } from 'sveltestrap';
   import { page } from '$app/stores';
-
+  import { getContext } from 'svelte';
   import { CARIN_HOSTS, CARIN_RESOURCES } from '$lib/config/config';
   import type { ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from '$lib/utils/types';
   import { clearURLOfParams, getReferences } from '$lib/utils/util';
   import { authorize, endSession } from '$lib/utils/sofClient.js';
   import { createEventDispatcher, onMount } from 'svelte';
   import type { BundleEntry, Resource } from 'fhir/r4';
-  import AuthService from '$lib/utils/AuthService';
+
+  let authService = getContext('authService');
   
   const authDispatch = createEventDispatcher<{'sof-auth-init': SOFAuthEvent; 'sof-auth-fail': SOFAuthEvent}>();
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
@@ -141,7 +142,7 @@
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${await AuthService.Instance.getAccessToken()}`,
+            'Authorization': `Bearer ${await authService.getAccessToken()}`,
           },
           body: JSON.stringify({ code, code_verifier }),
         })

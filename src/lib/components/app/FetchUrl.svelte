@@ -12,11 +12,12 @@
     Label,
     Row,
     Spinner } from 'sveltestrap';
-
+  import { getContext } from 'svelte';
   import { PATIENT_IPS, EXAMPLE_IPS, IPS_DEFAULT, BEARER_AUTHORIZATION } from '$lib/config/config';
-  import type { SHCRetrieveEvent, IPSRetrieveEvent } from '$lib/utils/types';
+  import type { SHCRetrieveEvent, IAuthService, IPSRetrieveEvent } from '$lib/utils/types';
   import { createEventDispatcher } from 'svelte';
-  import AuthService from '$lib/utils/AuthService';
+
+  let authService: IAuthService = getContext('authService');
 
   const shcDispatch = createEventDispatcher<{'shc-retrieved': SHCRetrieveEvent}>();
   const ipsDispatch = createEventDispatcher<{'ips-retrieved': IPSRetrieveEvent}>();
@@ -58,10 +59,10 @@
       let url;
       if (summaryUrlValidated?.toString().includes('meditech')) {
         url = "/api/url_bearer/meditech?url=" + encodeURIComponent(summaryUrlValidated.toString());
-        headers["Authorization"] = `Bearer ${await AuthService.Instance.getAccessToken()}`
+        headers["Authorization"] = `Bearer ${await authService.getAccessToken()}`
       } else if (summaryUrlValidated?.toString().includes('Interconnect-Fhir-Oauth')) {
         url = "/api/url_bearer/epic?url=" + encodeURIComponent(summaryUrlValidated.toString());
-        headers["Authorization"] = `Bearer ${await AuthService.Instance.getAccessToken()}`
+        headers["Authorization"] = `Bearer ${await authService.getAccessToken()}`
       } else if (summaryUrlValidated?.toString().includes('openfhir')) {
         headers['epic-client-id'] = `${BEARER_AUTHORIZATION['EpicHIMSS']}`;
       } else {

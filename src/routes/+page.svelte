@@ -7,16 +7,18 @@
     CardBody,
     Row
   } from 'sveltestrap';
+  import { getContext } from 'svelte';
   import { goto } from '$app/navigation';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
-  import { AuthService } from '$lib/utils/AuthService';
+  import type { IAuthService } from '$lib/utils/types';
 
+  let authService: IAuthService = getContext('authService');
 
   async function login() {
-    if (await AuthService.Instance.isAuthenticated()) {
+    if (authService.authenticated.get()) {
       goto(INSTANCE_CONFIG.defaultRedirectURI ?? '/summaries');
     } else {
-      AuthService.Instance.login();
+      authService.login();
     }
   }
 </script>

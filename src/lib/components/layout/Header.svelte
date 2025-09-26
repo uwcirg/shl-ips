@@ -22,13 +22,15 @@
   import { type Writable } from 'svelte/store';
   import Banner from '$lib/components/layout/Banner.svelte';
   import LanguageMenu from '$lib/components/layout/LanguageMenu.svelte';
-  import { AuthService } from '$lib/utils/AuthService';
-  import { type SHLAdminParams } from '$lib/utils/managementClient';
-  import {INSTANCE_CONFIG} from '$lib/config/instance_config';
+  import type { SHLStore } from '$lib/utils/SHLStore';
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
+  import type { IAuthService } from '$lib/utils/types';
 
-  let authService = AuthService.Instance;
+  let authService: IAuthService = getContext('authService');
+  let authenticated = authService.authenticated;
+  let user = authService.user;
 
-  let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
+  let shlStore: SHLStore = getContext('shlStore');
   
   let isOpen: Writable<boolean> = getContext('isOpen');
 
@@ -46,12 +48,6 @@
     }
   }
 
-  let haveUser = false;
-  function handleAuthenticationEvent(event) {
-    haveUser = true;
-    return;
-  }
-
   onMount(async () => {
     $isOpen = false;
     setTimeout(() => {
@@ -59,12 +55,9 @@
         shrinkNav();
       }
     }, 10);
-
-    window.addEventListener('userFound', handleAuthenticationEvent);
     addDynamicNavbarListeners();
   });
   onDestroy(() => {
-    window.removeEventListener('userFound', handleAuthenticationEvent);
     removeDynamicNavbarListeners();
   });
 
@@ -151,77 +144,75 @@
         <NavItem>
           <NavLink href={"/"} active={ activeItem === "home" }>Home</NavLink>
         </NavItem>
-        {#if haveUser}
-          {#await authService.getProfile() then profile}
-            {#if profile}
-              {#if INSTANCE_CONFIG.pages.summaries}
-                <NavItem>
-                  <NavLink href="/summaries" active={ activeItem === "summaries" }>Summaries</NavLink>
-                </NavItem>
-              {/if}
-              {#if INSTANCE_CONFIG.pages.documents}
-                <NavItem>
-                  <NavLink href="/documents" active={ activeItem === "documents" }>Documents</NavLink>
-                </NavItem>
-              {/if}
-              {#if INSTANCE_CONFIG.pages.create}
-                <NavItem>
-                  <NavLink href="/create" active={ activeItem === "create" }>Create</NavLink>
-                </NavItem>
-              {/if}
-              {#if INSTANCE_CONFIG.pages.provider}
-                <NavItem>
-                  <NavLink href="/provider" active={ activeItem === "provider" }>Provider</NavLink>
-                </NavItem>
-              {/if}
-              <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
-                <DropdownToggle color="primary" nav caret><Icon name="person-circle"/> Account</DropdownToggle>
-                <DropdownMenu end style="max-height: 350px; overflow:auto">
-                  <DropdownItem header>Welcome, {profile.given_name ?? profile.preferred_username}</DropdownItem>
-                  <DropdownItem
-                    on:click={() => {
-                      authService.logout();
-                    }}><Icon name="box-arrow-right"/> Sign Out</DropdownItem>
-                    <DropdownItem divider />
-                    <DropdownItem header>Demo Options</DropdownItem>
-                    <DropdownItem
-                      on:click={() => {
-                        $mode = ($mode === 'advanced' ? 'normal' : 'advanced');
-                    }}>
-                      <Row class="mr-0" style="min-width:240px">
-                        <Col class="d-flex justify-content-start align-items-center pe-0">
-                          Show Advanced Features
-                        </Col>
-                        <Col class="d-flex justify-content-end ps-0">
-                          {#if $mode == 'advanced'}
-                          <Icon class="text-primary" name="toggle-on"></Icon>
-                          {:else}
-                          <Icon class="text-secondary" name="toggle-off"></Icon>
-                          {/if}
-                        </Col>
-                      </Row>
-                    </DropdownItem>
-                    <DropdownItem divider />
-                    <DropdownItem header>Your Summaries</DropdownItem>
-                    <DropdownItem on:click={() => { goto("/create") }}>
-                      <Icon name="plus-lg" /> Create New Summary
-                    </DropdownItem>
-                    {#if $shlStore.length > 0}
-                      {#each $shlStore as shl, i}
-                        <DropdownItem
-                          on:click={() => {
-                          goto('/view/' + shl.id);
-                        }}>{shl.label || `Summary ${i + 1}`}</DropdownItem>
-                      {/each}
-                    {/if}
-                  </DropdownMenu>
-              </Dropdown>
-            {:else}
+        {#if $authenticated}
+          {#if $user}
+            {#if INSTANCE_CONFIG.pages.summaries}
               <NavItem>
-                <NavLink on:click={() => authService.login()}><Icon name="person-circle"/> Sign In</NavLink>
+                <NavLink href="/summaries" active={ activeItem === "summaries" }>Summaries</NavLink>
               </NavItem>
             {/if}
-          {/await}
+            {#if INSTANCE_CONFIG.pages.documents}
+              <NavItem>
+                <NavLink href="/documents" active={ activeItem === "documents" }>Documents</NavLink>
+              </NavItem>
+            {/if}
+            {#if INSTANCE_CONFIG.pages.create}
+              <NavItem>
+                <NavLink href="/create" active={ activeItem === "create" }>Create</NavLink>
+              </NavItem>
+            {/if}
+            {#if INSTANCE_CONFIG.pages.provider}
+              <NavItem>
+                <NavLink href="/provider" active={ activeItem === "provider" }>Provider</NavLink>
+              </NavItem>
+            {/if}
+            <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
+              <DropdownToggle color="primary" nav caret><Icon name="person-circle"/> Account</DropdownToggle>
+              <DropdownMenu end style="max-height: 350px; overflow:auto">
+                <DropdownItem header>Welcome, {$user.given_name ?? $user.preferred_username}</DropdownItem>
+                <DropdownItem
+                  on:click={() => {
+                    authService.logout();
+                  }}><Icon name="box-arrow-right"/> Sign Out</DropdownItem>
+                  <DropdownItem divider />
+                  <DropdownItem header>Demo Options</DropdownItem>
+                  <DropdownItem
+                    on:click={() => {
+                      $mode = ($mode === 'advanced' ? 'normal' : 'advanced');
+                  }}>
+                    <Row class="mr-0" style="min-width:240px">
+                      <Col class="d-flex justify-content-start align-items-center pe-0">
+                        Show Advanced Features
+                      </Col>
+                      <Col class="d-flex justify-content-end ps-0">
+                        {#if $mode == 'advanced'}
+                        <Icon class="text-primary" name="toggle-on"></Icon>
+                        {:else}
+                        <Icon class="text-secondary" name="toggle-off"></Icon>
+                        {/if}
+                      </Col>
+                    </Row>
+                  </DropdownItem>
+                  <DropdownItem divider />
+                  <DropdownItem header>Your Summaries</DropdownItem>
+                  <DropdownItem on:click={() => { goto("/create") }}>
+                    <Icon name="plus-lg" /> Create New Summary
+                  </DropdownItem>
+                  {#if $shlStore.length > 0}
+                    {#each $shlStore as shl, i}
+                      <DropdownItem
+                        on:click={() => {
+                        goto('/view/' + shl.id);
+                      }}>{shl.label || `Summary ${i + 1}`}</DropdownItem>
+                    {/each}
+                  {/if}
+                </DropdownMenu>
+            </Dropdown>
+          {:else}
+            <NavItem>
+              <NavLink on:click={() => authService.login()}><Icon name="person-circle"/> Sign In</NavLink>
+            </NavItem>
+          {/if}
         {:else}
         <NavItem>
           <NavLink on:click={() => authService.login()}><Icon name="person-circle"/> Sign In</NavLink>

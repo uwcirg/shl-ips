@@ -2,9 +2,10 @@
   import { onMount } from 'svelte';
   import { Alert } from 'sveltestrap';
   import { goto } from '$app/navigation';
-  import { AuthService } from '$lib/utils/AuthService';
+  import { getContext } from 'svelte';
+  import { IAuthService } from '$lib/utils/types';
 
-  let authService = AuthService.Instance;
+  let authService: IAuthService = getContext('authService');
   let errorMsg = "";
 
   onMount(() => {

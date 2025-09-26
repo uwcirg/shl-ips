@@ -11,8 +11,9 @@
   import { SHLStore } from '$lib/utils/SHLStore';
   import Header from '$lib/components/layout/Header.svelte';
   import Footer from '$lib/components/layout/Footer.svelte';
+  import type { IAuthService } from '$lib/utils/types';
 
-  let authService: AuthService = new AuthService();
+  let authService: IAuthService = new AuthService();
   setContext('authService', authService);
 
   let fhirDataService: FHIRDataService = new FHIRDataService(authService);

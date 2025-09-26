@@ -17,7 +17,8 @@
   import type { Coding, Patient } from 'fhir/r4';
 
   export let patient: Patient | undefined;
-  let myPatient = JSON.parse(JSON.stringify(patient));
+  let myPatient;
+  $: myPatient = JSON.parse(JSON.stringify(patient));
   $: {
     if (myPatient) {
       first = myPatient.name?.[0].given?.[0] ?? '';
@@ -31,9 +32,9 @@
       culture = myPatient.extension?.find((e) => e.url === 'http://healthintersections.com.au/fhir/StructureDefinition/patient-cultural-background')?.valueCodeableConcept?.coding?.[0].code ?? '';
       community = myPatient.extension?.find((e) => e.url === 'http://hl7.org.au/fhir/StructureDefinition/community-affiliation')?.valueCodeableConcept?.coding?.[0].code ?? '';
       let pronounsCoding = myPatient.extension?.find((e) => e.url === 'http://hl7.org/fhir/StructureDefinition/individual-pronouns')?.valueCodeableConcept?.coding?.[0] ?? '';
-      pronouns = Object.entries(pronounOptions).find(([k, v]) => v?.code === pronounsCoding?.code)?.[1] ?? pronounsCoding;
+      pronouns = Object.values(pronounOptions).find((v) => v?.code === pronounsCoding?.code) ?? pronounsCoding;
       let sexCharacteristicsCoding = myPatient.extension?.find((e) => e.url === 'http://hl7.org.au/fhir/StructureDefinition/sex-characteristic-variation')?.valueCodeableConcept?.coding?.[0] ?? '';
-      sexCharacteristics = Object.entries(sexCharacteristicOptions).find(([k, v]) => v?.code === sexCharacteristicsCoding?.code)?.[1] ?? sexCharacteristicsCoding;
+      sexCharacteristics = Object.values(sexCharacteristicOptions).find((v) => v?.code === sexCharacteristicsCoding?.code) ?? sexCharacteristicsCoding;
       let religionCoding = myPatient.extension?.find((e) => e.url === 'http://hl7.org/fhir/StructureDefinition/patient-religion')?.valueCodeableConcept?.coding?.[0] ?? '';
       religion = Object.values(religionOptions).find((p) => p?.code === religionCoding?.code) ?? religionCoding;
       preferredLanguage = myPatient.communication?.find((e) => e.preferred)?.language?.text ?? '';

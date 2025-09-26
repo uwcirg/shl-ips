@@ -1,15 +1,14 @@
 import { base64url } from '$lib/utils/util';
 import { API_BASE } from '$lib/config/config';
 import * as jose from 'jose';
-import type { AuthService } from './AuthService';
-import type { ConfigForServer, SHLAdminParams } from '$lib/utils/types';
+import type { ConfigForServer, IAuthService, SHLAdminParams } from '$lib/utils/types';
 
 export class SHLClient {
   // TODO: commit to jwt auth
   // use this to get token for each request
-  auth: AuthService;
+  auth: IAuthService;
   
-  constructor(auth: AuthService) {
+  constructor(auth: IAuthService) {
     this.auth = auth;
   }
 

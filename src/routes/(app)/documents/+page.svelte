@@ -20,20 +20,21 @@
   import Patient from '$lib/components/resource-templates/Patient.svelte';
   import { goto } from '$app/navigation';
   import { getContext, onMount } from 'svelte';
-  import AuthService from '$lib/utils/AuthService';
   import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
   import type { Writable } from 'svelte/store';
   import type { SHLAdminParams } from '$lib/utils/managementClient';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import { demographics } from '$lib/stores/demographics';
+  import type { IAuthService } from '$lib/utils/types';
 
+  let authService: IAuthService = getContext('authService');
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
   let mode: Writable<string> = getContext('mode');
 
   let patientData: Resource[];
 
   onMount(async () => {
-    let userId = (await AuthService.Instance.getProfile()).sub;
+    let userId = authService.userId.get();
     let patient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient?identifier=https://keycloak.cirg.uw.edu%7C${userId}`, {cache: "no-store"})
       .then((response) => response.json())
       .then((data) => {
@@ -98,10 +99,10 @@
   }
 
   async function resetPatientResource() {
-    let userAuth = await AuthService.Instance.getProfile();
+    const user = authService.user.get();
     $demographics.identifier = {
       system: 'https://keycloak.cirg.uw.edu',
-      value: userAuth.sub
+      value: authService.userId.get()
     };
     let patient = patientData[0];
     if (patient.resourceType !== "Patient") {
@@ -109,8 +110,8 @@
     }
 
     $demographics.id = patient.id;
-    $demographics.first = userAuth.given_name || userAuth.firstName;
-    $demographics.last = userAuth.family_name || userAuth.lastName;
+    $demographics.first = user.given_name || user.firstName;
+    $demographics.last = user.family_name || user.lastName;
     delete $demographics.dob
     delete $demographics.gender;
     delete $demographics.address;

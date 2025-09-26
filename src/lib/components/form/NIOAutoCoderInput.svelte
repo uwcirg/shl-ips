@@ -10,12 +10,14 @@
     Icon,
     Spinner
   } from 'sveltestrap';
-  import type { IOResponse, NIOAutoCoderResponse } from '$lib/utils/types';
-  import AuthService from '$lib/utils/AuthService';
+  import { getContext } from 'svelte';
+  import type { IAuthService, IOResponse, NIOAutoCoderResponse } from '$lib/utils/types';
   import { onDestroy, onMount } from 'svelte';
 
   export let mode: "Occupation" | "Industry";
   export let value: IOResponse;
+
+  let authService: IAuthService = getContext('authService');
 
   let defaults: NIOAutoCoderResponse = {
     Industry: [{
@@ -76,7 +78,7 @@
     let api = `/api/nio-autocoder`;
     let url = `${api}?${mode === "Occupation" ? "o" : "i"}=${input}`;
 
-    return AuthService.Instance.getAccessToken().then((token: string) => fetch(url, {
+    return authService.getAccessToken().then((token: string) => fetch(url, {
       signal,
       method: "GET",
       headers: {
