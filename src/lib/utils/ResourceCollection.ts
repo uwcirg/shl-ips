@@ -7,12 +7,10 @@ import { SerializedResourceHelper } from "./ResourceHelper";
 export interface SerializedResourceCollection {
     resources: SerializedResourceHelper[];
     selectedPatient: string;
-    categories: Record<string, string>;
 }
 
 export class ResourceCollection implements IResourceCollection {
     resources: Writable<ResourceHelperMap>;
-    categories: Writable<Record<string, string>>;
     selectedPatient: Writable<string>;
     patientReference: Readable<string>;
     patient: Readable<Patient | undefined>;
@@ -43,15 +41,6 @@ export class ResourceCollection implements IResourceCollection {
                 this.addResource(r);
             }
         }
-        this.categories = derived(this.resources, ($resources) => {
-            let tempCategories: Record<string, string> = {};
-            for (const rh of Object.values($resources) as ResourceHelper[]) {
-                for (const category of rh.categories) {
-                    tempCategories[category] = rh.tempId;
-                }
-            }
-          
-        })
     }
 
     /**
@@ -134,7 +123,6 @@ export class ResourceCollection implements IResourceCollection {
         let output:SerializedResourceCollection = {
             resources: resources.map(rh => rh.toJson()),
             selectedPatient: get(this.selectedPatient),
-            categories: get(this.categories)
         }
         return JSON.stringify(output);
     }
@@ -153,7 +141,6 @@ export class ResourceCollection implements IResourceCollection {
 
     clear() {
         this.resources.set({});
-        this.categories.set({});
         this.selectedPatient.set('');
     }
 }
