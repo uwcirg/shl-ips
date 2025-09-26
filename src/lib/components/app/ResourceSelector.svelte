@@ -1,5 +1,5 @@
 <script lang='ts'>
-    import { uploadResources } from '$lib/utils/resourceUploader.js';
+    import { uploadResourcesAndFetchIPS } from '$lib/utils/resourceUploader.js';
     import { download } from '$lib/utils/util.js';
     import { createEventDispatcher, getContext } from 'svelte';
     import { type Writable } from 'svelte/store';
@@ -127,7 +127,7 @@
             let selectedIPSResources = resourceCollection.getSelectedIPSResources().map((rh:ResourceHelper) => {
                 return rh.resource;
             });
-            reference = await uploadResources(selectedIPSResources);
+            reference = await uploadResourcesAndFetchIPS(selectedIPSResources);
         } catch (e:any) {
             throw new Error("Unable to upload resources", {cause: e});
         }

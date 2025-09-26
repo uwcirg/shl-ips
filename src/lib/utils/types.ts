@@ -120,7 +120,7 @@ export interface Language {
   code: string;
 }
 
-export interface DemographicFields {
+export interface UserDemographics {
   first?: string;
   last?: string;
   dob?: string;
@@ -151,21 +151,6 @@ export interface DateTimeFields {
   period?: Period;
   range?: Range;
   string?: string;
-}
-
-export interface UserDemographics {
-  first?: string;
-  last?: string;
-  gender?: string;
-  dob?: string;
-  mrn?: string;
-  phone?: string;
-  address1?: string;
-  address2?: string;
-  city?: string;
-  state?: string;
-  zip?: string;
-  country?: string;
 }
 
 export interface FormOption {

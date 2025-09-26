@@ -20,26 +20,46 @@ export async function uploadResources(resources) {
     };
 
     return await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json+fhir',
-                // Add any additional headers if needed
-            },
-            body: JSON.stringify(bundle),
-        }).then((response) => {
-            if (!response.ok) {
-                throw new Error('Error uploading resources', { cause: response });
-            }
-            return response.json();
-        }).then((body) => {
-            let ipsUrl = "";
-            body.entry.forEach(entry => {
-                if (entry.response.location.startsWith('Patient')) {
-                    let createdPatient = entry.response.location.split('/_history')[0];
-                    ipsUrl = `${INTERMEDIATE_FHIR_SERVER_BASE}/${createdPatient}/$summary`;
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json+fhir',
+            // Add any additional headers if needed
+        },
+        body: JSON.stringify(bundle),
+    }).then((response) => {
+        let body = response.text();
+        let parsedBody;
+        try {
+            parsedBody = JSON.parse(body);
+        } catch (error) {
+            console.log(error);
+            console.log("Response body:", body);
+        }
+        if (!response.ok) {
+            for (const entry in parsedBody.entry) {
+                if (parsedBody.entry[entry].response.outcome.issue[0].diagnostics) {
+                    console.error(parsedBody.entry[entry].response.outcome.issue[0].diagnostics);
                 }
-                console.log(entry.response.outcome.issue[0].diagnostics);
-            });
-            return ipsUrl;
-        });
+            }
+            throw new Error('Error uploading resources', { cause: response });
+        }
+        return parsedBody;
+    });
+}
+
+export function getPatientReferenceFromTransactionResponse(transactionResponse) {
+    let createdPatientReference = transactionResponse.entry.find(entry => entry.response.location.startsWith('Patient')).response.location.split('/_history')[0];
+    return createdPatientReference;
+}
+
+export function generateIpsUrlFromPatientReference(patientReference) {
+    return `${INTERMEDIATE_FHIR_SERVER_BASE}/${patientReference}/$summary`;
+}
+
+export function uploadResourcesAndFetchIPS(resources) {
+    return uploadResources(resources).then(transactionResponse => {
+        let patientReference = getPatientReferenceFromTransactionResponse(transactionResponse);
+        let ipsUrl = generateIpsUrlFromPatientReference(patientReference);
+        return fetch(ipsUrl).then(response => response.json());
+    });
 }

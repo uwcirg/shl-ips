@@ -1,9 +1,9 @@
 /**
  * Class that encapsulates the data for a user including their demographics and associated resources stored in the intermediate FHIR server.
  * 
- * @property {Writable<UserDemographics[] | undefined>} userResources - The user's saved fhir resources
+ * @property {Writable<Record<string, ResourceCollection>>} userResources - The user's saved fhir resources
  * @property {UserDemographics} demographics - The user's demographic form information
- * @property {Writable<boolean>} patientFound - Whether or not a patient has been found on the FHIR server
+ * @property {Writable<boolean>} patientFound - Whether or not the master patient was fetched from the FHIR server
  * 
  * @function loadUserData - Load in the user's SHL and FHIR data
  * @function syncDemographicsToPatient - Sync the user's demographics form data to the FHIR server
@@ -11,148 +11,261 @@
  * @function saveDemographicsAsPatient - Create or update a patient resource on the FHIR server based on the demographic store
  */
 
-import { writable, type Writable } from "svelte/store";
+import { writable, derived, type Readable, type Writable } from "svelte/store";
 import { ResourceCollection } from "$lib/utils/ResourceCollection";
 import { INTERMEDIATE_FHIR_SERVER_BASE } from "$lib/config/config";
-import { IAuthService, UserDemographics } from "$lib/utils/types";
-import type { Resource } from "fhir/r4";
-import { constructPatientResource } from "$lib/utils/util";
+import { IAuthService, ResourceHelper, UserDemographics } from "$lib/utils/types";
+import type { Coding, Patient, Resource } from "fhir/r4";
+import { constructPatientResource, getDemographicsFromPatient } from "$lib/utils/util";
+import { uploadResources, getPatientReferenceFromTransactionResponse } from "$lib/utils/resourceUploader";
 
-const identifierSystem = 'https://keycloak.cirg.uw.edu';
+const IDENTIFIER_SYSTEM = 'http://keycloak.cirg.uw.edu';
+const CATEGORY_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-category';
+const PLACEHOLDER_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-placeholder';
+
+export type UserResourceDataset = {
+  category: Coding,
+  source: Coding,
+  collection: ResourceCollection,
+}
 
 export class FHIRDataService {
   auth: IAuthService;
 
-  userResources: ResourceCollection = new ResourceCollection();
+  userResources: Writable<Record<string, UserResourceDataset>> = writable({});
+  masterPatient: Writable<ResourceHelper> = writable({});
   demographics: Writable<UserDemographics> = writable({});
-  patientFound: Writable<boolean> = writable(false);
-  loadingResources: Writable<boolean> = writable(false);
+  patientLinks: Readable<Array<any>> = derived(this.masterPatient, ($masterPatient) => $masterPatient.resource.link);
 
   constructor(auth: IAuthService) {
     this.auth = auth;
   }
 
-  loadUserData(): void {
-    this.loadingResources.set(true);
-    this.retrieveUserResources().then((resources: Resource[]) => {
-      if (resources) {
-        this.userResources = new ResourceCollection();
-        this.userResources.collection.addResources(resources);
-        this.syncDemographicsToPatient();
-      }
-      this.loadingResources.set(false);
-    });
+  // Get the cached, fetched, or newly created master patient
+  async getOrCreateMasterPatient(): Promise<ResourceHelper> {
+    return (
+      this.masterPatient.get() ??
+      await this.fetchPatient() ??
+      await this.createOrUpdateMasterPatient(this.generateMasterPatientFromAuth())
+    );
   }
-  
-  private async retrieveUserResources(): Promise<Resource[]> {
-    let userResources = [];
-    const userAuth = this.auth.user.get();
-    let patient = this.userResources.patient.get();
-    if (!patient) {
-      patient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient?identifier=${identifierSystem}%7C${userAuth.sub}`, {cache: "no-store"})
+
+  // Set the master patient to the given patient resource and update the demographics store
+  setMasterPatient(patient: Patient): ResourceHelper {
+    this.masterPatient.set(new ResourceHelper(patient));
+    this.syncDemographicsToPatient();
+    return this.masterPatient.get();
+  }
+
+  async loadUserData(): Promise<void> {
+    let resourceCollections: Array<Array<Resource>> = await this.fetchUserResources();
+    resourceCollections.map(this.addDatasetToUserResources);
+  }
+
+  private async fetchUserResources(): Promise<Array<Array<Resource>>> {
+    let patient: ResourceHelper = await this.getOrCreateMasterPatient();
+    let patientLinks = patient.resource.link;
+    if (patientLinks?.length > 0) {
+      let userCategoryDatasetResults = await Promise.allSettled(patientLinks.map((link) => {
+        let datasetPatientReference = link.other.reference;
+        return this.fetchDatasetFromPatientReference(datasetPatientReference);
+      }));
+      let userCategoryDatasets = userCategoryDatasetResults.filter((result) => result.status === 'fulfilled').map((result) => result.value);
+      return userCategoryDatasets;
+    }
+    return [];
+  }
+
+  async fetchDatasetFromPatientReference(patientReference: string): Promise<Array<Resource>> {
+    return fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/${patientReference}/$everything`, {cache: "no-store"})
+      .then((response) => response.text())
+      .then((data) => JSON.parse(data))
+      .then((data) => {
+        if (data?.total > 0) {
+          return data.entry.map((entry) => entry.resource);
+        }
+      });
+  }
+
+  async fetchPatient(): Promise<ResourceHelper | undefined> {
+    let patient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient?identifier=${IDENTIFIER_SYSTEM}%7C${this.auth.userId.get()}`, {cache: "no-store"})
       .then((response) => response.text())
       .then((data) => JSON.parse(data))
       .then((data) => {
         if (data?.total > 0) {
           return data.entry?.[0].resource;
         }
-      });
-    }
-
-    if (patient) {
-      this.patientFound.set(true);
-      // TODO: track time last fetched and limit fetch to newer resources
-      userResources = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient/${patient?.id}/$everything`, {cache: "no-store"})
-      .then((response) => response.text())
-      .then((data) => JSON.parse(data))
-      .then((data) => {
-        if (data?.total > 0) {
-          return data.entry;
+      })
+      .catch((error) => {
+        if (error.status === 404) {
+          return undefined;
         }
+        throw error;
       });
-    } else {
-      // make a placeholder patient to pre-fill demographic forms
-      this.patientFound.set(false);
-      patient = constructPatientResource({
-        identifier: {
-          system: identifierSystem,
-          value: userAuth.sub
-        },
-        first: (userAuth.given_name || userAuth.firstName),
-        last: (userAuth.family_name || userAuth.lastName),
-      });
-      userResources = [patient];
+    if (patient !== undefined) {
+      return this.setMasterPatient(patient);
     }
-    return userResources;
+    return undefined;
   }
-
-  syncDemographicsToPatient() {
-    const patient = this.userResources.patient.get();
-    this.demographics.set({
-      id: patient.id,
-      first: patient.name?.[0].given?.[0],
-      last: patient.name?.[0].family,
-      dob: patient.birthDate,
-      gender: patient.gender,
-      address: patient.address?.[0].line,
-      city: patient.address?.[0].city,
-      state: patient.address?.[0].state,
-      zip: patient.address?.[0].postalCode,
-      country: patient.address?.[0].country,
-      phone: patient.telecom?.[0].value,
-    });
-  }
-
-  demographicsMatchPatient(patient: any): boolean {
-    const demographics: UserDemographics = this.demographics.get();
-    return (
-      demographics.id == patient.id &&
-      demographics.first == patient.name?.[0].given?.[0] &&
-      demographics.last == patient.name?.[0].family &&
-      demographics.dob == patient.birthDate &&
-      demographics.gender == patient.gender &&
-      demographics.address == patient.address?.[0].line &&
-      demographics.city == patient.address?.[0].city &&
-      demographics.state == patient.address?.[0].state &&
-      demographics.zip == patient.address?.[0].postalCode &&
-      demographics.country == patient.address?.[0].country &&
-      demographics.phone == patient.telecom?.[0].value
-    );
-  }
-
-  async saveDemographicsAsPatient(): Promise<void> {
-    const demographics = this.demographics.get();
-    const currentPatient = this.userResources.patient.get()
-    let patientFromDemographics = constructPatientResource(demographics);
-    let patientToSave;
-    if (!patientFromDemographics.id) {
+  
+  async createOrUpdateMasterPatient(patient: Resource): Promise<ResourceHelper> {
+    let savedPatient: Patient;
+    if (this.masterPatient.get().id) {
+      patient.id = this.masterPatient.get().id;
+      let updatedPatient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient/${patient.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/fhir+json'
+        },
+        body: JSON.stringify(patient)
+      })
+      .then((response) => response.text())
+      .then((data) => JSON.parse(data));
+      savedPatient = updatedPatient;
+    } else {
+      if (patient.id) {
+        delete patient.id;
+      }
       let newPatient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/fhir+json'
         },
-        body: JSON.stringify(patientFromDemographics)
+        body: JSON.stringify(patient)
       })
       .then((response) => response.text())
       .then((data) => JSON.parse(data));
-      patientToSave = newPatient;
-      this.patientFound.set(true);
-    } else if (!this.demographicsMatchPatient(currentPatient)) {
-      let updatedPatient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient/${patientFromDemographics.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/fhir+json'
-        },
-        body: JSON.stringify(patientFromDemographics)
-      })
-      .then((response) => response.json());
-      patientToSave = updatedPatient;
+      savedPatient = newPatient;
     }
-    
-    if (!patientToSave) return; // Didn't need to create or update patient info
-    
-    this.userResources.collection.addResource(patientToSave);
-    this.syncDemographicsToPatient();
+    return this.setMasterPatient(savedPatient);
+  }
+
+  // make a temporary patient to pre-fill demographic forms when one doesn't exist on the server
+  // will be updated when demographics are submitted
+  generateMasterPatientFromAuth(): Resource {
+    const userAuth = this.auth.user.get();
+    let patient = constructPatientResource({
+      identifier: {
+        system: IDENTIFIER_SYSTEM,
+        value: userAuth.sub
+      },
+      first: (userAuth.given_name || userAuth.firstName),
+      last: (userAuth.family_name || userAuth.lastName),
+    });
+    return patient;
+  }
+
+  syncDemographicsToPatient(): void {
+    const userDemographics = getDemographicsFromPatient(this.masterPatient.get().resource);
+    this.demographics.set(userDemographics);
+  }
+
+  // Update master patient with demographics data
+  async saveDemographicsToPatient(): Promise<void> {
+    const demographics = this.demographics.get();
+    let patientFromDemographics = constructPatientResource(demographics, this.masterPatient.get().resource);
+    return this.createOrUpdateMasterPatient(patientFromDemographics);
+  }
+
+  generateCategoryPlaceholderPatient(): Promise<Resource> {
+    const masterPatientResource = this.masterPatient.get().resource;
+    let patient = constructPatientResource({
+      first: masterPatientResource.name?.[0].given?.[0],
+      last: masterPatientResource.name?.[0].family,
+    });
+    patient.meta = patient.meta ?? {};
+    patient.meta.tag = patient.meta.tag ?? [];
+    patient.meta.tag.push({
+      url: PLACEHOLDER_SYSTEM,
+      code: 'placeholder-patient'
+    });
+    let patientReference = `Patient/${masterPatientResource.id}`;
+    patient.link = { other: { reference: patientReference }, type: "replaced-by" }
+    return patient;
+  }
+
+  addDatasetToUserResources(resourceList: Resource[]): void {
+    if (resourceList.length > 0) {
+      let collection = new ResourceCollection(resourceList);
+      let patient = collection.patient.get();
+      if (!patient) {
+        throw new Error('No patient resource found in resource collection');
+      }
+      let categories = patient.meta.tag.filter((tag) => tag.system === CATEGORY_SYSTEM);
+      if (categories.length === 0) {
+        throw new Error('No category tag found in patient resource');
+      }
+      let category = categories[0];
+      let source = patient.meta.source;
+      let dataset = {
+        category,
+        source,
+        collection
+      };
+      this.userResources.update((categoryMap) => {
+        categoryMap[category.code] = dataset;
+        return { ...categoryMap };
+      });
+    }
+  }
+
+  removeDatasetFromUserResources(category: string) {
+    this.userResources.update((categoryMap) => {
+      delete categoryMap[category];
+      return { ...categoryMap };
+    })
+  }
+
+
+  async createDataset(resources: Resource[], category: string, source: string): Promise<string> {
+    let patient = resources.find((resource) => resource.resourceType === "Patient");
+    if (!patient) {
+      patient = this.generateCategoryPlaceholderPatient();
+      resources = [ patient, ...resources ];
+    }
+    patient.meta = patient.meta ?? {};
+    patient.meta.tag = patient.meta.tag ?? [];
+    patient.meta.tag.push({ system: CATEGORY_SYSTEM, code: category });
+    patient.meta.source = source;
+    let transactionResponse = await uploadResources(resources);
+    let patientReference = await getPatientReferenceFromTransactionResponse(transactionResponse);
+    return patientReference;
+  }
+
+  async deleteDataset(category: string): Promise<void> {
+    let dataset: UserResourceDataset = this.userResources.get()[category];
+    if (!dataset) {
+      return;
+    }
+    const datasetPatientId = dataset.collection.patient.get().id;
+    let deleteResult = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient/${datasetPatientId}?_cascade=delete`, {
+      method: 'DELETE'
+    });
+    if (deleteResult.ok) {
+      let patient = this.masterPatient.get().resource;
+      let datasetPatientLinkIndex = patient.link.findIndex((link) => link.other.reference === `Patient/${datasetPatientId}`);
+      if (datasetPatientLinkIndex > -1) {
+        patient.link.splice(datasetPatientLinkIndex, 1);
+      }
+      if (patient.link.length === 0) {
+        delete patient.link;
+      }
+      await this.createOrUpdateMasterPatient(patient);
+      this.removeDatasetFromUserResources(category);
+    }
+  }
+
+  async addOrReplaceDataset(resources: Resource[], category: string, source: string) {
+    let patientReference = await this.createDataset(resources, category, source);
+    let newDataset = await this.fetchDatasetFromPatientReference(patientReference);
+    if (this.userResources.get()[category]) {
+      this.deleteDataset(category);
+    }
+    let patient = this.masterPatient.get().resource;
+    patient.link = patient.link ?? [];
+    patient.link.push({ other: { reference: patientReference }, type: "seealso" });
+    await this.createOrUpdateMasterPatient(patient);
+    this.addDatasetToUserResources(newDataset);
   }
 }
 

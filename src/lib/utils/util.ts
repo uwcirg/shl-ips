@@ -1,8 +1,8 @@
 import * as jose from 'jose';
 import * as pako from 'pako';
 import issuerKeys from '$lib/utils/issuer.private.jwks.json';
-import type { Bundle, BundleEntry, Patient, Resource } from 'fhir/r4';
-import type { DemographicFields, DateTimeFields, SHCFile } from '$lib/utils/types';
+import type { Bundle, BundleEntry, Extension, Identifier, Patient, Resource } from 'fhir/r4';
+import type { UserDemographics, DateTimeFields, SHCFile } from '$lib/utils/types';
 
 export const base64url = jose.base64url;
 
@@ -205,11 +205,31 @@ export function clearURLOfParams(url: URL) {
   return url;
 }
 
-export function constructPatientResource (props: DemographicFields = {}) {
-  let patient: Patient = {
-    resourceType: 'Patient',
-    active: true
+export function getDemographicsFromPatient(patient: Patient): UserDemographics {
+  let demographics: UserDemographics = {
+    first: patient.name?.[0].given?.[0],
+    last: patient.name?.[0].family,
+    dob: patient.birthDate,
+    gender: patient.gender,
+    mrn: patient.identifier?.find((i) => i.type?.coding?.[0].code === 'MR')?.value,
+    phone: patient.telecom?.find((t) => t.system === 'phone')?.value,
+    email: patient.telecom?.find((t) => t.system === 'email')?.value,
+    country: patient.address?.[0].country,
+    culture: patient.extension?.find((e) => e.url === 'http://healthintersections.com.au/fhir/StructureDefinition/patient-cultural-background')?.valueCodeableConcept?.coding?.[0].code,
+    community: patient.extension?.find((e) => e.url === 'http://hl7.org.au/fhir/StructureDefinition/community-affiliation')?.valueCodeableConcept?.coding?.[0].code,
+    pronouns: patient.extension?.find((e) => e.url === 'http://hl7.org/fhir/StructureDefinition/individual-pronouns')?.valueCodeableConcept?.coding?.[0],
+    sexCharacteristics: patient.extension?.find((e) => e.url === 'http://hl7.org.au/fhir/StructureDefinition/sex-characteristic-variation')?.valueCodeableConcept?.coding?.[0],
+    religion: patient.extension?.find((e) => e.url === 'http://hl7.org/fhir/StructureDefinition/patient-religion')?.valueCodeableConcept?.coding?.[0],
+    preferredLanguage: patient.communication?.find((e) => e.preferred)?.language?.text,
+    spokenLanguages: patient.communication?.filter((e) => !e.preferred).map((e) => e.language.text).join(', '),
   };
+  return Object.fromEntries(Object.entries(demographics).filter(([_, v]) => v)); // don't return empty fields
+}
+
+export function constructPatientResource (
+  props: UserDemographics & { customIdentifiers: Identifier[], customExtensions: Extension[] } = {},
+  patient: Patient = { resourceType: 'Patient', active: true }
+): Patient {
   if (props.id) {
     patient.id = props.id;
   }
@@ -217,6 +237,9 @@ export function constructPatientResource (props: DemographicFields = {}) {
     patient.name = [ {} ];
     if (props.first) patient.name[0].given = [props.first];
     if (props.last) patient.name[0].family = props.last;
+  }
+  if (props.dob) {
+    patient.birthDate = props.dob;
   }
   if (props.gender) {
     patient.gender = props.gender;
@@ -241,12 +264,9 @@ export function constructPatientResource (props: DemographicFields = {}) {
       });
     }
   }
-  if (props.dob) {
-    patient.birthDate = props.dob;
-  }
-  let identifiers = [];
+  let identifiers: Identifier[] = [];
   if (props.mrn) {
-    identifiers.push([
+    identifiers.push(
       {
         use: 'usual',
         type: {
@@ -261,16 +281,17 @@ export function constructPatientResource (props: DemographicFields = {}) {
         },
         system: 'http://hospital.smarthealthit.org',
         value: props.mrn
-      }
-    ]);
+      });
   }
-  if (props.identifier) {
-    identifiers.push([
-      {
-        system: props.identifier.system,
-        value: props.identifier.value
-      }
-    ]);
+
+  if (props.customIdentifiers) {
+    let identifiersToUpdate = patient.identifiers ?? [];
+    let newIdentifiers = [...props.customIdentifiers, ...identifiers];
+    for (const newIdentifier of newIdentifiers) {
+      identifiersToUpdate = identifiersToUpdate.filter((i) => i.system !== newIdentifier.system);
+      identifiersToUpdate.push(newIdentifier);
+    }
+    identifiers = identifiersToUpdate;
   }
   if (identifiers.length > 0) {
     patient.identifier = identifiers;
@@ -286,7 +307,7 @@ export function constructPatientResource (props: DemographicFields = {}) {
     if (props.country) patient.address[0].country = props.country;
   }
   
-  let extensions = [];
+  let extensions: Extension[] = [];
   if (props.religion) {
     extensions.push({
       "url" : "http://hl7.org/fhir/StructureDefinition/patient-religion",
@@ -323,6 +344,15 @@ export function constructPatientResource (props: DemographicFields = {}) {
       }
     });
   }
+  if (props.customExtensions) {
+    let extensionsToUpdate = patient.extension ?? [];
+    let newExtensions = [...props.customExtensions, ...extensions];
+    for (const newExtension of newExtensions) {
+      extensionsToUpdate = extensionsToUpdate.filter((i) => i.system !== newExtension.system);
+      extensionsToUpdate.push(newExtension);
+    }
+    extensions = extensionsToUpdate;
+  }
   if (extensions.length > 0) {
     patient.extension = extensions;
   }
@@ -331,7 +361,7 @@ export function constructPatientResource (props: DemographicFields = {}) {
 }
 
 export function buildPatientSearchQuery(
-  props: DemographicFields = {},
+  props: UserDemographics = {},
   callback: Function = ((q: string) => q)
 ) {
   let query = "?_count=1&";
