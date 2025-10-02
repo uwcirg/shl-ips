@@ -1,6 +1,7 @@
 import { base64url } from '$lib/utils/util';
 import { API_BASE } from '$lib/config/config';
 import * as jose from 'jose';
+import { get } from 'svelte/store';
 import type { ConfigForServer, IAuthService, SHLAdminParams } from '$lib/utils/types';
 
 export class SHLClient {
@@ -17,7 +18,7 @@ export class SHLClient {
   }
 
   async getUserShls(): Promise<SHLAdminParams[]> {
-    const userId = await this.auth.userId.get();
+    const userId = await get(this.auth.userId);
     if (!userId) return [];
     const res = await fetch(`${API_BASE}/user`, {
       method: 'POST',
@@ -25,11 +26,20 @@ export class SHLClient {
       cache: 'no-store'
     });
     const shls = await res.json();
-    return shls;
+    return shls.map((shl: SHLAdminParams) => {
+      if (shl.config) {
+        shl = {
+          ...shl,
+          ...shl.config,
+        };
+        delete shl.config;
+      }
+      return shl;
+    });
   }
 
   async createShl(config: ConfigForServer = {}): Promise<SHLAdminParams> {
-    config.userId = await this.auth.userId.get();
+    config.userId = await get(this.auth.userId);
     const res = await fetch(`${API_BASE}/shl`, {
       method: 'POST',
       headers: {
@@ -37,7 +47,7 @@ export class SHLClient {
       },
       body: JSON.stringify(config)
     });
-    const shlink = await res.text();
+    const shlink = await res.text(); // shlink:/[encoded data]
     const payload = shlink.split('/');
     const decodedPayload = base64url.decode(payload[payload.length - 1]);
     const asString = new TextDecoder('utf-8').decode(decodedPayload);

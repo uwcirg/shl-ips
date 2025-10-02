@@ -1,4 +1,4 @@
-import { writable, derived, type Readable, type Writable } from "svelte/store";
+import { get, writable, derived, type Readable, type Writable } from "svelte/store";
 import type { SHLAdminParams } from "$lib/utils/types";
 import { SHL } from "$lib/utils/SHL";
 import { SHLClient } from "$lib/utils/managementClient";
@@ -40,6 +40,6 @@ export class SHLStore {
   }
 
   findById(id: string): SHL | undefined {
-    return this.shlStore.get().find((shl) => shl.id === id);
+    return get(this.shlStore).find((shl) => shl.id === id);
   }
 }

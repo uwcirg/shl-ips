@@ -18,6 +18,7 @@
   } from "fhir/r4";
   import { download } from '$lib/utils/util';
   import { createEventDispatcher } from 'svelte';
+  import { get } from 'svelte/store';
   import type { IAuthService, ResourceRetrieveEvent } from '$lib/utils/types';
   import AdvanceDirective from '$lib/components/resource-templates/AdvanceDirective.svelte';
   import { getContext, onMount } from 'svelte';
@@ -56,7 +57,7 @@
   };
 
   onMount(async () => {
-    let userId = authService.userId.get();
+    let userId = get(authService.userId);
     let patient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient?identifier=https://keycloak.cirg.uw.edu%7C${userId}`, {cache: "no-store"})
       .then((response) => response.json())
       .then((data) => {

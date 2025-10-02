@@ -8,6 +8,7 @@
     Row
   } from 'sveltestrap';
   import { getContext } from 'svelte';
+  import { get } from 'svelte/store';
   import { goto } from '$app/navigation';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import type { IAuthService } from '$lib/utils/types';
@@ -15,7 +16,7 @@
   let authService: IAuthService = getContext('authService');
 
   async function login() {
-    if (authService.authenticated.get()) {
+    if (get(authService.authenticated)) {
       goto(INSTANCE_CONFIG.defaultRedirectURI ?? '/summaries');
     } else {
       authService.login();

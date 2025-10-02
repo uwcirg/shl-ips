@@ -21,11 +21,12 @@
   import { goto } from '$app/navigation';
   import { getContext, onMount } from 'svelte';
   import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
-  import type { Writable } from 'svelte/store';
+  import { get, type Writable } from 'svelte/store';
   import type { SHLAdminParams } from '$lib/utils/managementClient';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import { demographics } from '$lib/stores/demographics';
   import type { IAuthService } from '$lib/utils/types';
+  import type { User } from 'oidc-client-ts';
 
   let authService: IAuthService = getContext('authService');
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
@@ -34,7 +35,7 @@
   let patientData: Resource[];
 
   onMount(async () => {
-    let userId = authService.userId.get();
+    let userId = get(authService.userId);
     let patient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient?identifier=https://keycloak.cirg.uw.edu%7C${userId}`, {cache: "no-store"})
       .then((response) => response.json())
       .then((data) => {
@@ -99,10 +100,10 @@
   }
 
   async function resetPatientResource() {
-    const user = authService.user.get();
+    const user: User = get(authService.user);
     $demographics.identifier = {
       system: 'https://keycloak.cirg.uw.edu',
-      value: authService.userId.get()
+      value: get(authService.userId)
     };
     let patient = patientData[0];
     if (patient.resourceType !== "Patient") {
