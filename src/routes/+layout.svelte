@@ -8,10 +8,9 @@
   import { AuthService } from '$lib/utils/AuthService';
   import { SHLClient } from '$lib/utils/managementClient';
   import { FHIRDataService } from '$lib/utils/FHIRDataService';
-  import { SHLStore } from '$lib/utils/SHLStore';
   import Header from '$lib/components/layout/Header.svelte';
   import Footer from '$lib/components/layout/Footer.svelte';
-  import type { IAuthService } from '$lib/utils/types';
+  import type { IAuthService, SHLAdminParams } from '$lib/utils/types';
 
   let authService: IAuthService = new AuthService();
   setContext('authService', authService);
@@ -22,7 +21,7 @@
   let shlClient: SHLClient = new SHLClient(authService);
   setContext('shlClient', shlClient);
 
-  let shlStore: SHLStore = new SHLStore(shlClient);
+  let shlStore: Writable<SHLAdminParams[]> = writable([]);
   setContext('shlStore', shlStore);
 
   let reset: Writable<number> = writable(0);

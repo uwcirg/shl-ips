@@ -22,15 +22,15 @@
   import { type Writable } from 'svelte/store';
   import Banner from '$lib/components/layout/Banner.svelte';
   import LanguageMenu from '$lib/components/layout/LanguageMenu.svelte';
-  import type { SHLStore } from '$lib/utils/SHLStore';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import type { IAuthService } from '$lib/utils/types';
+  import { SHLAdminParams } from '$lib/utils/types';
 
   let authService: IAuthService = getContext('authService');
   let authenticated = authService.authenticated;
   let user = authService.user;
 
-  let shlStore: SHLStore = getContext('shlStore');
+  let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
   
   let isOpen: Writable<boolean> = getContext('isOpen');
 
