@@ -39,11 +39,11 @@ export class SHLClient {
   }
 
   async createShl(config: ConfigForServer = {}): Promise<SHLAdminParams> {
-    config.userId = await get(this.auth.userId);
     const res = await fetch(`${API_BASE}/shl`, {
       method: 'POST',
       headers: {
         "Content-Type": 'application/json',
+        "Authorization": `Bearer ${await this.auth.getAccessToken()}`
       },
       body: JSON.stringify(config)
     });
@@ -59,7 +59,7 @@ export class SHLClient {
     const res = await fetch(`${API_BASE}/shl/${shl.id}`, {
       method: 'DELETE',
       headers: {
-        "Authorization": `Bearer ${shl.managementToken}`
+        "Authorization": `Bearer ${await this.auth.getAccessToken()}`
       }
     });
     const deleted = await res.json();
@@ -71,7 +71,7 @@ export class SHLClient {
       method: 'PUT',
       body: JSON.stringify({ passcode: shl.passcode, exp: shl.exp, label: shl.label }),
       headers: {
-        "Authorization": `Bearer ${shl.managementToken}`
+        "Authorization": `Bearer ${await this.auth.getAccessToken()}`
       }
     });
     const updatedShl = await res.json();
@@ -114,7 +114,7 @@ export class SHLClient {
     const res = await fetch(`${API_BASE}/shl/${shl.id}/reactivate`, {
       method: 'PUT',
       headers: {
-        "Authorization": `Bearer ${shl.managementToken}`
+        "Authorization": `Bearer ${await this.auth.getAccessToken()}`
       }
     });
     const reactivated = await res.json();
@@ -143,7 +143,7 @@ export class SHLClient {
       method: 'POST',
       headers: {
         "Content-Type": contentType,
-        "Authorization": `Bearer ${shl.managementToken}`
+        "Authorization": `Bearer ${await this.auth.getAccessToken()}`
       },
       body: contentEncrypted
     });
@@ -155,7 +155,7 @@ export class SHLClient {
     const res = await fetch(`${API_BASE}/shl/${shl.id}/file`, {
       method: 'DELETE',
       headers: {
-        "Authorization": `Bearer ${shl.managementToken}`
+        "Authorization": `Bearer ${await this.auth.getAccessToken()}`
       },
       body: contentHash
     });

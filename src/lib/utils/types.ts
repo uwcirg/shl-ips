@@ -37,7 +37,6 @@ export interface SHLFile {
 export interface MutableSHLAdminParams extends Pick<SHLAdminParams, "passcode" | "exp" | "label"> {} 
 
 export interface ConfigForServer extends MutableSHLAdminParams {
-  userId?: string;
   patientId?: string;
   pin?: string;
   patientIdentifierSystem?: string;
