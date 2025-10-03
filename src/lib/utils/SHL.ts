@@ -77,4 +77,18 @@ export class SHL implements SHLAdminParams {
     this._update(result);
   }
 
+  toJSON(): SHLAdminParams {
+    return JSON.stringify(Object.entries({
+      id: this.id,
+      url: this.url,
+      managementToken: this.managementToken,
+      key: this.key,
+      files: this.files,
+      label: this.label,
+      passcode: this.passcode,
+      exp: this.exp,
+      flag: this.flag,
+      v: this.v
+    }).filter(([_, v]) => v !== undefined));
+  }
 }
