@@ -23,8 +23,7 @@
   import AdvanceDirective from '$lib/components/resource-templates/AdvanceDirective.svelte';
   import { getContext, onMount } from 'svelte';
   import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
-  import type { Writable } from 'svelte/store';
-  import type { SHLAdminParams } from '$lib/utils/managementClient';
+  import type { SHLStore } from '$lib/utils/SHLStore';
 
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
@@ -33,7 +32,7 @@
   let message = '';
 
   let authService: IAuthService = getContext('authService');
-  let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
+  let shlStore: SHLStore = getContext('shlStore');
 
   let patientData: Resource[];
 

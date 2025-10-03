@@ -27,18 +27,20 @@
   import { goto } from '$app/navigation';
   import type { Writable } from 'svelte/store';
   import type { SHLAdminParams, SHLClient } from '$lib/utils/managementClient';
+  import type { SHL } from '$lib/utils/SHL';
+  import type { SHLStore } from '$lib/utils/SHLStore';
 
-  export let shl: SHLAdminParams;
+  export let shl: SHL;
   let shlControlled: SHLAdminParams;
   let open = false;
   const toggle = () => (open = !open);
 
   function syncProps(shl: SHLAdminParams) {
-    shlControlled = JSON.parse(JSON.stringify(shl));
+    shlControlled = shl.toJSON();
   }
   $: syncProps(shl);
 
-  let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
+  let shlStore: SHLStore = getContext('shlStore');
   let shlClient: SHLClient = getContext('shlClient');
   let mode: Writable<string> = getContext('mode');
 
@@ -139,21 +141,19 @@
   }
 
   async function deleteShl() {
-    let success = await shlClient.deleteShl(shl);
-    if (success) {
-      $shlStore = await shlClient.getUserShls();
-      toggle();
-      goto('/');
-    }
+    await shlStore.deleteSHL(shl.id);
+    toggle();
+    goto('/');
   }
 
   async function addFile() {
     goto(`/create?shlid=${shl.id}`);
   }
 
-  async function deleteFile(fileContent:string) {
-    shl = await shlClient.deleteFile(shl, fileContent).then((shl) => {
-      let updatedFiles = shl.files.filter((f) => f.contentHash !== fileContent);
+  async function deleteFile(contentHash:string) {
+    shl.deleteFile(contentHash);
+    shl = await shlClient.deleteFile(shl, contentHash).then((shl) => {
+      let updatedFiles = shl.files.filter((f) => f.contentHash !== contentHash);
       shl.files = updatedFiles;
       return shl;
     });
