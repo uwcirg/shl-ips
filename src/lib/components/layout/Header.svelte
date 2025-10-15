@@ -23,8 +23,7 @@
   import Banner from '$lib/components/layout/Banner.svelte';
   import LanguageMenu from '$lib/components/layout/LanguageMenu.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
-  import type { IAuthService } from '$lib/utils/types';
-  import { SHLAdminParams } from '$lib/utils/types';
+  import type { IAuthService, SHLAdminParams } from '$lib/utils/types';
 
   let authService: IAuthService = getContext('authService');
   let authenticated = authService.authenticated;
@@ -169,7 +168,7 @@
             <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
               <DropdownToggle color="primary" nav caret><Icon name="person-circle"/> Account</DropdownToggle>
               <DropdownMenu end style="max-height: 350px; overflow:auto">
-                <DropdownItem header>Welcome, {$user.given_name ?? $user.preferred_username}</DropdownItem>
+                <DropdownItem header>Welcome, {$user.profile.given_name ?? $user.profile.preferred_username}</DropdownItem>
                 <DropdownItem
                   on:click={() => {
                     authService.logout();

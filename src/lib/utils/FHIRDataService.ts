@@ -14,7 +14,8 @@
 import { get, writable, derived, type Readable, type Writable } from "svelte/store";
 import { ResourceCollection } from "$lib/utils/ResourceCollection";
 import { INTERMEDIATE_FHIR_SERVER_BASE } from "$lib/config/config";
-import { IAuthService, ResourceHelper, UserDemographics } from "$lib/utils/types";
+import type { IAuthService, UserDemographics } from "$lib/utils/types";
+import { ResourceHelper } from "$lib/utils/ResourceHelper";
 import type { Coding, Patient, Resource } from "fhir/r4";
 import { constructPatientResource, getDemographicsFromPatient } from "$lib/utils/util";
 import { uploadResources, getPatientReferenceFromTransactionResponse } from "$lib/utils/resourceUploader";
@@ -143,14 +144,14 @@ export class FHIRDataService {
   // make a temporary patient to pre-fill demographic forms when one doesn't exist on the server
   // will be updated when demographics are submitted
   generateMasterPatientFromAuth(): Resource {
-    const userAuth = get(this.auth.user);
+    const userAuthProfile = get(this.auth.user).profile;
     let patient = constructPatientResource({
       identifier: {
         system: IDENTIFIER_SYSTEM,
-        value: userAuth.sub
+        value: userAuthProfile.sub
       },
-      first: (userAuth.given_name || userAuth.firstName),
-      last: (userAuth.family_name || userAuth.lastName),
+      first: (userAuthProfile.given_name || userAuthProfile.firstName),
+      last: (userAuthProfile.family_name || userAuthProfile.lastName),
     });
     return patient;
   }

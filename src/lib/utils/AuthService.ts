@@ -16,7 +16,7 @@ export class AuthService implements IAuthService {
 
   private _user: Writable<User | null> = writable(null);
   public readonly user: Readable<User | null> = derived(this._user, ($user) => $user);
-  public readonly userId: Readable<string> = derived(this._user, ($user) => $user?.sub ?? "");
+  public readonly userId: Readable<string> = derived(this._user, ($user) => $user?.profile.sub ?? "");
 
   private _authenticated: Writable<boolean> = writable(false);
   public readonly authenticated: Readable<boolean> = derived(this._authenticated, ($authenticated) => $authenticated);
