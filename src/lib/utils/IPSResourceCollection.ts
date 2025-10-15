@@ -8,9 +8,9 @@
 import { ResourceHelper } from "$lib/utils/ResourceHelper";
 import type { Resource, Bundle, Composition,CompositionSection, FhirResource } from "fhir/r4";
 import { derived, writable, get, type Writable, type Readable } from "svelte/store";
-import type { CategorizedResourceHelperMap } from "$lib/types";
-import { ResourceCollection, SerializedResourceCollection } from "$lib/utils/ResourceCollection";
-import { ResourceHelperMap } from "./types";
+import type { CategorizedResourceHelperMap } from "$lib/utils/types";
+import { ResourceCollection, type SerializedResourceCollection } from "$lib/utils/ResourceCollection";
+import type { ResourceHelperMap } from "$lib/utils/types";
 
 // This is both allowable and reverse order of loading
 const allowableResourceTypes = [

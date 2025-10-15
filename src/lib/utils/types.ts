@@ -60,6 +60,17 @@ export interface ResourceTemplateParams<T> {
   entries?: BundleEntry[];
 }
 
+export interface IOResponse {
+  Code: string;
+  Title: string;
+  Score: number;
+}
+export interface NIOAutoCoderResponse {
+  Industry: IOResponse[];
+  Occupation: IOResponse[];
+  Scheme: string;
+}
+
 export interface ResourceRetrieveEvent {
   resources: Array<any> | undefined;
   sectionKey?: string;
