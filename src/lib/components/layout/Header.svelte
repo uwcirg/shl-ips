@@ -23,6 +23,7 @@
   import Banner from '$lib/components/layout/Banner.svelte';
   import LanguageMenu from '$lib/components/layout/LanguageMenu.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
+  import { VERSION_STRING } from '$lib/config/config';
   import type { IAuthService, SHLAdminParams } from '$lib/utils/types';
   import FHIRDataService from '$lib/utils/FHIRDataService';
 
@@ -227,6 +228,8 @@
                       </Col>
                     </Row>
                   </DropdownItem>
+                  <DropdownItem divider />
+                  <DropdownItem header>Build: {VERSION_STRING}</DropdownItem>
                 </DropdownMenu>
             </Dropdown>
           {:else}
