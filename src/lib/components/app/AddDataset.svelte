@@ -154,7 +154,7 @@
     tabNavOpen = false;
   }
 
-  let tabs = {
+  let tabs: Record<string, string> = {
     'patient': 'About Me', // Handled differently from other tabs
     'sof-health-record': 'Data from Healthcare Providers',
     'patient-story': 'My Story',
@@ -188,7 +188,7 @@
     <Nav tabs>
       <NavItem>
         <Dropdown nav isOpen={tabNavOpen}>
-          <DropdownToggle nav caret class="active">Categories</DropdownToggle>
+          <DropdownToggle nav caret class="active">Categories <Icon name="chevron-right" style="font-size: .7em"/> {tabs[activeTab]}</DropdownToggle>
           <DropdownMenu>
             {#each Object.entries(tabs) as [tabId, tabName]}
               {#if !advancedTabs.includes(tabId) || $mode === 'advanced'}
