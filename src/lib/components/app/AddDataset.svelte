@@ -251,7 +251,7 @@
     <DataCategoryView
       title="Health-Related Work Info"
       description="Add or update information about the work you do to include in your Health Summary."
-      category="occupational-data-for-healthal-data-for-health"
+      category="occupational-data-for-health"
       editable
     >
       <ODHForm slot="form"
