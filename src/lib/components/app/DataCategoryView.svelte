@@ -10,10 +10,10 @@
     Row,
   } from 'sveltestrap';
   import { getContext } from 'svelte';
+  import { get } from 'svelte/store';
   import { DATA_CATEGORIES } from '$lib/config/config';
   import FHIRDataService from '$lib/utils/FHIRDataService';
   import FHIRResourceList from '$lib/components/app/FHIRResourceList.svelte';
-  import { Collapse } from 'bootstrap';
   
   export let title;
   export let description;
@@ -59,7 +59,11 @@
             on:error={ ({ detail }) => { /*showError(detail)*/ } }
           />
           <Row class="p-2 mx-0 flex-fill rounded-bottom bg-light border-bottom border-left border-right">
-            <Col class="col-10 d-flex justify-content-start align-items-center"> 
+            <Col class="col-10 d-flex justify-content-start align-items-center">
+              <span>Updated {new Date((get(dataset.patient)).meta.lastUpdated).toLocaleString(undefined, {
+                dateStyle: "medium",
+                timeStyle: "short",
+              })}</span>
               <!-- <Button 
                 size="sm"
                 color="secondary"
