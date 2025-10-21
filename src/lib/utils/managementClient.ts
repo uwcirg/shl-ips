@@ -3,6 +3,7 @@ import { API_BASE } from '$lib/config/config';
 import * as jose from 'jose';
 import { get } from 'svelte/store';
 import type { ConfigForServer, IAuthService, SHLAdminParams } from '$lib/utils/types';
+import { VIEWER_BASE } from '$lib/config/config';
 
 export class SHLClient {
   // TODO: commit to jwt auth
@@ -11,6 +12,19 @@ export class SHLClient {
   
   constructor(auth: IAuthService) {
     this.auth = auth;
+  }
+
+  async toLink(shl: SHLAdminParams): Promise<string> {
+    const shlinkJsonPayload = {
+      url: this.getSHLUrl(shl),
+      exp: shl.exp || undefined,
+      flag: shl.flag ?? 'P',
+      key: shl.key
+    };
+
+    const encodedPayload: string = base64url.encode(JSON.stringify(shlinkJsonPayload));
+    const shlinkBare = VIEWER_BASE + `shlink:/` + encodedPayload;
+    return shlinkBare;
   }
 
   getSHLUrl(shl: SHLAdminParams): string {
@@ -22,6 +36,10 @@ export class SHLClient {
     if (!userId) return [];
     const res = await fetch(`${API_BASE}/user`, {
       method: 'POST',
+      headers: {
+        "Content-Type": 'application/json',
+        "Authorization": `Bearer ${await this.auth.getAccessToken()}`
+      },
       body: JSON.stringify({ userId }),
       cache: 'no-store'
     });

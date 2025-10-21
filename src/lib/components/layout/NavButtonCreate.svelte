@@ -4,5 +4,5 @@
 </script>
 
 <NavItem>
-  <NavLink href="/create" active={active}>Create</NavLink>
+  <NavLink href="/share" active={active}>Share</NavLink>
 </NavItem>

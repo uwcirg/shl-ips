@@ -10,13 +10,13 @@
   import { page } from '$app/stores';
   import { getContext } from 'svelte';
   import { CARIN_HOSTS, CARIN_RESOURCES } from '$lib/config/config';
-  import type { ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from '$lib/utils/types';
+  import type { IAuthService, ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from '$lib/utils/types';
   import { clearURLOfParams, getReferences } from '$lib/utils/util';
   import { authorize, endSession } from '$lib/utils/sofClient.js';
   import { createEventDispatcher, onMount } from 'svelte';
   import type { BundleEntry, Resource } from 'fhir/r4';
 
-  let authService = getContext('authService');
+  let authService: IAuthService = getContext('authService');
   
   const authDispatch = createEventDispatcher<{'sof-auth-init': SOFAuthEvent; 'sof-auth-fail': SOFAuthEvent}>();
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();

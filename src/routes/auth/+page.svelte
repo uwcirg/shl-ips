@@ -12,17 +12,15 @@
     let newUser: User | undefined;
     try {
       newUser = await authService.signinCallback();
-      if (newUser) {
-        setTimeout(async () => {
-          let redirectUrl = authService.getRedirectUrl();
-          // avoid redirecting to the same page
-          if (redirectUrl && !redirectUrl.includes($page.url.pathname)) {
-            goto(redirectUrl);
-          } else {
-            goto(INSTANCE_CONFIG.defaultRedirectURI ?? '/summaries');
-          }
-        }, 100);
-      }
+      setTimeout(async () => {
+        let redirectUrl = authService.getRedirectUrl();
+        // avoid redirecting to the same page
+        if (redirectUrl && !redirectUrl.includes($page.url.pathname)) {
+          goto(redirectUrl);
+        } else {
+          goto(INSTANCE_CONFIG.defaultRedirectURI ?? '/');
+        }
+      }, 100);
     } catch (error) {
       console.error("No authentication parameters found.");
       console.error(error);

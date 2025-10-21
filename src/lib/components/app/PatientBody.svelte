@@ -12,6 +12,14 @@
   import { createEventDispatcher } from 'svelte';
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
   import type { CodeableConcept, Condition } from 'fhir/r4';
+  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
+
+  const CATEGORY = 'patient-body-concerns';
+  const SOURCE = {
+    url: window.location.origin,
+    name: 'Patient Provided Information'
+  };
+  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let processing = false;
   let fetchError = '';
@@ -400,7 +408,9 @@
   function prepareIps() {
     const resources = bodyPartConcerns.map(prepareConditionResource).filter((entry) => entry !== undefined);
     const result = {
-      resources: resources
+      resources: resources,
+      category: CATEGORY,
+      source: SOURCE,
     };
     resourceDispatch('update-resources', result);
   }
@@ -448,7 +458,7 @@
           </Input>
         </FormGroup>
       </Col>
-      <Col xs="auto">
+      <Col>
         <FormGroup style="font-size:small" class="text-secondary" label="What is the concern?">
           <!-- <Input type="select" bind:value={status.status} style="width: 165px">
             {#each statusOptions as option}
@@ -480,9 +490,9 @@
         color="primary"
         style="width:fit-content"
         disabled={processing}
-        on:click={prepareIps}>
+        on:click={FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, SOURCE, prepareIps)}>
         {#if !processing}
-        Update your body concerns
+          Update your body concerns
         {:else}
           Adding...
         {/if}
@@ -495,5 +505,5 @@
     {/if}
   </Row>
 </form>
-
+<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 <span class="text-danger">{fetchError}</span>

@@ -126,7 +126,7 @@ export function getReferences(resourceContent: any, references: any[] | undefine
     return references;
   }
 
-export function getResourcesFromIPS(ips: Bundle) {
+export function getResourcesFromIPS(ips: Bundle): Resource[] {
   let entries = ips.entry;
   let resources = [] as Resource[];
   if (!entries) return resources;
@@ -214,9 +214,14 @@ export function getDemographicsFromPatient(patient: Patient): UserDemographics {
     mrn: patient.identifier?.find((i) => i.type?.coding?.[0].code === 'MR')?.value,
     phone: patient.telecom?.find((t) => t.system === 'phone')?.value,
     email: patient.telecom?.find((t) => t.system === 'email')?.value,
+    address1: patient.address?.[0].line?.[0],
+    address2: patient.address?.[0].line?.slice(1).join(' '),
+    city: patient.address?.[0].city,
+    state: patient.address?.[0].state,
+    zip: patient.address?.[0].postalCode,
     country: patient.address?.[0].country,
-    culture: patient.extension?.find((e) => e.url === 'http://healthintersections.com.au/fhir/StructureDefinition/patient-cultural-background')?.valueCodeableConcept?.coding?.[0].code,
-    community: patient.extension?.find((e) => e.url === 'http://hl7.org.au/fhir/StructureDefinition/community-affiliation')?.valueCodeableConcept?.coding?.[0].code,
+    culture: patient.extension?.find((e) => e.url === 'http://healthintersections.com.au/fhir/StructureDefinition/patient-cultural-background')?.valueString,
+    community: patient.extension?.find((e) => e.url === 'http://hl7.org.au/fhir/StructureDefinition/community-affiliation')?.valueString,
     pronouns: patient.extension?.find((e) => e.url === 'http://hl7.org/fhir/StructureDefinition/individual-pronouns')?.valueCodeableConcept?.coding?.[0],
     sexCharacteristics: patient.extension?.find((e) => e.url === 'http://hl7.org.au/fhir/StructureDefinition/sex-characteristic-variation')?.valueCodeableConcept?.coding?.[0],
     religion: patient.extension?.find((e) => e.url === 'http://hl7.org/fhir/StructureDefinition/patient-religion')?.valueCodeableConcept?.coding?.[0],

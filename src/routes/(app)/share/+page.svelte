@@ -8,7 +8,7 @@
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import AddFile from '$lib/components/app/AddFile.svelte';
 
-  let component = INSTANCE_CONFIG.pages.create.component ?? AddFile;
+  let component = INSTANCE_CONFIG.pages.share.component ?? AddFile;
 
   let shlClient: SHLClient = getContext('shlClient');
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
@@ -21,7 +21,7 @@
     if (shlIdParam) {
       shl = $shlStore.find((s) => s.id === shlIdParam);
       if (shl == null) {
-        goto('/create');
+        goto('/share');
       }
     }
   }

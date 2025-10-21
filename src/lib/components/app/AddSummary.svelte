@@ -3,26 +3,25 @@
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { getContext } from 'svelte';
-  import { writable, type Writable } from 'svelte/store';
+  import { type Writable } from 'svelte/store';
   import {
     Accordion,
     AccordionItem,
     Button,
     Card,
     CardBody,
+    CardHeader,
     Col,
     FormGroup,
     Icon,
     Input,
     Label,
     Row,
-    Spinner
+    Spinner,
+    TabContent,
+    TabPane
   } from 'sveltestrap';
-  import CreatePOLST from '$lib/components/app/CreatePOLST.svelte';
-  import Demographic from './Demographic.svelte';
-  import AddStoredResources from '$lib/components/app/AddStoredResources.svelte';
-  import FetchADPOLST from '$lib/components/app/FetchADPOLST.svelte';
-  import AdvancedDirectiveSearch from '$lib/components/app/AdvancedDirectiveSearch.svelte';
+  import { DATA_CATEGORIES } from '$lib/config/config';
   import ResourceSelector from '$lib/components/app/ResourceSelector.svelte';
   import {
     getResourcesFromIPS,
@@ -38,9 +37,11 @@
     SHLSubmitEvent, 
     SOFAuthEvent
   } from '$lib/utils/types';
-  import type { Patient } from 'fhir/r4';
   import { IPSResourceCollection } from '$lib/utils/IPSResourceCollection.js';
-  import UploadDocument from '$lib/components/app/UploadDocument.svelte';
+  import FHIRResourceList from '$lib/components/app/FHIRResourceList.svelte';
+  import type FHIRDataService from '$lib/utils/FHIRDataService';
+  import Patient from '$lib/components/resource-templates/Patient.svelte';
+  import { PLACEHOLDER_SYSTEM } from '$lib/config/config';
  
   export let status = "";
   
@@ -49,11 +50,15 @@
   const shlDispatch = createEventDispatcher<{ 'shl-submitted': SHLSubmitEvent }>();
   let submitting = false;
   let fetchError = "";
-  let currentTab: string | number = 'url';
-  let emptyResourceListHeader = "Review your demographic information";
-  let fullResourceListHeader = "1. Update your demographic information"
+  let currentTab: string | number = 'default';
+  let emptyResourceListHeader = "Retrieve Your Health Information";
+  let fullResourceListHeader = "1. Add information from another provider"
   let addDataHeader = emptyResourceListHeader;
   let successMessage = false;
+
+  let fhirDataService: FHIRDataService = getContext('fhirDataService');
+  let masterPatient = fhirDataService.masterPatient;
+  let userResources = fhirDataService.userResources;
   
   let mode: Writable<string> = getContext('mode');
 
@@ -66,16 +71,6 @@
   let ipsResult: IPSRetrieveEvent = {
     ips: undefined
   }
-
-  let adFormType = 'POLST';
-  let formTypeOptions: Record<string, any> = {
-    "POLST": '',
-    "Durable Power of Attorney for Health Care": '',
-    "Living Will": '',
-    "Advance Care Plan": ''
-  };
-
-  let polstUploadType = '';
 
   let shcsToAdd: SHCFile[] = [];
   let singleIPS = true;
@@ -92,17 +87,14 @@
   let resourcesByTypeStore;
   $: resourcesByTypeStore = resourceCollection.resourcesByType;
   let resourcesAdded = false;
-  let hasAdvanceDirective = false;
   $: {
     if ($resourcesByTypeStore) {
       let oldvalue = resourcesAdded;
       resourcesAdded = Object.keys($resourcesByTypeStore).length > 0;
       if (!oldvalue && resourcesAdded) {
         // Prevent flash of AddData accordion overflow when first resources are added
-        handleAddDataAccordionOverflow('add-demographics');
-        document.getElementsByClassName('add-demographics')?.[0]?.scrollIntoView({ behavior: 'smooth' });
+        handleAddDataAccordionOverflow('add-data');
       }
-      hasAdvanceDirective = Object.keys($resourcesByTypeStore['Advance Directives'] ?? {}).length > 0;
     }
   }
 
@@ -138,7 +130,7 @@
     }
   }
 
-  onMount(() => {
+  onMount(async function() {
     if (sessionStorage.getItem('URL')) {
       let url = sessionStorage.getItem('URL') ?? '/share';
       let currentUrl = window.location.href.split('?')[0];
@@ -165,7 +157,7 @@
     sessionStorage.removeItem('LABEL');
     sessionStorage.removeItem('PASSCODE');
     sessionStorage.removeItem('EXPIRE');
-    const accordion = document.querySelector('div.add-demographics > div.accordion-collapse');
+    const accordion = document.querySelector('div.add-data > div.accordion-collapse');
     if (accordion) {
       accordion.style.overflow = 'visible';
       accordion.classList.add('at-load');
@@ -173,8 +165,8 @@
         accordion.classList.remove('at-load');
       }, 250);
     }
-
-    document.querySelector(`span.${currentTab}-tab`)?.parentElement?.click();
+    let tab = document.querySelector(`span.${currentTab}-tab`)?.parentElement
+    tab?.click();
   });
   
   async function preAuthRedirectHandler(details: SOFAuthEvent|undefined) {
@@ -200,14 +192,19 @@
   async function handleNewResources(details: ResourceRetrieveEvent) {
     try {
       resourceResult = details;
+      if (resourceResult.sectionKey) {
+        resourceCollection.addSection(resourceResult.sectionKey, resourceResult.sectionTemplate);
+      }
       if (resourceResult.resources) {
-        // Trigger update in ResourceSelector
-        resourceCollection.addResources(resourceResult.resources, resourceResult.sectionKey, resourceResult.sectionTemplate);
-        showSuccessMessage();
-        if (document.querySelector(`div.edit-data > div.accordion-collapse.show`)?.length === 0) {
-          (document.querySelector(`div.edit-data button`) as HTMLButtonElement)?.click();
-          document.querySelector(`div.edit-data > div.accordion-collapse`)?.scrollIntoView({ behavior: 'smooth' });
+        if (!resourcesAdded) {
+          let mpResource = $masterPatient.resource;
+          delete mpResource.link; // Otherwise the IPS patient will be included with future $everything calls
+          resourceCollection.addResource(mpResource);
         }
+        // Trigger update in ResourceSelector
+        let resources = resourceResult.resources.filter(r => !(r && r.resourceType === 'Patient' && r.meta?.tag?.find(t => t.system === PLACEHOLDER_SYSTEM)));
+        resourceCollection.addResources(resources, resourceResult.sectionKey);
+        showSuccessMessage();
       }
     } catch (e) {
       console.log('Failed', e);
@@ -308,152 +305,78 @@
     submitting = true;
   }
 </script>
-<Accordion>
-  <AccordionItem
-    active={!resourcesAdded}
-    class="add-demographics"
-    on:toggle={handleAddDataAccordionOverflow("add-demographics")}
-  >
-    <h5 slot="header" class="my-2">{addDataHeader}</h5>
-    <Demographic on:update-resources={ async ({ detail }) => { handleNewResources(detail) } } />
+
+<h4>Create a Shareable Health Summary</h4>
+<p>Create a Health Summary, which can be shared with providers, family members, and others with a QR code or URL.</p>
+<p>To get started, add any data from health record sources that you have compiled in WA Health Summary.</p>
+<Accordion stayOpen>
+  <AccordionItem active>
+    <h5 slot="header" class="my-2">1. Add My Data</h5>
+    <Accordion>
+      {#if $masterPatient !== null}
+      <Card>
+        <CardHeader>
+          <Row>
+            <Col class="d-flex justify-content-start align-items-center">
+              <h6 class="mt-1">My Demographics</h6>
+            </Col>
+            <Col class="d-flex justify-content-end align-items-center">
+              <Button
+                size="sm"
+                color="secondary"
+                outline
+                on:click={() => goto('/data')}
+              >
+                Edit
+              </Button>
+            </Col>
+          </Row>
+        </CardHeader>
+        <CardBody>
+          <Patient content={ {resource: $masterPatient.resource} } />
+        </CardBody>
+      </Card>
+      {/if}
+      {#each Object.entries($userResources) as [category, datasetsBySource]}
+        <br>
+        <Card>
+          <CardHeader>
+            <h6 class="mt-1">{DATA_CATEGORIES[category]?.title || category}</h6>
+          </CardHeader>
+          <CardBody>
+            {#each Object.entries(datasetsBySource) as [source, dataset]}
+            <AccordionItem>
+              <Row slot="header" class="me-2 flex-fill" style="max-width: 97%">
+                <Col class="col-10 d-flex justify-content-start align-items-center">
+                  <h6 class="mt-1" style="max-width: 100%; overflow:ellipsis">{source}</h6>
+                </Col>
+                <Col class="col-2 d-flex justify-content-end align-items-center">
+                  <Button
+                    size="sm"
+                    color="success"
+                    outline
+                    on:click={() => handleNewResources({ resources: dataset.getFHIRResources(), source, category })}
+                  >
+                    Add
+                  </Button>
+                </Col>
+              </Row>
+              <FHIRResourceList
+                bind:resourceCollection={dataset}
+                bind:submitting={submitting}
+                on:status-update={ ({ detail }) => { updateStatus(detail) } }
+                on:error={ ({ detail }) => { showError(detail) } }
+              />
+            </AccordionItem>
+            {/each}
+          </CardBody>
+        </Card>
+      {/each}
+    </Accordion>
   </AccordionItem>
   {#if resourcesAdded}
-    <AccordionItem
-      active
-      class="add-documents"
-      on:toggle={handleAddDataAccordionOverflow("add-documents")}
-    >
-      <h5 slot="header" class="my-2">2. Create or retrieve an Advance Care Planning Document</h5>
-      <p>Advanced Care Planning Documents help providers know more about your treatment preferences.</p>
-
-      <Label>Select the type of Advance Care Planning Document you would like to share:</Label>
-      <Input type="select" bind:value={adFormType} class="mb-4" style="width:min-content">
-        {#each Object.entries(formTypeOptions) as [value, display]}
-          <option value={value} disabled={value !== 'POLST'} style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
-            {value}
-          </option>
-        {/each}
-      </Input>
-      {#if adFormType === 'POLST'}
-        <Row>
-          <FormGroup>
-            <Input type="radio" bind:group={polstUploadType} value="create" label="I would like to create a new POLST" />
-            <Input type="radio" bind:group={polstUploadType} value="upload" label="I have a signed POLST PDF to upload from my device" />
-            <Input type="radio" bind:group={polstUploadType} value="WAHSP" label="I have my POLST in my WA Health Summary | POLST" />
-            <Input type="radio" bind:group={polstUploadType} value="waStateRepo" label="I have a POLST in the WA State POLST Repository (search for demo patient)" />
-            <Input type="radio" bind:group={polstUploadType} value="adVault" label="I have a POLST in the AD Vault (search for demo patient)" />
-          </FormGroup>
-        </Row>
-        {#if polstUploadType === 'upload'}
-          <Row>
-            <Col>
-              <h5>Upload a signed POLST document from your device</h5>
-              <Card class="mb-4">
-                <CardBody>
-                  <UploadDocument on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }/>
-                </CardBody>
-              </Card>
-            </Col>
-          </Row>
-        {:else if polstUploadType === 'WAHSP'}
-          <Row>
-            <Col>
-              <h5>Add POLSTs from my WA Health Summary</h5>
-              <Card class="mb-4">
-                <CardBody>
-                  <AddStoredResources
-                    on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
-                  />
-                </CardBody>
-              </Card>
-            </Col>
-          </Row>
-        {:else if polstUploadType === 'adVault'}
-          <Row>
-            <Col>
-              <h5>Search for your POLST in the AD Vault repository</h5>
-              <Card class="mb-4">
-                <CardBody>
-                  <AdvancedDirectiveSearch
-                    description="Search the AD Vault repository for a demo patient's advance directive documents."
-                    sources = {{
-                      "AD Vault Sandbox": {
-                        url: "https://qa-rr-fhir.maxmddirect.com",
-                        patients: [
-                          {
-                            last: "Mosley",
-                            //last: "Smith-Johnson",
-                            first: "Jenny",
-                            //first: "Betsy",
-                            gender: "female",
-                            dob: "1955-10-03",
-                            //dob: "1950-11-15",
-                          },
-                          {
-                            // last: "Mosley",
-                            last: "Smith-Johnson",
-                            // first: "Jenny",
-                            first: "Betsy",
-                            gender: "female",
-                            // dob: "1955-10-03",
-                            dob: "1950-11-15",
-                          }
-                        ],
-                        patient: writable({})
-                      }
-                    }}
-                    on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
-                  />
-                </CardBody>
-              </Card>
-            </Col>
-          </Row>
-        {:else if polstUploadType === 'waStateRepo'}
-          <Row>
-            <Col>
-              <h5>Search for your POLST in the WA State POLST repository</h5>
-              <Card class="mb-4">
-                <CardBody>
-                  <AdvancedDirectiveSearch
-                    description="Search the WA State POLST repository for a demo patient's advance directive documents."
-                    sources = {{
-                      "WA POLST Repository Demo": {
-                        url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir",
-                        patients: [{
-                          last: "Wilson",
-                          first: "Cynthia",
-                          gender: "female",
-                          dob: "1993-12-01",
-                        }],
-                        patient: writable({})
-                      }
-                    }}
-                    on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
-                  />
-                </CardBody>
-              </Card>
-            </Col>
-          </Row>
-        {:else if polstUploadType === 'create'}
-          <Row>
-            <Col>
-              <h5>Create a POLST to sign</h5>
-              <Card class="mb-4">
-                <CardBody>
-                  <CreatePOLST
-                    on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
-                  />
-                </CardBody>
-              </Card>
-            </Col>
-          </Row>
-        {/if}
-      {/if}
-    </AccordionItem>
-  {/if}
-  {#if resourcesAdded && hasAdvanceDirective}
-    <AccordionItem class="edit-data" active>
-      <h5 slot="header" class="my-2">3. Directly edit your health summary content</h5>
+    <AccordionItem active class="edit-data">
+      <h5 slot="header" class="my-2">2. Directly edit your health summary content</h5>
       <Label>Select which resources to include in your customized IPS</Label>
       <ResourceSelector
         bind:resourceCollection={resourceCollection}
@@ -465,18 +388,18 @@
     </AccordionItem>
   {/if}
 </Accordion>
-{#if resourcesAdded && hasAdvanceDirective}
+{#if resourcesAdded}
   {#if shlIdParam == null}
     <Row class="mt-4">
-      <h5>4. Save and create your shareable link</h5>
+      <h5>3. Save your Summary</h5>
     </Row>
     <Row class="mx-2">
-      <Label>Save your Advanced Care Plan and generate a secure link to it that you can share.</Label>
+      <Label>Save your summary and generate a secure link to it that you can share.</Label>
     </Row>
     <Row class="mx-2">
       <form on:submit|preventDefault={confirmContent}>
         <FormGroup>
-          <Label>Enter a name for the Plan:</Label>
+          <Label>Enter a name for the Summary:</Label>
           <Input type="text" bind:value={label} on:input={() => { userUpdatedLabel = true }}/>
         </FormGroup>
         <FormGroup>
@@ -512,9 +435,39 @@
           <Col xs="auto">
           <Button color="primary" style="width:fit-content" disabled={submitting} type="submit">
               {#if !submitting}
-              Create Health Link
+              Create Summary
               {:else}
               Creating...
+              {/if}
+          </Button>
+          </Col>
+          {#if submitting}
+            <Col xs="auto" class="d-flex align-items-center px-0">
+              <Spinner color="primary" type="border" size="md"/>
+            </Col>
+            <Col xs="auto" class="d-flex align-items-center">
+              <span class="text-secondary">{status}</span>
+            </Col>
+          {/if}
+        </Row>
+      </form>
+    </Row>
+  {:else}
+    <Row class="mt-4">
+      <h5>4. Include this summary in my secure sharing link</h5>
+    </Row>
+    <Row class="mx-2">
+      <Label>This summary will be shared alongside any other summaries already included in the link.</Label>
+    </Row>
+    <Row class="mx-2">
+      <form on:submit|preventDefault={confirmContent}>
+        <Row>
+          <Col xs="auto">
+          <Button color="primary" style="width:fit-content" disabled={submitting} type="submit">
+              {#if !submitting}
+              Add Summary
+              {:else}
+              Adding...
               {/if}
           </Button>
           </Col>

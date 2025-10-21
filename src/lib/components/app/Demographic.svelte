@@ -1,5 +1,13 @@
 <script lang="ts">
-  import { Row, Col, Button, Spinner } from 'sveltestrap';
+  import {
+    Button,
+    Col,
+    FormGroup,
+    Input,
+    Label,
+    Row,
+    Spinner
+  } from 'sveltestrap';
   import { createEventDispatcher, getContext } from 'svelte';
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
   import DemographicForm from '$lib/components/form/DemographicForm.svelte';
@@ -8,12 +16,12 @@
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
+  let demographics = fhirDataService.demographics;
 
   let processing = false;
-  
   async function saveDemographics() {
     processing = true;
-    let patientRH = fhirDataService.saveDemographicsToPatient();
+    let patientRH = await fhirDataService.saveDemographicsToPatient();
     let patient = patientRH.resource;
     resourceDispatch('update-resources', {
       resources: [patient],
@@ -25,10 +33,10 @@
 </script>
 
 <form on:submit|preventDefault={() => saveDemographics()}>
-  <p>Please review your demographic information below.</p>
+  <h5>Patient Details</h5>
   <Row class="mt-3">
     <Col>
-       <DemographicForm />
+       <DemographicForm { demographics } hide={['mrn']} />
     </Col>
   </Row>
   <Row>

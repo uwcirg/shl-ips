@@ -27,15 +27,24 @@
   $: icon = 'search';
   let processing = false;
 
-  let codingOptionTitle: string = "";
+  let codingOptionTitle: string = value?.display ?? "";;
+  // $: codingOptionTitle = 
   let codingOptions: Coding[] | undefined = defaultOptions;
 
+  let prevValue = "";
   $: {
     if (value) {
-      codingOptionTitle = value.display;
+      let newValue = value?.display ?? "";
+      if (prevValue !== newValue) {
+        codingOptionTitle = newValue;
+      }
+      prevValue = newValue;
+    }
+  }
+
+  $: {
+    if (codingOptionTitle) {
       fetchCode(codingOptionTitle);
-    } else {
-      codingOptionTitle = "";
     }
   }
 

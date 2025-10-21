@@ -13,33 +13,32 @@
 
 import { get, writable, derived, type Readable, type Writable } from "svelte/store";
 import { ResourceCollection } from "$lib/utils/ResourceCollection";
-import { INTERMEDIATE_FHIR_SERVER_BASE } from "$lib/config/config";
+import {
+  INTERMEDIATE_FHIR_SERVER_BASE,
+  IDENTIFIER_SYSTEM,
+  CATEGORY_SYSTEM,
+  PLACEHOLDER_SYSTEM
+} from "$lib/config/config";
 import type { IAuthService, UserDemographics } from "$lib/utils/types";
 import { ResourceHelper } from "$lib/utils/ResourceHelper";
-import type { Coding, Patient, Resource } from "fhir/r4";
+import type { Patient, Resource } from "fhir/r4";
 import { constructPatientResource, getDemographicsFromPatient } from "$lib/utils/util";
 import { uploadResources, getPatientReferenceFromTransactionResponse } from "$lib/utils/resourceUploader";
-
-const IDENTIFIER_SYSTEM = 'http://keycloak.cirg.uw.edu';
-const CATEGORY_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-category';
-const PLACEHOLDER_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-placeholder';
-
-export type UserResourceDataset = {
-  category: Coding,
-  source: Coding,
-  collection: ResourceCollection,
-}
 
 export class FHIRDataService {
   auth: IAuthService;
 
-  userResources: Writable<Record<string, UserResourceDataset>> = writable({});
-  masterPatient: Writable<ResourceHelper> = writable({});
-  demographics: Writable<UserDemographics> = writable({});
-  patientLinks: Readable<Array<any>> = derived(this.masterPatient, ($masterPatient) => $masterPatient.resource.link);
+  userResources: Writable<Record<string, Record<string, ResourceCollection>>>;
+  masterPatient: Writable<ResourceHelper>;
+  demographics: Writable<UserDemographics>;
+  patientLinks: Readable<Array<any>>;
 
   constructor(auth: IAuthService) {
     this.auth = auth;
+    this.userResources = writable({});
+    this.masterPatient = writable(null);
+    this.demographics = writable({});
+    this.patientLinks = derived(this.masterPatient, ($masterPatient) => $masterPatient.resource.link);
   }
 
   // Get the cached, fetched, or newly created master patient
@@ -60,18 +59,22 @@ export class FHIRDataService {
 
   async loadUserData(): Promise<void> {
     let resourceCollections: Array<Array<Resource>> = await this.fetchUserResources();
-    resourceCollections.map(this.addDatasetToUserResources);
+    resourceCollections.map((collection) => this.addDatasetToUserResources(collection));
   }
 
   private async fetchUserResources(): Promise<Array<Array<Resource>>> {
     let patient: ResourceHelper = await this.getOrCreateMasterPatient();
     let patientLinks = patient.resource.link;
     if (patientLinks?.length > 0) {
-      let userCategoryDatasetResults = await Promise.allSettled(patientLinks.map((link) => {
+      let userCategoryDatasetResults = await Promise.allSettled(patientLinks.map(async (link) => {
         let datasetPatientReference = link.other.reference;
-        return this.fetchDatasetFromPatientReference(datasetPatientReference);
+        let dataset = await this.fetchDatasetFromPatientReference(datasetPatientReference);
+        if (!dataset) {
+          
+        }
+        return dataset;
       }));
-      let userCategoryDatasets = userCategoryDatasetResults.filter((result) => result.status === 'fulfilled').map((result) => result.value);
+      let userCategoryDatasets = userCategoryDatasetResults.filter((result) => result.status === 'fulfilled' && result.value !== undefined).map((result) => result.value);
       return userCategoryDatasets;
     }
     return [];
@@ -82,8 +85,8 @@ export class FHIRDataService {
       .then((response) => response.text())
       .then((data) => JSON.parse(data))
       .then((data) => {
-        if (data?.total > 0) {
-          return data.entry.map((entry) => entry.resource);
+        if (data?.entry?.length > 0) {
+          return data.entry.map((entry) => entry.resource).filter((resource) => !(resource.resourceType === 'Patient' && resource.id === get(this.masterPatient).resource.id));
         }
       });
   }
@@ -111,8 +114,11 @@ export class FHIRDataService {
   
   async createOrUpdateMasterPatient(patient: Resource): Promise<ResourceHelper> {
     let savedPatient: Patient;
-    if (get(this.masterPatient).id) {
-      patient.id = get(this.masterPatient).id;
+    if (get(this.masterPatient) === null) {
+      this.setMasterPatient(patient);
+    }
+    if (get(this.masterPatient).resource.id) {
+      patient.id = get(this.masterPatient).resource.id;
       let updatedPatient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient/${patient.id}`, {
         method: 'PUT',
         headers: {
@@ -146,12 +152,13 @@ export class FHIRDataService {
   generateMasterPatientFromAuth(): Resource {
     const userAuthProfile = get(this.auth.user).profile;
     let patient = constructPatientResource({
-      identifier: {
+      customIdentifiers: [{
         system: IDENTIFIER_SYSTEM,
         value: userAuthProfile.sub
-      },
+      }],
       first: (userAuthProfile.given_name || userAuthProfile.firstName),
       last: (userAuthProfile.family_name || userAuthProfile.lastName),
+      email: userAuthProfile.email
     });
     return patient;
   }
@@ -165,6 +172,7 @@ export class FHIRDataService {
   async saveDemographicsToPatient(): Promise<void> {
     const demographics = get(this.demographics);
     let patientFromDemographics = constructPatientResource(demographics, get(this.masterPatient).resource);
+    delete patientFromDemographics.meta.tag;
     return this.createOrUpdateMasterPatient(patientFromDemographics);
   }
 
@@ -174,15 +182,19 @@ export class FHIRDataService {
       first: masterPatientResource.name?.[0].given?.[0],
       last: masterPatientResource.name?.[0].family,
     });
+    patient.id = "placeholder-patient";
     patient.meta = patient.meta ?? {};
     patient.meta.tag = patient.meta.tag ?? [];
     patient.meta.tag.push({
-      url: PLACEHOLDER_SYSTEM,
+      system: PLACEHOLDER_SYSTEM,
       code: 'placeholder-patient'
     });
-    let patientReference = `Patient/${masterPatientResource.id}`;
-    patient.link = { other: { reference: patientReference }, type: "replaced-by" }
     return patient;
+  }
+
+  datasetExists(category: string, source: string): boolean {
+    let datasetsInCategoryWithSource = get(this.userResources)?.[category]?.[source];
+    return datasetsInCategoryWithSource !== undefined;
   }
 
   addDatasetToUserResources(resourceList: Resource[]): void {
@@ -193,30 +205,39 @@ export class FHIRDataService {
         throw new Error('No patient resource found in resource collection');
       }
       let categories = patient.meta.tag.filter((tag) => tag.system === CATEGORY_SYSTEM);
-      if (categories.length === 0) {
-        throw new Error('No category tag found in patient resource');
+      let category = categories?.[0]?.code;
+      let source = patient.meta?.source?.split('#')[0];
+      if (!category) {
+        throw new Error('Category must be passed when creating a new dataset, or contained in the dataset patient resource\s meta.tag attribute.');
       }
-      let category = categories[0];
-      let source = patient.meta.source;
-      let dataset = {
-        category,
-        source,
-        collection
-      };
+      if (!source) {
+        throw new Error('Source must be passed when creating a new dataset, or contained in the dataset patient resource\'s meta.source attribute.');
+      }
+
       this.userResources.update((categoryMap) => {
-        categoryMap[category.code] = dataset;
+        if (!category || !source) {
+          return { ...categoryMap };
+        }
+        if (!categoryMap[category]) {
+          categoryMap[category] = {};
+        }
+        categoryMap[category][source] = collection;
         return { ...categoryMap };
       });
     }
   }
 
-  removeDatasetFromUserResources(category: string) {
+  removeDatasetFromUserResources(category: string, source: string): void {
     this.userResources.update((categoryMap) => {
-      delete categoryMap[category];
-      return { ...categoryMap };
+      if (categoryMap[category]?.[source]) {
+        delete categoryMap[category][source];
+        if (categoryMap[category] && Object.keys(categoryMap[category]).length === 0) {
+          delete categoryMap[category];
+        }
+        return { ...categoryMap };
+      }
     })
   }
-
 
   async createDataset(resources: Resource[], category: string, source: string): Promise<string> {
     let patient = resources.find((resource) => resource.resourceType === "Patient");
@@ -228,40 +249,44 @@ export class FHIRDataService {
     patient.meta.tag = patient.meta.tag ?? [];
     patient.meta.tag.push({ system: CATEGORY_SYSTEM, code: category });
     patient.meta.source = source;
-    let transactionResponse = await uploadResources(resources);
+    let datasetCollection = new ResourceCollection(resources);
+    let updatedResources = datasetCollection.getFHIRResources();
+    let transactionResponse = await uploadResources(updatedResources);
     let patientReference = await getPatientReferenceFromTransactionResponse(transactionResponse);
     return patientReference;
   }
 
-  async deleteDataset(category: string): Promise<void> {
-    let dataset: UserResourceDataset = get(this.userResources)[category];
+  async deleteDataset(category: string, source: string): Promise<void> {
+    let dataset: ResourceCollection = get(this.userResources)?.[category]?.[source];
     if (!dataset) {
       return;
     }
-    const datasetPatientId = get(dataset.collection.patient).id;
+    const datasetPatientId = get(dataset.patient).id;
+    let patient = get(this.masterPatient).resource;
+    let datasetPatientLinkIndex = patient.link.findIndex((link) => link.other.reference === `Patient/${datasetPatientId}`);
+    if (datasetPatientLinkIndex > -1) {
+      patient.link.splice(datasetPatientLinkIndex, 1);
+    }
+    if (patient.link.length === 0) {
+      delete patient.link;
+    }
+    await this.createOrUpdateMasterPatient(patient);
+    this.removeDatasetFromUserResources(category, source);
+    // Delete after patient.link is updated to prevent cascade from deleting master patient resource
     let deleteResult = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient/${datasetPatientId}?_cascade=delete`, {
       method: 'DELETE'
     });
-    if (deleteResult.ok) {
-      let patient = get(this.masterPatient).resource;
-      let datasetPatientLinkIndex = patient.link.findIndex((link) => link.other.reference === `Patient/${datasetPatientId}`);
-      if (datasetPatientLinkIndex > -1) {
-        patient.link.splice(datasetPatientLinkIndex, 1);
-      }
-      if (patient.link.length === 0) {
-        delete patient.link;
-      }
-      await this.createOrUpdateMasterPatient(patient);
-      this.removeDatasetFromUserResources(category);
+    if (!deleteResult.ok) {
+      throw new Error(`Failed to delete dataset: ${await deleteResult.text()}`);
     }
   }
 
   async addOrReplaceDataset(resources: Resource[], category: string, source: string) {
+    if (get(this.userResources)?.[category]?.[source]) {
+      this.deleteDataset(category, source);
+    }
     let patientReference = await this.createDataset(resources, category, source);
     let newDataset = await this.fetchDatasetFromPatientReference(patientReference);
-    if (get(this.userResources)[category]) {
-      this.deleteDataset(category);
-    }
     let patient = get(this.masterPatient).resource;
     patient.link = patient.link ?? [];
     patient.link.push({ other: { reference: patientReference }, type: "seealso" });

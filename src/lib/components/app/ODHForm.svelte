@@ -3,10 +3,17 @@
   import { createEventDispatcher } from 'svelte';
   import NIOAutoCoderInput from '$lib/components/form/NIOAutoCoderInput.svelte';
   import type { IOResponse, ResourceRetrieveEvent } from '$lib/utils/types';
-
-  const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
+  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
 
   export let sectionKey: string = 'Occupational Data';
+
+  const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
+  const CATEGORY = 'occupational-data-for-health';
+  const SOURCE = {
+    url: window.location.origin,
+    name: 'Patient Provided Information'
+  };
+  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let canShare = navigator?.canShare?.({ url: 'https://example.com', title: 'Title' }); // True for Chrome
 
@@ -424,14 +431,15 @@
     }
   }
 
-  let buttonText = 'Add occupation to summary';
+  let buttonText = 'Update occupation data';
   let buttonDisabled = false;
   function updateOdhSection() {
+    let prevButtonText = buttonText;
     buttonText = 'Added!';
     buttonDisabled = true;
     setTimeout(() => {
       buttonDisabled = false;
-      buttonText = 'Add occupation to summary';
+      buttonText = prevButtonText;
     }, 1000);
     if (employmentStatus || currentJob || pastJob || retirementDate || combatPeriod) {
       let odhSectionResources = [
@@ -443,7 +451,9 @@
       ].filter((r) => r !== undefined);
       let result: ResourceRetrieveEvent = {
         resources: odhSectionResources.map((r) => r.resource),
-        sectionKey: sectionKey
+        sectionKey: sectionKey,
+        category: CATEGORY,
+        source: SOURCE
       };
       resourceDispatch('update-resources', result);
       console.log(odhSectionResources);
@@ -576,9 +586,10 @@
   </AccordionItem>
 </Accordion>
 <br>
-<Button color="primary" on:click={updateOdhSection} disabled={buttonDisabled}>
+<Button color="primary" on:click={FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, SOURCE, updateOdhSection)} disabled={buttonDisabled}>
   {buttonText}
 </Button>
+<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 
 <style>
   :global(.odh-section > .accordion-collapse.show) {

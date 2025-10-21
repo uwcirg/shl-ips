@@ -1,5 +1,8 @@
 <script lang='ts'>
-  import Demographic from "$lib/components/app/Demographic.svelte";
-</script>
+  import {onMount } from 'svelte';
+  import { goto } from '$app/navigation';
 
-<Demographic />
+  onMount(() => {
+    goto("/account/profile");
+  });
+</script>

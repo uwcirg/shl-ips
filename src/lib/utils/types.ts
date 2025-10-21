@@ -75,7 +75,11 @@ export interface ResourceRetrieveEvent {
   resources: Array<any> | undefined;
   sectionKey?: string;
   sectionTemplate?: CompositionSection;
-  source?: string;
+  category?: string;
+  source?: {
+    url: string;
+    name: string;
+  };
 }
 export interface SHCRetrieveEvent {
   shc: SHCFile | undefined;
@@ -88,6 +92,7 @@ export interface IPSRetrieveEvent {
 export interface SOFAuthEvent {
   data: any | undefined;
 }
+
 export interface SHCFile {
   verifiableCredential: string[];
 }

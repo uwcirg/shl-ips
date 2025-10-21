@@ -100,7 +100,7 @@
   }
 
   async function resetPatientResource() {
-    const user: User = get(authService.user);
+    const userAuthProfile: User = get(authService.user).profile;
     $demographics.identifier = {
       system: 'https://keycloak.cirg.uw.edu',
       value: get(authService.userId)
@@ -111,8 +111,8 @@
     }
 
     $demographics.id = patient.id;
-    $demographics.first = user.given_name || user.firstName;
-    $demographics.last = user.family_name || user.lastName;
+    $demographics.first = userAuthProfile.given_name || userAuthProfile.firstName;
+    $demographics.last = userAuthProfile.family_name || userAuthProfile.lastName;
     delete $demographics.dob
     delete $demographics.gender;
     delete $demographics.address;

@@ -3,6 +3,62 @@
 export const API_BASE = import.meta.env.VITE_API_BASE;
 
 export const INTERMEDIATE_FHIR_SERVER_BASE = import.meta.env.VITE_INTERMEDIATE_FHIR_SERVER_BASE;
+export const IDENTIFIER_SYSTEM = 'http://keycloak.cirg.uw.edu';
+export const CATEGORY_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-category';
+export const PLACEHOLDER_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-placeholder';
+export const DATA_CATEGORIES = {
+  "occupational-data-for-health": {
+    title: "Occupational Data for Health",
+  },
+  "patient-body-concerns": {
+    title: "Patient Body Concerns",
+  },
+  "patient-identity-information": {
+    title: "Patient Identities",
+  },
+  "patient-medical-history": {
+    title: "Patient Medical History",
+  },
+  "patient-care-needs": {
+    title: "Patient Needs",
+  },
+  "patient-story": {
+    title: "Patient Story",
+    sectionKey: "Patient Story",
+    sectionTemplate: {
+      title: "Patient Story",
+      code: {
+        coding: [
+          {
+            system: "http://loinc.org",
+            code: "81338-6",
+            display: "Patient Story"
+          }
+        ]
+      },
+      text: {
+        status: "generated",
+        div: "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>[Patient Story]</p>\n<p><strong>Patient's Goals</strong></p>\n<ul>\n<li>Maintain blood sugar levels within normal range (in progress)</li>\n</ul>\n</div>"
+      },
+      extension: [
+        {
+          url: "http://healthintersections.com.au/fhir/StructureDefinition/patient-story",
+          valueString: ""
+        }
+      ],
+      entry: []
+    }
+  },
+  "advance-directives": {
+    title: "Advance Directives",
+  },
+  "sof-health-record": {
+    title: "EHR Health Records",
+  },
+  "fetch-url": {
+    title: "Data from FHIR URL",
+  }
+}
 
 export const VERSION_STRING = import.meta.env.VITE_APP_VERSION_STRING;
 
@@ -148,7 +204,7 @@ export const CARIN_HOSTS = [
 export const BEARER_AUTHORIZATION = {
   'EpicHIMSS': import.meta.env.VITE_EPIC_CLIENT_ID
 }
-export const SOF_REDIRECT_URI = '/create';
+export const SOF_REDIRECT_URI = '/data';
 export const SOF_RESOURCES = [
   'Patient',
   'AllergyIntolerance',

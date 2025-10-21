@@ -148,7 +148,7 @@
   }
 
   async function addFile() {
-    goto(`/create?shlid=${shl.id}`);
+    goto(`/share?shlid=${shl.id}`);
   }
 
   async function deleteFile(fileContent:string) {
@@ -175,7 +175,7 @@
 
 <Row cols={{ md: 2, xs: 1 }}>
   <Col class="d-flex justify-content-center">
-    <Card class="mb-3" color="light">
+    <Card class="card-300 mb-3" color="light">
       <CardHeader>
         <CardTitle>
           <Icon name={shl.passcode ? 'lock' : 'unlock'} />
@@ -337,7 +337,7 @@
         <p><em>No Summaries found</em></p>
       {/if}
       {#each shl.files as file (file.contentHash)}
-        <Card class="mb-2" color="light">
+        <Card class="card-300 mb-2" color="light">
           <CardHeader>
             <Row class="align-items-center">
               <Col xs=6 class="align-items-center">
@@ -400,7 +400,7 @@
     margin-top: 1em;
     margin-bottom: 1em;
   }
-  :global(div.card) {
+  :global(div.card.card-300) {
     max-width: 300px;
   }
   :global(.card-title) {

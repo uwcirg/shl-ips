@@ -1,8 +1,17 @@
+/**
+ * @module ResourceCollection
+ * @description A class that holds a list of resources pertaining to a patient
+ * provides methods for adding, removing, and retrieving resources,
+ * setting the selected patient, and updating the patient references in
+ * each resource to match.
+ * @exports ResourceCollection
+ * @exports SerializedResourceCollection
+ */
 import { ResourceHelper } from "$lib/utils/ResourceHelper";
 import type { Patient, Resource } from "fhir/r4";
 import { writable, derived, get, type Writable, type Readable } from "svelte/store";
 import type { ResourceHelperMap, IResourceCollection } from "$lib/utils/types";
-import { SerializedResourceHelper } from "./ResourceHelper";
+import type { SerializedResourceHelper } from "$lib/utils/ResourceHelper";
 
 export interface SerializedResourceCollection {
     resources: SerializedResourceHelper[];
@@ -10,14 +19,15 @@ export interface SerializedResourceCollection {
 }
 
 export class ResourceCollection implements IResourceCollection {
-    resources: Writable<ResourceHelperMap>;
-    selectedPatient: Writable<string>;
-    patientReference: Readable<string>;
-    patient: Readable<Patient | undefined>;
+    public resources: Writable<ResourceHelperMap> = writable({});
+    public selectedPatient: Writable<string>;
+    public patientReference: Readable<string>;
+    public patient: Readable<Patient | undefined>;
 
     constructor();
     constructor(r: Resource | Resource[] | null);
     constructor(r: Resource | Resource[] | null = null) {
+        this.resources = writable({});
         this.selectedPatient = writable('');
         this.patient = derived(this.selectedPatient, ($selectedPatient) => {
           if ($selectedPatient) {
@@ -43,21 +53,24 @@ export class ResourceCollection implements IResourceCollection {
         }
     }
 
+    _updatePatientRef(rh: ResourceHelper) {
+        const newPatientRef = get(this.patientReference);
+        if (rh.resource.subject) {
+            rh.resource.subject.reference = newPatientRef;
+        } else if (rh.resource.patient) {
+            rh.resource.patient.reference = newPatientRef;
+        }
+        return rh;
+    }
+
     /**
      * Sets the patient reference on each resource in the list of resources.
      * @param resources The list of resources to set the patient references on.
      * @returns The list of resources with the patient references set.
     */
-    _updatePatientRefs() {
+    _updateAllPatientRefs() {
         this.resources.update((currState:ResourceHelperMap) => {
-            let newPatientRef = get(this.patientReference);
-            Object.values(currState).forEach((rh: ResourceHelper) => {
-                if (rh.resource.subject) {
-                    rh.resource.subject.reference = newPatientRef;
-                } else if (rh.resource.patient) {
-                    rh.resource.patient.reference = newPatientRef;
-                }
-            });
+            Object.values(currState).map((rh: ResourceHelper) => this._updatePatientRef(rh));
             return { ...currState };
         });
     }
@@ -67,8 +80,8 @@ export class ResourceCollection implements IResourceCollection {
      * exists in the list, it will not be added again.
      * @param resource The resource to add.
      */
-    addResource(resource: Resource, categories?:string[]) {
-      let rh = new ResourceHelper(resource, categories);
+    addResource(resource: Resource): ResourceHelper {
+      let rh = this._updatePatientRef(new ResourceHelper(resource));
       this.resources.update((curr) => {
           if (!(rh.tempId in curr)) {
               curr[rh.tempId] = rh;
@@ -78,6 +91,7 @@ export class ResourceCollection implements IResourceCollection {
           }
           return { ...curr };
       });
+      return rh;
     }
 
     /**
@@ -87,8 +101,16 @@ export class ResourceCollection implements IResourceCollection {
      */
 
     // May want to add signature accepting a sectionKey function to handle more complex cases
-    addResources(resources:Resource[], categories?:string[]) {
-        resources.forEach(r => this.addResource(r, categories));
+    addResources(resources:Resource[]): ResourceHelper[]{
+        let result = resources.map(r => this.addResource(r));
+        return result;
+    }
+
+    updateResource(rh: ResourceHelper) {
+        this.resources.update((curr) => {
+            curr[rh.tempId] = rh;
+            return { ...curr };
+        });
     }
 
     setSelectedPatient(patientTempId: string) {
@@ -100,14 +122,18 @@ export class ResourceCollection implements IResourceCollection {
             patients.forEach((rh:ResourceHelper) => {
                 rh.include = (rh.tempId == patientTempId);
             });
-            return curr;
+            return { ...curr };
         })
         this.selectedPatient.set(patientTempId);
-        this._updatePatientRefs();
+        this._updateAllPatientRefs();
     }
 
     getResources() {
         return this.resources;
+    }
+
+    getFHIRResources() {
+        return this.flattenResources(get(this.resources)).map(rh => rh.resource);
     }
 
     getSelectedPatient() {
@@ -129,7 +155,7 @@ export class ResourceCollection implements IResourceCollection {
 
     static fromJson(json:string) {
         let data:SerializedResourceCollection = JSON.parse(json);
-        let newCollection = new ResourceCollection();
+        let newCollection = new this();
         if (data.resources) {
             newCollection.resources.set(data.resources);
         }

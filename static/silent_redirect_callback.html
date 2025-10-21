@@ -1,17 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Silent Renew - WA Health Summary</title>
-  </head>
-  <body>
-    <script type="module">
-      import { UserManager } from "https://cdn.jsdelivr.net/npm/oidc-client-ts/dist/oidc-client-ts.min.js";
-
-      // Complete the silent sign-in process
-      UserManager.signinSilentCallback().catch((err) => {
-        console.error("Silent renew error:", err);
-      });
-    </script>
-  </body>
-</html>
+<script src="https://unpkg.com/oidc-client-ts/dist/umd/oidc-client-ts.min.js"></script>
+<script>
+  new Oidc.UserManager().signinSilentCallback();
+</script>

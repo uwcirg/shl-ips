@@ -10,6 +10,7 @@
   import { FHIRDataService } from '$lib/utils/FHIRDataService';
   import Header from '$lib/components/layout/Header.svelte';
   import Footer from '$lib/components/layout/Footer.svelte';
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import type { IAuthService, SHLAdminParams } from '$lib/utils/types';
 
   let authService: IAuthService = new AuthService();
@@ -57,37 +58,25 @@
     prevPageSize = width;
   }
 
-  onMount(() => {
+  onMount(async () => {
+    await authService.isAuthenticated();
     // Initial call to set pagination size on page load
     dispatchPageSize()
 
     // Call dispatchPageSize() on window resize
     window.addEventListener('resize', dispatchPageSize);
-
-    authService.getUser().then((user) => {
-      if (user) {
-        let now = Date.now() / 1000;
-        if ((user.expires_at ?? 0) < now) {
-          return user;
-        }
-      }
-      return undefined;
-    }).then(async (user) => {
-      if (!user) {
-        return undefined;
-      }
-      window.dispatchEvent(new CustomEvent('userFound', { 
-        detail: { message: 'Hello from the base routes component!' } 
-      }));
-      $shlStore = await shlClient.getUserShls();
-      return user;
-    });
   });
   onDestroy(() => {
     window.removeEventListener('resize', dispatchPageSize);
   });
 
 </script>
+
+<svelte:head>
+    <title>{INSTANCE_CONFIG.title}</title>
+    <link rel="preload" as="image" href="/img/doh_logo_doh-black.png" />
+    <link rel="preload" as="image" href={INSTANCE_CONFIG.header.logo} />
+</svelte:head>
 
 <Container class="main" fluid>
   <Styles />
@@ -99,20 +88,19 @@
 </Container>
 
 <style>
-  /* Handle scroll gutter */
-  .main {
-    position: relative;
-    left: calc((100vw - 100%) / 2);
-  }
   .main-content {
     flex-grow: 1;
   }
 
   :global(div.container-fluid.main) {
+    /* Handle scroll gutter */
+    position: relative;
+    left: calc((100vw - 100%) / 2);
+
     min-height: 100%;
     margin-right: auto;
     margin-left: auto;
-    max-width: 800px;
+    max-width: 1200px;
     display: flex;
     flex-direction: column;
   }

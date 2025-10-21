@@ -19,7 +19,7 @@ export default {
     summaries: {
       navButtonComponent: NavButtonSummaries
     },
-    create: {
+    share: {
       navButtonComponent: NavButtonCreate,
       component: AddFilePOLST,
     },

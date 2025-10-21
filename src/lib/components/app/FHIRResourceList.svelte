@@ -1,8 +1,7 @@
 <script lang="ts">
-  import { uploadResourcesAndGetReference } from '$lib/utils/resourceUploader.js';
   import { download } from '$lib/utils/util.js';
   import { createEventDispatcher, getContext } from 'svelte';
-  import { type Writable } from 'svelte/store';
+  import { derived, type Readable, type Writable } from 'svelte/store';
   import {
     Accordion,
     AccordionItem,
@@ -20,10 +19,10 @@
     Label,
     Row
   } from 'sveltestrap';
+  import { PLACEHOLDER_SYSTEM } from '$lib/config/config';
   import { ResourceHelper } from '$lib/utils/ResourceHelper.js';
-  import type { IPSResourceCollection } from '$lib/utils/IPSResourceCollection.js';
-  import type { IPSRetrieveEvent } from '$lib/utils/types.js';
-  import type { CompositionSection, BundleEntry } from 'fhir/r4';
+  import type { ResourceCollection } from '$lib/utils/ResourceCollection.js';
+  import type { BundleEntry } from 'fhir/r4';
 
   import AdvanceDirective from '$lib/components/resource-templates/AdvanceDirective.svelte';
   import AllergyIntolerance from '$lib/components/resource-templates/AllergyIntolerance.svelte';
@@ -47,7 +46,8 @@
   import QuestionnaireResponse from '$lib/components/resource-templates/QuestionnaireResponse.svelte';
 
   export let submitting: boolean;
-  export let resourceCollection: IPSResourceCollection;
+  export let resourceCollection: ResourceCollection;
+  export let selectable: boolean = true;
 
   const components: Record<string, any> = {
     'AllergyIntolerance': AllergyIntolerance,
@@ -75,7 +75,6 @@
     'QuestionnaireResponse': QuestionnaireResponse
   };
 
-  const ipsDispatch = createEventDispatcher<{ 'ips-retrieved': IPSRetrieveEvent }>();
   const statusDispatch = createEventDispatcher<{ 'status-update': string }>();
   const errorDispatch = createEventDispatcher<{ error: string }>();
 
@@ -85,16 +84,29 @@
   let selectedPatient = resourceCollection.selectedPatient;
 
   // Proxy for resourceCollection's resourcesByType to allow reactive updates
-  let resourcesByTypeStore: Writable<Record<string, Record<string, ResourceHelper>>>;
-  $: resourcesByTypeStore = resourceCollection.resourcesByType;
-
-  let extensionSectionStore: Writable<Record<string, CompositionSection | false>>;
-  $: extensionSectionStore = resourceCollection.extensionSections;
+  let categorizedResourceStore: Readable<Record<string, Record<string, ResourceHelper>>> = derived(
+    resourceCollection.resources,
+    ($resources) => {
+      let resourcesByType: Record<string, Record<string, ResourceHelper>> = {};
+      if ($resources) {
+        for (const rh of Object.values($resources) as ResourceHelper[]) {
+          if (rh.resource.resourceType === 'Patient' && rh.resource?.meta?.tag?.find(t => t.system === PLACEHOLDER_SYSTEM)) {
+            continue;  
+          }
+          if (!(rh.resource.resourceType in resourcesByType)) {
+            resourcesByType[rh.resource.resourceType] = {};
+          }
+          resourcesByType[rh.resource.resourceType][rh.tempId] = rh;
+        }
+      }
+      return resourcesByType;
+    }
+  );
 
   let patientStore: Record<string, ResourceHelper>;
   $: {
-    if ($resourcesByTypeStore) {
-      patientStore = $resourcesByTypeStore['Patient'];
+    if ($categorizedResourceStore) {
+      patientStore = $categorizedResourceStore['Patient'];
     }
   }
   let patientBadgeColor: string = 'danger';
@@ -105,68 +117,6 @@
     }
   }
   $: patientBadgeColor = patientCount > 1 ? 'danger' : 'secondary';
-
-  $: {
-    if (submitting) {
-      confirm().catch((error) => {
-        submitting = false;
-        console.error(error);
-        errorDispatch('error', error.message);
-      });
-    }
-  }
-
-  /**
-   * Confirms the IPS content, then uploads the selected resources,
-   * fetches the IPS, and calls the event dispatcher to pass the IPS to the parent component.
-   */
-  async function confirm() {
-    submitting = true;
-
-    statusDispatch('status-update', 'Adding data');
-    try {
-      let selectedIPSResources = resourceCollection
-        .getSelectedIPSResources()
-        .map((rh: ResourceHelper) => {
-          return rh.resource;
-        });
-      reference = await uploadResourcesAndGetReference(selectedIPSResources);
-    } catch (e: any) {
-      throw new Error('Unable to upload resources', { cause: e });
-    }
-
-    let content: any;
-    statusDispatch('status-update', 'Building IPS');
-    const contentResponse = await fetch(reference!, {
-      headers: { accept: 'application/fhir+json' }
-    }).then(function (response) {
-      if (!response.ok) {
-        // reject the promise if we didn't get a 2xx response
-        throw new Error('Unable to fetch IPS', { cause: response });
-      } else {
-        return response;
-      }
-    });
-    content = await contentResponse.json();
-
-    // Add injected resources to existing IPS
-    if (content) {
-      content = resourceCollection.extendIPS(content);
-    }
-    content.entry.map((entry: BundleEntry) => {
-      if (entry.resource && 'extension' in entry.resource && entry.resource.extension) {
-        entry.resource.extension = entry.resource.extension.filter(function (item) {
-          return item.url !== 'http://hl7.org/fhir/StructureDefinition/narrativeLink';
-        });
-        if (entry.resource.extension.length === 0) {
-          delete entry.resource.extension;
-        }
-      }
-      return entry;
-    });
-    ipsDispatch('ips-retrieved', { ips: content });
-    // submitting = false;
-  }
 
   function updateBadge(type: string, color = '') {
     if (type === 'Patient') {
@@ -192,7 +142,6 @@
     isOpen = !isOpen;
   }
 </script>
-
 <Offcanvas
   {isOpen}
   {toggle}
@@ -230,54 +179,50 @@
   </Row>
 </Offcanvas>
 
-{#if $resourcesByTypeStore}
+
+{#if $categorizedResourceStore}
   <Accordion>
-    {#if Object.keys($resourcesByTypeStore).length > 0}
-      {#each Object.keys($resourcesByTypeStore) as resourceType}
-        {#if Object.keys($resourcesByTypeStore[resourceType]).length > 0}
-          <AccordionItem on:toggle={() => updateBadge(resourceType)}>
+    {#if Object.keys($categorizedResourceStore).length > 0}
+      {#each Object.keys($categorizedResourceStore) as category}
+        {#if Object.keys($categorizedResourceStore[category]).length > 0}
+          <AccordionItem on:toggle={() => updateBadge(category)}>
             <span slot="header">
-              {#if resourceType === 'Patient'}
-                Patients
+              {category}
+              {#if category === 'Patients'}
                 <Badge positioned class="mx-1" color={patientBadgeColor}>
                   {patientCount}
                 </Badge>
               {:else}
-                {#if resourceType in $extensionSectionStore}
-                  {resourceType}
-                {:else}
-                  {`${resourceType}s`}
-                {/if}
                 <Badge
                   positioned
                   class="mx-1"
-                  color={Object.values($resourcesByTypeStore[resourceType]).filter(
+                  color={Object.values($categorizedResourceStore[category]).filter(
                     (resource) => resource.include
-                  ).length == Object.keys($resourcesByTypeStore[resourceType]).length
+                  ).length == Object.keys($categorizedResourceStore[category]).length
                     ? 'primary'
-                    : Object.values($resourcesByTypeStore[resourceType]).filter(
+                    : Object.values($categorizedResourceStore[category]).filter(
                           (resource) => resource.include
-                        ).length == Object.keys($resourcesByTypeStore[resourceType]).length
+                        ).length == Object.keys($categorizedResourceStore[category]).length
                       ? 'primary'
-                      : Object.values($resourcesByTypeStore[resourceType]).filter(
+                      : Object.values($categorizedResourceStore[category]).filter(
                             (resource) => resource.include
                           ).length > 0
                         ? 'info'
                         : 'secondary'}
                 >
-                  {Object.values($resourcesByTypeStore[resourceType]).filter(
+                  {Object.values($categorizedResourceStore[category]).filter(
                     (resource) => resource.include
                   ).length}
                 </Badge>
               {/if}
             </span>
             <FormGroup>
-              {#each Object.keys($resourcesByTypeStore[resourceType]) as key}
+              {#each Object.keys($categorizedResourceStore[category]) as key}
                 <Card style="width: 100%; max-width: 100%" class="mb-2">
                   <CardHeader>
                     <Row>
                       <Col class="d-flex justify-content-start align-items-center">
-                        <span style="font-size:small">{resourceType}</span>
+                        <span style="font-size:small">{$categorizedResourceStore[category][key].resource.resourceType}</span>
                       </Col>
                       {#if $mode === 'advanced'}
                         <Col class="d-flex justify-content-end align-items-center">
@@ -285,7 +230,7 @@
                             size="sm"
                             color="secondary"
                             outline
-                            on:click={() => setJson($resourcesByTypeStore[resourceType][key])}
+                            on:click={() => setJson($categorizedResourceStore[category][key])}
                           >
                             View
                           </Button>
@@ -296,38 +241,21 @@
                   <Label style="width: 100%">
                     <CardBody>
                       <Row style="overflow:hidden">
-                        <Col xs="auto" class="d-flex align-items-top pt-4 pe-0">
-                          {#if resourceType === 'Patient'}
-                            <Input id={key} type="radio" bind:group={$selectedPatient} value={key} />
-                          {:else}
-                            <Input
-                              id={key}
-                              type="checkbox"
-                              checked={$resourcesByTypeStore[resourceType][key].include}
-                              value={key}
-                              on:change={(e) => {
-                                let rh = { ...$resourcesByTypeStore[resourceType][key] };
-                                rh.include = e.target.checked;
-                                resourceCollection.collection.updateResource(rh);
-                              }}
-                            />
-                          {/if}
-                        </Col>
                         <Col class="resource-content justify-content-center align-items-center">
-                          {#if resourceType in components}
+                          {#if category in components}
                             <svelte:component
-                              this={components[resourceType]}
+                              this={components[category]}
                               content={{
-                                resource: $resourcesByTypeStore[resourceType][key].resource,
-                                entries: resourceCollection.flattenResources($resourcesByTypeStore)
+                                resource: $categorizedResourceStore[category][key].resource,
+                                entries: resourceCollection.flattenResources($categorizedResourceStore)
                               }}
                             />
-                            <!-- ResourceType: {resourceType}
-                              Resource: {JSON.stringify($resourcesByTypeStore[resourceType][key].resource)} -->
-                          {:else if $resourcesByTypeStore[resourceType][key].resource.text?.div}
-                            {@html $resourcesByTypeStore[resourceType][key].resource.text?.div}
+                            <!-- ResourceType: {category}
+                              Resource: {JSON.stringify($categorizedResourceStore[category][key].resource)} -->
+                          {:else if $categorizedResourceStore[category][key].resource.text?.div}
+                            {@html $categorizedResourceStore[category][key].resource.text?.div}
                           {:else}
-                            {$resourcesByTypeStore[resourceType][key].tempId}
+                            {$categorizedResourceStore[category][key].tempId}
                           {/if}
                         </Col>
                       </Row>

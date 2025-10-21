@@ -1,4 +1,4 @@
-import AddFile from '$lib/components/app/AddFile.svelte';
+import AddSummary from '$lib/components/app/AddSummary.svelte';
 import Introduction from '$lib/components/app/Introduction.svelte';
 
 export default {
@@ -8,15 +8,15 @@ export default {
     logo_width: "200",
     title: "HL7 Standards-Based Patient Summary",
   },
-  defaultRedirectURI: "/summaries",
+  defaultRedirectURI: "/data",
   pages: {
     home: {
       introComponent: Introduction
     },
-    summaries: {
-    },
-    create: {
-      component: AddFile
+    data: {},
+    summaries: {},
+    share: {
+      component: AddSummary
     }
   }
 };

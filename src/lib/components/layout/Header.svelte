@@ -19,15 +19,18 @@
   import { onMount, onDestroy, getContext } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
-  import { type Writable } from 'svelte/store';
+  import { get, type Writable } from 'svelte/store';
   import Banner from '$lib/components/layout/Banner.svelte';
   import LanguageMenu from '$lib/components/layout/LanguageMenu.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import type { IAuthService, SHLAdminParams } from '$lib/utils/types';
+  import FHIRDataService from '$lib/utils/FHIRDataService';
 
   let authService: IAuthService = getContext('authService');
   let authenticated = authService.authenticated;
   let user = authService.user;
+
+  let fhirDataService: FHIRDataService = getContext('fhirDataService');
 
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
   
@@ -38,7 +41,7 @@
   let activeItem: string = "";
   $: {
     activeItem = "";
-    for (const name of Object.keys(INSTANCE_CONFIG.pages)) {
+    for (const name of [...Object.keys(INSTANCE_CONFIG.pages), 'account']) {
       if ($page.url.pathname.includes(name)) {
         activeItem = name;
       } else if ($page.url.pathname == "/") {
@@ -126,7 +129,7 @@
 </script>
 <div>
 <Row>
-  <Navbar sticky="top"color="light" light expand="sm" style="border-bottom: 1px solid rgb(204, 204, 204);">
+  <Navbar sticky="top" color="light" light expand="sm" style="border-bottom: 1px solid rgb(204, 204, 204);">
     <NavbarBrand href="https://doh.wa.gov/" target="_blank">
       <Row>
         <Col>
@@ -141,23 +144,48 @@
       </Nav>
       <Nav class="ms-auto" navbar>
         <NavItem>
-          <NavLink href={"/"} active={ activeItem === "home" }>Home</NavLink>
+          <NavLink href={"/"} active={ activeItem === "home" }>About</NavLink>
         </NavItem>
         {#if $authenticated}
           {#if $user}
+            <NavItem>
+              <NavLink href="/data" active={ activeItem === "data" }>My Data</NavLink>
+            </NavItem>
             {#if INSTANCE_CONFIG.pages.summaries}
               <NavItem>
-                <NavLink href="/summaries" active={ activeItem === "summaries" }>Summaries</NavLink>
+                <NavLink href="/summaries" active={ activeItem === "summaries" }>My Summaries</NavLink>
               </NavItem>
+              <!-- <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
+                <DropdownToggle color="primary" nav caret class={ activeItem === "summaries" ? "active" : "" }>Summaries</DropdownToggle>
+                <DropdownMenu end style="max-height: 350px; overflow:auto">
+                  <DropdownItem
+                    on:click={() => {
+                      goto("/share");
+                    }}><Icon name="plus-lg" /> Create New Shareable Summary </DropdownItem>
+                  <DropdownItem divider />
+                  <DropdownItem header>Your Summaries</DropdownItem>
+                  <DropdownItem on:click={() => { goto("/summaries") }}>
+                    <Icon name="archive" /> All Summaries
+                  </DropdownItem>
+                  {#if $shlStore.length > 0}
+                    {#each $shlStore as shl, i}
+                      <DropdownItem
+                        on:click={() => {
+                        goto('/view/' + shl.id);
+                      }}>{shl.label || `Summary ${i + 1}`}</DropdownItem>
+                    {/each}
+                  {/if}
+                </DropdownMenu>
+              </Dropdown> -->
             {/if}
             {#if INSTANCE_CONFIG.pages.documents}
               <NavItem>
                 <NavLink href="/documents" active={ activeItem === "documents" }>Documents</NavLink>
               </NavItem>
             {/if}
-            {#if INSTANCE_CONFIG.pages.create}
+            {#if INSTANCE_CONFIG.pages.share}
               <NavItem>
-                <NavLink href="/create" active={ activeItem === "create" }>Create</NavLink>
+                <NavLink href="/share" active={ activeItem === "share" }>Share</NavLink>
               </NavItem>
             {/if}
             {#if INSTANCE_CONFIG.pages.provider}
@@ -166,9 +194,16 @@
               </NavItem>
             {/if}
             <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
-              <DropdownToggle color="primary" nav caret><Icon name="person-circle"/> Account</DropdownToggle>
+              <DropdownToggle color="primary" nav caret class={ activeItem === "account" ? "active" : "" }>
+                <Icon name="person-circle"/> Account
+              </DropdownToggle>
               <DropdownMenu end style="max-height: 350px; overflow:auto">
-                <DropdownItem header>Welcome, {$user.profile.given_name ?? $user.profile.preferred_username}</DropdownItem>
+                <DropdownItem header>
+                  Welcome, {get(fhirDataService.demographics)?.firstName ?? $user.profile.given_name ?? $user.profile.preferred_username}
+                </DropdownItem>
+                <DropdownItem on:click={() => {
+                  goto('/account');
+                }}><Icon name="gear-fill"/> Settings</DropdownItem>
                 <DropdownItem
                   on:click={() => {
                     authService.logout();
@@ -192,19 +227,6 @@
                       </Col>
                     </Row>
                   </DropdownItem>
-                  <DropdownItem divider />
-                  <DropdownItem header>Your Summaries</DropdownItem>
-                  <DropdownItem on:click={() => { goto("/create") }}>
-                    <Icon name="plus-lg" /> Create New Summary
-                  </DropdownItem>
-                  {#if $shlStore.length > 0}
-                    {#each $shlStore as shl, i}
-                      <DropdownItem
-                        on:click={() => {
-                        goto('/view/' + shl.id);
-                      }}>{shl.label || `Summary ${i + 1}`}</DropdownItem>
-                    {/each}
-                  {/if}
                 </DropdownMenu>
             </Dropdown>
           {:else}

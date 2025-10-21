@@ -38,9 +38,12 @@ export class AuthService implements IAuthService {
   }
 
   private handleError(error: unknown) {
+    this.userManager.clearStaleState();
+    if (error.error === "login_required") {
+      return;
+    }
     this._error.set(error);
     console.error(error);
-    this.userManager.clearStaleState();
     this.logout();
   }
 
@@ -77,12 +80,14 @@ export class AuthService implements IAuthService {
   async signinCallback(): Promise<User | undefined> {
     try {
       const user = await this.userManager.signinCallback();
-      if (!user) {
-        throw Error('User not found');
+      // if (!user) {
+      //   throw Error('User not found');
+      // }
+      if (user) {
+        this.redirect_url = user.url_state ?? "";
+        this.storeUser(user);
+        return user;
       }
-      this.redirect_url = user.url_state ?? "";
-      this.storeUser(user);
-      return user;
     } catch (error) {
       this.handleError(error);
     }
@@ -104,9 +109,23 @@ export class AuthService implements IAuthService {
     let currentUrl = new URL(window.location.href.split('?')[0]);
     let redirectUrl = currentUrl.href;
     if (currentUrl.pathname === '/' || currentUrl.pathname === '/home') {
-      redirectUrl = INSTANCE_CONFIG.defaultRedirectURI ?? '/summaries';
+      redirectUrl = INSTANCE_CONFIG.defaultRedirectURI ?? '/data';
     }
     return await this.userManager.signinRedirect({ url_state: redirectUrl });
+  }
+
+  async isAuthenticated(): Promise<boolean | undefined> {
+    try {
+      const user = await this.userManager.getUser();
+      if (user) {
+        this.storeUser(user);
+        return true;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      this.handleError(error);
+    }
   }
 
   async renewToken(): Promise<User | null> {
@@ -114,8 +133,10 @@ export class AuthService implements IAuthService {
       const user = await this.userManager.signinSilent();
       if (user) {
         this.storeUser(user);
+        return user;
+      } else {
+        throw Error('Unable to authenticate user in background');
       }
-      return user;
     } catch (error) {
       this.handleError(error);
     }

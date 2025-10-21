@@ -16,11 +16,15 @@
   import { PATIENT_IPS, EXAMPLE_IPS, IPS_DEFAULT, BEARER_AUTHORIZATION } from '$lib/config/config';
   import type { SHCRetrieveEvent, IAuthService, IPSRetrieveEvent } from '$lib/utils/types';
   import { createEventDispatcher } from 'svelte';
+  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
 
   let authService: IAuthService = getContext('authService');
 
   const shcDispatch = createEventDispatcher<{'shc-retrieved': SHCRetrieveEvent}>();
   const ipsDispatch = createEventDispatcher<{'ips-retrieved': IPSRetrieveEvent}>();
+
+  const CATEGORY = "fetch-url";
+  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let summaryUrls = EXAMPLE_IPS;
   let defaultUrl = summaryUrls[IPS_DEFAULT];
@@ -102,7 +106,7 @@
   }
 </script>
 
-<form on:submit|preventDefault={() => prepareIps()}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, summaryUrlValidated, prepareIps)}>
 <FormGroup>
   <Label>Fetch summary from URL</Label>
   <Dropdown {isOpen} toggle={() => (isOpen = !isOpen)}>
@@ -158,6 +162,6 @@
   {/if}
 </Row>
 </form>
-
+<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 <span class="text-danger">{fetchError}</span>
   

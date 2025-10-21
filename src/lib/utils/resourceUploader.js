@@ -6,7 +6,8 @@ export async function uploadResources(resources) {
     resources.forEach(resource => {
         let entry = {
             request: {
-                method: resource.resourceType === "Patient" ? "PUT" : "POST",
+                // method: resource.resourceType === "Patient" ? "PUT" : "POST",
+                method: "POST",
                 url: `${resource.resourceType}${resource.resourceType === "Patient" ? "/" + resource.id : ""}`
             },
             resource: resource
@@ -26,8 +27,8 @@ export async function uploadResources(resources) {
             // Add any additional headers if needed
         },
         body: JSON.stringify(bundle),
-    }).then((response) => {
-        let body = response.text();
+    }).then(async (response) => {
+        let body = await response.text();
         let parsedBody;
         try {
             parsedBody = JSON.parse(body);
@@ -56,10 +57,10 @@ export function generateIpsUrlFromPatientReference(patientReference) {
     return `${INTERMEDIATE_FHIR_SERVER_BASE}/${patientReference}/$summary`;
 }
 
-export function uploadResourcesAndFetchIPS(resources) {
+export function uploadResourcesAndGetReference(resources) {
     return uploadResources(resources).then(transactionResponse => {
         let patientReference = getPatientReferenceFromTransactionResponse(transactionResponse);
-        let ipsUrl = generateIpsUrlFromPatientReference(patientReference);
-        return fetch(ipsUrl).then(response => response.json());
+        return generateIpsUrlFromPatientReference(patientReference);
+        // return fetch(ipsUrl).then(response => response.json());
     });
 }

@@ -9,7 +9,7 @@
     Row,
     Spinner
   } from 'sveltestrap';
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, getContext } from 'svelte';
   import type { DocumentReferencePOLST, ResourceRetrieveEvent } from '$lib/utils/types';
   import type { Attachment, BundleEntry, ServiceRequest } from 'fhir/r4';
   import {
@@ -20,6 +20,7 @@
   import type { UserDemographics } from '$lib/utils/types';
   import { demographics } from '$lib/stores/demographics';
   import { writable, type Writable } from 'svelte/store';
+  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
 
   export let sectionKey: string = "Advance Directives";
 
@@ -59,6 +60,10 @@
       })
     },
   };
+
+  const CATEGORY = "advance-directives";
+  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
+
   let selectedSource = "Current User";
   let processing = false;
   let fetchError = '';
@@ -213,11 +218,9 @@
     fetchError = '';
     processing = true;
     try {
-      let content;
       let hostname;
       const patient = await fetchPatient(constructPatientResource($formDemographics));
-      const contentResponse = await fetchAdvanceDirective(patient.id);
-      content = await contentResponse.json();
+      const content = await fetchAdvanceDirective(patient.id);
       hostname = sources[selectedSource].url;
       let resources: Array<DocumentReferencePOLST> = content.entry ? content.entry.map((e: BundleEntry) => {
         return e.resource;
@@ -347,6 +350,7 @@
         resources: resources,
         sectionKey: sectionKey,
         sectionTemplate: sectionTemplate,
+        category: CATEGORY,
         source: hostname,
       }
       resourceDispatch('update-resources', result);
@@ -378,7 +382,7 @@
   }
 </script>
 
-<form on:submit|preventDefault={() => prepareIps()}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, sources[selectedSource].url, prepareIps)}>
   <Label>Fetch Advance Directives to include in your summary</Label><br>
   <Label>Select a source to search:</Label>
   <FormGroup>
@@ -393,14 +397,15 @@
   {#if selectedSource}
     <FormGroup>
       <Label>Enter your information to fetch related advance directives</Label>
-      <DemographicForm demographics={formDemographics}/>
+      <br>
+      <DemographicForm demographics={formDemographics} hide={ ["genderIdentity", "culture"]}/>
     </FormGroup>
     
     <Row>
       <Col xs="auto">
         <Button color="primary" style="width:fit-content" disabled={processing} type="submit">
           {#if !processing}
-            Add advance directives to Summary
+            Update advance directives
           {:else}
             Adding...
           {/if}
@@ -414,5 +419,5 @@
     </Row>
   {/if}
 </form>
-
+<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 <span class="text-danger">{fetchError}</span>

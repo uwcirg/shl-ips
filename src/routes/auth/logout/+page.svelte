@@ -14,7 +14,7 @@
       } catch (e) {
           console.error(e);
           errorMsg = "Unable to log out.";
-          goto('/summaries');
+          goto('/');
       }
   });
 </script>

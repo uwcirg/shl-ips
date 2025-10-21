@@ -15,8 +15,17 @@
   import ReligionCodeInput from '$lib/components/form/ReligionCodeInput.svelte';
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
   import type { Coding, Patient } from 'fhir/r4';
+  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
 
   export let patient: Patient | undefined;
+
+  const CATEGORY = 'patient-identity-information';
+  const SOURCE = {
+    url: window.location.origin,
+    name: 'Patient Provided Information'
+  };
+  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
+
   let myPatient;
   $: myPatient = JSON.parse(JSON.stringify(patient));
   $: {
@@ -165,15 +174,17 @@
     });
     patient.id = "customPatient";
     let result: ResourceRetrieveEvent = {
-      resources: [ patient ]
+      resources: [ patient ],
+      category: CATEGORY,
+      source: SOURCE,
     };
     resourceDispatch('update-resources', result);
   }
   
 </script>
 
-<p class="text-secondary"><em>Add or update the personal information that will be shown in this Health Summary.</em></p>
-<form on:submit|preventDefault={() => prepareIps()}>
+<!-- <p class="text-secondary"><em>Add or update the personal information that will be shown in this Health Summary.</em></p> -->
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, SOURCE, prepareIps)}>
   <h5>Patient Details</h5>
   <Row>
     <Col>
@@ -304,5 +315,5 @@
     {/if}
   </Row>
 </form>
-
+<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 <span class="text-danger">{fetchError}</span>

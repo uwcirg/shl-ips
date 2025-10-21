@@ -12,8 +12,16 @@
   import { createEventDispatcher } from 'svelte';
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
   import type { Goal, CompositionSection } from 'fhir/r4';
+  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   
   export let sectionKey: string = "Patient Story";
+
+  const CATEGORY = 'patient-story';
+  const SOURCE = {
+    url: window.location.origin,
+    name: 'Patient Provided Information'
+  };
+  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let processing = false;
   let fetchError = '';
@@ -99,8 +107,8 @@
     processing = false;
     let result:ResourceRetrieveEvent = {
       resources: resources,
-      sectionKey: sectionKey,
-      sectionTemplate: section
+      category: CATEGORY,
+      source: SOURCE,
     }
     resourceDispatch('update-resources', result);
     console.log(resources);
@@ -134,9 +142,9 @@
   <Label class="text-secondary">What specific outcomes are important to you from your care?</Label>
   {#each goals as goal, i}
     <Row class="mb-1">
-      <Col xs="auto">
+      <Col>
         <FormGroup style="font-size:small" class="text-secondary" label="Goal">
-          <Input type="text" bind:value={goal.value} style="width: 400px"/>
+          <Input type="text" bind:value={goal.value}/>
         </FormGroup>
       </Col>
       <Col xs="auto" class="pt-1">
@@ -161,7 +169,11 @@
 
   <Row>
     <Col xs="auto">
-      <Button color="primary" style="width:fit-content" disabled={processing} on:click={prepareIps}>
+      <Button
+        color="primary"
+        style="width:fit-content"
+        disabled={processing}
+        on:click={FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, SOURCE, prepareIps)}>
         {#if !processing}
           Update your patient story and goals
         {:else}
@@ -176,5 +188,5 @@
     {/if}
   </Row>
 </form>
-
+<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 <span class="text-danger">{fetchError}</span>
