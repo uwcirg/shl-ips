@@ -45,9 +45,7 @@
   import OccupationalData from '$lib/components/resource-templates/OccupationalData.svelte';
   import QuestionnaireResponse from '$lib/components/resource-templates/QuestionnaireResponse.svelte';
 
-  export let submitting: boolean;
   export let resourceCollection: ResourceCollection;
-  export let selectable: boolean = true;
 
   const components: Record<string, any> = {
     'AllergyIntolerance': AllergyIntolerance,
