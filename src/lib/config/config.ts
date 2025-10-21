@@ -6,6 +6,7 @@ export const INTERMEDIATE_FHIR_SERVER_BASE = import.meta.env.VITE_INTERMEDIATE_F
 export const IDENTIFIER_SYSTEM = 'http://keycloak.cirg.uw.edu';
 export const CATEGORY_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-category';
 export const PLACEHOLDER_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-placeholder';
+export const SOURCE_NAME_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-source-name';
 export const DATA_CATEGORIES = {
   "occupational-data-for-health": {
     title: "Occupational Data for Health",
