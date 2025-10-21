@@ -13,10 +13,9 @@
 
   export let demographics: UserDemographics;
 
-  onMount(() => {
-    $demographics.religion = Object.values(religionOptions).find((p) => p?.code === $demographics.religion?.code) ?? $demographics.religion;
-    $demographics.sexCharacteristics = Object.values(sexCharacteristicOptions).find((v) => v?.code === $demographics.sexCharacteristics?.code) ?? $demographics.sexCharacteristics;
-  })
+  $: $demographics.pronouns = Object.values(pronounOptions).find((p) => p?.code === $demographics.pronouns?.code) ?? $demographics.pronouns;
+  $: $demographics.religion = Object.values(religionOptions).find((p) => p?.code === $demographics.religion?.code) ?? $demographics.religion;
+  $: $demographics.sexCharacteristics = Object.values(sexCharacteristicOptions).find((v) => v?.code === $demographics.sexCharacteristics?.code) ?? $demographics.sexCharacteristics;
   
   let pronounOptions = {
     '': undefined,
