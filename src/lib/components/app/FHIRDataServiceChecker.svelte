@@ -38,6 +38,6 @@
   </ModalBody>
   <ModalFooter>
     <Button color="danger" on:click={toggle}>Cancel</Button>
-    <Button color="success"  on:click={callbackFn}><Icon name="check" /> Yes, overwrite data</Button>
+    <Button color="success"  on:click={() => {toggle(); callbackFn();} }><Icon name="check" /> Yes, overwrite data</Button>
   </ModalFooter>
 </Modal>
