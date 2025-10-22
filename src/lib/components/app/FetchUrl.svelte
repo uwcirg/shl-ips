@@ -14,14 +14,16 @@
     Spinner } from 'sveltestrap';
   import { getContext } from 'svelte';
   import { PATIENT_IPS, EXAMPLE_IPS, IPS_DEFAULT, BEARER_AUTHORIZATION } from '$lib/config/config';
-  import type { SHCRetrieveEvent, IAuthService, IPSRetrieveEvent } from '$lib/utils/types';
+  import type { SHCRetrieveEvent, IAuthService, IPSRetrieveEvent, ResourceRetrieveEvent } from '$lib/utils/types';
   import { createEventDispatcher } from 'svelte';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
+  import { getResourcesFromIPS } from '$lib/utils/util';
 
   let authService: IAuthService = getContext('authService');
 
   const shcDispatch = createEventDispatcher<{'shc-retrieved': SHCRetrieveEvent}>();
   const ipsDispatch = createEventDispatcher<{'ips-retrieved': IPSRetrieveEvent}>();
+  const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
   const CATEGORY = "fetch-url";
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
@@ -93,11 +95,22 @@
         };
         return shcDispatch('shc-retrieved', shcResult);
       }
-      ipsResult = {
-        ips: content,
-        source: hostname
+      const selectedUrl = summaryUrlValidated?.toString();
+      const allUrls = {...PATIENT_IPS, ...EXAMPLE_IPS};
+      let name = Object.keys(allUrls).find(title => allUrls[title] === selectedUrl);
+      if (name) {
+        name = name + " Demo Dataset";
+      } else {
+        name = selectedUrl;
+      }
+      let result = {
+        resources: getResourcesFromIPS(content),
+        category: CATEGORY,
+        source: selectedUrl,
+        sourceName: name
       };
-      ipsDispatch('ips-retrieved', ipsResult);
+      // ipsDispatch('ips-retrieved', ipsResult);
+      resourceDispatch('update-resources', result);
     } catch (e) {
       processing = false;
       console.log('Failed', e);

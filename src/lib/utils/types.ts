@@ -76,10 +76,8 @@ export interface ResourceRetrieveEvent {
   sectionKey?: string;
   sectionTemplate?: CompositionSection;
   category?: string;
-  source?: {
-    url: string;
-    name: string;
-  };
+  source?: string;
+  sourceName?: string;
 }
 export interface SHCRetrieveEvent {
   shc: SHCFile | undefined;

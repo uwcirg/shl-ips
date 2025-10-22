@@ -11,7 +11,7 @@
   } from 'sveltestrap';
   import { getContext } from 'svelte';
   import { get } from 'svelte/store';
-  import { DATA_CATEGORIES } from '$lib/config/config';
+  import { DATA_CATEGORIES, SOURCE_NAME_SYSTEM } from '$lib/config/config';
   import FHIRDataService from '$lib/utils/FHIRDataService';
   import FHIRResourceList from '$lib/components/app/FHIRResourceList.svelte';
   
@@ -51,7 +51,14 @@
         <Accordion>
         {#each Object.entries($userResources[category]) as [source, dataset]}
         <AccordionItem>
-          <h6 slot="header" title={source} class="mt-1" style="max-width: 60ch; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{source}</h6>
+          <h6
+            slot="header"
+            title={source}
+            class="mt-1"
+            style="max-width: 60ch; white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
+          >
+            {get(dataset.patient).meta.tag.find((tag) => tag.system === SOURCE_NAME_SYSTEM)?.code || source}
+          </h6>
           <FHIRResourceList
             bind:resourceCollection={dataset}
             bind:submitting={submitting}

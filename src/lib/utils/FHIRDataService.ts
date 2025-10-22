@@ -17,7 +17,8 @@ import {
   INTERMEDIATE_FHIR_SERVER_BASE,
   IDENTIFIER_SYSTEM,
   CATEGORY_SYSTEM,
-  PLACEHOLDER_SYSTEM
+  PLACEHOLDER_SYSTEM,
+  SOURCE_NAME_SYSTEM
 } from "$lib/config/config";
 import type { IAuthService, UserDemographics } from "$lib/utils/types";
 import { ResourceHelper } from "$lib/utils/ResourceHelper";
@@ -239,7 +240,7 @@ export class FHIRDataService {
     })
   }
 
-  async createDataset(resources: Resource[], category: string, source: string): Promise<string> {
+  async createDataset(resources: Resource[], category: string, source: string, sourceName?: string): Promise<string> {
     let patient = resources.find((resource) => resource.resourceType === "Patient");
     if (!patient) {
       patient = this.generateCategoryPlaceholderPatient();
@@ -248,6 +249,9 @@ export class FHIRDataService {
     patient.meta = patient.meta ?? {};
     patient.meta.tag = patient.meta.tag ?? [];
     patient.meta.tag.push({ system: CATEGORY_SYSTEM, code: category });
+    if (sourceName) {
+      patient.meta.tag.push({ system: SOURCE_NAME_SYSTEM, code: sourceName });
+    }
     patient.meta.source = source;
     let datasetCollection = new ResourceCollection(resources);
     let updatedResources = datasetCollection.getFHIRResources();
@@ -281,11 +285,11 @@ export class FHIRDataService {
     }
   }
 
-  async addOrReplaceDataset(resources: Resource[], category: string, source: string) {
+  async addOrReplaceDataset(resources: Resource[], category: string, source: string, sourceName?: string) {
     if (get(this.userResources)?.[category]?.[source]) {
       this.deleteDataset(category, source);
     }
-    let patientReference = await this.createDataset(resources, category, source);
+    let patientReference = await this.createDataset(resources, category, source, sourceName);
     let newDataset = await this.fetchDatasetFromPatientReference(patientReference);
     let patient = get(this.masterPatient).resource;
     patient.link = patient.link ?? [];

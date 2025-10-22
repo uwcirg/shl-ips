@@ -100,7 +100,8 @@
       result = {
         resources: allResources,
         category: CATEGORY,
-        source: sofHost?.url
+        source: sofHost?.url,
+        sourceName: sofHost?.name
       };
       resourceDispatch('update-resources', result);
       return;

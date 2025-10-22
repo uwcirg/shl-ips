@@ -453,7 +453,8 @@
         resources: odhSectionResources.map((r) => r.resource),
         sectionKey: sectionKey,
         category: CATEGORY,
-        source: SOURCE
+        source: SOURCE.url,
+        sourceName: SOURCE.name
       };
       resourceDispatch('update-resources', result);
       console.log(odhSectionResources);

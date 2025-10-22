@@ -176,7 +176,8 @@
     let result: ResourceRetrieveEvent = {
       resources: [ patient ],
       category: CATEGORY,
-      source: SOURCE,
+      source: SOURCE.url,
+      sourceName: SOURCE.name
     };
     resourceDispatch('update-resources', result);
   }

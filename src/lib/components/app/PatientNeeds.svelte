@@ -256,7 +256,8 @@
     const result = {
       resources: resources,
       category: CATEGORY,
-      source: SOURCE,
+      source: SOURCE.url,
+      sourceName: SOURCE.name
     }
     resourceDispatch('update-resources', result);
   }

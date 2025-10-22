@@ -26,13 +26,15 @@
 
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
-  let sources: Record<string, {selected: Boolean; url: string; patient: Writable<UserDemographics>}> = {
+  let sources: Record<string, {name: string, selected: Boolean; url: string; patient: Writable<UserDemographics>}> = {
     "Current User": {
+      name: INSTANCE_CONFIG.title,
       selected: false,
       url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir",
       patient: demographics
     },
     "WA Health Summary Demo Patient": {
+      name: INSTANCE_CONFIG.title + " Demo Patient",
       selected: false,
       url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir",
       patient: writable({
@@ -47,6 +49,7 @@
       })
     },
     "AD Vault Demo Patient": {
+      name: "AD Vault Demo Patient",
       selected: false,
       url: "https://qa-rr-fhir.maxmddirect.com",
       patient: writable({
@@ -218,10 +221,8 @@
     fetchError = '';
     processing = true;
     try {
-      let hostname;
       const patient = await fetchPatient(constructPatientResource($formDemographics));
       const content = await fetchAdvanceDirective(patient.id);
-      hostname = sources[selectedSource].url;
       let resources: Array<DocumentReferencePOLST> = content.entry ? content.entry.map((e: BundleEntry) => {
         return e.resource;
       }) : [];
@@ -344,14 +345,14 @@
           }
         }
       }
-      
       processing = false;
       let result:ResourceRetrieveEvent = {
         resources: resources,
         sectionKey: sectionKey,
         sectionTemplate: sectionTemplate,
         category: CATEGORY,
-        source: hostname,
+        source: sources[selectedSource].url,
+        sourceName: sources[selectedSource].name
       }
       resourceDispatch('update-resources', result);
       console.log([patient, ...resources]);

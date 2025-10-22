@@ -117,7 +117,7 @@
       resourceResult = details;
       if (resourceResult.resources) {
         // Trigger update in ResourceSelector
-        await fhirDataService.addOrReplaceDataset(resourceResult.resources, resourceResult.category, resourceResult.source);
+        await fhirDataService.addOrReplaceDataset(resourceResult.resources, resourceResult.category, resourceResult.source, resourceResult.sourceName);
         showSuccessMessage();
       }
     } catch (e) {
