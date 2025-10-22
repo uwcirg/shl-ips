@@ -13,8 +13,6 @@
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
   import type { Goal, CompositionSection } from 'fhir/r4';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
-  
-  export let sectionKey: string = "Patient Story";
 
   const CATEGORY = 'patient-story';
   const SOURCE = {
