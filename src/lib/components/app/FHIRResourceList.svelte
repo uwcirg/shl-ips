@@ -22,7 +22,6 @@
   import { PLACEHOLDER_SYSTEM } from '$lib/config/config';
   import { ResourceHelper } from '$lib/utils/ResourceHelper.js';
   import type { ResourceCollection } from '$lib/utils/ResourceCollection.js';
-  import type { BundleEntry } from 'fhir/r4';
 
   import AdvanceDirective from '$lib/components/resource-templates/AdvanceDirective.svelte';
   import AllergyIntolerance from '$lib/components/resource-templates/AllergyIntolerance.svelte';
