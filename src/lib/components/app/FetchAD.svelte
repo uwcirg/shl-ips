@@ -10,6 +10,7 @@
     Spinner
   } from 'sveltestrap';
   import { createEventDispatcher, getContext } from 'svelte';
+  import { get } from 'svelte/store';
   import type { DocumentReferencePOLST, ResourceRetrieveEvent } from '$lib/utils/types';
   import type { Attachment, BundleEntry, ServiceRequest } from 'fhir/r4';
   import {
@@ -18,11 +19,15 @@
   } from '$lib/utils/util';
   import DemographicForm from '$lib/components/form/DemographicForm.svelte';
   import type { UserDemographics } from '$lib/utils/types';
-  import { demographics } from '$lib/stores/demographics';
   import { writable, type Writable } from 'svelte/store';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
+  import FHIRDataService from '$lib/utils/FHIRDataService';
 
   export let sectionKey: string = "Advance Directives";
+
+  let fhirDataService: FHIRDataService = getContext('fhirDataService');
+  let demographics = writable<UserDemographics>(get(fhirDataService.demographics)); // Copy to avoid reactivity loop
 
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
