@@ -89,6 +89,8 @@
 
 <style>
   .main-content {
+    display: flex;
+    flex-direction: column;
     flex-grow: 1;
   }
 
@@ -97,7 +99,7 @@
     position: relative;
     left: calc((100vw - 100%) / 2);
 
-    min-height: 100%;
+    height: 100vh;
     margin-right: auto;
     margin-left: auto;
     max-width: 1200px;

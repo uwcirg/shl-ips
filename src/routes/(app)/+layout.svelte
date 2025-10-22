@@ -46,8 +46,8 @@
 
 </script>
 {#if $user}
-  <Row class="main-row">
-    <Col>
+  <Row class="flex-fill">
+    <Col class = "d-flex flex-column">
       <slot />
     </Col>
   </Row>
@@ -58,6 +58,8 @@
 
 <style>
   .main-row {
-    flex-grow: 1;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
   }
 </style>

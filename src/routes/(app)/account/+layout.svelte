@@ -32,9 +32,9 @@
 
 </script>
 
-<div class="d-flex flex-column flex-lg-row tab-content data-tabs">
+<div class="d-flex flex-column flex-lg-row tab-content data-tabs h-100">
   <!-- Sidebar for large and up -->
-  <Nav pills vertical style="width:15em" class="flex-column d-none d-lg-flex me-3 p-2 bg-light rounded">
+  <Nav pills vertical style="min-width:15em" class="flex-column d-none d-lg-flex me-3 p-2 bg-light rounded">
     <h6 class="py-2">Account Settings</h6>
     {#each Object.entries(tabs) as [tabId, tabName]}
       <NavItem>

@@ -163,12 +163,12 @@
     'patient-medical-history': 'My Medical History',
     'patient-care-needs': 'My Care Needs',
     'patient-body-concerns': 'My Body',
-    'url': '*FHIR URL Upload'
+    'url': '* FHIR URL Upload'
   }
   let advancedTabs = ['url'];
 </script>
 
-<div class="d-flex flex-column flex-lg-row tab-content data-tabs">
+<div class="d-flex flex-column flex-lg-row flex-fill tab-content data-tabs h-100">
   <!-- Sidebar for medium and up -->
   <Nav pills vertical class="flex-column d-none d-lg-flex me-3 p-2 bg-light rounded">
     <h6 class="py-2">Categories</h6>
@@ -203,118 +203,117 @@
     </Nav>
   </div>
 
-  <div class="tab-pane patient-tab {activeTab === 'patient' ? "active show": ""}">
-    <DataCategoryView
-      title="About Me"
-      description="Add or update personal information to be shown in your next Health Summary."
-      category="patient"
-      editable
-    >
-      <Demographic slot="form" />
-    </DataCategoryView>
+  <div class="tab-pane active show col d-flex flex-fill flex-column justify-content-between">
+    <div class="{activeTab === 'patient' ? "" : "d-none"}">
+      <DataCategoryView
+        title="About Me"
+        description="Add or update personal information to be shown in your next Health Summary."
+        category="patient"
+        editable
+      >
+        <Demographic slot="form" />
+      </DataCategoryView>
+    </div>
+    <div class="{activeTab === 'sof-health-record' ? "" : "d-none"}">
+      <DataCategoryView
+        title="Data from Healthcare Providers"
+        description="Fetch US Core data from your sof-health-record via SMART authorization."
+        category="sof-health-record"
+      >
+        <FetchSoF slot="form"
+          on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
+          on:sof-auth-fail={ async ({ detail }) => { revertPreAuth(detail) }}
+          on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
+        />
+      </DataCategoryView>
+    </div>
+    <div class="{activeTab === 'patient-story' ? "" : "d-none"}">
+      <DataCategoryView
+        title="My Story"
+        description="Add or update your personal patient story and health goals."
+        category="patient-story"
+        editable
+      >
+        <PatientStory slot="form" />
+      </DataCategoryView>
+    </div>
+    <div class="{activeTab === 'advance-directives' ? "" : "d-none"}">
+      <DataCategoryView
+        title="Advance Directives"
+        description="Create or retrieve your Advance Directive documents from a repository."
+        category="advance-directives"
+      >
+        <FetchAD slot="form"
+          on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
+        />
+      </DataCategoryView>
+    </div>
+    <div class="{activeTab === 'occupational-data-for-health' ? "" : "d-none"}">
+      <DataCategoryView
+        title="Health-Related Work Info"
+        description="Add or update information about the work you do to include in your Health Summary."
+        category="occupational-data-for-health"
+        editable
+      >
+        <ODHForm slot="form"
+          on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
+        />
+      </DataCategoryView>
+    </div>
+    <div class="{activeTab === 'patient-medical-history' ? "" : "d-none"}">
+      <DataCategoryView
+        title="My Medical History"
+        description="Add any health conditions, medications, or history of illness that may not be included elsewhere in your health history."
+        category="patient-medical-history-history"
+        editable
+      >
+        <PatientMedical slot="form"
+          on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
+        />
+      </DataCategoryView>
+    </div>
+    <div class="{activeTab === 'patient-care-needs' ? "" : "d-none"}">
+      <DataCategoryView
+        title="My Care Needs"
+        description="Select any identities, functional concerns, or needs you would like your carers to be aware of."
+        category="patient-care-needs"
+        editable
+      >
+        <PatientNeeds slot="form"
+          on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
+        />
+      </DataCategoryView>
+    </div>
+    <div class="{activeTab === 'patient-body-concerns' ? "" : "d-none"}">
+      <DataCategoryView
+        title="My Body"
+        description="Record brief concerns about any specific part of your body."
+        category="patient-body-concerns"
+        editable
+      >
+        <PatientBody slot="form"
+          on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
+        />
+      </DataCategoryView>
+    </div>
+    {#if $mode === 'advanced'}
+      <div class="{activeTab === 'url' ? "" : "d-none"}">
+        <DataCategoryView
+          title="FHIR URL Upload"
+          description="Upload data from a FHIR server."
+          category="fetch-url"
+        >
+          <FetchUrl slot="form"
+            on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }  
+          />
+        </DataCategoryView>
+      </div>
+    {/if}
+    {#if $mode === "advanced"}
+      <em class="text-secondary">* Advanced features for demo purposes only</em>
+    {/if}
   </div>
-  <div class="tab-pane sof-health-record-tab {activeTab === 'sof-health-record' ? "active show": ""}">
-    <DataCategoryView
-      title="Data from Healthcare Providers"
-      description="Fetch US Core data from your sof-health-record via SMART authorization."
-      category="sof-health-record"
-    >
-      <FetchSoF slot="form"
-        on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
-        on:sof-auth-fail={ async ({ detail }) => { revertPreAuth(detail) }}
-        on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
-      />
-    </DataCategoryView>
-  </div>
-  <div class="tab-pane patient-story-tab {activeTab === 'patient-story' ? "active show": ""}">
-    <DataCategoryView
-      title="My Story"
-      description="Add or update your personal patient story and health goals."
-      category="patient-story"
-      editable
-    >
-      <PatientStory slot="form" />
-    </DataCategoryView>
-  </div>
-  <div class="tab-pane advance-directives-tab {activeTab === 'advance-directives' ? "active show": ""}">
-    <DataCategoryView
-      title="Advance Directives"
-      description="Create or retrieve your Advance Directive documents from a repository."
-      category="advance-directives"
-    >
-      <FetchAD slot="form"
-        on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
-      />
-    </DataCategoryView>
-  </div>
-  <div class="tab-pane occupational-data-for-health-tab {activeTab === 'occupational-data-for-health' ? "active show": ""}">
-    <DataCategoryView
-      title="Health-Related Work Info"
-      description="Add or update information about the work you do to include in your Health Summary."
-      category="occupational-data-for-health"
-      editable
-    >
-      <ODHForm slot="form"
-        on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
-      />
-    </DataCategoryView>
-  </div>
-  <div class="tab-pane patient-medical-history-tab {activeTab === 'patient-medical-history' ? "active show": ""}">
-    <DataCategoryView
-      title="My Medical History"
-      description="Add any health conditions, medications, or history of illness that may not be included elsewhere in your health history."
-      category="patient-medical-history-history"
-      editable
-    >
-      <PatientMedical slot="form"
-        on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
-      />
-    </DataCategoryView>
-  </div>
-  <div class="tab-pane patient-care-needs-tab {activeTab === 'patient-care-needs' ? "active show": ""}">
-    <DataCategoryView
-      title="My Care Needs"
-      description="Select any identities, functional concerns, or needs you would like your carers to be aware of."
-      category="patient-care-needs"
-      editable
-    >
-      <PatientNeeds slot="form"
-        on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
-      />
-    </DataCategoryView>
-  </div>
-  <div class="tab-pane patient-body-concerns {activeTab === 'patient-body-concerns' ? "active show": ""}">
-    <DataCategoryView
-      title="My Body"
-      description="Record brief concerns about any specific part of your body."
-      category="patient-body-concerns"
-      editable
-    >
-      <PatientBody slot="form"
-        on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
-      />
-    </DataCategoryView>
-  </div>
-  {#if $mode === 'advanced'}
-  <div class="tab-pane url-tab {activeTab === 'url' ? "active show": ""}">
-    <DataCategoryView
-      title="FHIR URL Upload"
-      description="Upload data from a FHIR server."
-      category="fhir-url"
-    >
-      <FetchUrl slot="form"
-        on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }  
-      />
-    </DataCategoryView>
-  </div>
-  {/if}
 </div>
-
-{#if $mode === "advanced"}
-  <br>
-  <em class="text-secondary">* Advanced features for demo purposes only</em>
-  <br>
-{/if}
 
 <style>
   :global(.at-load) {
