@@ -57,7 +57,7 @@
   const datasetDispatch = createEventDispatcher<{ 'dataset-submitted': DatasetSubmitEvent }>();
   let submitting = false;
   let fetchError = "";
-  let currentTab: string | number = 'default';
+  let activeTab: string | number = 'patient';
   let successMessage = false;
   
   let mode: Writable<string> = getContext('mode');
@@ -75,7 +75,7 @@
 
   $: {
     if ($mode === 'normal') {
-      setTimeout(() => document.querySelector(`span.default-tab`)?.parentElement?.click(), 1); 
+      setTimeout(() => document.querySelector(`span.patient-tab`)?.parentElement?.click(), 1); 
     }
   }
 
@@ -88,7 +88,7 @@
         return goto(url);
       }
     }
-    currentTab = sessionStorage.getItem('TAB') ?? currentTab;
+    activeTab = sessionStorage.getItem('TAB') ?? activeTab;
     sessionStorage.removeItem('TAB');
     const accordion = document.querySelector('div.add-data > div.accordion-collapse');
     if (accordion) {
@@ -98,13 +98,13 @@
         accordion.classList.remove('at-load');
       }, 250);
     }
-    let tab = document.querySelector(`span.${currentTab}-tab`)?.parentElement
+    let tab = document.querySelector(`span.${activeTab}-tab`)?.parentElement
     tab?.click();
   });
   
   async function preAuthRedirectHandler(details: SOFAuthEvent|undefined) {
     sessionStorage.setItem('URL', window.location.href);
-    sessionStorage.setItem('TAB', String(currentTab ?? ""));
+    sessionStorage.setItem('TAB', String(activeTab ?? ""));
   }
 
   async function revertPreAuth(details: SOFAuthEvent|undefined) {
@@ -146,7 +146,6 @@
   }
   
   let tabNavOpen = false;
-  let activeTab = 'patient';
   function toggleTab (tab: string) {
     if (activeTab !== tab) {
       activeTab = tab
