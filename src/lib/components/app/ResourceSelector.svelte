@@ -22,7 +22,7 @@
   } from 'sveltestrap';
   import { ResourceHelper } from '$lib/utils/ResourceHelper.js';
   import type { IPSResourceCollection } from '$lib/utils/IPSResourceCollection.js';
-  import type { IPSRetrieveEvent } from '$lib/utils/types.js';
+  import type { IAuthService, IPSRetrieveEvent } from '$lib/utils/types.ts';
   import type { CompositionSection, BundleEntry } from 'fhir/r4';
 
   import AdvanceDirective from '$lib/components/resource-templates/AdvanceDirective.svelte';
@@ -121,6 +121,7 @@
    * fetches the IPS, and calls the event dispatcher to pass the IPS to the parent component.
    */
   async function confirm() {
+    let authService: IAuthService = getContext('authService');
     submitting = true;
 
     statusDispatch('status-update', 'Adding data');
@@ -130,7 +131,7 @@
         .map((rh: ResourceHelper) => {
           return rh.resource;
         });
-      reference = await uploadResourcesAndGetReference(selectedIPSResources);
+      reference = await uploadResourcesAndGetReference(selectedIPSResources, authService.getAccessToken());
     } catch (e: any) {
       throw new Error('Unable to upload resources', { cause: e });
     }

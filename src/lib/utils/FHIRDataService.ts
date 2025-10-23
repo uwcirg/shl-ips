@@ -82,7 +82,12 @@ export class FHIRDataService {
   }
 
   async fetchDatasetFromPatientReference(patientReference: string): Promise<Array<Resource>> {
-    return fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/${patientReference}/$everything`, {cache: "no-store"})
+    return fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/${patientReference}/$everything`, {
+        cache: "no-store",
+        headers: {
+          "Authorization": `Bearer ${await this.auth.getAccessToken()}`
+        }
+      })
       .then((response) => response.text())
       .then((data) => JSON.parse(data))
       .then((data) => {
@@ -93,7 +98,12 @@ export class FHIRDataService {
   }
 
   async fetchPatient(): Promise<ResourceHelper | undefined> {
-    let patient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient?identifier=${IDENTIFIER_SYSTEM}%7C${get(this.auth.userId)}`, {cache: "no-store"})
+    let patient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient?identifier=${IDENTIFIER_SYSTEM}%7C${get(this.auth.userId)}`, {
+        cache: "no-store",
+        headers: {
+          "Authorization": `Bearer ${await this.auth.getAccessToken()}`
+        }
+      })
       .then((response) => response.text())
       .then((data) => JSON.parse(data))
       .then((data) => {
@@ -123,7 +133,8 @@ export class FHIRDataService {
       let updatedPatient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient/${patient.id}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/fhir+json'
+          'Content-Type': 'application/fhir+json',
+          'Authorization': `Bearer ${await this.auth.getAccessToken()}`
         },
         body: JSON.stringify(patient)
       })
@@ -137,7 +148,8 @@ export class FHIRDataService {
       let newPatient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/fhir+json'
+          'Content-Type': 'application/fhir+json',
+          'Authorization': `Bearer ${await this.auth.getAccessToken()}`
         },
         body: JSON.stringify(patient)
       })
@@ -255,7 +267,7 @@ export class FHIRDataService {
     patient.meta.source = source;
     let datasetCollection = new ResourceCollection(resources);
     let updatedResources = datasetCollection.getFHIRResources();
-    let transactionResponse = await uploadResources(updatedResources);
+    let transactionResponse = await uploadResources(updatedResources, await this.auth.getAccessToken());
     let patientReference = await getPatientReferenceFromTransactionResponse(transactionResponse);
     return patientReference;
   }
@@ -278,7 +290,10 @@ export class FHIRDataService {
     this.removeDatasetFromUserResources(category, source);
     // Delete after patient.link is updated to prevent cascade from deleting master patient resource
     let deleteResult = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient/${datasetPatientId}?_cascade=delete`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: {
+        "Authorization": `Bearer ${await this.auth.getAccessToken()}`
+      }
     });
     if (!deleteResult.ok) {
       throw new Error(`Failed to delete dataset: ${await deleteResult.text()}`);

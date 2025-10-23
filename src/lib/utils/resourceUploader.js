@@ -1,7 +1,7 @@
 import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
 
 // Create Bundle and POST
-export async function uploadResources(resources) {
+export async function uploadResources(resources, token=undefined) {
     let entries = [];
     resources.forEach(resource => {
         let entry = {
@@ -20,12 +20,16 @@ export async function uploadResources(resources) {
         entry: entries
     };
 
+    let headers = {
+        'Content-Type': 'application/json+fhir',
+    };
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+    }
+
     return await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json+fhir',
-            // Add any additional headers if needed
-        },
+        headers,
         body: JSON.stringify(bundle),
     }).then(async (response) => {
         let body = await response.text();
@@ -57,8 +61,8 @@ export function generateIpsUrlFromPatientReference(patientReference) {
     return `${INTERMEDIATE_FHIR_SERVER_BASE}/${patientReference}/$summary`;
 }
 
-export function uploadResourcesAndGetReference(resources) {
-    return uploadResources(resources).then(transactionResponse => {
+export function uploadResourcesAndGetReference(resources, token=undefined) {
+    return uploadResources(resources, token).then(transactionResponse => {
         let patientReference = getPatientReferenceFromTransactionResponse(transactionResponse);
         return generateIpsUrlFromPatientReference(patientReference);
         // return fetch(ipsUrl).then(response => response.json());
