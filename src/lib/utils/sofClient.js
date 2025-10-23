@@ -19,7 +19,7 @@ const config = {
 
 let client;
 
-async function authorize(inputFhirUrl, clientId, scope) {
+async function authorize(inputFhirUrl, clientId, scope=undefined) {
     if (scope) {
         config.scope = scope;
     }
