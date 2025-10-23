@@ -51,38 +51,32 @@
         <Accordion>
         {#each Object.entries($userResources[category]) as [source, dataset]}
         <AccordionItem>
-          <h6
-            slot="header"
-            title={source}
-            class="mt-1"
-            style="max-width: 60ch; white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
-          >
-            {get(dataset.patient).meta.tag.find((tag) => tag.system === SOURCE_NAME_SYSTEM)?.code || source}
-          </h6>
+          <div slot="header" class="d-flex align-items-center w-100" style="max-width: calc(100% - 2.5rem);">
+            <div class="flex-grow-1" style="min-width: 0">
+              <h6
+                class="mt-1"
+                title={source}
+                style="max-width: 100%; overflow-wrap: anywhere;"
+              >
+                {get(dataset.patient).meta.tag.find((tag) => tag.system === SOURCE_NAME_SYSTEM)?.code || source}
+              </h6>
+            </div>
+          </div>
           <FHIRResourceList
             bind:resourceCollection={dataset}
             bind:submitting={submitting}
             on:status-update={ ({ detail }) => { /*updateStatus(detail)*/ } }
             on:error={ ({ detail }) => { /*showError(detail)*/ } }
           />
-          <Row class="p-2 mx-0 flex-fill rounded-bottom bg-light border-bottom border-left border-right">
-            <Col class="col-10 d-flex justify-content-start align-items-center">
-              <span>Updated {new Date((get(dataset.patient)).meta.lastUpdated).toLocaleString(undefined, {
+          <div class="p-2 mx-0 d-flex flex-fill justify-content-between align-items-center flex-nowrap w-100 rounded-bottom bg-light border-bottom border-left border-right">
+            <div class="flex-grow-1" style="min-width: 0">
+              <span style="max-width: 100%;">
+                Updated {new Date((get(dataset.patient)).meta.lastUpdated).toLocaleString(undefined, {
                 dateStyle: "medium",
                 timeStyle: "short",
               })}</span>
-              <!-- <Button 
-                size="sm"
-                color="secondary"
-                outline
-                on:click={() => {
-                  document.querySelector('.add .accordion-collapse')?.classList.add('show');
-                }}
-              >
-                Update
-              </Button>-->
-            </Col>
-            <Col class="col-2 d-flex justify-content-end align-items-center">
+            </div>
+            <div class="ms-3 flex-shrink-0">
               <Button
                 size="sm"
                 color="danger"
@@ -91,8 +85,8 @@
               >
                 Delete
               </Button>
-            </Col>
-          </Row>
+            </div>
+          </div>
         </AccordionItem>
         {/each}
         </Accordion>
