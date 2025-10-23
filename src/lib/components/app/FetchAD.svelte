@@ -389,7 +389,6 @@
 </script>
 
 <form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, sources[selectedSource].url, prepareIps)}>
-  <Label>Fetch Advance Directives to include in your summary</Label><br>
   <Label>Select a source to search:</Label>
   <FormGroup>
     <Row>

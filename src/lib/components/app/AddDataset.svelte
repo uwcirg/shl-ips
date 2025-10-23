@@ -231,7 +231,7 @@
     <div class="{activeTab === 'patient-story' ? "" : "d-none"}">
       <DataCategoryView
         title="My Story"
-        description="Add or update your personal patient story and health goals."
+        description="Add or update a description of your personal patient story and goals for care."
         category="patient-story"
         editable
       >

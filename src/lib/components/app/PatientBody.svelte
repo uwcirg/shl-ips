@@ -430,7 +430,6 @@
 </script>
 
 <form on:submit|preventDefault={() => {}}>
-  <p class="text-secondary"><em>Record brief concerns about any specific part of your body.</em></p>
   <h5>Body Concerns</h5>
   {#each bodyPartConcerns as status, i}
     <Row>
