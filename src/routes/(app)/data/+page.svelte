@@ -20,16 +20,8 @@
   <title>My Data - {INSTANCE_CONFIG.title}</title> 
 </svelte:head>
 
-<div class="px-3 h-100 d-flex flex-column">
-  <Row>
-    <h4> My Health Data</h4>
-    <p>
-      Select a data category to display health data that you have imported, add data to it, and make changes.
-    </p>
-  </Row>
-  <Row class="d-flex flex-fill">
-    <Col class="d-flex flex-fill">
-      <AddDataset />
-    </Col>
-  </Row>
-</div>
+<h4> My Health Data</h4>
+<p>
+  Select a data category to display health data that you have imported, add data to it, and make changes.
+</p>
+<AddDataset />
