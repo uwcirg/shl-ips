@@ -3,7 +3,7 @@
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { getContext } from 'svelte';
-  import { type Writable } from 'svelte/store';
+  import { type Writable, get } from 'svelte/store';
   import {
     Accordion,
     AccordionItem,
@@ -21,7 +21,7 @@
     TabContent,
     TabPane
   } from 'sveltestrap';
-  import { DATA_CATEGORIES } from '$lib/config/config';
+  import { DATA_CATEGORIES, SOURCE_NAME_SYSTEM } from '$lib/config/config';
   import ResourceSelector from '$lib/components/app/ResourceSelector.svelte';
   import {
     getResourcesFromIPS,
@@ -333,7 +333,11 @@
           </Row>
         </CardHeader>
         <CardBody>
-          <Patient content={ {resource: $masterPatient.resource} } />
+          <Row style="overflow: hidden">
+            <Col class="resource-content justify-content-center align-items-center">
+              <Patient content={ {resource: $masterPatient.resource} } />
+            </Col>
+          </Row>
         </CardBody>
       </Card>
       {/if}
@@ -346,11 +350,17 @@
           <CardBody>
             {#each Object.entries(datasetsBySource) as [source, dataset]}
             <AccordionItem>
-              <Row slot="header" class="me-2 flex-fill" style="max-width: 97%">
-                <Col class="col-10 d-flex justify-content-start align-items-center">
-                  <h6 class="mt-1" style="max-width: 100%; overflow:ellipsis">{source}</h6>
-                </Col>
-                <Col class="col-2 d-flex justify-content-end align-items-center">
+              <div slot="header" class="d-flex justify-content-between align-items-center flex-nowrap w-100" style="max-width: calc(100% - 2.5rem);">
+                <div class="flex-grow-1 text-break">
+                  <h6
+                    class="mt-1"
+                    title={source}
+                    style="max-width: 100%; overflow-wrap: anywhere;"
+                  >
+                    {get(dataset.patient).meta.tag.find((tag) => tag.system === SOURCE_NAME_SYSTEM)?.code || source}
+                  </h6>
+                </div>
+                <div class="ms-3 flex-shrink-0">
                   <Button
                     size="sm"
                     color="success"
@@ -359,8 +369,8 @@
                   >
                     Add
                   </Button>
-                </Col>
-              </Row>
+                </div>
+              </div>
               <FHIRResourceList
                 bind:resourceCollection={dataset}
                 bind:submitting={submitting}
