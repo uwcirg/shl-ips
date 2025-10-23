@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Badge} from 'sveltestrap';
+  import { Badge, Row, Col } from 'sveltestrap';
   import type { CodeableConcept } from "fhir/r4";
 
   export let codeableConcept: CodeableConcept; // Define a prop to pass the data to the component
@@ -24,19 +24,25 @@
 </script>
 
 {#if codeableConcept?.coding?.length > 0}
-  {#if badge}
-    <Badge color="primary">{codeableConcept.coding[0].system} : {codeableConcept.coding[0].code}</Badge>
-    <br>
-  {/if}
-  {#if codeSet.size > 0}
-    {#each [...codeSet] as code, index}
-      {#if index === 0 && bold}
-        <strong>{code}</strong><br>
-      {:else}
-        {code}<br>
+  <Row class="flex-wrap-reverse justify-content-start">
+    <Col class="col-auto">
+      {#if codeSet.size > 0}
+        {#each [...codeSet] as code, index}
+          {#if index === 0 && bold}
+            <strong>{code}</strong><br>
+          {:else}
+            {code}<br>
+          {/if}
+        {/each}
       {/if}
-    {/each}
-  {/if}
+    </Col>
+    <Col class="col-auto">
+      {#if badge}
+        <Badge color="primary">{codeableConcept.coding[0].system} : {codeableConcept.coding[0].code}</Badge>
+        <br>
+      {/if}
+    </Col>
+  </Row>
 {:else if codeableConcept?.text}
   {#if bold}
     <strong>{codeableConcept.text}</strong><br>
