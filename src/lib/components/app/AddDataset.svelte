@@ -187,7 +187,9 @@
     <Nav tabs>
       <NavItem>
         <Dropdown nav isOpen={tabNavOpen}>
-          <DropdownToggle nav caret class="active">Categories <Icon name="chevron-right" style="font-size: .7em"/> {tabs[activeTab]}</DropdownToggle>
+          <DropdownToggle nav caret class="active">
+            Categories <span class="d-none d-sm-inline"><Icon name="chevron-right" style="font-size: .7em"/> {tabs[activeTab]}</span>
+          </DropdownToggle>
           <DropdownMenu>
             {#each Object.entries(tabs) as [tabId, tabName]}
               {#if !advancedTabs.includes(tabId) || $mode === 'advanced'}
