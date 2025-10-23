@@ -102,124 +102,126 @@
         {showContact ? 'Hide' : 'Show'} contact information <Icon style="font-size: x-small;"name={!showContact ? "caret-down" : "caret-up"} />
     </Button>
     {#if showContact}
-        {#if resource.telecom}
-            <table class="table table-bordered table-sm">
-                <thead>
-                    <tr><th colspan="3">Contact Information</th></tr>
-                </thead>
-                <tbody>
-                    {#each resource.telecom as telecom}
+        <div style="overflow: scroll;">
+            {#if resource.telecom}
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr><th colspan="3">Contact Information</th></tr>
+                    </thead>
+                    <tbody>
+                        {#each resource.telecom as telecom}
+                            <tr>
+                                <td>{telecom.system ?? ""}</td>
+                                <td>{telecom.use ?? ""}</td>
+                                <td>{telecom.value ?? ""}</td>
+                            </tr>
+                        {/each}
+                    </tbody>
+                </table>
+            {/if}
+            {#if resource.address}
+                <table class="table table-bordered table-sm">
+                    <thead>
                         <tr>
-                            <td>{telecom.system ?? ""}</td>
-                            <td>{telecom.use ?? ""}</td>
-                            <td>{telecom.value ?? ""}</td>
+                        <th scope="col">Use</th>
+                        <th scope="col">Address</th>
                         </tr>
-                    {/each}
-                </tbody>
-            </table>
-        {/if}
-        {#if resource.address}
-            <table class="table table-bordered table-sm">
-                <thead>
-                    <tr>
-                    <th scope="col">Use</th>
-                    <th scope="col">Address</th>
-                    </tr>
-                    <tr></tr>
-                </thead>
-                <tbody>
-                    {#each resource.address as address}
-                        <tr>
-                        <td>{address.use ?? ""}</td>
-                        <td>
-                            {#if address.line}
-                                {#each address.line as line}
-                                    {line}<br>
-                                {/each}
+                        <tr></tr>
+                    </thead>
+                    <tbody>
+                        {#each resource.address as address}
+                            <tr>
+                            <td>{address.use ?? ""}</td>
+                            <td>
+                                {#if address.line}
+                                    {#each address.line as line}
+                                        {line}<br>
+                                    {/each}
+                                {/if}
+                                {address.city ? address.city+"," : ""}{
+                                    address.state
+                                        ? ` ${address.state}`+(address.country ? "," : "")
+                                        : ''
+                                }{address.country
+                                    ? ` ${address.country}`
+                                    : ''}
+                                {address.postalCode ?? ""}
+                            </td>
+                            </tr>
+                        {/each}
+                    </tbody>
+                </table>
+            {/if}
+            {#if resource.contact}
+                {#each resource.contact as contact}
+                    <strong>Emergency Contact:</strong><br>
+                    {#if contact.relationship}
+                        {#each contact.relationship as relationship, index}
+                            {#if relationship.coding && relationship.coding[0].display}
+                                <Badge color="secondary">{relationship.coding[0].display}</Badge>
                             {/if}
-                            {address.city ? address.city+"," : ""}{
-                                address.state
-                                    ? ` ${address.state}`+(address.country ? "," : "")
-                                    : ''
-                            }{address.country
-                                ? ` ${address.country}`
-                                : ''}
-                            {address.postalCode ?? ""}
-                        </td>
-                        </tr>
-                    {/each}
-                </tbody>
-            </table>
-        {/if}
-        {#if resource.contact}
-            {#each resource.contact as contact}
-                <strong>Emergency Contact:</strong><br>
-                {#if contact.relationship}
-                    {#each contact.relationship as relationship, index}
-                        {#if relationship.coding && relationship.coding[0].display}
-                            <Badge color="secondary">{relationship.coding[0].display}</Badge>
-                        {/if}
-                        {#if index < contact.relationship.length - 1}
-                            <br>
-                        {/if}
-                    {/each}
-                {/if}
-                {#if contact.name}
-                    <strong>
-                        {contact.name.prefix ?? ""}
-                        {contact.name.given ? contact.name.given.join(' ') : ""}
-                        {contact.name.family ?? ""}
-                    </strong>
-                    <br>
-                {/if}
-                {#if contact.telecom}
-                    <table class="table table-bordered table-sm">
-                        <thead>
-                            <tr><th colspan="3">Contact Information</th></tr>
-                        </thead>
-                        <tbody>
-                            {#each contact.telecom as telecom}
+                            {#if index < contact.relationship.length - 1}
+                                <br>
+                            {/if}
+                        {/each}
+                    {/if}
+                    {#if contact.name}
+                        <strong>
+                            {contact.name.prefix ?? ""}
+                            {contact.name.given ? contact.name.given.join(' ') : ""}
+                            {contact.name.family ?? ""}
+                        </strong>
+                        <br>
+                    {/if}
+                    {#if contact.telecom}
+                        <table class="table table-bordered table-sm">
+                            <thead>
+                                <tr><th colspan="3">Contact Information</th></tr>
+                            </thead>
+                            <tbody>
+                                {#each contact.telecom as telecom}
+                                    <tr>
+                                        <td>{telecom.system ?? ""}</td>
+                                        <td>{telecom.use ?? ""}</td>
+                                        <td>{telecom.value ?? ""}</td>
+                                    </tr>
+                                {/each}
+                            </tbody>
+                        </table>
+                    {/if}
+                    {#if contact.address}
+                        <table class="table table-bordered table-sm">
+                            <thead>
                                 <tr>
-                                    <td>{telecom.system ?? ""}</td>
-                                    <td>{telecom.use ?? ""}</td>
-                                    <td>{telecom.value ?? ""}</td>
+                                <th scope="col">Use</th>
+                                <th scope="col">Address</th>
                                 </tr>
-                            {/each}
-                        </tbody>
-                    </table>
-                {/if}
-                {#if contact.address}
-                    <table class="table table-bordered table-sm">
-                        <thead>
-                            <tr>
-                            <th scope="col">Use</th>
-                            <th scope="col">Address</th>
-                            </tr>
-                            <tr></tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>{contact.address.use ?? ""}</td>
-                                <td>
-                                    {#if contact.address.line}
-                                        {#each contact.address.line as line}
-                                            {line}<br>
-                                        {/each}
-                                    {/if}
-                                    {contact.address.city ? contact.address.city+"," : ""}{
-                                        contact.address.state
-                                            ? ` ${contact.address.state}`+(contact.address.country ? "," : "")
-                                            : ''
-                                    }{contact.address.country
-                                        ? ` ${contact.address.country}`
-                                        : ''}
-                                    {contact.address.postalCode ?? ""}
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                {/if}
-            {/each}
-        {/if}
+                                <tr></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{contact.address.use ?? ""}</td>
+                                    <td>
+                                        {#if contact.address.line}
+                                            {#each contact.address.line as line}
+                                                {line}<br>
+                                            {/each}
+                                        {/if}
+                                        {contact.address.city ? contact.address.city+"," : ""}{
+                                            contact.address.state
+                                                ? ` ${contact.address.state}`+(contact.address.country ? "," : "")
+                                                : ''
+                                        }{contact.address.country
+                                            ? ` ${contact.address.country}`
+                                            : ''}
+                                        {contact.address.postalCode ?? ""}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    {/if}
+                {/each}
+            {/if}
+        </div>
     {/if}
 {/if}
