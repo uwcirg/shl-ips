@@ -9,7 +9,7 @@
     Col,
     Row,
   } from 'sveltestrap';
-  import { getContext } from 'svelte';
+  import { getContext, onMount } from 'svelte';
   import { get } from 'svelte/store';
   import { DATA_CATEGORIES, SOURCE_NAME_SYSTEM } from '$lib/config/config';
   import FHIRDataService from '$lib/utils/FHIRDataService';
@@ -24,6 +24,27 @@
 
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
   let userResources = fhirDataService.userResources;
+
+  onMount(async () => {
+    const accordion = document.querySelector('div.add-'+ category + ' > div.accordion-collapse');
+    if (accordion) {
+      accordion.style.overflow = 'visible';
+    }
+  });
+
+  function handleAddDataAccordionOverflow(accordionClass: string) {
+    const accordion = document.querySelector(`div.${accordionClass} > div.accordion-collapse`);
+    if (accordion) {
+      accordion.style.overflow = 'hidden';
+    } else {
+      setTimeout(function() {
+        const accordion = document.querySelector(`div.${accordionClass} > div.accordion-collapse`);
+        if (accordion) {
+          accordion.style.overflow = 'visible';
+        }
+      }, 500);
+    }
+  }
 </script>
 
 {#if title}
@@ -36,7 +57,11 @@
 {/if}
 <slot name="description"/>
 <Accordion stayOpen>
-  <AccordionItem class="add" active={!($userResources && $userResources[category])}>
+  <AccordionItem
+    class="add-{category}"
+    active={!($userResources && $userResources[category])}
+    on:toggle={() => handleAddDataAccordionOverflow("add-" + category)}
+  >
     <h5 slot="header" class="my-2">{editable ? "Enter or Edit Stored Data" : "Add New Data"}</h5>
     <slot name="form" />
   </AccordionItem>
