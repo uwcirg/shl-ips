@@ -237,7 +237,7 @@
                   </CardHeader>
                   <Label style="width: 100%">
                     <CardBody>
-                      <Row style="overflow:hidden">
+                      <Row style="overflow: hidden">
                         <Col class="resource-content justify-content-center align-items-center">
                           {#if category in components}
                             <svelte:component
