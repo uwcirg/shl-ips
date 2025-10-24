@@ -1,6 +1,10 @@
 import type { CompositionSection, Resource } from 'fhir/r4';
 
-export function methodSectionHelper(method: string, resources: Resource[]): { resources: Resource[]; sectionKey: string; sectionTemplate: CompositionSection } {
+export function methodSectionHelper(method: string, resources: Resource[]): { resources: Resource[]; sectionKey?: string; sectionTemplate?: CompositionSection } {
+  if (!methodSectionHelpers[method]) {
+    return { resources: resources, sectionKey: undefined, sectionTemplate: undefined };
+  }
+  
   return methodSectionHelpers[method](resources);
 }
 
