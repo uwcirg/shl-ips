@@ -38,5 +38,5 @@
   </CardBody>
 </Card>
 {/if}
-<Button color="primary" style="width:fit-content" on:click={() => goto('/data')}>Update My Patient Data</Button>
+<Button color="primary" style="width:fit-content" on:click={() => goto('/data#about-me')}>Update My Patient Data</Button>
 

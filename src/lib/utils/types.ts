@@ -103,6 +103,16 @@ export interface SOFHost {
   note:string | undefined;
 }
 
+export interface DataCategoryConfig {
+  category: string;
+  component: any;
+  tabTitle?: string;
+  title?: string;
+  description?: string;
+  editable?: boolean;
+  advanced?: boolean;
+};
+
 export interface DocumentReferencePOLST extends DocumentReference {
   pdfSignedDate?: string;
   

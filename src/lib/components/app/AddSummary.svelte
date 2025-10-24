@@ -325,7 +325,7 @@
                 size="sm"
                 color="secondary"
                 outline
-                on:click={() => goto('/data')}
+                on:click={() => goto('/data#about-me')}
               >
                 Edit
               </Button>

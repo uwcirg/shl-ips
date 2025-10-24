@@ -17,7 +17,7 @@
   const CATEGORY = 'patient-body-concerns';
   const SOURCE = {
     url: window.location.origin,
-    name: 'Patient Provided Information'
+    name: 'My Body'
   };
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 

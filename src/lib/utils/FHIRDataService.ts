@@ -219,7 +219,8 @@ export class FHIRDataService {
       }
       let categories = patient.meta.tag.filter((tag) => tag.system === CATEGORY_SYSTEM);
       let category = categories?.[0]?.code;
-      let source = patient.meta?.source?.split('#')[0];
+      // let source = patient.meta?.source?.split('#')[0];
+      let source = patient.meta.tag.filter((tag) => tag.system === SOURCE_NAME_SYSTEM)?.[0]?.code ?? patient.meta.source?.split('#')[0];
       if (!category) {
         throw new Error('Category must be passed when creating a new dataset, or contained in the dataset patient resource\s meta.tag attribute.');
       }

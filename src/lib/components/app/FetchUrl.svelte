@@ -88,12 +88,20 @@
       content = await contentResponse.json();
       hostname = summaryUrlValidated?.hostname;
       processing = false
+      
       if (content != undefined && content.verifiableCredential) {
         shcResult = {
           shc: content,
           source: hostname
         };
         return shcDispatch('shc-retrieved', shcResult);
+      }
+
+      if (
+        !(summaryUrlValidated?.toString().includes('$summary') ||
+         summaryUrlValidated?.toString().includes('Bundle'))
+      ) {
+        throw new Error("Error preparing IPS: URL must return an IPS Bundle.");
       }
       const selectedUrl = summaryUrlValidated?.toString();
       const allUrls = {...PATIENT_IPS, ...EXAMPLE_IPS};
@@ -119,9 +127,9 @@
   }
 </script>
 
+<div style="height: 300px">
 <form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, summaryUrlValidated, prepareIps)}>
 <FormGroup>
-  <Label>Fetch summary from URL</Label>
   <Dropdown {isOpen} toggle={() => (isOpen = !isOpen)}>
     <DropdownToggle tag="div" class="d-inline-block" style="width:100%">
       <div style="position:relative">
@@ -175,6 +183,7 @@
   {/if}
 </Row>
 </form>
+</div>
 <FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 <span class="text-danger">{fetchError}</span>
   
