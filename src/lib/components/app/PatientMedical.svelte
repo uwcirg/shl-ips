@@ -13,10 +13,11 @@
   import type { CodeableConcept, Condition, MedicationStatement } from 'fhir/r4';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
 
-  const CATEGORY = 'patient-medical-history';
+  const CATEGORY = 'patient-story';
+  const METHOD = 'patient-medical-history-form';
   const SOURCE = {
     url: window.location.origin,
-    name: 'Patient Provided Information'
+    name: 'My Medical History'
   };
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
@@ -158,6 +159,7 @@
     let result:ResourceRetrieveEvent = {
       resources: resources,
       category: CATEGORY,
+      method: METHOD,
       source: SOURCE.url,
       sourceName: SOURCE.name
     }

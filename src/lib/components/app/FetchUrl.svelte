@@ -25,7 +25,8 @@
   const ipsDispatch = createEventDispatcher<{'ips-retrieved': IPSRetrieveEvent}>();
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
-  const CATEGORY = "fetch-url";
+  const CATEGORY = "provider-health-record";
+  const METHOD = "provider-health-record-url";
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let summaryUrls = EXAMPLE_IPS;
@@ -114,6 +115,7 @@
       let result = {
         resources: getResourcesFromIPS(content),
         category: CATEGORY,
+        method: METHOD,
         source: selectedUrl,
         sourceName: name
       };

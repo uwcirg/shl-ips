@@ -21,7 +21,7 @@
     TabContent,
     TabPane
   } from 'sveltestrap';
-  import { DATA_CATEGORIES, SOURCE_NAME_SYSTEM } from '$lib/config/config';
+  import { DATA_CATEGORY_NAMES, METHOD_SYSTEM, SOURCE_NAME_SYSTEM } from '$lib/config/config';
   import ResourceSelector from '$lib/components/app/ResourceSelector.svelte';
   import {
     getResourcesFromIPS,
@@ -42,6 +42,7 @@
   import type FHIRDataService from '$lib/utils/FHIRDataService';
   import Patient from '$lib/components/resource-templates/Patient.svelte';
   import { PLACEHOLDER_SYSTEM } from '$lib/config/config';
+  import { methodSectionHelper } from '$lib/utils/sectionTemplateUtil';
  
   export let status = "";
   
@@ -192,10 +193,16 @@
   async function handleNewResources(details: ResourceRetrieveEvent) {
     try {
       resourceResult = details;
-      if (resourceResult.sectionKey) {
-        resourceCollection.addSection(resourceResult.sectionKey, resourceResult.sectionTemplate);
-      }
       if (resourceResult.resources) {
+        let patient = resourceResult.resources.find(r => r.resourceType === 'Patient');
+        let datasetMethod = patient.meta?.tag?.find(t => t.system === METHOD_SYSTEM)?.code;
+        if (datasetMethod) {
+          let { resources, sectionKey, sectionTemplate } = methodSectionHelper(datasetMethod, resourceResult.resources);
+          resourceResult = { ...resourceResult, resources, sectionKey, sectionTemplate };
+        }
+        if (resourceResult.sectionKey) {
+          resourceCollection.addSection(resourceResult.sectionKey, resourceResult.sectionTemplate);
+        }
         if (!resourcesAdded) {
           let mpResource = $masterPatient.resource;
           delete mpResource.link; // Otherwise the IPS patient will be included with future $everything calls
@@ -345,7 +352,7 @@
         <br>
         <Card>
           <CardHeader>
-            <h6 class="mt-1">{DATA_CATEGORIES[category]?.title || category}</h6>
+            <h6 class="mt-1">{DATA_CATEGORY_NAMES[category]?.name || category}</h6>
           </CardHeader>
           <CardBody>
             {#each Object.entries(datasetsBySource) as [source, dataset]}
@@ -365,7 +372,11 @@
                     size="sm"
                     color="success"
                     outline
-                    on:click={() => handleNewResources({ resources: dataset.getFHIRResources(), source, category })}
+                    on:click={() => handleNewResources({
+                      resources: dataset.getFHIRResources(),
+                      source,
+                      category
+                    })}
                   >
                     Add
                   </Button>

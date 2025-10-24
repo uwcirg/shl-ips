@@ -40,7 +40,7 @@
   import ODHForm from '$lib/components/app/ODHForm.svelte';
   import type {
     ResourceRetrieveEvent,
-    DataCategoryConfig,
+    DataFormConfig,
     DatasetSubmitEvent,
     SOFAuthEvent
   } from '$lib/utils/types';
@@ -156,9 +156,9 @@
   async function handleNewResources(details: ResourceRetrieveEvent) {
     try {
       resourceResult = details;
-      if (resourceResult.resources) {
+      if (resourceResult.resources?.length) {
         // Trigger update in ResourceSelector
-        await fhirDataService.addOrReplaceDataset(resourceResult.resources, resourceResult.category, resourceResult.source, resourceResult.sourceName);
+        await fhirDataService.addOrReplaceDataset(resourceResult);
         showSuccessMessage();
       }
     } catch (e) {
@@ -182,28 +182,30 @@
     fetchError = message;
   }
 
-  let sections: {id: string; title?: string; description?: string; categories: DataCategoryConfig[]}[] = [
+  let sections: {id: string; title?: string; description?: string; category: string; forms: DataFormConfig[]}[] = [
     {
       id: "about-me",
       title: "About Me",
       description: "Manage information about you to be shown in your next Health Summary.",
-      categories: [
-        { category: "patient", component: Demographic, editable: true }
+      category: "patient",
+      forms: [
+        { method: "patient", component: Demographic, editable: true }
       ]
     },
     {
       id: "healthcare-providers",
       title: "Data from Healthcare Providers",
       description: "",
-      categories: [
+      category: "provider-health-record",
+      forms: [
         {
-          category: "sof-health-record",
+          method: "provider-health-record-sof",
           tabTitle: "SMART Data Access",
           description: "Fetch US Core data from your healthcare provider via SMART authorization.",
           component: FetchSoF
         },
         {
-          category: "fetch-url",
+          method: "provider-health-record-url",
           tabTitle: "FHIR URL",
           description: "Fetch health summary data from a FHIR URL.",
           advanced: true,
@@ -215,30 +217,31 @@
       id: "my-story",
       title: "My Health in My Words",
       description: "Your own representation of your health, history, needs and goals.",
-      categories: [
+      category: "patient-story",
+      forms: [
         {
-          category: "patient-story",
+          method: "patient-story-form",
           tabTitle: "My Story",
           description: "Create a description of your personal patient story and goals for care.",
           component: PatientStory,
           editable: true
         },
         {
-          category: "patient-medical-history",
+          method: "patient-medical-history-form",
           tabTitle: "My Medical History",
           description: "Add any health conditions, medications, or history of illness that may not be included elsewhere in your health history.",
           component: PatientMedical,
           editable: true
         },
         {
-          category: "patient-care-needs",
+          method: "patient-care-needs-form",
           tabTitle: "My Care Needs",
           description: "Select any identities, functional concerns, or needs you would like your carers to be aware of.",
           component: PatientNeeds,
           editable: true
         },
         {
-          category: "patient-body-concerns",
+          method: "patient-body-concerns-form",
           tabTitle: "My Body",
           description: "Record brief concerns about any specific part of your body.",
           component: PatientBody,
@@ -250,9 +253,10 @@
       id: "advance-directives",
       title: "Advance Directives",
       description: "Create or retrieve your Advance Directive documents from a repository.",
-      categories: [
+      category: "advance-directives",
+      forms: [
         {
-          category: "advance-directives",
+          method: "advance-directives-search",
           component: FetchAD,
           editable: true
         }
@@ -262,9 +266,10 @@
       id: "occupation",
       title: "Health-Related Work Info",
       description: "Manage information about the work you do to include in your Health Summary.",
-      categories: [
+      category: "occupational-data-for-health",
+      forms: [
         {
-          category: "occupational-data-for-health",
+          method: "occupational-data-for-health-form",
           component: ODHForm,
           editable: true
         }
@@ -282,7 +287,8 @@
       <DataCategoryView
         title={section.title}
         description={section.description}
-        categories={section.categories}
+        category = {section.category}
+        forms={section.forms}
         showAdd={section.id === activeSection}
         on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
         on:sof-auth-fail={ async ({ detail }) => { revertPreAuth(detail) }}

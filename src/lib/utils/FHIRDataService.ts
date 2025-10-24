@@ -17,10 +17,11 @@ import {
   INTERMEDIATE_FHIR_SERVER_BASE,
   IDENTIFIER_SYSTEM,
   CATEGORY_SYSTEM,
+  METHOD_SYSTEM,
   PLACEHOLDER_SYSTEM,
   SOURCE_NAME_SYSTEM
 } from "$lib/config/config";
-import type { IAuthService, UserDemographics } from "$lib/utils/types";
+import type { IAuthService, ResourceRetrieveEvent, UserDemographics } from "$lib/utils/types";
 import { ResourceHelper } from "$lib/utils/ResourceHelper";
 import type { Patient, Resource } from "fhir/r4";
 import { constructPatientResource, getDemographicsFromPatient } from "$lib/utils/util";
@@ -253,7 +254,8 @@ export class FHIRDataService {
     })
   }
 
-  async createDataset(resources: Resource[], category: string, source: string, sourceName?: string): Promise<string> {
+  async createDataset(dataset: ResourceRetrieveEvent): Promise<string> {
+    let { resources, category, method, source, sourceName } = dataset;
     let patient = resources.find((resource) => resource.resourceType === "Patient");
     if (!patient) {
       patient = this.generateCategoryPlaceholderPatient();
@@ -262,6 +264,7 @@ export class FHIRDataService {
     patient.meta = patient.meta ?? {};
     patient.meta.tag = patient.meta.tag ?? [];
     patient.meta.tag.push({ system: CATEGORY_SYSTEM, code: category });
+    patient.meta.tag.push({ system: METHOD_SYSTEM, code: method });
     if (sourceName) {
       patient.meta.tag.push({ system: SOURCE_NAME_SYSTEM, code: sourceName });
     }
@@ -301,11 +304,11 @@ export class FHIRDataService {
     }
   }
 
-  async addOrReplaceDataset(resources: Resource[], category: string, source: string, sourceName?: string) {
-    if (get(this.userResources)?.[category]?.[source]) {
-      this.deleteDataset(category, source);
+  async addOrReplaceDataset(dataset: ResourceRetrieveEvent) {
+    if (get(this.userResources)?.[dataset.category]?.[dataset.source]) {
+      this.deleteDataset(dataset.category, dataset.source);
     }
-    let patientReference = await this.createDataset(resources, category, source, sourceName);
+    let patientReference = await this.createDataset(dataset);
     let newDataset = await this.fetchDatasetFromPatientReference(patientReference);
     let patient = get(this.masterPatient).resource;
     patient.link = patient.link ?? [];

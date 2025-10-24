@@ -26,7 +26,8 @@
   const authDispatch = createEventDispatcher<{'sof-auth-init': SOFAuthEvent; 'sof-auth-fail': SOFAuthEvent}>();
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
-  const CATEGORY = "sof-health-record";
+  const CATEGORY = "provider-health-record";
+  const METHOD = "provider-health-record-sof";
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let processing = false;
@@ -35,6 +36,7 @@
   let result: ResourceRetrieveEvent = {
     resources: undefined,
     category: CATEGORY,
+    method: METHOD,
     source: undefined
   };
 
@@ -136,7 +138,9 @@
       result = {
         resources,
         category: CATEGORY,
-        source: defaultUrl
+        method: METHOD,
+        source: defaultUrl,
+        sourceName: 'Quick Sample'
       };
       resourceDispatch('update-resources', result);
     } catch (e) {

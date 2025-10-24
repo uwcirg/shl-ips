@@ -11,13 +11,14 @@
   } from 'sveltestrap';
   import { createEventDispatcher } from 'svelte';
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
-  import type { Goal, CompositionSection } from 'fhir/r4';
+  import type { Goal, Observation, CompositionSection } from 'fhir/r4';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
 
   const CATEGORY = 'patient-story';
+  const METHOD = 'patient-story-form';
   const SOURCE = {
     url: window.location.origin,
-    name: 'Patient Provided Information'
+    name: 'My Story'
   };
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
@@ -44,7 +45,7 @@
     },
     text: {
       status: "generated",
-      div: "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>[Patient Story]</p>\n<p><strong>Patient's Goals</strong></p>\n<ul>\n<li>Maintain blood sugar levels within normal range (in progress)</li>\n</ul>\n</div>"
+      div: "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>${story}</p>\n<p><strong>Patient's Goals</strong></p><ul>${goals}</ul></div>"
     },
     extension: [
       {
@@ -54,6 +55,24 @@
     ],
     entry: []
   };
+
+  let observationResourceTemplate: Observation = {
+    resourceType: "Observation",
+    status: "final",
+    code: {
+      coding: [
+        {
+          system: "http://loinc.org",
+          code: "51855-5",
+          display: "Patient Note"
+        }
+      ]
+    },
+    valueString: "",
+    subject: {
+      reference: "Patient/pat1"
+    },
+  }
   
   let goalResourceTemplate: Goal = {
     resourceType: "Goal",
@@ -89,16 +108,24 @@
 
   function prepareGoalResource(goal: any) {
     let goalResource = JSON.parse(JSON.stringify(goalResourceTemplate));
+    if (!goal.value) {
+      return;
+    }
     goalResource.statusDate = new Date().toISOString().slice(0, 10);
     goalResource.description.text = goal.value;
     goalResource.achievementStatus.coding[0] = progressCodings[goal.checked ? "in-progress" : "not-achieved"];
     return goalResource;
   }
 
-
+  function prepareObservationResource() {
+    let observationResource = JSON.parse(JSON.stringify(observationResourceTemplate));
+    observationResource.valueString = story;
+    return observationResource;
+  }
 
   function prepareIps() {
-    const resources = goals.map(prepareGoalResource);
+    const resources = goals.map(prepareGoalResource).filter((entry) => entry !== undefined);
+    resources.push(prepareObservationResource());
     const section = JSON.parse(JSON.stringify(sectionTemplate));
     section.text.div = `<div xmlns="http://www.w3.org/1999/xhtml"><p><strong>Patient Story</strong></p><p>${story}</p><p><strong>Patient's Goals</strong></p><ul>${goals.map(goal => `<li>${goal.value}</li>`).join('')}</ul></div>`;
     section.extension[0].valueString = story;
@@ -106,6 +133,7 @@
     let result:ResourceRetrieveEvent = {
       resources: resources,
       category: CATEGORY,
+      method: METHOD,
       source: SOURCE.url,
       sourceName: SOURCE.name
     }

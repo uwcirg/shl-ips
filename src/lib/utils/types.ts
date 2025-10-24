@@ -75,9 +75,10 @@ export interface ResourceRetrieveEvent {
   resources: Array<any> | undefined;
   sectionKey?: string;
   sectionTemplate?: CompositionSection;
-  category?: string;
-  source?: string;
-  sourceName?: string;
+  category: string;
+  method: string;
+  source: string;
+  sourceName: string;
 }
 export interface SHCRetrieveEvent {
   shc: SHCFile | undefined;
@@ -103,8 +104,8 @@ export interface SOFHost {
   note:string | undefined;
 }
 
-export interface DataCategoryConfig {
-  category: string;
+export interface DataFormConfig {
+  method: string;
   component: any;
   tabTitle?: string;
   title?: string;

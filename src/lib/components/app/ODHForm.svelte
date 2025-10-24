@@ -9,9 +9,10 @@
 
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
   const CATEGORY = 'occupational-data-for-health';
+  const METHOD = 'occupational-data-for-health-form';
   const SOURCE = {
     url: window.location.origin,
-    name: 'Patient Provided Information'
+    name: 'My Work Info'
   };
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
@@ -431,7 +432,7 @@
     }
   }
 
-  let buttonText = 'Update occupation data';
+  let buttonText = 'Update work info';
   let buttonDisabled = false;
   function updateOdhSection() {
     let prevButtonText = buttonText;
@@ -453,6 +454,7 @@
         resources: odhSectionResources.map((r) => r.resource),
         sectionKey: sectionKey,
         category: CATEGORY,
+        method: METHOD,
         source: SOURCE.url,
         sourceName: SOURCE.name
       };

@@ -70,6 +70,7 @@
   };
 
   const CATEGORY = "advance-directives";
+  const METHOD = "advance-directives-search";
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let selectedSource = "Current User";
@@ -356,6 +357,7 @@
         sectionKey: sectionKey,
         sectionTemplate: sectionTemplate,
         category: CATEGORY,
+        method: METHOD,
         source: sources[selectedSource].url,
         sourceName: sources[selectedSource].name
       }

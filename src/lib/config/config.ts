@@ -5,59 +5,21 @@ export const API_BASE = import.meta.env.VITE_API_BASE;
 export const INTERMEDIATE_FHIR_SERVER_BASE = import.meta.env.VITE_INTERMEDIATE_FHIR_SERVER_BASE;
 export const IDENTIFIER_SYSTEM = 'http://keycloak.cirg.uw.edu';
 export const CATEGORY_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-category';
+export const METHOD_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-method';
 export const PLACEHOLDER_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-placeholder';
 export const SOURCE_NAME_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-source-name';
-export const DATA_CATEGORIES = {
+export const DATA_CATEGORY_NAMES = {
   "occupational-data-for-health": {
-    title: "Occupational Data for Health",
-  },
-  "patient-body-concerns": {
-    title: "Patient Body Concerns",
-  },
-  "patient-identity-information": {
-    title: "Patient Identities",
-  },
-  "patient-medical-history": {
-    title: "Patient Medical History",
-  },
-  "patient-care-needs": {
-    title: "Patient Needs",
+    name: "Health-Related Work Info",
   },
   "patient-story": {
-    title: "Patient Story",
-    sectionKey: "Patient Story",
-    sectionTemplate: {
-      title: "Patient Story",
-      code: {
-        coding: [
-          {
-            system: "http://loinc.org",
-            code: "81338-6",
-            display: "Patient Story"
-          }
-        ]
-      },
-      text: {
-        status: "generated",
-        div: "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>[Patient Story]</p>\n<p><strong>Patient's Goals</strong></p>\n<ul>\n<li>Maintain blood sugar levels within normal range (in progress)</li>\n</ul>\n</div>"
-      },
-      extension: [
-        {
-          url: "http://healthintersections.com.au/fhir/StructureDefinition/patient-story",
-          valueString: ""
-        }
-      ],
-      entry: []
-    }
+    name: "Patient Story"
   },
   "advance-directives": {
-    title: "Advance Directives",
+    name: "Advance Directives",
   },
-  "sof-health-record": {
-    title: "EHR Health Records",
-  },
-  "fetch-url": {
-    title: "Data from FHIR URL",
+  "provider-health-record": {
+    name: "Provider Health Records",
   }
 }
 

@@ -19,10 +19,11 @@
 
   export let patient: Patient | undefined;
 
-  const CATEGORY = 'patient-identity-information';
+  const CATEGORY = 'patient-story';
+  const METHOD = 'patient-identity-form';
   const SOURCE = {
     url: window.location.origin,
-    name: 'Patient Provided Information'
+    name: 'My Identities'
   };
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
@@ -176,6 +177,7 @@
     let result: ResourceRetrieveEvent = {
       resources: [ patient ],
       category: CATEGORY,
+      method: METHOD,
       source: SOURCE.url,
       sourceName: SOURCE.name
     };
