@@ -13,8 +13,6 @@
   import DemographicForm from '$lib/components/form/DemographicForm.svelte';
   import FHIRDataService from '$lib/utils/FHIRDataService';
 
-  const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
-
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
   let demographics = fhirDataService.demographics;
 
@@ -22,12 +20,6 @@
   async function saveDemographics() {
     processing = true;
     let patientRH = await fhirDataService.saveDemographicsToPatient();
-    let patient = patientRH.resource;
-    resourceDispatch('update-resources', {
-      resources: [patient],
-      hostname: 'WA Health Summary'
-    });
-    
     processing = false;
   }
 </script>
