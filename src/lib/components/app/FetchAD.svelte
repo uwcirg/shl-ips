@@ -27,7 +27,13 @@
   export let sectionKey: string = "Advance Directives";
 
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
-  let demographics = writable<UserDemographics>(get(fhirDataService.demographics)); // Copy to avoid reactivity loop
+  let demographics: UserDemographics = get(fhirDataService.demographics);
+  let userFormDemographics = writable<UserDemographics>({
+    first: demographics.first,
+    last: demographics.last,
+    gender: demographics.gender,
+    dob: demographics.dob
+  }); // Copy to avoid reactivity loop
 
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
@@ -36,7 +42,7 @@
       name: INSTANCE_CONFIG.title,
       selected: false,
       url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir",
-      patient: demographics
+      patient: userFormDemographics
     },
     "WA Health Summary Demo Patient": {
       name: INSTANCE_CONFIG.title + " Demo Patient",
@@ -405,7 +411,7 @@
     <FormGroup>
       <Label>Enter your information to fetch related advance directives</Label>
       <br>
-      <DemographicForm demographics={formDemographics} hide={ ["genderIdentity", "culture"]}/>
+      <DemographicForm demographics={formDemographics} show={ ["first", "last", "gender", "dob"]}/>
     </FormGroup>
     
     <Row>
