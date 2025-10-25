@@ -139,7 +139,10 @@
     let content: any;
     statusDispatch('status-update', 'Building IPS');
     const contentResponse = await fetch(reference!, {
-      headers: { accept: 'application/fhir+json' }
+      headers: {
+        accept: 'application/fhir+json',
+        authorization: `Bearer ${await authService.getAccessToken()}`
+      }
     }).then(function (response) {
       if (!response.ok) {
         // reject the promise if we didn't get a 2xx response
