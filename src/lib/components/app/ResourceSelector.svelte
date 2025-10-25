@@ -131,7 +131,7 @@
         .map((rh: ResourceHelper) => {
           return rh.resource;
         });
-      reference = await uploadResourcesAndGetReference(selectedIPSResources, authService.getAccessToken());
+      reference = await uploadResourcesAndGetReference(selectedIPSResources, await authService.getAccessToken());
     } catch (e: any) {
       throw new Error('Unable to upload resources', { cause: e });
     }
