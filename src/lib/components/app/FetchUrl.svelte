@@ -146,7 +146,7 @@
           color: rgb(50, 50, 50);"/>
       </div>
     </DropdownToggle>
-    <DropdownMenu style="max-height: 300px; width:100%; overflow:scroll">
+    <DropdownMenu style="max-height: 250px; width:100%; overflow:scroll">
       {#if Object.keys(PATIENT_IPS).length > 0}
         <DropdownItem header>Actual Patient Data (permitted for use)</DropdownItem>
         {#each Object.entries(PATIENT_IPS) as [title, url]}
