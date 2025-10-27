@@ -134,8 +134,6 @@ export function getResourcesFromIPS(ips: Bundle): Resource[] {
       if (!entry.resource) return;
       // if (entry.resource.resourceType == 'Condition') return; // Omit conditions until ips fhir server is upgraded
       if (entry.resource.resourceType == 'Composition') return;
-
-      entry.resource.id = entry.fullUrl;
       if ('extension' in entry.resource && entry.resource.extension) {
           entry.resource.extension = entry.resource.extension.filter(function(item) {
               return item.url !== "http://hl7.org/fhir/StructureDefinition/narrativeLink";
