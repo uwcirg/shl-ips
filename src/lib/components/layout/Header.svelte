@@ -145,7 +145,7 @@
       </Nav>
       <Nav class="ms-auto" navbar>
         <NavItem>
-          <NavLink href={"/"} active={ activeItem === "home" }>About</NavLink>
+          <NavLink href={"/"} active={ activeItem === "home" }>Home</NavLink>
         </NavItem>
         {#if $authenticated}
           {#if $user}
@@ -156,37 +156,10 @@
               <NavItem>
                 <NavLink href="/summaries" active={ activeItem === "summaries" }>My Summaries</NavLink>
               </NavItem>
-              <!-- <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
-                <DropdownToggle color="primary" nav caret class={ activeItem === "summaries" ? "active" : "" }>Summaries</DropdownToggle>
-                <DropdownMenu end style="max-height: 350px; overflow:auto">
-                  <DropdownItem
-                    on:click={() => {
-                      goto("/share");
-                    }}><Icon name="plus-lg" /> Create New Shareable Summary </DropdownItem>
-                  <DropdownItem divider />
-                  <DropdownItem header>Your Summaries</DropdownItem>
-                  <DropdownItem on:click={() => { goto("/summaries") }}>
-                    <Icon name="archive" /> All Summaries
-                  </DropdownItem>
-                  {#if $shlStore.length > 0}
-                    {#each $shlStore as shl, i}
-                      <DropdownItem
-                        on:click={() => {
-                        goto('/view/' + shl.id);
-                      }}>{shl.label || `Summary ${i + 1}`}</DropdownItem>
-                    {/each}
-                  {/if}
-                </DropdownMenu>
-              </Dropdown> -->
             {/if}
             {#if INSTANCE_CONFIG.pages.documents}
               <NavItem>
                 <NavLink href="/documents" active={ activeItem === "documents" }>Documents</NavLink>
-              </NavItem>
-            {/if}
-            {#if INSTANCE_CONFIG.pages.share}
-              <NavItem>
-                <NavLink href="/share" active={ activeItem === "share" }>Share</NavLink>
               </NavItem>
             {/if}
             {#if INSTANCE_CONFIG.pages.provider}
