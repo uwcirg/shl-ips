@@ -138,7 +138,7 @@
 
   async function fetchPatient(patient: any, url?: string) {
     let baseUrl = url ?? sources[selectedSource].url;
-    let query = buildPatientSearchQuery(formDemographics);
+    let query = buildPatientSearchQuery($formDemographics);
     let result = await fetch(`${baseUrl}/Patient${query}`, {
       method: 'GET',
       headers: { accept: 'application/json' },

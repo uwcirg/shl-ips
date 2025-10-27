@@ -16,8 +16,16 @@
   import { PDFDocument } from 'pdf-lib'
   import { demographics } from '$lib/stores/demographics';
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
+  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
 
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
+  const CATEGORY = "advance-directives";
+  const METHOD = "advance-directives-create-polst";
+  const SOURCE = {
+    url: window.location.origin,
+    name: 'Custom POLST'
+  };
+  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let processing = false;
 
@@ -325,8 +333,10 @@
     processing = false;
     let result:ResourceRetrieveEvent = {
       resources: resources,
-      sectionKey: sectionKey,
-      sectionTemplate: sectionTemplate
+      category: CATEGORY,
+      method: METHOD,
+      source: SOURCE.url,
+      sourceName: SOURCE.name
     }
     resourceDispatch('update-resources', result);
   }

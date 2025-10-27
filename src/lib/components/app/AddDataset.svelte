@@ -38,6 +38,7 @@
   import PatientNeeds from '$lib/components/app/PatientNeeds.svelte';
   import PatientBody from '$lib/components/app/PatientBody.svelte';
   import ODHForm from '$lib/components/app/ODHForm.svelte';
+  import CreatePOLST from '$lib/components/app/CreatePOLST.svelte';
   import type {
     ResourceRetrieveEvent,
     DataFormConfig,
@@ -257,8 +258,13 @@
       forms: [
         {
           method: "advance-directives-search",
-          component: FetchAD,
-          editable: true
+          tabTitle: "Directive Search",
+          component: FetchAD
+        },
+        {
+          method: "advance-directives-create-polst",
+          tabTitle: "Create POLST",
+          component: CreatePOLST
         }
       ]
     },
