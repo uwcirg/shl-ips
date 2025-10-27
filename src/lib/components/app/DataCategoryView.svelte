@@ -58,7 +58,7 @@
 </script>
 
 {#if description}
-  <p class="text-secondary"><em>{description}</em></p>
+  <p class="text-secondary"><em>{@html description}</em></p>
 {/if}
 <slot name="description"/>
 <Accordion stayOpen class="mb-2">
@@ -77,7 +77,7 @@
         <TabPane class="{formConfig.method}-tab" tabId={formConfig.method} style="padding-top:10px" active={formConfig.method === activeTab || !activeTab && index === 0}>
           <span class="{formConfig.method}-tab" slot="tab">{formConfig.advanced ? "* " : ""}{formConfig.tabTitle || formConfig.title}</span>
           {#if formConfig.title}<h5 class="my-2">{formConfig.title}</h5>{/if}
-          {#if formConfig.description}<p class="text-secondary"><em>{formConfig.description}</em></p>{/if}
+          {#if formConfig.description}<p class="text-secondary"><em>{@html formConfig.description}</em></p>{/if}
           {#if formConfig.component}
             <svelte:component this={formConfig.component} on:update-resources on:sof-auth-init on:sof-auth-fail />
           {/if}
@@ -87,89 +87,94 @@
       </TabContent>
     {:else if (forms.length === 1)}
       {#if forms[0].title}<h5 class="my-2">{forms[0].title}</h5>{/if}
-      {#if forms[0].description}<p class="text-secondary"><em>{forms[0].description}</em></p>{/if}
+      {#if forms[0].description}<p class="text-secondary"><em>{@html forms[0].description}</em></p>{/if}
       {#if forms[0].component}
         <svelte:component this={forms[0].component} on:update-resources on:sof-auth-init on:sof-auth-fail />
       {/if}
     {/if}
-  </AccordionItem>
-  </Accordion>
-  {#if !addDataActiveOnLoad && methodList?.length > 0 }
-  <Accordion stayOpen>
-    <AccordionItem
-      class="my-data-accordion"
-      active
-    >
-      <h5 slot="header">My Stored Data</h5>
-    {#if $userResources[category]}
-      <Accordion stayOpen>
-        {#each Object.entries($userResources[category]) as [source, dataset]}
-          <AccordionItem active>
-            <div slot="header" class="d-flex align-items-center w-100" style="max-width: calc(100% - 2.5rem);">
-              <div class="flex-grow-1" style="min-width: 0">
-                <h6
-                  class="mt-1"
-                  title={source}
-                  style="max-width: 100%; overflow-wrap: anywhere;"
-                >
-                  {get(dataset.patient).meta.tag.find((tag) => tag.system === SOURCE_NAME_SYSTEM)?.code || source}
-                </h6>
-              </div>
-            </div>
-            <div class="p-2 mx-0 d-flex flex-fill justify-content-between align-items-center flex-nowrap w-100 rounded-top bg-light border-top border-left border-right">
-              <div class="flex-grow-1" style="min-width: 0">
-                <span style="max-width: 100%;">
-                  Updated {new Date((get(dataset.patient)).meta.lastUpdated).toLocaleString(undefined, {
-                  dateStyle: "medium",
-                  timeStyle: "short",
-                })}</span>
-              </div>
-              <div class="ms-3 flex-shrink-0">
-                <Button
-                  size="sm"
-                  color="secondary"
-                  outline
-                  on:click={() => {
-                    const accordionButton = document.querySelector(`div.${accordionClass} > h2 > button.accordion-button`);
-                    if (accordionButton) {
-                      const openCollapse = document.querySelector(`div.${accordionClass} > div.accordion-collapse.show`);
-                      if (openCollapse === null) {
-                        accordionButton.click();
-                      }
-                      const offset = 72;
-                      const elementTop = accordionButton.getBoundingClientRect().top + window.scrollY;
-                      window.scrollTo({top: elementTop - offset-10, behavior: 'smooth'});
-                      activeTab = get(dataset.patient).meta.tag.find((tag) => tag.system === METHOD_SYSTEM)?.code;
-                    }
-                  }}
-                >
-                  Update
-                </Button>
-              </div>
-              <div class="ms-3 flex-shrink-0">
-                <Button
-                  size="sm"
-                  color="danger"
-                  outline
-                  on:click={() => fhirDataService.deleteDataset(category, source)}
-                >
-                  Delete
-                </Button>
-              </div>
-            </div>
-            <FHIRResourceList
-              bind:resourceCollection={dataset}
-              bind:submitting={submitting}
-              on:status-update={ ({ detail }) => { /*updateStatus(detail)*/ } }
-              on:error={ ({ detail }) => { /*showError(detail)*/ } }
-            />
-          </AccordionItem>
-        {/each}
-      </Accordion>
+    {#if $mode === "advanced"}
+      <br>
+      <em class="text-secondary">* Advanced feature for demo purposes only</em>
+      <br>
     {/if}
-    </AccordionItem>
+  </AccordionItem>
+</Accordion>
+{#if !addDataActiveOnLoad && methodList?.length > 0 }
+<Accordion stayOpen>
+  <AccordionItem
+    class="my-data-accordion"
+    active
+  >
+    <h5 slot="header">My Stored Data</h5>
+  {#if $userResources[category]}
+    <Accordion stayOpen>
+      {#each Object.entries($userResources[category]) as [source, dataset]}
+        <AccordionItem active>
+          <div slot="header" class="d-flex align-items-center w-100" style="max-width: calc(100% - 2.5rem);">
+            <div class="flex-grow-1" style="min-width: 0">
+              <h6
+                class="mt-1"
+                title={source}
+                style="max-width: 100%; overflow-wrap: anywhere;"
+              >
+                {get(dataset.patient).meta.tag.find((tag) => tag.system === SOURCE_NAME_SYSTEM)?.code || source}
+              </h6>
+            </div>
+          </div>
+          <div class="p-2 mx-0 d-flex flex-fill justify-content-between align-items-center flex-nowrap w-100 rounded-top bg-light border-top border-left border-right">
+            <div class="flex-grow-1" style="min-width: 0">
+              <span style="max-width: 100%;">
+                Updated {new Date((get(dataset.patient)).meta.lastUpdated).toLocaleString(undefined, {
+                dateStyle: "medium",
+                timeStyle: "short",
+              })}</span>
+            </div>
+            <div class="ms-3 flex-shrink-0">
+              <Button
+                size="sm"
+                color="secondary"
+                outline
+                on:click={() => {
+                  const accordionButton = document.querySelector(`div.${accordionClass} > h2 > button.accordion-button`);
+                  if (accordionButton) {
+                    const openCollapse = document.querySelector(`div.${accordionClass} > div.accordion-collapse.show`);
+                    if (openCollapse === null) {
+                      accordionButton.click();
+                    }
+                    const offset = 72;
+                    const elementTop = accordionButton.getBoundingClientRect().top + window.scrollY;
+                    window.scrollTo({top: elementTop - offset-10, behavior: 'smooth'});
+                    activeTab = get(dataset.patient).meta.tag.find((tag) => tag.system === METHOD_SYSTEM)?.code;
+                  }
+                }}
+              >
+                Update
+              </Button>
+            </div>
+            <div class="ms-3 flex-shrink-0">
+              <Button
+                size="sm"
+                color="danger"
+                outline
+                on:click={() => fhirDataService.deleteDataset(category, source)}
+              >
+                Delete
+              </Button>
+            </div>
+          </div>
+          <FHIRResourceList
+            bind:resourceCollection={dataset}
+            bind:submitting={submitting}
+            on:status-update={ ({ detail }) => { /*updateStatus(detail)*/ } }
+            on:error={ ({ detail }) => { /*showError(detail)*/ } }
+          />
+        </AccordionItem>
+      {/each}
     </Accordion>
   {/if}
+  </AccordionItem>
+  </Accordion>
+{/if}
 
 <style>
   :global(div.my-data-accordion > h2.accordion-header > button.accordion-button) {
