@@ -173,12 +173,10 @@
               </DropdownToggle>
               <DropdownMenu end style="max-height: 350px; overflow:auto">
                 <DropdownItem header>
-                  Welcome, {get(fhirDataService.demographics)?.firstName ?? $user.profile.given_name ?? $user.profile.preferred_username}<br>
+                  Welcome, {get(fhirDataService.demographics)?.firstName ?? $user.profile.given_name ?? $user.profile.preferred_username} ({$user.profile.email})
                   {#if $user.profile.idp === 'google'}
-                    <Icon name="google"/>
+                    <br><Icon name="google" alt="Google logo" aria-label="Signed in using Google"/> Signed in using Google
                   {/if}
-                  {$user.profile.email}
-                  
                 </DropdownItem>
                 <DropdownItem on:click={() => {
                   goto('/account');
