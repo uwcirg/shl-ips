@@ -102,6 +102,7 @@
       result = {
         resources: allResources,
         category: CATEGORY,
+        method: METHOD,
         source: sofHost?.url,
         sourceName: sofHost?.name
       };
