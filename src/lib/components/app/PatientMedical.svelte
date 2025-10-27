@@ -216,7 +216,7 @@
       <Button color="secondary" outline style="width:fit-content" on:click={() => addEntry('problems')}><Icon name="plus"></Icon>Add Health Issue</Button>
     </Col>
   </Row>
-  <h5>Medications</h5>
+  <h5>Medications I'm Taking Now</h5>
   {#each entries.medications as medication, i}
     <Row class="mb-1" style="width: 100%">
       <Col>
