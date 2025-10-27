@@ -11,7 +11,7 @@
   } from 'sveltestrap';
   import { createEventDispatcher } from 'svelte';
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
-  import type { Goal, Observation, CompositionSection } from 'fhir/r4';
+  import type { Goal, Observation, Resource, CompositionSection } from 'fhir/r4';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
 
   const CATEGORY = 'patient-story';
@@ -127,8 +127,18 @@
   }
 
   function prepareIps() {
-    const resources = goals.map(prepareGoalResource).filter((entry) => entry !== undefined);
-    resources.push(prepareObservationResource());
+    let resources: Resource = [];
+    let goalResources = goals.map(prepareGoalResource).filter((entry) => entry);
+    if (goalResources.length > 0) {
+      resources = [...resources, ...goalResources];
+    }
+    let observationResource = prepareObservationResource();
+    if (observationResource) {
+      resources.push(observationResource);
+    }
+    if (resources.length == 0) {
+      return;
+    }
     const section = JSON.parse(JSON.stringify(sectionTemplate));
     section.text.div = `<div xmlns="http://www.w3.org/1999/xhtml"><p><strong>Patient Story</strong></p><p>${story}</p><p><strong>Patient's Goals</strong></p><ul>${goals.map(goal => `<li>${goal.value}</li>`).join('')}</ul></div>`;
     section.extension[0].valueString = story;
