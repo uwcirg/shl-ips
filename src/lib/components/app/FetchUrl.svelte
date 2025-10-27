@@ -56,6 +56,18 @@
     }
   }
 
+  function getSourceName(url: URL | undefined) {
+    const selectedUrl = url?.toString();
+    const allUrls = {...PATIENT_IPS, ...EXAMPLE_IPS};
+    let name = Object.keys(allUrls).find(title => allUrls[title] === selectedUrl);
+    if (name) {
+      name = name + " Demo Dataset";
+    } else {
+      name = selectedUrl;
+    }
+    return name;
+  }
+
   async function prepareIps() {
     fetchError = "";
     processing = true;
@@ -104,19 +116,12 @@
       ) {
         throw new Error("Error preparing IPS: URL must return an IPS Bundle.");
       }
-      const selectedUrl = summaryUrlValidated?.toString();
-      const allUrls = {...PATIENT_IPS, ...EXAMPLE_IPS};
-      let name = Object.keys(allUrls).find(title => allUrls[title] === selectedUrl);
-      if (name) {
-        name = name + " Demo Dataset";
-      } else {
-        name = selectedUrl;
-      }
+
       let result = {
         resources: getResourcesFromIPS(content),
         category: CATEGORY,
         method: METHOD,
-        source: selectedUrl,
+        source: getSourceName(summaryUrlValidated),
         sourceName: name
       };
       // ipsDispatch('ips-retrieved', ipsResult);
@@ -130,7 +135,7 @@
 </script>
 
 <div style="height: 300px">
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, summaryUrlValidated, prepareIps)}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, getSourceName(summaryUrlValidated), prepareIps)}>
 <FormGroup>
   <Dropdown {isOpen} toggle={() => (isOpen = !isOpen)}>
     <DropdownToggle tag="div" class="d-inline-block" style="width:100%">

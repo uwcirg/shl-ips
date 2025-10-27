@@ -283,7 +283,7 @@
         color="primary"
         style="width:fit-content"
         disabled={processing}
-        on:click={FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, SOURCE, prepareIps)}>
+        on:click={FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, SOURCE.name, prepareIps)}>
         {#if !processing}
           Update your conditions, medications and history
         {:else}

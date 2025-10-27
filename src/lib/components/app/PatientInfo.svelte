@@ -187,7 +187,7 @@
 </script>
 
 <!-- <p class="text-secondary"><em>Add or update the personal information that will be shown in this Health Summary.</em></p> -->
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, SOURCE, prepareIps)}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, SOURCE.name, prepareIps)}>
   <h5>Patient Details</h5>
   <Row>
     <Col>

@@ -264,7 +264,7 @@
     resourceDispatch('update-resources', result);
   }
 </script>
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, SOURCE, prepareIps)}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, SOURCE.name, prepareIps)}>
   <!-- <p class="text-secondary"><em>Select any identities, functional concerns, or needs you would like your carers to be aware of.</em></p> -->
   <h5>Functional Identities and Concerns</h5>
   <FormGroup>
