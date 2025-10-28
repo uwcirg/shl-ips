@@ -216,7 +216,7 @@
       <Button color="secondary" outline style="width:fit-content" on:click={() => addEntry('problems')}><Icon name="plus"></Icon>Add Health Issue</Button>
     </Col>
   </Row>
-  <h5>Medications I'm Taking Now</h5>
+  <h5>Medications I'm Taking Currently</h5>
   {#each entries.medications as medication, i}
     <Row class="mb-1" style="width: 100%">
       <Col>
@@ -225,7 +225,7 @@
         </FormGroup>
       </Col>
       <Col>
-        <FormGroup style="font-size:small" class="text-secondary" label="Dosage">
+        <FormGroup style="font-size:small" class="text-secondary" label="Dose and Time of Day">
           <Input type="text" bind:value={medication.detail} style="width: 100%; min-width: 150px" />
         </FormGroup>
       </Col>
