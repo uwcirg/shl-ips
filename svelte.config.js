@@ -1,8 +1,6 @@
 import { vitePreprocess } from '@sveltejs/kit/vite';
 import adapter from '@sveltejs/adapter-node';
 
-const disallowedRoutes = INSTANCE_CONFIG.disallowedRoutes.map((r) => `/${r}`);
-
 const dev = process.argv.includes('dev');
 
 /** @type {import('@sveltejs/kit').Config} */
