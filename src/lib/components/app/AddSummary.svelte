@@ -373,11 +373,14 @@
                     size="sm"
                     color="success"
                     outline
-                    on:click={() => handleNewResources({
-                      resources: dataset.getFHIRResources(),
-                      source,
-                      category
-                    })}
+                    on:click={(event) => {
+                      event.stopPropagation();
+                      handleNewResources({
+                        resources: dataset.getFHIRResources(),
+                        source,
+                        category
+                      });
+                    }}
                   >
                     Add
                   </Button>
