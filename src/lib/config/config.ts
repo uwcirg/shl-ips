@@ -1,4 +1,5 @@
 // import {PUBLIC_BASE_URL} from '$env/static/public';
+import PUBLIC_PROVIDER_ENDPOINTS from '$lib/config/public-provider-endpoints.json';
 
 export const API_BASE = import.meta.env.VITE_API_BASE;
 
@@ -75,6 +76,9 @@ export const SOF_HOSTS = [
     note: "Credentials provided"
   },
 ];
+export const EPIC_CLIENT_ID = import.meta.env.VITE_EPIC_CLIENT_ID;
+export const CERNER_CLIENT_ID = import.meta.env.VITE_CERNER_CLIENT_ID;
+export const SOF_ENDPOINTS = PUBLIC_PROVIDER_ENDPOINTS;
 
 export const CARIN_RESOURCES = [
   'Patient',
