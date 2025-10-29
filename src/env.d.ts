@@ -9,6 +9,7 @@ interface ImportMetaEnv {
     readonly VITE_SHOW_VIEWER_DEMO: boolean
     readonly VITE_INTERMEDIATE_FHIR_SERVER_BASE: string
     readonly VITE_APP_VERSION_STRING: string
+    readonly VITE_DEMO_WARNING: string
 
     // Authentication
     readonly VITE_AUTH_URL: string

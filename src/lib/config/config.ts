@@ -1,6 +1,8 @@
 // import {PUBLIC_BASE_URL} from '$env/static/public';
 import PUBLIC_PROVIDER_ENDPOINTS from '$lib/config/public-provider-endpoints.json';
 
+export const DEMO_WARNING = import.meta.env.VITE_DEMO_WARNING;
+
 export const API_BASE = import.meta.env.VITE_API_BASE;
 
 export const INTERMEDIATE_FHIR_SERVER_BASE = import.meta.env.VITE_INTERMEDIATE_FHIR_SERVER_BASE;

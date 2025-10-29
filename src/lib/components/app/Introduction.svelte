@@ -1,6 +1,3 @@
-<span style="margin: 50px 0px;">
-  <p class="text-danger info-paragraph">Demonstration/Test System - do not use with real health information</p>
-</span>
 <p class="info-paragraph">
   Welcome to WA Health Summary, the Washington State Department of Health's platform for creating and sharing your personal health summaries.
 </p>
