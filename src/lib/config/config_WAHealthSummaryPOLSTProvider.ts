@@ -4,6 +4,7 @@ let instanceTitle = "WA Health Summary | POLST Lookup for Providers";
 export default {
   title: instanceTitle,
   header: {
+    brandLogo: "/img/doh_logo_doh-black.png",
     logo: "/img/wa-health-summary-polst.png",
     logo_width: "300",
     title: "Lookup for Providers",

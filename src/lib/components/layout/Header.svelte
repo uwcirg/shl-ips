@@ -134,7 +134,7 @@
     <NavbarBrand href="https://doh.wa.gov/" target="_blank">
       <Row>
         <Col>
-          <Image id="nav-image" alt="Washington State Department of Health Logo" src="/img/doh_logo_doh-black.png"/>
+          <Image id="nav-image" alt="Washington State Department of Health Logo" src={INSTANCE_CONFIG.header.brandLogo}/>
         </Col>
       </Row>
     </NavbarBrand>

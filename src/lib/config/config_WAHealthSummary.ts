@@ -4,6 +4,7 @@ import Introduction from '$lib/components/app/Introduction.svelte';
 export default {
   title: "WA Health Summary",
   header: {
+    brandLogo: "/img/doh_logo_doh-black.png",
     logo: "/img/wa-health-summary.png",
     logo_width: "200",
     title: "HL7 Standards-Based Patient Summary",

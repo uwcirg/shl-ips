@@ -74,7 +74,7 @@
 
 <svelte:head>
     <title>{INSTANCE_CONFIG.title}</title>
-    <link rel="preload" as="image" href="/img/doh_logo_doh-black.png" />
+    <link rel="preload" as="image" href={INSTANCE_CONFIG.header.brandLogo} />
     <link rel="preload" as="image" href={INSTANCE_CONFIG.header.logo} />
 </svelte:head>
 
