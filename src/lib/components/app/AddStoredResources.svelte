@@ -168,7 +168,7 @@
     </Row>
 </Offcanvas>
 
-<p>These are the POLST documents that have already been added to your WA Health Summary account. If you would like to share one of them, click the button below.</p>
+<p>These are the POLST documents that have already been added to your {INSTANCE_CONFIG.title} account. If you would like to share one of them, click the button below.</p>
 
 {#if showInfo}
   <Row class="text-info">{infoMessage}</Row>

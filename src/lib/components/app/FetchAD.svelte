@@ -44,8 +44,8 @@
       url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir",
       patient: userFormDemographics
     },
-    "WA Health Summary Demo Patient": {
-      name: INSTANCE_CONFIG.title + " Demo Patient",
+    "WA POLST Repository Demo Patient": {
+      name: "WA POLST Repository Demo Patient",
       selected: false,
       url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir",
       patient: writable({

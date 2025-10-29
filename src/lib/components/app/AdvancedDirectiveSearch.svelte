@@ -22,6 +22,7 @@
   import DemographicForm from '$lib/components/form/DemographicForm.svelte';
   import type { ResourceTemplateParams, UserDemographics } from '$lib/utils/types';
   import { demographics } from '$lib/stores/demographics';
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import { writable, type Writable } from 'svelte/store';
   
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
@@ -54,13 +55,15 @@
    */
   export let editable: boolean = false;
 
-  export let sources: Record<string, {url: string; patients: Array<UserDemographics>; patient: Writable<UserDemographics>}> = {
-    "WA Health Summary - POLST Server": {
+  export let sources: Record<string, {name: string; url: string; patients: Array<UserDemographics>; patient: Writable<UserDemographics>}> = {
+    "System Account": {
+      name: `${INSTANCE_CONFIG.title} Account`,
       url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir",
       patients: [$demographics],
       patient: demographics
     },
     "WA POLST Repository Demo": {
+      name: "WA POLST Repository Demo",
       url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir",
       patients: [{
         last: "Wilson",
@@ -71,6 +74,7 @@
       patient: writable({})
     },
     "AD Vault Sandbox": {
+      name: "AD Vault Sandbox",
       url: "https://qa-rr-fhir.maxmddirect.com",
       patients: [
         {
@@ -421,9 +425,9 @@
     <Label>Select a source to search:</Label>
     <FormGroup>
       <Row>
-        {#each Object.keys(sources) as source}
+        {#each Object.entries(sources) as [key, source]}
           <Row class="mx-2">
-            <Input type="radio" bind:group={selectedSource} value={source} label={source} />
+            <Input type="radio" bind:group={selectedSource} value={key} label={source.name} />
           </Row>
         {/each}
       </Row>

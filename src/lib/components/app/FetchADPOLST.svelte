@@ -20,18 +20,21 @@
   import type { UserDemographics } from '$lib/utils/types';
   import { demographics } from '$lib/stores/demographics';
   import { writable, type Writable } from 'svelte/store';
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 
   export let sectionKey: string = "Advance Directives";
 
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
-  let sources: Record<string, {selected: Boolean; url: string; patient: Writable<UserDemographics>}> = {
-    "WA Health Summary - POLST Server": {
+  let sources: Record<string, {name: string; selected: Boolean; url: string; patient: Writable<UserDemographics>}> = {
+    "System Account": {
+      name: INSTANCE_CONFIG.title + " Account",
       selected: false,
       url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir",
       patient: demographics
     },
     "WA POLST Repository Demo": {
+      name: "WA POLST Repository Demo",
       selected: false,
       url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir",
       patient: writable({
@@ -46,6 +49,7 @@
       })
     },
     "AD Vault Sandbox": {
+      name: "AD Vault Sandbox",
       selected: false,
       url: "https://qa-rr-fhir.maxmddirect.com",
       patient: writable({
@@ -59,7 +63,7 @@
       })
     },
   };
-  let selectedSource = "WA Health Summary - POLST Server";
+  let selectedSource = "System Account";
   let processing = false;
   let fetchError = '';
   let message = '';
@@ -387,9 +391,9 @@
   <Label>Select a source to search:</Label>
   <FormGroup>
     <Row>
-      {#each Object.keys(sources) as source}
+      {#each Object.entries(sources) as [key, source]}
         <Row class="mx-2">
-          <Input type="radio" bind:group={selectedSource} value={source} label={source} />
+          <Input type="radio" bind:group={selectedSource} value={key} label={source.name} />
         </Row>
       {/each}
     </Row>

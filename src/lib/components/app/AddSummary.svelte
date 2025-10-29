@@ -42,6 +42,7 @@
   import type FHIRDataService from '$lib/utils/FHIRDataService';
   import Patient from '$lib/components/resource-templates/Patient.svelte';
   import { PLACEHOLDER_SYSTEM } from '$lib/config/config';
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import { methodSectionHelper } from '$lib/utils/sectionTemplateUtil';
  
   export let status = "";
@@ -315,7 +316,7 @@
 
 <h4>Create a Shareable Health Summary</h4>
 <p>Create a Health Summary, which can be shared with providers, family members, and others with a QR code or URL.</p>
-<p>To get started, add any data from health record sources that you have compiled in WA Health Summary.</p>
+<p>To get started, add any data from health record sources that you have compiled in {INSTANCE_CONFIG.title}.</p>
 <Accordion stayOpen>
   <AccordionItem active>
     <h5 slot="header" class="my-2">1. Add My Data</h5>

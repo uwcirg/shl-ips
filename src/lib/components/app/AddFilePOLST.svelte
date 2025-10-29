@@ -41,6 +41,7 @@
   import type { Patient } from 'fhir/r4';
   import { IPSResourceCollection } from '$lib/utils/IPSResourceCollection.js';
   import UploadDocument from '$lib/components/app/UploadDocument.svelte';
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
  
   export let status = "";
   
@@ -339,7 +340,7 @@
           <FormGroup>
             <Input type="radio" bind:group={polstUploadType} value="create" label="I would like to create a new POLST" />
             <Input type="radio" bind:group={polstUploadType} value="upload" label="I have a signed POLST PDF to upload from my device" />
-            <Input type="radio" bind:group={polstUploadType} value="WAHSP" label="I have my POLST in my WA Health Summary | POLST" />
+            <Input type="radio" bind:group={polstUploadType} value="account" label={`I have my POLST in my ${INSTANCE_CONFIG.title} account`} />
             <Input type="radio" bind:group={polstUploadType} value="waStateRepo" label="I have a POLST in the WA State POLST Repository (search for demo patient)" />
             <Input type="radio" bind:group={polstUploadType} value="adVault" label="I have a POLST in the AD Vault (search for demo patient)" />
           </FormGroup>
@@ -355,10 +356,10 @@
               </Card>
             </Col>
           </Row>
-        {:else if polstUploadType === 'WAHSP'}
+        {:else if polstUploadType === 'account'}
           <Row>
             <Col>
-              <h5>Add POLSTs from my WA Health Summary</h5>
+              <h5>Add POLSTs from my {INSTANCE_CONFIG.title} account</h5>
               <Card class="mb-4">
                 <CardBody>
                   <AddStoredResources
