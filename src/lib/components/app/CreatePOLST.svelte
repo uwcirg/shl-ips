@@ -10,17 +10,19 @@
     Spinner,
     Tooltip
   } from 'sveltestrap';
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, getContext } from 'svelte';
+  import { writable, get } from 'svelte/store';
   import DemographicForm from '$lib/components/form/DemographicForm.svelte';
-  import type { FormOption } from '$lib/utils/types';
+  import type { FormOption, UserDemographics } from '$lib/utils/types';
   import { PDFDocument } from 'pdf-lib'
-  import { demographics } from '$lib/stores/demographics';
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
+  import FHIRDataService from '$lib/utils/FHIRDataService';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
 
   export let disabled = false;
   
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
+
   const CATEGORY = "advance-directives";
   const METHOD = "advance-directives-create-polst";
   const SOURCE = {
@@ -28,6 +30,10 @@
     name: 'Custom POLST'
   };
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
+
+  let fhirDataService: FHIRDataService = getContext('fhirDataService');
+  let demographics: UserDemographics = get(fhirDataService.demographics);
+  let userFormDemographics = writable(demographics); // Copy to avoid reactivity loop
 
   let processing = false;
 
@@ -139,9 +145,9 @@
         }
       };
 
-      let name = `${$demographics.last ?? ""}, ${$demographics.first ?? ""}`;
+      let name = `${$userFormDemographics.last ?? ""}, ${$userFormDemographics.first ?? ""}`;
       // Parse date in local time by appending plain time suffix
-      let dob = $demographics.dob ? new Date($demographics.dob+"T00:00:00") : undefined;
+      let dob = $userFormDemographics.dob ? new Date($userFormDemographics.dob+"T00:00:00") : undefined;
       let dobYear = dob?.getFullYear()?.toString() ?? " ";
       let dobMonth = dob?.getMonth() !== undefined ? (dob?.getMonth() + 1).toString() : " ";
       let dobDay = dob?.getDate()?.toString() ?? " ";
@@ -160,7 +166,7 @@
       form.getTextField('dobMonth').setText(ensureText(dobMonth));
       form.getTextField('dobDay').setText(ensureText(dobDay));
       form.getTextField('dobYear').setText(ensureText(dobYear));
-      form.getTextField('gender').setText(ensureText($demographics.gender));
+      form.getTextField('gender').setText(ensureText($userFormDemographics.gender));
       form.getTextField('conditionsAndGoals').setText(ensureText(conditionsAndGoals));
       // form.getCheckBox('discussedIndividual').check();
       // form.getCheckBox('discussedParent').check();
@@ -345,14 +351,15 @@
 
 </script>
 
-<form on:submit|preventDefault={() => {}}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, SOURCE.name, submit)}>
   <p>To prepare a new POLST form, specify your preferences below.</p>
-  <DemographicForm demographics={demographics} show={['first', 'last', 'gender', 'dob', 'phone']} />
+  <DemographicForm demographics={userFormDemographics} show={['first', 'last', 'gender', 'dob', 'phone']} />
   <Row>
     <Col>
       <FormGroup>
         <Label>Use of Cardiopulmonary Resuscitation (CPR):</Label>
         <span style="font-size:small" class="text-secondary">(When the individual has NO pulse and is not breathing)</span>
+        <br>
         {#each cprOptions as option}
           <Label class="mb-0">
             <Row style="overflow:hidden">
@@ -524,3 +531,4 @@
     </Row>
   {/if}
 </form>
+<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
