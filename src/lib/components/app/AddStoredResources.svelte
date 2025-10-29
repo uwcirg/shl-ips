@@ -24,6 +24,7 @@
   import { getContext, onMount } from 'svelte';
   import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
   import type { Writable } from 'svelte/store';
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import type { SHLAdminParams } from '$lib/utils/managementClient';
 
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
