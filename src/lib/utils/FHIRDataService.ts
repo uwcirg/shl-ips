@@ -34,6 +34,7 @@ export class FHIRDataService {
   masterPatient: Writable<ResourceHelper>;
   demographics: Writable<UserDemographics>;
   patientLinks: Readable<Array<any>>;
+  loading: Writable<Promise<any> | undefined> = writable(undefined);
 
   constructor(auth: IAuthService) {
     this.auth = auth;
@@ -60,8 +61,11 @@ export class FHIRDataService {
   }
 
   async loadUserData(): Promise<void> {
-    let resourceCollections: Array<Array<Resource>> = await this.fetchUserResources();
+    let fetchPromise = this.fetchUserResources();
+    this.loading.set(fetchPromise);
+    let resourceCollections: Array<Array<Resource>> = await fetchPromise;
     resourceCollections.map((collection) => this.addDatasetToUserResources(collection));
+    this.loading.set(undefined);
   }
 
   private async fetchUserResources(): Promise<Array<Array<Resource>>> {
@@ -71,9 +75,6 @@ export class FHIRDataService {
       let userCategoryDatasetResults = await Promise.allSettled(patientLinks.map(async (link) => {
         let datasetPatientReference = link.other.reference;
         let dataset = await this.fetchDatasetFromPatientReference(datasetPatientReference);
-        if (!dataset) {
-          
-        }
         return dataset;
       }));
       let userCategoryDatasets = userCategoryDatasetResults.filter((result) => result.status === 'fulfilled' && result.value !== undefined).map((result) => result.value);

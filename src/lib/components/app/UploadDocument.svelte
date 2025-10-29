@@ -9,6 +9,8 @@
         Spinner } from 'sveltestrap';
     import type { ResourceRetrieveEvent } from '$lib/utils/types';
     import { createEventDispatcher } from 'svelte';
+
+    export let disabled = false;
     
     const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
@@ -148,7 +150,7 @@
 
     <Row>
         <Col xs="auto">
-        <Button color="primary" style="width:fit-content" disabled={processing} type="submit">
+        <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
             {#if !processing}
             Add File{(uploadFiles?.length ?? 0) > 1 ? `s` : ""}
             {:else}
@@ -160,6 +162,11 @@
         <Col xs="auto" class="d-flex align-items-center px-0">
             <Spinner color="primary" type="border" size="md"/>
         </Col>
+        {/if}
+        {#if disabled}
+          <Col xs="auto" class="d-flex align-items-center px-0">
+            Please wait...
+          </Col>
         {/if}
     </Row>
 </form>

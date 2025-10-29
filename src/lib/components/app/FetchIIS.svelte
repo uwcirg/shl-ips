@@ -19,6 +19,8 @@
   import GenderInput from '$lib/components/form/GenderInput.svelte';
   import CountryInput from '$lib/components/form/CountryInput.svelte';
 
+  export let disabled = false;
+
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
 
   let defaultUrl = 'https://35.160.125.146:8039/fhir/Patient';
@@ -173,7 +175,7 @@
 
   <Row>
     <Col xs="auto">
-      <Button color="primary" style="width:fit-content" disabled={processing} type="submit">
+      <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
         {#if !processing}
           Fetch Data
         {:else}
@@ -184,6 +186,11 @@
     {#if processing}
       <Col xs="auto" class="d-flex align-items-center px-0">
         <Spinner color="primary" type="border" size="md"/>
+      </Col>
+    {/if}
+    {#if disabled}
+      <Col xs="auto" class="d-flex align-items-center px-0">
+        Please wait...
       </Col>
     {/if}
   </Row>

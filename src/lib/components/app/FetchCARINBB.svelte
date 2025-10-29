@@ -16,6 +16,8 @@
   import { createEventDispatcher, onMount } from 'svelte';
   import type { BundleEntry, Resource } from 'fhir/r4';
 
+  export let disabled = false;
+
   let authService: IAuthService = getContext('authService');
   
   const authDispatch = createEventDispatcher<{'sof-auth-init': SOFAuthEvent; 'sof-auth-fail': SOFAuthEvent}>();
@@ -213,7 +215,7 @@
 
   <Row>
     <Col xs="auto">
-    <Button color="primary" style="width:fit-content" disabled={processing || loadingSample} type="submit">
+    <Button color="primary" style="width:fit-content" disabled={processing || disabled || loadingSample} type="submit">
       {#if !processing}
         Fetch Data
       {:else}
@@ -221,11 +223,16 @@
       {/if}
     </Button>
     </Col>
-  {#if processing || loadingSample}
-    <Col xs="auto" class="d-flex align-items-center px-0">
-      <Spinner color="primary" type="border" size="md"/>
-    </Col>
-  {/if}
+    {#if processing || loadingSample}
+      <Col xs="auto" class="d-flex align-items-center px-0">
+        <Spinner color="primary" type="border" size="md"/>
+      </Col>
+    {/if}
+    {#if disabled}
+      <Col xs="auto" class="d-flex align-items-center px-0">
+        Please wait...
+      </Col>
+    {/if}
   </Row>
 </form>
 <span class="text-danger">{fetchError}</span>

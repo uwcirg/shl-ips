@@ -35,19 +35,17 @@
 
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
   let userResources = fhirDataService.userResources;
+  let loading = fhirDataService.loading;
   
   let mode: Writable<string> = getContext('mode');
   
   let methodList: string[];
-  let addDataActiveOnLoad = showAdd;
+  let addDataActiveOnLoad = showAdd || !($userResources?.[category]);
   let accordionClass: string;
   $: if (forms) {
     methodList = forms.map(cat => cat.method);
     if (methodList?.length > 0) {
       accordionClass = "add-" + methodList[0];
-      if ($userResources) {
-        addDataActiveOnLoad = !($userResources?.[category]);
-      }
     }
   }
   $: {
@@ -79,7 +77,7 @@
           {#if formConfig.title}<h5 class="my-2">{formConfig.title}</h5>{/if}
           {#if formConfig.description}<p class="text-secondary"><em>{@html formConfig.description}</em></p>{/if}
           {#if formConfig.component}
-            <svelte:component this={formConfig.component} on:update-resources on:sof-auth-init on:sof-auth-fail />
+            <svelte:component this={formConfig.component} disabled={!!$loading} on:update-resources on:sof-auth-init on:sof-auth-fail />
           {/if}
         </TabPane>
         {/if}
@@ -89,17 +87,17 @@
       {#if forms[0].title}<h5 class="my-2">{forms[0].title}</h5>{/if}
       {#if forms[0].description}<p class="text-secondary"><em>{@html forms[0].description}</em></p>{/if}
       {#if forms[0].component}
-        <svelte:component this={forms[0].component} on:update-resources on:sof-auth-init on:sof-auth-fail />
+        <svelte:component this={forms[0].component} disabled={!!$loading} on:update-resources on:sof-auth-init on:sof-auth-fail />
       {/if}
     {/if}
-    {#if $mode === "advanced"}
+    {#if $mode === "advanced" && forms.some(form => form.advanced)}
       <br>
       <em class="text-secondary">* Advanced feature for demo purposes only</em>
       <br>
     {/if}
   </AccordionItem>
 </Accordion>
-{#if !addDataActiveOnLoad && methodList?.length > 0 }
+{#if $userResources?.[category] && methodList?.length > 0 }
 <Accordion stayOpen>
   <AccordionItem
     class="my-data-accordion"

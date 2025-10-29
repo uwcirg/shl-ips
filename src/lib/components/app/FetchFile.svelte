@@ -9,6 +9,8 @@
         Spinner } from 'sveltestrap';
     import type { SHCRetrieveEvent, IPSRetrieveEvent } from '$lib/utils/types';
     import { createEventDispatcher } from 'svelte';
+
+    export let disabled = false;
     
     const shcDispatch = createEventDispatcher<{'shc-retrieved': SHCRetrieveEvent}>();
     const ipsDispatch = createEventDispatcher<{'ips-retrieved': IPSRetrieveEvent}>();
@@ -65,7 +67,7 @@
 
     <Row>
         <Col xs="auto">
-        <Button color="primary" style="width:fit-content" disabled={processing} type="submit">
+        <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
             {#if !processing}
             Fetch Data
             {:else}
@@ -77,6 +79,11 @@
         <Col xs="auto" class="d-flex align-items-center px-0">
             <Spinner color="primary" type="border" size="md"/>
         </Col>
+        {/if}
+        {#if disabled}
+          <Col xs="auto" class="d-flex align-items-center px-0">
+            Please wait...
+          </Col>
         {/if}
     </Row>
 </form>

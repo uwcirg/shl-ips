@@ -13,6 +13,8 @@
   import DemographicForm from '$lib/components/form/DemographicForm.svelte';
   import FHIRDataService from '$lib/utils/FHIRDataService';
 
+  export let disabled = false;
+
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
   let demographics = fhirDataService.demographics;
 

@@ -24,6 +24,8 @@
   import { demographics } from '$lib/stores/demographics';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import { writable, type Writable } from 'svelte/store';
+
+  export let disabled = false;
   
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
   let processing = false;
@@ -463,7 +465,7 @@
     
     <Row>
       <Col xs="auto">
-        <Button color="primary" style="width:fit-content" disabled={processing} type="submit">
+        <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
           {#if !processing}
             Search Repository<Icon class="ms-2" name="search" />
           {:else}
@@ -474,6 +476,11 @@
       {#if processing}
         <Col xs="auto" class="d-flex align-items-center px-0">
           <Spinner color="primary" type="border" size="md"/>
+        </Col>
+      {/if}
+      {#if disabled}
+        <Col xs="auto" class="d-flex align-items-center px-0">
+          Please wait...
         </Col>
       {/if}
     </Row>

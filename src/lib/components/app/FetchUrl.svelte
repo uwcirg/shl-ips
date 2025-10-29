@@ -19,6 +19,8 @@
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { getResourcesFromIPS } from '$lib/utils/util';
 
+  export let disabled = false;
+
   let authService: IAuthService = getContext('authService');
 
   const shcDispatch = createEventDispatcher<{'shc-retrieved': SHCRetrieveEvent}>();
@@ -175,7 +177,7 @@
 
 <Row>
   <Col xs="auto">
-    <Button color="primary" style="width:fit-content" disabled={!summaryUrlValidated || processing} type="submit">
+    <Button color="primary" style="width:fit-content" disabled={processing || disabled || !summaryUrlValidated} type="submit">
       {#if !processing}
         Fetch Data
       {:else}
@@ -187,6 +189,11 @@
   <Col xs="auto" class="d-flex align-items-center px-0">
     <Spinner color="primary" type="border" size="md"/>
   </Col>
+  {/if}
+  {#if disabled}
+    <Col xs="auto" class="d-flex align-items-center px-0">
+      Please wait...
+    </Col>
   {/if}
 </Row>
 </form>

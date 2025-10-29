@@ -13,6 +13,8 @@
   import type { CodeableConcept, Condition, MedicationStatement } from 'fhir/r4';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
 
+  export let disabled = false;
+
   const CATEGORY = 'patient-story';
   const METHOD = 'patient-medical-history-form';
   const SOURCE = {
@@ -282,7 +284,7 @@
       <Button
         color="primary"
         style="width:fit-content"
-        disabled={processing}
+        disabled={processing || disabled}
         on:click={FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, SOURCE.name, prepareIps)}>
         {#if !processing}
           Update your conditions, medications and history
@@ -294,6 +296,11 @@
     {#if processing}
       <Col xs="auto" class="d-flex align-items-center px-0">
         <Spinner color="primary" type="border" size="md"/>
+      </Col>
+    {/if}
+    {#if disabled}
+      <Col xs="auto" class="d-flex align-items-center px-0">
+        Please wait...
       </Col>
     {/if}
   </Row>

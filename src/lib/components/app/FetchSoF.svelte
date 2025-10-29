@@ -17,6 +17,8 @@
   import { page } from '$app/stores';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
 
+  export let disabled = false;
+
   // For "quick sample" in demo
   import { EXAMPLE_IPS, IPS_DEFAULT } from '$lib/config/config';
 
@@ -165,7 +167,7 @@
 
   <Row>
     <Col xs="auto">
-    <Button color="primary" style="width:fit-content" disabled={processing || loadingSample} type="submit">
+    <Button color="primary" style="width:fit-content" disabled={processing || disabled || loadingSample} type="submit">
       {#if !processing}
         Fetch Data
       {:else}
@@ -178,7 +180,7 @@
       color="secondary"
       outline
       style="width:fit-content"
-      disabled={processing || loadingSample}
+      disabled={processing || disabled || loadingSample}
       type="button"
       on:click={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, defaultUrl, quickLoad)}>
         {#if !loadingSample}
@@ -191,6 +193,11 @@
   {#if processing || loadingSample}
     <Col xs="auto" class="d-flex align-items-center px-0">
       <Spinner color="primary" type="border" size="md"/>
+    </Col>
+  {/if}
+  {#if disabled}
+    <Col xs="auto" class="d-flex align-items-center px-0">
+      Please wait...
     </Col>
   {/if}
   </Row>

@@ -18,6 +18,8 @@
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
 
+  export let disabled = false;
+  
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
   const CATEGORY = "advance-directives";
   const METHOD = "advance-directives-create-polst";
@@ -496,7 +498,7 @@
     </Row>
     <Row class="my-4">
       <Col xs="auto">
-        <Button color="primary" style="width:fit-content" disabled={processing} on:click={submit}>
+        <Button color="primary" style="width:fit-content" disabled={processing || disabled} on:click={submit}>
           {#if !processing}
             Sign Document and Save
           {:else}
@@ -507,6 +509,11 @@
       {#if processing}
         <Col xs="auto" class="d-flex align-items-center px-0">
           <Spinner color="primary" type="border" size="md"/>
+        </Col>
+      {/if}
+      {#if disabled}
+        <Col xs="auto" class="d-flex align-items-center px-0">
+          Please wait...
         </Col>
       {/if}
     </Row>
