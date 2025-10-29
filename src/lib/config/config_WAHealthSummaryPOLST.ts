@@ -25,5 +25,10 @@ export default {
     },
     documents: {
     }
-  }
+  },
+  disallowedPages: [
+    'api',
+    'patient',
+    'provider'
+  ]
 };

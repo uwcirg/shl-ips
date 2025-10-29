@@ -213,10 +213,10 @@ export const SOF_PATIENT_RESOURCES = [
   'QuestionnaireResponse',
 ];
 
-export const VIEWER_BASE = new URL(
+export const VIEWER_BASE = typeof window !== 'undefined' ? new URL(
   (import.meta.env.VITE_VIEWER_BASE ? import.meta.env.VITE_VIEWER_BASE : `/ips`)+'#',
   window.location.href
-).toString();
+).toString() : undefined;
 export const SHOW_VIEWER_DEMO = import.meta.env.VITE_SHOW_VIEWER_DEMO;
 
 export const PATIENT_IPS = {

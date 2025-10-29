@@ -18,5 +18,10 @@ export default {
     share: {
       component: AddSummary
     }
-  }
-};
+  },
+  disallowedPages: [
+    'documents',
+    'patient',
+    'provider'
+  ]
+}

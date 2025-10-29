@@ -1,5 +1,8 @@
 import { error, Handle, Request } from '@sveltejs/kit';
 import { SERVER_API_BASE } from '$lib/server/config';
+import { INSTANCE_CONFIG } from '$lib/config/instance_config';
+
+const disallowedEndpoints = INSTANCE_CONFIG.disallowedEndpoints;
 
 const authenticatedAPIs = [
   '/api'
@@ -28,6 +31,12 @@ function isPathAuthenticatedAPI(pathname: string) {
 }
 export const handle: Handle = async ({ event, resolve }) => {
   const { url, request } = event;
+  
+  if (url.pathname.split('/')[1] === "api" && disallowedEndpoints.includes(url.pathname.split('/')[2])) {
+    console.log(url.pathname.split('/')[1]);
+    throw error(404, { message: "Page not found" });
+  }
+
   if (isPathAuthenticatedAPI(url.pathname)) {
     const authorized = await checkAuth(request);
     if (!authorized.ok) {

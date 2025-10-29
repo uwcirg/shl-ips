@@ -16,5 +16,9 @@ export default {
     },
     provider: {
     }
-  }
+  },
+  disallowedPages: [
+    'patient',
+    'provider'
+  ]
 };
