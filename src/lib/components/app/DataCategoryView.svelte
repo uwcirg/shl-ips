@@ -103,7 +103,7 @@
     class="my-data-accordion"
     active
   >
-    <h5 slot="header">My Stored Data</h5>
+    <h5 slot="header">Data Retrieved From...</h5>
   {#if $userResources[category]}
     <Accordion stayOpen>
       {#each Object.entries($userResources[category]) as [source, dataset]}
@@ -117,15 +117,16 @@
               >
                 {get(dataset.patient).meta.tag.find((tag) => tag.system === SOURCE_NAME_SYSTEM)?.code || source}
               </h6>
+              <span style="max-width: 100%;">
+                              Updated {new Date((get(dataset.patient)).meta.lastUpdated).toLocaleString(undefined, {
+                              dateStyle: "medium",
+                              timeStyle: "short",
+                            })}</span>
             </div>
           </div>
           <div class="p-2 mx-0 d-flex flex-fill justify-content-between align-items-center flex-nowrap w-100 rounded-top bg-light border-top border-left border-right">
             <div class="flex-grow-1" style="min-width: 0">
-              <span style="max-width: 100%;">
-                Updated {new Date((get(dataset.patient)).meta.lastUpdated).toLocaleString(undefined, {
-                dateStyle: "medium",
-                timeStyle: "short",
-              })}</span>
+              
             </div>
             <div class="ms-3 flex-shrink-0">
               <Button
