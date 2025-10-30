@@ -50,12 +50,6 @@ export default {
               component: FetchSoF
             },
             {
-              method: "provider-health-record-sof-search",
-              tabTitle: "Provider Search",
-              description: "Fetch US Core data from your healthcare provider via SMART authorization.",
-              component: FetchSoFSearch
-            },
-            {
               method: "provider-health-record-url",
               tabTitle: "FHIR URL",
               description: "Fetch health summary data from a FHIR URL.",
