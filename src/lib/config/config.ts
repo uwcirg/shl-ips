@@ -58,21 +58,21 @@ export const SOF_HOSTS = [
   // },
   {
     id: "epic",
-    name: "Epic Demo",
+    name: "Epic Test System",
     url: "https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4",
     clientId: import.meta.env.VITE_EPIC_CLIENT_ID,
     note: "fhircamila / epicepic1 <br> <a style='color: grey; font-size: small' href='https://fhir.epic.com/Documentation?docId=testpatients' target='_blank' rel='noreferrer'>More credentials <span style='vertical-align: text-bottom; font-size: x-small' class='bi-chevron-double-right' /></a>"
   },
   { 
     id: "cerner",
-    name: "Oracle Cerner Demo",
+    name: "Oracle Cerner Test System",
     url: "https://fhir-myrecord.cerner.com/r4/ec2458f2-1e24-41c8-b71b-0e701af7583d",
     clientId: import.meta.env.VITE_CERNER_CLIENT_ID,
     note: "nancysmart / Cerner01 <br> <a style='color: grey; font-size: small' href='https://docs.google.com/document/u/1/d/e/2PACX-1vQwyX3px4qi5t1O6_El6022zYt4ymKAWCrcgxcX5NvYGUJAkJ4WFwOnLoikow6rEccpFZzDWBdcBqsQ/pub' target='_blank' rel='noreferrer'>More credentials <span style='vertical-align: text-bottom; font-size: x-small' class='bi-chevron-double-right' /></a>"
   },
   {
     id: "smit",
-    name: "SMART Health IT Demo",
+    name: "SMART Health IT Test System",
     url: "https://launch.smarthealthit.org/v/r4/sim/WzMsIiIsIiIsIkFVVE8iLDAsMCwwLCIiLCIiLCIiLCIiLCIiLCIiLCIiLDAsMF0/fhir",
     clientId: "<no client id>",
     note: "Credentials provided"
