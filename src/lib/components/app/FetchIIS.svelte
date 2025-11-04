@@ -18,6 +18,7 @@
   import StateInput from '$lib/components/form/StateInput.svelte';
   import GenderInput from '$lib/components/form/GenderInput.svelte';
   import CountryInput from '$lib/components/form/CountryInput.svelte';
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 
   export let disabled = false;
 
@@ -117,7 +118,7 @@
 <form on:submit|preventDefault={() => prepareIps()}>
   <FormGroup>
     <Label>Enter your information to fetch immunizations from WA IIS</Label>
-    <p class="text-secondary"><em>WA Health Summary does not save this information</em></p>
+    <p class="text-secondary"><em>{INSTANCE_CONFIG.title} does not save this information</em></p>
     <Row cols={{ md: 2, sm: 1 }}>
       <Col>
         <Label>Name</Label>

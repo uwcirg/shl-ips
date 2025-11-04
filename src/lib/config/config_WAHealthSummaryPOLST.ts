@@ -6,9 +6,8 @@ import IntroductionPOLST from '$lib/components/app/IntroductionPOLST.svelte';
 let instanceTitle = "WA Health Summary | POLST";
 export default {
   title: instanceTitle,
+  imgPath: "/img/wa-health-summary-polst",
   header: {
-    brandLogo: "/img/doh_logo_doh-black.png",
-    logo: "/img/wa-health-summary-polst.png",
     logo_width: "300",
     title: "Provider Orders for Life-Sustaining Treatment",
   },

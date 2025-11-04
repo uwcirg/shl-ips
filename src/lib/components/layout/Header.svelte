@@ -1,5 +1,6 @@
 <script lang="ts">
   import {
+    Alert,
     Col,
     Collapse,
     Dropdown,
@@ -7,7 +8,6 @@
     DropdownMenu,
     DropdownToggle,
     Icon,
-    Image,
     Nav,
     NavItem,
     NavLink,
@@ -20,10 +20,9 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { get, type Writable } from 'svelte/store';
-  import Banner from '$lib/components/layout/Banner.svelte';
   import LanguageMenu from '$lib/components/layout/LanguageMenu.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
-  import { VERSION_STRING } from '$lib/config/config';
+  import { DEMO_WARNING, VERSION_STRING } from '$lib/config/config';
   import type { IAuthService, SHLAdminParams } from '$lib/utils/types';
   import FHIRDataService from '$lib/utils/FHIRDataService';
 
@@ -53,11 +52,6 @@
 
   onMount(async () => {
     $isOpen = false;
-    setTimeout(() => {
-      if (window.innerWidth < 800) {
-        shrinkNav();
-      }
-    }, 10);
     addDynamicNavbarListeners();
   });
   onDestroy(() => {
@@ -104,8 +98,6 @@
 
   let navOpening = false;
   function addDynamicNavbarListeners() {
-    window.addEventListener('page-sm', shrinkNav);
-    window.addEventListener('page-md', growNav);
     document.addEventListener('click', (event) => {
       // Ignore clicks on the navbar toggler
       if (event.target?.className?.includes('navbar-toggler')) return;
@@ -124,47 +116,94 @@
     });
   }
 
+  // Combine header, qr code, and footer images into one image
+  async function createHeaderImage() {
+    // create the qr code image
+
+    // load the images
+    const uris = [`${INSTANCE_CONFIG.imgPath}/company-logo.png`, `${INSTANCE_CONFIG.imgPath}/divider.png`, `${INSTANCE_CONFIG.imgPath}/logo.png`];
+    const [companyLogo, divider, siteLogo] = await Promise.all(
+        uris.map(uri => new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = (err) => reject(new Error('Failed to load image from data URI.'));
+        img.src = uri;
+      })
+    )) as HTMLImageElement[];
+
+    // scale the images to match the largest image width
+    const targetHeight: number = Math.max(companyLogo.height, divider.height, siteLogo.height);
+    const dividerWidth: number = (divider.width / divider.height) * targetHeight;
+    const companyLogoImageWidth: number = (companyLogo.width / companyLogo.height) * targetHeight;
+    const siteLogoWidth: number = (siteLogo.width / siteLogo.height) * targetHeight;
+
+    // get the canvas and combine the images
+    const canvas = document.getElementById('header-image') as HTMLCanvasElement;
+    if (!canvas) {
+      throw Error('Could not get header image canvas element');
+    }
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      throw Error('Could not get canvas context');
+    }
+    const marginX = 60;
+    const marginY = 40;
+    canvas.height = targetHeight + marginY * 2;
+    canvas.width = dividerWidth + companyLogoImageWidth + siteLogoWidth + marginX * 4;
+    ctx.fillStyle = "rgb(248, 249, 250)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(companyLogo, marginX, marginY,                                    companyLogoImageWidth, targetHeight);
+    ctx.drawImage(divider, companyLogoImageWidth + marginX * 2, marginY,                     dividerWidth, targetHeight);
+    ctx.drawImage(siteLogo, companyLogoImageWidth + dividerWidth + marginX * 3, marginY, siteLogoWidth, targetHeight);
+
+    const fullImageDataUrl = canvas.toDataURL('image/png');
+    return fullImageDataUrl;
+  }
+
   function handleUpdate(event: any) {
     $isOpen = event.detail.isOpen;
   }
 </script>
-<div>
+
+<canvas id="header-image" class="img-fluid" style="display: none;"/>
+
+{#await createHeaderImage() then headerImageUrl}
 <Row>
-  <Navbar sticky="top" color="light" light expand="sm" style="border-bottom: 1px solid rgb(204, 204, 204);">
-    <NavbarBrand href="https://doh.wa.gov/" target="_blank">
-      <Row>
-        <Col>
-          <Image id="nav-image" alt="Washington State Department of Health Logo" src={INSTANCE_CONFIG.header.brandLogo}/>
-        </Col>
-      </Row>
-    </NavbarBrand>
-    <NavbarToggler class="me-2" on:click={() => ($isOpen = !$isOpen)} />
-    <Collapse class="flex-column ms-2" isOpen={$isOpen} navbar expand="sm" on:update={handleUpdate}>
+  <Navbar sticky="top" color="light" light expand="md" style="border-bottom: 1px solid rgb(204, 204, 204);">
+    <div class="container-fluid d-flex align-items-center justify-content-between">
+      <NavbarBrand class="flex-shrink-1">
+        <img id="nav-image" alt="Washington State Department of Health Logo" src={headerImageUrl}/>
+      </NavbarBrand>
+      <div class="flex-grow-1 d-flex align-items-center justify-content-end">
+        <NavbarToggler class="me-2" on:click={() => ($isOpen = !$isOpen)} />
+      </div>
+    </div>
+    <Collapse class="flex-column ms-2" isOpen={$isOpen} navbar expand="md" on:update={handleUpdate}>
       <Nav class="ms-auto" navbar>
         <LanguageMenu />
       </Nav>
       <Nav class="ms-auto" navbar>
         <NavItem>
-          <NavLink href={"/"} active={ activeItem === "home" }>Home</NavLink>
+          <NavLink style="text-wrap-mode: nowrap" href={"/"} active={ activeItem === "home" }>Home</NavLink>
         </NavItem>
         {#if $authenticated}
           {#if $user}
             <NavItem>
-              <NavLink href="/data" active={ activeItem === "data" }>My Data</NavLink>
+              <NavLink style="text-wrap-mode: nowrap" href="/data" active={ activeItem === "data" }>My Data</NavLink>
             </NavItem>
             {#if INSTANCE_CONFIG.pages.summaries}
               <NavItem>
-                <NavLink href="/summaries" active={ activeItem === "summaries" }>My Summaries</NavLink>
+                <NavLink style="text-wrap-mode: nowrap" href="/summaries" active={ activeItem === "summaries" }>My Summaries</NavLink>
               </NavItem>
             {/if}
             {#if INSTANCE_CONFIG.pages.documents}
               <NavItem>
-                <NavLink href="/documents" active={ activeItem === "documents" }>Documents</NavLink>
+                <NavLink style="text-wrap-mode: nowrap" href="/documents" active={ activeItem === "documents" }>Documents</NavLink>
               </NavItem>
             {/if}
             {#if INSTANCE_CONFIG.pages.provider}
               <NavItem>
-                <NavLink href="/provider" active={ activeItem === "provider" }>Provider</NavLink>
+                <NavLink style="text-wrap-mode: nowrap" href="/provider" active={ activeItem === "provider" }>Provider</NavLink>
               </NavItem>
             {/if}
             <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
@@ -221,16 +260,36 @@
       </Nav>
     </Collapse>
   </Navbar>
-  <Banner title={INSTANCE_CONFIG.header.title} style={INSTANCE_CONFIG.header.title_style}/>
-</Row>
-</div>
+  </Row>
+  {#if DEMO_WARNING}
+    <Alert color="warning" dismissible class="mt-2 mb-0">
+      <span class="text-danger">Demonstration/test system - do not use with real health information</span>
+    </Alert>
+  {/if}
+  <!-- <Banner title={INSTANCE_CONFIG.header.title} style={INSTANCE_CONFIG.header.title_style}/> -->
+{/await}
+
 <style>
-    :global(#nav-image) {
-    width: 240px;
+  :global(#nav-image) {
+    height: auto;
+    width: 100%;
+    max-width: 440px;
+    min-width: 220px;
+    object-fit: contain;
     -webkit-transition: all 0.06s linear;
     -moz-transition: all 0.06s linear;
     -o-transition: all 0.06s linear;
     transition: all 0.06s linear;
+  }
+  :global(.navbar-brand) {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    overflow: hidden;
+    min-width: 220px;
+    /* margin: 0 !important;
+    padding: 0 !important; */
   }
   :global(.nav-text) {
     font-size:medium;
@@ -244,7 +303,7 @@
     padding-bottom: 0.25rem !important;
   }
   :global(#nav-image.scrolling) {
-    width: 160px !important;
+    max-width: 293px !important;
     margin-left: 10px;
   }
   :global(.nav-text.scrolling)  {

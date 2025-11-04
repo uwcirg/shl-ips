@@ -74,8 +74,9 @@
 
 <svelte:head>
     <title>{INSTANCE_CONFIG.title}</title>
-    <link rel="preload" as="image" href={INSTANCE_CONFIG.header.brandLogo} />
-    <link rel="preload" as="image" href={INSTANCE_CONFIG.header.logo} />
+    <link rel="icon" href={`${INSTANCE_CONFIG.imgPath}/favicon.ico`} type="image/x-icon">
+    <link rel="preload" as="image" href={`${INSTANCE_CONFIG.imgPath}/company-logo.png`} />
+    <link rel="preload" as="image" href={`${INSTANCE_CONFIG.imgPath}/logo.png`} />
 </svelte:head>
 
 <Container class="main" fluid>
@@ -92,12 +93,13 @@
     display: flex;
     flex-direction: column;
     flex-grow: 1;
+    margin-top: 1.5rem;
+    padding: 0 1rem;
   }
 
   :global(div.container-fluid.main) {
     /* Handle scroll gutter */
     position: relative;
-    left: calc((100vw - 100%) / 2);
 
     height: 100vh;
     margin-right: auto;

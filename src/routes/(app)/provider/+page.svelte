@@ -13,16 +13,14 @@
   <title>Patients - {INSTANCE_CONFIG.title}</title> 
 </svelte:head>
 
-<div class="px-3">
-  <Row>
-    <p>
-      Welcome to WA Health Summary, the Washington State Department of Health's platform
-      for creating and sharing your personal health summaries.
-    </p>
-  </Row>
-  <Row>
-    <Col>
-      <svelte:component this={component} />
-    </Col>
-  </Row>
-</div>
+<Row>
+  <p>
+    Welcome to {INSTANCE_CONFIG.title}, the Washington State Department of Health's platform
+    for creating and sharing your personal health summaries.
+  </p>
+</Row>
+<Row>
+  <Col>
+    <svelte:component this={component} />
+  </Col>
+</Row>

@@ -1,6 +1,7 @@
 import * as shlClient from '$lib/utils/shlClient.js';
 import { verify } from '$lib/utils/shcDecoder.js';
 import { prepareSHLContents } from "$lib/utils/renderIPS.js";
+import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 
 const shl = window.location.hash.match(/shlink:\/.*/)?.[0];
 if (shl) {
@@ -15,12 +16,12 @@ if (shl) {
 }
 
 async function retrieve(){
-    const recipient = "WA Health Summary Viewer";
+    const recipient = `${INSTANCE_CONFIG.title} Viewer`;
 
     let passcode;
     const needPasscode = shlClient.flag({ shl }).includes('P');
     if (needPasscode) {
-        passcode = prompt("WA Health Summary Viewer\n----------------------\nEnter a passcode to access this SMART Health Link\nIf no passcode was set, just click \"OK\"");
+        passcode = prompt(`${INSTANCE_CONFIG.title} Viewer\n----------------------\nEnter a passcode to access this SMART Health Link\nIf no passcode was set, just click \"OK\"`);
     }
     $('#status').text("Retrieving contents...");
     let retrieveResult;
@@ -46,7 +47,7 @@ async function retrieve(){
             } else if (retrieveResult.status === 401) {
                 // Failed the password requirement
                 while (retrieveResult.status === 401) {
-                    passcode = prompt(`WA Health Summary Viewer\n----------------------\nEnter a passcode to access this SMART Health Link\nIf no passcode was set, just click \"OK\"${retrieveResult.error.remainingAttempts !== undefined ? "\nAttempts remaining: "+retrieveResult.error.remainingAttempts : ""}`);
+                    passcode = prompt(`${INSTANCE_CONFIG.title} Viewer\n----------------------\nEnter a passcode to access this SMART Health Link\nIf no passcode was set, just click \"OK\"${retrieveResult.error.remainingAttempts !== undefined ? "\nAttempts remaining: "+retrieveResult.error.remainingAttempts : ""}`);
                     try {
                         retrieveResult = await shlClient.retrieve({
                             shl,

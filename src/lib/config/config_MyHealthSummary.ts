@@ -1,5 +1,5 @@
 import AddSummary from '$lib/components/app/AddSummary.svelte';
-import Introduction from '$lib/components/app/Introduction.svelte';
+import IntroductionMyHealthSummary from '$lib/components/app/IntroductionMyHealthSummary.svelte';
 
 import Demographic from '$lib/components/app/Demographic.svelte'
 import FetchSoFSearch from '$lib/components/app/FetchSoFSearch.svelte'
@@ -12,16 +12,15 @@ import ODHForm from '$lib/components/app/ODHForm.svelte'
 
 export default {
   title: "My Health Summary",
+  imgPath: "/img/my-health-summary",
   header: {
-    brandLogo: "/img/doh_logo_doh-black.png",
-    logo: "/img/wa-health-summary.png",
     logo_width: "200",
     title: "HL7 Standards-Based Patient Summary",
   },
   defaultRedirectURI: "/data",
   pages: {
     home: {
-      introComponent: Introduction
+      introComponent: IntroductionMyHealthSummary
     },
     data: {
       sections: [

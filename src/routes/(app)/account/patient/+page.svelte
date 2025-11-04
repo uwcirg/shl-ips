@@ -18,7 +18,7 @@
 
 <h4>My Patient Data</h4>
 <p>
-  This is the patient data that you have added to WA Health Summary. It can be used to represent you in any Health Summary you create and share. Edit it by clicking the button below.
+  This is the patient data that you have added to {INSTANCE_CONFIG.title}. It can be used to represent you in any Health Summary you create and share. Edit it by clicking the button below.
 </p>
 {#if $masterPatient}
 <Card style="width: 100%; max-width: 100%" class="mb-2">

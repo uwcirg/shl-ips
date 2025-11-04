@@ -15,9 +15,8 @@ import ODHForm from '$lib/components/app/ODHForm.svelte';
 
 export default {
   title: "WA Health Summary",
+  imgPath: "/img/wa-health-summary",
   header: {
-    brandLogo: "/img/doh_logo_doh-black.png",
-    logo: "/img/wa-health-summary.png",
     logo_width: "200",
     title: "HL7 Standards-Based Patient Summary",
   },

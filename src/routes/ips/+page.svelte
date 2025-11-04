@@ -20,6 +20,7 @@
   import Demo from '$lib/components/viewer/Demo.svelte';
   
   import { SHOW_VIEWER_DEMO } from "$lib/config/config";
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 
   let shlContents: Bundle[] = [];
 
@@ -93,7 +94,7 @@
 
   // Retrieving SHL
   async function retrieve(){
-    const recipient = "WA Health Summary Viewer";
+    const recipient = `${INSTANCE_CONFIG.title} Viewer`;
 
     let retrieveResult;
     let passcode;
@@ -113,7 +114,7 @@
         // Failed the password requirement
         const needPasscode = shlClient.flag({ shl: shl ?? "" })?.includes('P');
         if (needPasscode) {
-          passcode = prompt("WA Health Summary Viewer\n----------------------------------------\nEnter a passcode to access this SMART Health Link");
+          passcode = prompt(`${INSTANCE_CONFIG.title} Viewer\n----------------------------------------\nEnter a passcode to access this SMART Health Link`);
         }
       }
     } catch (e) {
@@ -150,7 +151,7 @@
             } else if (retrieveResult.status === 401) {
                 // Failed the password requirement
                 while (retrieveResult.status === 401) {
-                  passcode = prompt(`WA Health Summary Viewer\n----------------------------------------\nIncorrect passcode.\nEnter a passcode to access this SMART Health Link`);
+                  passcode = prompt(`${INSTANCE_CONFIG.title} Viewer\n----------------------------------------\nIncorrect passcode.\nEnter a passcode to access this SMART Health Link`);
                     try {
                         retrieveResult = await shlClient.retrieve({
                             shl: shl ?? "",

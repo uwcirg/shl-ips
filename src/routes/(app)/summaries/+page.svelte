@@ -13,13 +13,12 @@
   <title>My Summaries - {INSTANCE_CONFIG.title}</title> 
 </svelte:head>
 
-<div class="px-3">
-  <Row>
-    <h4> My Shareable Health Summaries</h4>
-    <p>
-      Shareable Health Summaries that you have created from your data to share with others are displayed here. Start creating a new Summary by clicking the button below, or select a summary to view details about it, make changes, or delete it.
-    </p>
-  </Row>
+<Row>
+  <h4> My Shareable Health Summaries</h4>
+  <p>
+    Shareable Health Summaries that you have created from your data to share with others are displayed here. Start creating a new Summary by clicking the button below, or select a summary to view details about it, make changes, or delete it.
+  </p>
+</Row>
 <Row class="d-flex justify-content-center mb-4">
   <Col md="10">
     <Button color="success" style="width:100%" href={'/share'}>
@@ -27,9 +26,8 @@
     </Button>
   </Col>
 </Row>
-  <Row>
-    <Col>
-      <HealthLinkOverview />
-    </Col>
-  </Row>
-</div>
+<Row>
+  <Col>
+    <HealthLinkOverview />
+  </Col>
+</Row>

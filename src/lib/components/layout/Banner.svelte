@@ -16,7 +16,7 @@
 >
   <Col style={`max-width:${INSTANCE_CONFIG.header.logo_width}px`}>
     <Image
-      alt="WA Health Summary Logo"
+      alt={`${INSTANCE_CONFIG.header.title} logo`}
       width={INSTANCE_CONFIG.header.logo_width}
       src={INSTANCE_CONFIG.header.logo}
       style="align-self: center"

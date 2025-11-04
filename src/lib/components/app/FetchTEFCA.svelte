@@ -13,6 +13,7 @@
   import { createEventDispatcher } from 'svelte';
   import { constructResourceUrl } from '$lib/utils/sofClient';
   import { SOF_PATIENT_RESOURCES } from '$lib/config/config';
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import {
     constructPatientResource,
     buildPatientSearchQuery
@@ -299,7 +300,7 @@
   {#if selectedSource}
   <FormGroup>
     <Label>Enter your information to locate your data</Label>
-    <p class="text-secondary"><em>WA Health Summary does not save this information</em></p>
+    <p class="text-secondary"><em>{INSTANCE_CONFIG.title} does not save this information</em></p>
     <Row cols={{ md: 2, sm: 1 }}>
       <Col>
         <Label>Name</Label>

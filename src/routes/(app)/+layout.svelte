@@ -2,7 +2,6 @@
   import { getContext, onMount } from 'svelte';
   import { type Writable } from 'svelte/store';
   import {
-    Alert,
     Col,
     Row
   } from 'sveltestrap';
@@ -10,7 +9,6 @@
   import { User } from 'oidc-client-ts';
   import { type SHLAdminParams, type SHLClient } from '$lib/utils/managementClient';
   import FHIRDataService from '$lib/utils/FHIRDataService';
-  import { DEMO_WARNING } from '$lib/config/config';
 
   let authService: IAuthService = getContext('authService');
   let user: User = authService.user;
@@ -48,11 +46,6 @@
 
 </script>
 {#if $user}
-  {#if DEMO_WARNING}
-    <Alert color="warning" dismissible>
-      <span class="text-danger">Demonstration/test system - do not use with real health information</span>
-    </Alert>
-  {/if}
   <Row class="flex-fill">
     <Col class = "d-flex flex-column">
       <slot />

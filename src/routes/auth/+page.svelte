@@ -29,5 +29,5 @@
   });
 </script>
 <svelte:head>
-    <title>Authenticate - WA Health Summary</title> 
+    <title>Authenticate - {INSTANCE_CONFIG.title}</title> 
 </svelte:head>

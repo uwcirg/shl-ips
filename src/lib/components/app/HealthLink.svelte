@@ -27,6 +27,7 @@
   import { goto } from '$app/navigation';
   import type { Writable } from 'svelte/store';
   import type { SHLAdminParams, SHLClient } from '$lib/utils/managementClient';
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 
   export let shl: SHLAdminParams;
   let shlControlled: SHLAdminParams;
@@ -75,7 +76,7 @@
     const qrCodeURI = await href.then(href => QRCode.toDataURL(href, { errorCorrectionLevel: 'M', margin: 0 }));
 
     // load the images
-    const uris = [qrCodeURI, "/img/qr-banner-top.png", "/img/qr-banner-bottom.png"];
+    const uris = [qrCodeURI, `${INSTANCE_CONFIG.imgPath}/qr-banner-top.png`, `${INSTANCE_CONFIG.imgPath}/qr-banner-bottom.png`];
     const [qrCode, header, footer] = await Promise.all(
         uris.map(uri => new Promise((resolve, reject) => {
         const img = new Image();
@@ -207,7 +208,7 @@
                     navigator.share({
                       files: [file],
                       url: await href,
-                      text: `${(shl.label ? `${shl.label}\n\n` : "")}Here's my WA Health Summary:\n\n`
+                      text: `${(shl.label ? `${shl.label}\n\n` : "")}Here's my Health Summary:\n\n`
                     });
                   } else {
                     navigator.share({ url: await href, title: shl.label });

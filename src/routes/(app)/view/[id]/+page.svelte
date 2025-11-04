@@ -15,8 +15,8 @@
 
 <svelte:head>
     <title>My Health Link - {INSTANCE_CONFIG.title}</title>
-    <link rel="preload" as="image" href="/img/qr-banner-top.png" />
-    <link rel="preload" as="image" href="/img/qr-banner-bottom.png" />
+    <link rel="preload" as="image" href={`${INSTANCE_CONFIG.imgPath}/qr-banner-top.png`} />
+    <link rel="preload" as="image" href={`${INSTANCE_CONFIG.imgPath}/qr-banner-bottom.png`} />
 </svelte:head>
 
 
