@@ -175,16 +175,16 @@
   {#each sections as section, index}
     <AccordionItem class="{section.id} section-accordion" active={section.id === activeSection}>
       <div slot="header" class="d-flex justify-content-start align-items-center">
-        <h5 class="my-2">{section.title}</h5>
-        <div class="ms-2">
-        {#if (!!$loading ? undefined : Boolean($userResources?.[section.category])) === undefined}
-          <Spinner color="secondary" size="sm"/>
-        {:else if (!!$loading ? undefined : Boolean($userResources?.[section.category])) === true}
-          <Icon name="check-circle-fill" color="success"/>
-        {:else if (!!$loading ? undefined : Boolean($userResources?.[section.category])) === false}
-          <Icon name="circle" color="secondary"/>
-        {/if}
+        <div class="me-3">
+          {#if section.category === undefined || (!!$loading ? undefined : Boolean($userResources?.[section.category])) === true}
+            <Icon name="check-circle-fill" style="color: var(--bs-success)"/>
+          {:else if (!!$loading ? undefined : Boolean($userResources?.[section.category])) === false}
+            <Icon name="circle" style="color: var(--bs-secondary"/>
+          {:else if (!!$loading ? undefined : Boolean($userResources?.[section.category])) === undefined}
+            <Spinner color="secondary" size="sm"/>
+          {/if}
         </div>
+        <h5 class="my-2">{section.title}</h5>
       </div>
       <DataCategoryView
         title={section.title}

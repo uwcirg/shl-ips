@@ -66,7 +66,7 @@
   >
     <!-- <h5 slot="header" class="my-2">{editable ? "Enter or Edit Stored Data" : "Add New Data"}</h5> -->
     <h5 slot="header">Add or Update My Data</h5>
-    {#if (forms.length > 1)}
+    {#if (forms.length > 1 && ($mode === "advanced" || forms.filter(form => !form.advanced).length > 1))}
       <TabContent on:tab={(e) => {
         currentTab = e.detail;
       }}>
@@ -83,7 +83,7 @@
         {/if}
       {/each}
       </TabContent>
-    {:else if (forms.length === 1)}
+    {:else}
       {#if forms[0].title}<h5 class="my-2">{forms[0].title}</h5>{/if}
       {#if forms[0].description}<p class="text-secondary"><em>{@html forms[0].description}</em></p>{/if}
       {#if forms[0].component}

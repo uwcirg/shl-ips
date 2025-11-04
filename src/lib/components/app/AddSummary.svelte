@@ -7,6 +7,7 @@
   import {
     Accordion,
     AccordionItem,
+    Badge,
     Button,
     Card,
     CardBody,
@@ -94,6 +95,7 @@
       let oldvalue = resourcesAdded;
       resourcesAdded = Object.keys($resourcesByTypeStore).length > 0;
       if (!oldvalue && resourcesAdded) {
+        setTimeout(() => document.querySelector('#select-data')?.scrollIntoView({block: 'center'}), 10);
         // Prevent flash of AddData accordion overflow when first resources are added
         handleAddDataAccordionOverflow('add-data');
       }
@@ -312,6 +314,15 @@
   function confirmContent() {
     submitting = true;
   }
+
+  const categoryNameFor = (category: string) => DATA_CATEGORY_NAMES[category]?.name || category;
+  const keyFor = (category: string, source: string) => `${source} (${categoryNameFor(category)})`;
+  let statemap: Record<string, boolean> = {};
+  function toggleState(category: string, source: string) {
+    let key = keyFor(category, source);
+    statemap[key] = !statemap[key];
+    statemap = statemap;
+  }
 </script>
 
 <h4>Create a Shareable Health Summary</h4>
@@ -343,6 +354,12 @@
         <CardBody>
           <Row style="overflow: hidden">
             <Col class="resource-content justify-content-center align-items-center">
+              <p class="text-secondary">
+                <em>
+                  This is the patient information that you have added to {INSTANCE_CONFIG.title}.
+                  For your summary, you may choose to replace it with the patient data from another source if available (step 2).
+                </em>
+              </p>
               <Patient content={ {resource: $masterPatient.resource} } />
             </Col>
           </Row>
@@ -353,7 +370,7 @@
         <br>
         <Card>
           <CardHeader>
-            <h6 class="mt-1">{DATA_CATEGORY_NAMES[category]?.name || category}</h6>
+            <h6 class="mt-1">{categoryNameFor(category)}</h6>
           </CardHeader>
           <CardBody>
             {#each Object.entries(datasetsBySource) as [source, dataset]}
@@ -365,16 +382,19 @@
                     title={source}
                     style="max-width: 100%; overflow-wrap: anywhere;"
                   >
-                    {get(dataset.patient).meta.tag.find((tag) => tag.system === SOURCE_NAME_SYSTEM)?.code || source}
+                    {source}
                   </h6>
                 </div>
                 <div class="ms-3 flex-shrink-0">
+                  {#if !statemap[keyFor(category, source)]}
                   <Button
                     size="sm"
                     color="success"
                     outline
+                    disabled={statemap[keyFor(category, source)]}
                     on:click={(event) => {
                       event.stopPropagation();
+                      toggleState(category, source);
                       handleNewResources({
                         resources: dataset.getFHIRResources(),
                         source,
@@ -384,6 +404,9 @@
                   >
                     Add
                   </Button>
+                  {:else}
+                    <span class="text-secondary">Added <Icon name="check-circle-fill" style="color: var(--bs-success)"/></span>
+                  {/if}
                 </div>
               </div>
               <FHIRResourceList
@@ -401,7 +424,16 @@
   </AccordionItem>
   {#if resourcesAdded}
     <AccordionItem active class="edit-data">
-      <h5 slot="header" class="my-2">2. Directly edit your health summary content</h5>
+      <h5 slot="header" class="my-2" id="select-data">2. Directly edit your health summary content</h5>
+      <h5>Included Data</h5>
+      <div class="my-2">
+        {#each Object.keys(statemap).filter((key) => statemap[key]) as name}
+          <Badge href="" color="light" class="border d-inline-flex align-items-center text-secondary me-1">
+            <span class="me-1" style="font-size: 1.5em"><Icon name="x"/></span>
+            {name}
+          </Badge>
+        {/each}
+      </div>
       <Label>Select which resources to include in your customized IPS</Label>
       <ResourceSelector
         bind:resourceCollection={resourceCollection}
