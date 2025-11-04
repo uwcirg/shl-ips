@@ -6,7 +6,9 @@
   import { type Writable } from 'svelte/store';
   import {
     Accordion,
-    AccordionItem
+    AccordionItem,
+    Icon,
+    Spinner
   } from 'sveltestrap';
   import type {
     ResourceRetrieveEvent,
@@ -25,6 +27,8 @@
   $: masterPatient = fhirDataService.masterPatient;
   let userResources;
   $: userResources = fhirDataService.userResources;
+  let loading;
+  $: loading = fhirDataService.loading;
 
   const datasetDispatch = createEventDispatcher<{ 'dataset-submitted': DatasetSubmitEvent }>();
   let submitting = false;
@@ -60,8 +64,7 @@
     }
   }
 
-  let activeSection: string;
-  $: activeSection = $page.url.hash.split('#')[1];
+  let activeSection: string = $page.url.hash.split('#')[1] ?? sessionStorage.getItem('CATEGORY'); // item cleared on mount
 
   onMount(async function() {
     if (sessionStorage.getItem('URL')) {
@@ -72,6 +75,7 @@
         return goto(url);
       }
     }
+    sessionStorage.removeItem('CATEGORY');
     activeTab = sessionStorage.getItem('TAB') ?? activeTab;
     sessionStorage.removeItem('TAB');
     const accordion = document.querySelector('div.add-data > div.accordion-collapse');
@@ -82,7 +86,7 @@
         accordion.classList.remove('at-load');
       }, 250);
     }
-    let tab = document.querySelector(`span.${activeTab}-tab`)?.parentElement
+    let tab = document.querySelector(`span.${activeTab}-tab`)?.parentElement;
     tab?.click();
 
     const accordions = document.querySelectorAll('div.section-accordion');
@@ -117,19 +121,20 @@
   
   async function preAuthRedirectHandler(details: SOFAuthEvent|undefined) {
     let url = $page.url.href.split('#')[0];
+    sessionStorage.setItem('URL', url);
     const openAccordion = document.querySelector('div.section-accordion:has(div.accordion-collapse.show)');
     if (openAccordion) {
       let activeSection = sections.map(s => s.id).find(sid => openAccordion.classList.contains(sid));
       if (activeSection) {
-        url += `#${activeSection}`;
+        sessionStorage.setItem('CATEGORY', activeSection);
       }
     }
-    sessionStorage.setItem('URL', url);
     sessionStorage.setItem('TAB', String(activeTab ?? ""));
   }
 
   async function revertPreAuth(details: SOFAuthEvent|undefined) {
     sessionStorage.removeItem('URL');
+    sessionStorage.removeItem('CATEGORY');
     sessionStorage.removeItem('TAB');
   }
   
@@ -154,26 +159,40 @@
     }, 1000);
   }
 
-  function updateStatus(newStatus: string) {
-    status = newStatus;
-  }
-
   function showError(message: string) {
     fetchError = message;
+  }
+
+  let categoryStatuses: Array<boolean | undefined> = sections.map(s => undefined);
+  function updateStatus(detail: {index: number, status: boolean | undefined}) {
+    categoryStatuses[detail.index] = detail.status;
+    categoryStatuses = categoryStatuses;
   }
 
 </script>
 
 <Accordion>
-  {#each sections as section}
+  {#each sections as section, index}
     <AccordionItem class="{section.id} section-accordion" active={section.id === activeSection}>
-      <h5 slot="header" class="my-2">{section.title}</h5>
+      <div slot="header" class="d-flex justify-content-start align-items-center">
+        <h5 class="my-2">{section.title}</h5>
+        <div class="ms-2">
+        {#if (!!$loading ? undefined : Boolean($userResources?.[section.category])) === undefined}
+          <Spinner color="secondary" size="sm"/>
+        {:else if (!!$loading ? undefined : Boolean($userResources?.[section.category])) === true}
+          <Icon name="check-circle-fill" color="success"/>
+        {:else if (!!$loading ? undefined : Boolean($userResources?.[section.category])) === false}
+          <Icon name="circle" color="secondary"/>
+        {/if}
+        </div>
+      </div>
       <DataCategoryView
         title={section.title}
         description={section.description}
         category = {section.category}
         forms={section.forms}
         showAdd={section.id === activeSection}
+        on:loading-status-change={ ( { detail }) => { detail.index = index; updateStatus(detail) } }
         on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
         on:sof-auth-fail={ async ({ detail }) => { revertPreAuth(detail) }}
         on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
