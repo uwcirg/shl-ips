@@ -45,8 +45,8 @@
       url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir",
       patient: userFormDemographics
     },
-    "WA POLST Repository Demo Patient": {
-      name: "WA POLST Repository Demo Patient",
+    "WA POLST Repository Sample Patient": {
+      name: "WA POLST Repository Sample Patient",
       selected: false,
       url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir",
       patient: writable({
@@ -60,8 +60,8 @@
         dob: "1993-12-01",
       })
     },
-    "AD Vault Demo Patient": {
-      name: "AD Vault Demo Patient",
+    "AD Vault Sample Patient": {
+      name: "AD Vault Sample Patient",
       selected: false,
       url: "https://qa-rr-fhir.maxmddirect.com",
       patient: writable({

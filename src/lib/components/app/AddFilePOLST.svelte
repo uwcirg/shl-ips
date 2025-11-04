@@ -418,7 +418,7 @@
                   <AdvancedDirectiveSearch
                     description="Search the WA State POLST repository for a demo patient's advance directive documents."
                     sources = {{
-                      "WA POLST Repository Demo": {
+                      "WA POLST Repository Sample": {
                         url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir",
                         patients: [{
                           last: "Wilson",

@@ -63,7 +63,7 @@
     const allUrls = {...PATIENT_IPS, ...EXAMPLE_IPS};
     let name = Object.keys(allUrls).find(title => allUrls[title] === selectedUrl);
     if (name) {
-      name = name + " Demo Dataset";
+      name = name + " Sample Dataset";
     } else {
       name = selectedUrl;
     }

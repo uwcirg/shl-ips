@@ -64,8 +64,8 @@
       patients: [$demographics],
       patient: demographics
     },
-    "WA POLST Repository Demo": {
-      name: "WA POLST Repository Demo",
+    "WA POLST Repository Sample": {
+      name: "WA POLST Repository Sample",
       url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir",
       patients: [{
         last: "Wilson",

@@ -34,8 +34,8 @@
       url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir",
       patient: demographics
     },
-    "WA POLST Repository Demo": {
-      name: "WA POLST Repository Demo",
+    "WA POLST Repository Sample": {
+      name: "WA POLST Repository Sample",
       selected: false,
       url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir",
       patient: writable({
@@ -49,8 +49,8 @@
         dob: "1993-12-01",
       })
     },
-    "AD Vault Sandbox": {
-      name: "AD Vault Sandbox",
+    "AD Vault Sandbox Sample": {
+      name: "AD Vault Sandbox Sample",
       selected: false,
       url: "https://qa-rr-fhir.maxmddirect.com",
       patient: writable({

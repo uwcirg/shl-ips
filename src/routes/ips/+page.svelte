@@ -268,7 +268,7 @@
     {/each}
     {#if SHOW_VIEWER_DEMO}
       <TabPane tabId="demo" active={shlContents.length === 0} style="padding-top:10px">
-        <span class="demo-tab" slot="tab">Demo</span>
+        <span class="demo-tab" slot="tab">IPS Sandbox</span>
         <Demo bundle={shlContents[0]} mode={$displayMode} />
       </TabPane>
     {/if}
