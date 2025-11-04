@@ -63,7 +63,7 @@
   }
 
   function shrinkNav() {
-    let links = document.getElementsByClassName("nav-link");
+    let links = document.getElementsByClassName("header-link");
     if (links.length == 0) return;
     for(let i = 0; i < links.length; i++) {
       links[i].classList.add("scrolling");
@@ -78,7 +78,7 @@
   }
 
   function growNav() {
-    let links = document.getElementsByClassName("nav-link");
+    let links = document.getElementsByClassName("header-link");
     if (links.length == 0) return;
     for(let i = 0; i < links.length; i++) {
       links[i].classList.remove("scrolling");
@@ -102,7 +102,7 @@
       // Ignore clicks on the navbar toggler
       if (event.target?.className?.includes('navbar-toggler')) return;
       // Ignore clicks on the dropdown toggle menu items
-      if (event.target?.closest('.nav-link') && event.target?.closest('.dropdown-toggle')) {
+      if (event.target?.closest('.nav-link.header-link') && event.target?.closest('.dropdown-toggle')) {
         navOpening = true;
         setTimeout(() => {
           navOpening = false;
@@ -184,30 +184,30 @@
       </Nav>
       <Nav class="ms-auto" navbar>
         <NavItem>
-          <NavLink style="text-wrap-mode: nowrap" href={"/"} active={ activeItem === "home" }>Home</NavLink>
+          <NavLink class="header-link" style="text-wrap-mode: nowrap" href={"/"} active={ activeItem === "home" }>Home</NavLink>
         </NavItem>
         {#if $authenticated}
           {#if $user}
             <NavItem>
-              <NavLink style="text-wrap-mode: nowrap" href="/data" active={ activeItem === "data" }>My Data</NavLink>
+              <NavLink class="header-link" style="text-wrap-mode: nowrap" href="/data" active={ activeItem === "data" }>My Data</NavLink>
             </NavItem>
             {#if INSTANCE_CONFIG.pages.summaries}
               <NavItem>
-                <NavLink style="text-wrap-mode: nowrap" href="/summaries" active={ activeItem === "summaries" }>My Summaries</NavLink>
+                <NavLink class="header-link" style="text-wrap-mode: nowrap" href="/summaries" active={ activeItem === "summaries" }>My Summaries</NavLink>
               </NavItem>
             {/if}
             {#if INSTANCE_CONFIG.pages.documents}
               <NavItem>
-                <NavLink style="text-wrap-mode: nowrap" href="/documents" active={ activeItem === "documents" }>Documents</NavLink>
+                <NavLink class="header-link" style="text-wrap-mode: nowrap" href="/documents" active={ activeItem === "documents" }>Documents</NavLink>
               </NavItem>
             {/if}
             {#if INSTANCE_CONFIG.pages.provider}
               <NavItem>
-                <NavLink style="text-wrap-mode: nowrap" href="/provider" active={ activeItem === "provider" }>Provider</NavLink>
+                <NavLink class="header-link" style="text-wrap-mode: nowrap" href="/provider" active={ activeItem === "provider" }>Provider</NavLink>
               </NavItem>
             {/if}
             <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
-              <DropdownToggle color="primary" nav caret class={ activeItem === "account" ? "active" : "" }>
+              <DropdownToggle color="primary" nav caret class={`header-link ${activeItem === "account" ? "active" : "" }`}>
                 <Icon name="person-circle"/> Account
               </DropdownToggle>
               <DropdownMenu end style="max-height: 350px; overflow:auto">
@@ -249,12 +249,12 @@
             </Dropdown>
           {:else}
             <NavItem>
-              <NavLink on:click={() => authService.login()} style="text-wrap-mode: nowrap"><Icon name="person-circle"/> Sign In</NavLink>
+              <NavLink class="header-link" on:click={() => authService.login()} style="text-wrap-mode: nowrap"><Icon name="person-circle"/> Sign In</NavLink>
             </NavItem>
           {/if}
         {:else}
         <NavItem>
-          <NavLink on:click={() => authService.login()} style="text-wrap-mode: nowrap"><Icon name="person-circle"/> Sign In</NavLink>
+          <NavLink class="header-link" on:click={() => authService.login()} style="text-wrap-mode: nowrap"><Icon name="person-circle"/> Sign In</NavLink>
         </NavItem>
       {/if}
       </Nav>
@@ -298,7 +298,7 @@
     -o-transition: all 0.06s linear;
     transition: all 0.06s linear;
   }
-  div > :global(.nav-link.scrolling) {
+  div > :global(.nav-link.header-link.scrolling) {
     padding-top: 0rem !important;
     padding-bottom: 0.25rem !important;
   }
@@ -314,29 +314,34 @@
   :global(.navbar.scrolling) {
     padding: 0px !important;
   }
-  :global(.nav-link) {
+  :global(.nav-link.header-link) {
     position: relative;
+    max-width: fit-content;
   }
-  @media (min-width: 576px) {
-    /* using ::before because of dropdown arrow ::after pseudo element */
-    :global(.nav-link::before) {
-      content: '';
-      opacity: 0;
-      transition: all 0.2s;
-      height: 2px;
-      width: calc(100% - 2*var(--bs-navbar-nav-link-padding-x));
-      left: var(--bs-navbar-nav-link-padding-x);
-      background-color: lightgrey;
-      position: absolute;
-      bottom: 1px;
-      /* left: 0; */
-    }
-    :global(.nav-link:hover::before) {
-      opacity: 1;
-    }
-    :global(.nav-link.active::before) {
-      opacity: 1;
-      background-color: grey;
+  /* using ::before because of nav dropdown arrow ::after pseudo element */
+  :global(.nav-link.header-link::before) {
+    content: '';
+    opacity: 0;
+    transition: all 0.2s;
+    height: 2px;
+    width: calc(100% - 2*var(--bs-navbar-nav-link-padding-x));
+    left: var(--bs-navbar-nav-link-padding-x);
+    background-color: lightgrey;
+    position: absolute;
+    bottom: 1px;
+    /* left: 0; */
+  }
+  :global(.nav-link.header-link:hover::before) {
+    opacity: 1;
+  }
+  :global(.nav-link.header-link.active::before) {
+    opacity: 1;
+    background-color: grey;
+  }
+  @media (max-width: 768px) {
+    :global(.nav-link.header-link::before) {
+      width: 100% !important;
+      left: 0 !important;
     }
   }
 </style>
