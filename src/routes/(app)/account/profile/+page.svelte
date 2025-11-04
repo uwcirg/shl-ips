@@ -19,6 +19,6 @@
 
 <h4>Account Information</h4>
 <p> Welcome, {$user.profile.name ?? $user.profile.given_name ?? $user.profile.preferred_username ?? $user.profile.email}</p>
-<p> You are signed in as {$user.profile.email} using your {$user.profile.idp === 'google' ? 'Google' : INSTANCE_CONFIG.title} account.</p>
+<p> You are signed in as <strong>{$user.profile.email}</strong> using your {$user.profile.idp === 'google' ? 'Google' : INSTANCE_CONFIG.title} account.</p>
 <br>
 <p> Click here to reset your password: <a href={`${AUTH_URL}/login-actions/reset-credentials?client_id=${AUTH_CLIENT_ID}`}>Reset Password</a></p>
