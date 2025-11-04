@@ -249,12 +249,12 @@
             </Dropdown>
           {:else}
             <NavItem>
-              <NavLink on:click={() => authService.login()}><Icon name="person-circle"/> Sign In</NavLink>
+              <NavLink on:click={() => authService.login()} style="text-wrap-mode: nowrap"><Icon name="person-circle"/> Sign In</NavLink>
             </NavItem>
           {/if}
         {:else}
         <NavItem>
-          <NavLink on:click={() => authService.login()}><Icon name="person-circle"/> Sign In</NavLink>
+          <NavLink on:click={() => authService.login()} style="text-wrap-mode: nowrap"><Icon name="person-circle"/> Sign In</NavLink>
         </NavItem>
       {/if}
       </Nav>

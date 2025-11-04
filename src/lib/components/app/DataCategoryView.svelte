@@ -108,7 +108,7 @@
     <Accordion stayOpen>
       {#each Object.entries($userResources[category]) as [source, dataset]}
         <AccordionItem active>
-          <div slot="header" class="d-flex align-items-center w-100" style="max-width: calc(100% - 2.5rem);">
+          <div slot="header" class="d-flex justify-content-between align-items-center flex-nowrap w-100" style="max-width: calc(100% - 2.5rem);">
             <div class="flex-grow-1" style="min-width: 0">
               <h6
                 class="mt-1"
@@ -120,20 +120,15 @@
               <span style="max-width: 100%;">
                               Updated {new Date((get(dataset.patient)).meta.lastUpdated).toLocaleString(undefined, {
                               dateStyle: "medium",
-                              timeStyle: "short",
                             })}</span>
-            </div>
-          </div>
-          <div class="p-2 mx-0 d-flex flex-fill justify-content-between align-items-center flex-nowrap w-100 rounded-top bg-light border-top border-left border-right">
-            <div class="flex-grow-1" style="min-width: 0">
-              
             </div>
             <div class="ms-3 flex-shrink-0">
               <Button
                 size="sm"
                 color="secondary"
                 outline
-                on:click={() => {
+                on:click={(event) => {
+                  event.stopPropagation();
                   const accordionButton = document.querySelector(`div.${accordionClass} > h2 > button.accordion-button`);
                   if (accordionButton) {
                     const openCollapse = document.querySelector(`div.${accordionClass} > div.accordion-collapse.show`);
@@ -155,7 +150,10 @@
                 size="sm"
                 color="danger"
                 outline
-                on:click={() => fhirDataService.deleteDataset(category, source)}
+                on:click={(event) => {
+                  event.stopPropagation();
+                  fhirDataService.deleteDataset(category, source)
+                }}
               >
                 Delete
               </Button>
