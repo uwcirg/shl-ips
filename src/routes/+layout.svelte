@@ -77,6 +77,7 @@
     <link rel="icon" href={`${INSTANCE_CONFIG.imgPath}/favicon.ico`} type="image/x-icon">
     <link rel="preload" as="image" href={`${INSTANCE_CONFIG.imgPath}/company-logo.png`} />
     <link rel="preload" as="image" href={`${INSTANCE_CONFIG.imgPath}/logo.png`} />
+    <link rel="preload" as="image" href={`${INSTANCE_CONFIG.imgPath}/divider.png`} />
 </svelte:head>
 
 <Container class="main" fluid>

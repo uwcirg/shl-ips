@@ -25,6 +25,7 @@
   import { DEMO_WARNING, VERSION_STRING } from '$lib/config/config';
   import type { IAuthService, SHLAdminParams } from '$lib/utils/types';
   import FHIRDataService from '$lib/utils/FHIRDataService';
+  import { imagePreload } from '$lib/utils/preloadImages';
 
   let authService: IAuthService = getContext('authService');
   let authenticated = authService.authenticated;
@@ -121,15 +122,7 @@
     // create the qr code image
 
     // load the images
-    const uris = [`${INSTANCE_CONFIG.imgPath}/company-logo.png`, `${INSTANCE_CONFIG.imgPath}/divider.png`, `${INSTANCE_CONFIG.imgPath}/logo.png`];
-    const [companyLogo, divider, siteLogo] = await Promise.all(
-        uris.map(uri => new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.onerror = (err) => reject(new Error('Failed to load image from data URI.'));
-        img.src = uri;
-      })
-    )) as HTMLImageElement[];
+    const [companyLogo, divider, siteLogo] = await imagePreload as HTMLImageElement[];
 
     // scale the images to match the largest image width
     const targetHeight: number = Math.max(companyLogo.height, divider.height, siteLogo.height);
@@ -167,13 +160,17 @@
 
 <canvas id="header-image" class="img-fluid" style="display: none;"/>
 
-{#await createHeaderImage() then headerImageUrl}
 <Row>
   <Navbar sticky="top" color="light" light expand="md" style="border-bottom: 1px solid rgb(204, 204, 204);">
     <div class="container-fluid d-flex align-items-center justify-content-between">
+      {#await createHeaderImage()}
+      <!-- <NavbarBrand class="flex-shrink-1"> <img id="nav-image" src={`${INSTANCE_CONFIG.imgPath}/company-logo.png`} alt="Site Logo" style="width: fit-content; height: 60px;" /> </NavbarBrand> -->
+      {:then headerImageUrl}
+      <!-- <NavbarBrand class="flex-shrink-1"> <img id="nav-image" style="height: 60px;"/> </NavbarBrand> -->
       <NavbarBrand class="flex-shrink-1">
         <img id="nav-image" alt="Washington State Department of Health Logo" src={headerImageUrl}/>
       </NavbarBrand>
+      {/await}
       <div class="flex-grow-1 d-flex align-items-center justify-content-end">
         <NavbarToggler class="me-2" on:click={() => ($isOpen = !$isOpen)} />
       </div>
@@ -260,14 +257,13 @@
       </Nav>
     </Collapse>
   </Navbar>
-  </Row>
-  {#if DEMO_WARNING}
-    <Alert color="warning" dismissible class="mt-2 mb-0">
-      <span class="text-danger">Demonstration/test system - do not use with real health information</span>
-    </Alert>
-  {/if}
-  <!-- <Banner title={INSTANCE_CONFIG.header.title} style={INSTANCE_CONFIG.header.title_style}/> -->
-{/await}
+</Row>
+{#if DEMO_WARNING}
+  <Alert color="warning" dismissible class="mt-2 mb-0">
+    <span class="text-danger">Demonstration/test system - do not use with real health information</span>
+  </Alert>
+{/if}
+<!-- <Banner title={INSTANCE_CONFIG.header.title} style={INSTANCE_CONFIG.header.title_style}/> -->
 
 <style>
   :global(#nav-image) {
