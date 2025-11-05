@@ -32,7 +32,7 @@ function isPathAuthenticatedAPI(pathname: string) {
 export const handle: Handle = async ({ event, resolve }) => {
   const { url, request } = event;
   
-  if (url.pathname.split('/')[1] === "api" && disallowedEndpoints.includes(url.pathname.split('/')[2])) {
+  if (url.pathname.split('/')[1] === "api" && disallowedEndpoints !== undefined && disallowedEndpoints.includes(url.pathname.split('/')[2])) {
     console.log(url.pathname.split('/')[1]);
     throw error(404, { message: "Page not found" });
   }
