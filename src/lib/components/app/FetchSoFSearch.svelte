@@ -10,13 +10,14 @@
     Icon,
     Input,
     Label,
+    Portal,
     Row,
     Spinner } from 'sveltestrap';
   import { EPIC_CLIENT_ID, CERNER_CLIENT_ID, SOF_ENDPOINTS } from '$lib/config/config';
   import type { ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from '$lib/utils/types';
   import type { Resource } from 'fhir/r4';
   import { authorize, endSession, getResourcesWithReferences } from '$lib/utils/sofClient.js';
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher, onMount, onDestroy } from 'svelte';
   import { clearURLOfParams, getResourcesFromIPS } from '$lib/utils/util';
   import { page } from '$app/stores';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
@@ -90,6 +91,10 @@
   }
 
   onMount(async function() {
+    updateMenuPosition();
+    window.addEventListener('resize', updateMenuPosition);
+    window.addEventListener('scroll', updateMenuPosition, true);
+    document.addEventListener('click', handleOutsideClick);
     let method = sessionStorage.getItem('AUTH_METHOD');
     if (!method || method != 'sof') {
       return;
@@ -108,6 +113,11 @@
       }
     }
   });
+  onDestroy(() => {
+    window.removeEventListener('resize', updateMenuPosition);
+    window.removeEventListener('scroll', updateMenuPosition, true);
+    document.removeEventListener('click', handleOutsideClick);
+  })
 
   async function fetchData() {
     processing = true;
@@ -140,33 +150,53 @@
   }
 
   let isOpen = false;
+  let toggleRef: HTMLDivElement | undefined = undefined;
+  let menuStyle = '';
+  function handleOutsideClick(event: any) {
+    if (toggleRef && !toggleRef.contains(event.target)) {
+      isOpen = false;
+    }
+  }
+  
+  function updateMenuPosition() {
+    if (!toggleRef) return;
+    const rect = toggleRef.getBoundingClientRect();
+    if (!rect) return;
+    menuStyle = `
+      position: absolute;
+      top: ${rect.bottom + window.scrollY}px;
+      left: ${rect.left + window.scrollX}px;
+      width: ${rect.width}px;
+      z-index: 2000;
+    `;
+  }
 
 </script>
 
-<div style="height: 300px">
-  <form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, sofHost?.name, prepareIps)}>
-    <FormGroup>
-      <Dropdown {isOpen} toggle={() => (isOpen = !isOpen)}>
-        <DropdownToggle tag="div" class="d-inline-block" style="width:100%">
-          <div style="position:relative">
-            <Input
-              type="text"
-              bind:value={searchString}
-              id="provider-search"
-              on:click={() => isOpen = true}
-              placeholder="Search for a provider..."
-            />
-            <Icon name="search"
-              style="position: absolute;
-              cursor: pointer;
-              height: 25px;
-              width: 20px;
-              top: 6px;
-              right: 10px;
-              color: rgb(50, 50, 50);"/>
-          </div>
-        </DropdownToggle>
-        <DropdownMenu style="max-height: 250px; width:100%; overflow:scroll">
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, sofHost?.name, prepareIps)}>
+  <FormGroup>
+    <Dropdown {isOpen} toggle={() => {isOpen = !isOpen; updateMenuPosition();}}>
+      <DropdownToggle tag="div" class="d-inline-block" style="width:100%">
+        <div style="position:relative" bind:this={toggleRef}>
+          <Input
+            type="text"
+            bind:value={searchString}
+            id="provider-search"
+            on:click={() => isOpen = true}
+            placeholder="Search for a provider..."
+          />
+          <Icon name="search"
+            style="position: absolute;
+            cursor: pointer;
+            height: 25px;
+            width: 20px;
+            top: 6px;
+            right: 10px;
+            color: rgb(50, 50, 50);"/>
+        </div>
+      </DropdownToggle>
+      <Portal>
+        <DropdownMenu style={`max-height: 250px; overflow:scroll; ${menuStyle}`}>
           {#each filteredHosts as host, index}
             <DropdownItem
               style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"
@@ -186,31 +216,31 @@
             {/if}
           {/each}
         </DropdownMenu>
-      </Dropdown>
-    </FormGroup>
+      </Portal>
+    </Dropdown>
+  </FormGroup>
 
-    <Row>
-      <Col xs="auto">
-      <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
-        {#if !processing}
-          Fetch Data
-        {:else}
-          Fetching...
-        {/if}
-      </Button>
-      </Col>
-    {#if processing}
-      <Col xs="auto" class="d-flex align-items-center px-0">
-        <Spinner color="primary" type="border" size="md"/>
-      </Col>
-    {/if}
-    {#if disabled}
-      <Col xs="auto" class="d-flex align-items-center px-0">
-        Please wait...
-      </Col>
-    {/if}
-    </Row>
-  </form>
-</div>
+  <Row>
+    <Col xs="auto">
+    <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
+      {#if !processing}
+        Fetch Data
+      {:else}
+        Fetching...
+      {/if}
+    </Button>
+    </Col>
+  {#if processing}
+    <Col xs="auto" class="d-flex align-items-center px-0">
+      <Spinner color="primary" type="border" size="md"/>
+    </Col>
+  {/if}
+  {#if disabled}
+    <Col xs="auto" class="d-flex align-items-center px-0">
+      Please wait...
+    </Col>
+  {/if}
+  </Row>
+</form>
 <FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 <span class="text-danger">{fetchError}</span>
