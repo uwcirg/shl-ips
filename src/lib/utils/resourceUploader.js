@@ -42,8 +42,8 @@ export async function uploadResources(resources, token=undefined) {
         }
         if (!response.ok) {
             for (const entry in parsedBody.entry) {
-                if (parsedBody.entry[entry].response.outcome.issue[0].diagnostics) {
-                    console.error(parsedBody.entry[entry].response.outcome.issue[0].diagnostics);
+                if (entry.response?.outcome?.issue?.[0]?.diagnostics) {
+                    console.error(entry.response.outcome.issue[0].diagnostics);
                 }
             }
             throw new Error('Error uploading resources', { cause: response });
