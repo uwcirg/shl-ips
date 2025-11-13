@@ -105,9 +105,41 @@
   >
     <h5 slot="header">Data Retrieved From...</h5>
   {#if $userResources[category]}
+    <div class="d-flex justify-content-end align-items-center flex-nowrap w-100 p-2 bg-light rounded-top border-top border-start border-end">
+      <div class="ms-3 flex-shrink-0">
+        <Button
+          size="sm"
+          color="secondary"
+          outline
+          on:click={(event) => {
+            const accordionButtons = document.querySelectorAll(`div.${category}-dataset:not(:has(div.accordion-collapse.show)) > h2 > button.accordion-button`);
+            for (const accordionButton of Array.from(accordionButtons)) {
+              accordionButton.click();
+            }
+          }}
+        >
+          Open All
+        </Button>
+      </div>
+      <div class="ms-3 flex-shrink-0">
+        <Button
+          size="sm"
+          color="secondary"
+          outline
+          on:click={(event) => {
+            const accordionButtons = document.querySelectorAll(`div.${category}-dataset:has(div.accordion-collapse.show) > h2 > button.accordion-button`);
+            for (const accordionButton of Array.from(accordionButtons)) {
+              accordionButton.click();
+            }
+          }}
+        >
+          Collapse All
+        </Button>
+      </div>
+    </div>
     <Accordion stayOpen>
       {#each Object.entries($userResources[category]) as [source, dataset]}
-        <AccordionItem active>
+        <AccordionItem active class="{category}-dataset">
           <div slot="header" class="d-flex justify-content-between align-items-center flex-nowrap w-100" style="max-width: calc(100% - 2.5rem);">
             <div class="flex-grow-1" style="min-width: 0">
               <h6
