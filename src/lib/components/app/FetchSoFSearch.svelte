@@ -47,8 +47,9 @@
 
   let epicHosts = SOF_ENDPOINTS["epic"];
   let cernerHosts = SOF_ENDPOINTS["cerner"];
-  let allHosts;
-  $: allHosts = [...epicHosts, ...cernerHosts].sort((e1, e2) => {
+  // let allHosts = [...epicHosts, ...cernerHosts];
+  let allHosts = [...epicHosts];
+  $: allHosts = allHosts.sort((e1, e2) => {
     if (sofHost?.endpoint === e1.endpoint) {
       return -1;
     }
