@@ -26,6 +26,42 @@ export const DATA_CATEGORY_NAMES = {
   }
 }
 
+export const METHOD_NAMES = {
+  "advance-directives-create-polst": {
+    name: "Patient Authored",
+  },
+  "advance-directives-search": {
+    name: "from Repository",
+  },
+  "provider-health-record-sof": {
+    name: "from EHR Sandbox",
+  },
+  "provider-health-record-search": {
+    name: "from EHR",
+  },
+  "provider-health-record-url": {
+    name: "from URL",
+  },
+  "occupational-data-for-health-form": {
+    name: "Patient Authored",
+  },
+  "patient-body-concerns-form": {
+    name: "Patient Authored",
+  },
+  "patient-identity-form": {
+    name: "Patient Authored",
+  },
+  "patient-medical-history-form": {
+    name: "Patient Authored",
+  },
+  "patient-care-needs-form": {
+    name: "Patient Authored",
+  },
+  "patient-story-form": {
+    name: "Patient Authored",
+  },
+}
+
 export const VERSION_STRING = import.meta.env.VITE_APP_VERSION_STRING;
 
 export const AUTH_URL = import.meta.env.VITE_AUTH_URL;

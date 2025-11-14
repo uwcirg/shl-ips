@@ -13,7 +13,7 @@
   } from 'sveltestrap';
   import { getContext } from 'svelte';
   import { get, type Writable } from 'svelte/store';
-  import { METHOD_SYSTEM, SOURCE_NAME_SYSTEM } from '$lib/config/config';
+  import { METHOD_SYSTEM, METHOD_NAMES, SOURCE_NAME_SYSTEM } from '$lib/config/config';
   import FHIRDataService from '$lib/utils/FHIRDataService';
   import FHIRResourceList from '$lib/components/app/FHIRResourceList.svelte';
   import type { DataFormConfig } from '$lib/utils/types';
@@ -148,6 +148,8 @@
                 style="max-width: 100%; overflow-wrap: anywhere;"
               >
                 {get(dataset.patient).meta.tag.find((tag) => tag.system === SOURCE_NAME_SYSTEM)?.code || source}
+                ({METHOD_NAMES[get(dataset.patient).meta.tag.find((tag) => tag.system === METHOD_SYSTEM)?.code]?.name || "Unknown"})
+                for {get(dataset.patient).name?.[0]?.given?.join(" ")} {get(dataset.patient).name?.[0]?.family}
               </h6>
               <span style="max-width: 100%;">
                               Updated {new Date((get(dataset.patient)).meta.lastUpdated).toLocaleString(undefined, {
