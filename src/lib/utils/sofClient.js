@@ -12,7 +12,7 @@ const patientResourceScope = SOF_PATIENT_RESOURCES.map(resourceType => `patient/
 const resourceScope = patientResourceScope.join(" ");
 const config = {
         clientId: '(ehr client id, populated later)', // clientId() is ignored at smit
-        scope: `openid fhirUser launch/patient patient/*.read`,
+        scope: `openid fhirUser launch/patient ${resourceScope}`, // patient/*.read`,
         iss: '(authorization url, populated later)',
         redirect_uri: SOF_REDIRECT_URI
     };
