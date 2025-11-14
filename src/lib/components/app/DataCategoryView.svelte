@@ -103,7 +103,7 @@
     class="my-data-accordion"
     active
   >
-    <h5 slot="header">Data Retrieved From...</h5>
+    <h5 slot="header">Data Previously Downloaded</h5>
   {#if $userResources[category]}
     <div class="d-flex justify-content-end align-items-center flex-nowrap w-100 p-2 bg-light rounded-top border-top border-start border-end">
       <div class="ms-3 flex-shrink-0">
