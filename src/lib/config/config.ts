@@ -36,7 +36,7 @@ export const METHOD_NAMES = {
   "provider-health-record-sof": {
     name: "from EHR Sandbox",
   },
-  "provider-health-record-search": {
+  "provider-health-record-sof-search": {
     name: "from EHR",
   },
   "provider-health-record-url": {
