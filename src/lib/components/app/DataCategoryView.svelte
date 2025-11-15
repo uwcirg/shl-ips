@@ -138,8 +138,8 @@
       </div>
     </div>
     <Accordion stayOpen>
-      {#each Object.entries($userResources[category]) as [source, dataset]}
-        <AccordionItem active class="{category}-dataset">
+      {#each Object.entries($userResources[category]).sort((a, b) => new Date((get(b[1].patient))?.meta?.lastUpdated) - new Date((get(a[1].patient))?.meta?.lastUpdated)) as [source, dataset]}
+        <AccordionItem class="{category}-dataset">
           <div slot="header" class="d-flex justify-content-between align-items-center flex-nowrap w-100" style="max-width: calc(100% - 2.5rem);">
             <div class="flex-grow-1" style="min-width: 0">
               <h6
