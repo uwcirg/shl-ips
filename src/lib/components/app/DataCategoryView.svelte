@@ -17,6 +17,7 @@
   import FHIRDataService from '$lib/utils/FHIRDataService';
   import FHIRResourceList from '$lib/components/app/FHIRResourceList.svelte';
   import type { DataFormConfig } from '$lib/utils/types';
+    import { PLACEHOLDER_SYSTEM } from '../../config/config';
 
   // Top-level title and description
   export let title: string | undefined;
@@ -36,6 +37,7 @@
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
   let userResources = fhirDataService.userResources;
   let loading = fhirDataService.loading;
+  let masterPatient = fhirDataService.masterPatient;
   
   let mode: Writable<string> = getContext('mode');
   
@@ -149,7 +151,11 @@
               >
                 {get(dataset.patient).meta.tag.find((tag) => tag.system === SOURCE_NAME_SYSTEM)?.code || source}
                 ({METHOD_NAMES[get(dataset.patient).meta.tag.find((tag) => tag.system === METHOD_SYSTEM)?.code]?.name || "Unknown"})
-                for {get(dataset.patient).name?.[0]?.given?.join(" ")} {get(dataset.patient).name?.[0]?.family}
+                for {
+                  get(dataset.patient).meta.tag.find((tag) => tag.system === PLACEHOLDER_SYSTEM)?.code === 'placeholder-patient' ?
+                    `${$masterPatient?.resource?.name?.[0]?.given?.join(" ")} ${$masterPatient?.resource?.name?.[0]?.family}` :
+                    `${get(dataset.patient).name?.[0]?.given?.join(" ")} ${get(dataset.patient).name?.[0]?.family}`
+                }
               </h6>
               <span style="max-width: 100%;">
                               Updated {new Date((get(dataset.patient)).meta.lastUpdated).toLocaleString(undefined, {
