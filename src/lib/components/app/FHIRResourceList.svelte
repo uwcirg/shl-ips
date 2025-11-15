@@ -47,29 +47,98 @@
   export let resourceCollection: ResourceCollection;
 
   const components: Record<string, any> = {
-    'AllergyIntolerance': AllergyIntolerance,
-    'Condition': Condition,
-    'Consent': AdvanceDirective,
-    'Device': Device,
-    'DeviceUseStatement': DeviceUseStatement,
-    'DiagnosticReport': DiagnosticReport,
-    'DocumentReference': AdvanceDirective,
-    'Encounter': Encounter,
-    'Goal': Goal,
-    'Immunization': Immunization,
-    'Location': Location,
-    'Medication': Medication,
-    'MedicationRequest': MedicationRequest,
-    'MedicationStatement': MedicationStatement,
-    'Observation': Observation,
-    'Organization': Organization,
-    'Patient': Patient,
-    'Practitioner': Practitioner,
-    'Procedure': Procedure,
-    'Patient Story': Goal,
-    'Occupational Data': Observation,
-    'Advance Directives': AdvanceDirective,
-    'QuestionnaireResponse': QuestionnaireResponse
+    'AllergyIntolerance': {
+      component: AllergyIntolerance,
+      name: "Allergies and Intolerances",
+    },
+    'Condition': {
+      component: Condition,
+      name: "Conditions",
+    },
+    'Consent': {
+      component: AdvanceDirective,
+      name: "Advance Directives",
+    },
+    'Device': {
+      component: Device,
+      name: "Devices",
+    },
+    'DeviceUseStatement': {
+      component: DeviceUseStatement,
+      name: "Devices",
+    },
+    'DiagnosticReport': {
+      component: DiagnosticReport,
+      name: "Diagnostics",
+    },
+    'DocumentReference': {
+      component: AdvanceDirective,
+      name: "Documents",
+    },
+    'Encounter': {
+      component: Encounter,
+      name: "Encounters",
+    },
+    'Goal': {
+      component: Goal,
+      name: "Goals",
+    },
+    'Immunization': {
+      component: Immunization,
+      name: "Immunizations",
+    },
+    'Location': {
+      component: Location,
+      name: "Locations",
+    },
+    'Medication': {
+      component: Medication,
+      name: "Medications",
+    },
+    'MedicationRequest': {
+      component: MedicationRequest,
+      name: "Medications",
+    },
+    'MedicationStatement': {
+      component: MedicationStatement,
+      name: "Medications",
+    },
+    'Observation': {
+      component: Observation,
+      name: "Observations/Results",
+    },
+    'Organization': {
+      component: Organization,
+      name: "Organizations",
+    },
+    'Patient': {
+      component: Patient,
+      name: "Patient",
+    },
+    'Practitioner': {
+      component: Practitioner,
+      name: "Practitioners",
+    },
+    'Procedure': {
+      component: Procedure,
+      name: "Procedures",
+    },
+    'Patient Story': {
+      component: Goal,
+      name: "Patient Story",
+    },
+    'Occupational Data': {
+      component: Observation,
+      name: "Occupational Data",
+    },
+    'Advance Directives': {
+      component: AdvanceDirective,
+      name: "Advance Directives",
+    },
+    'QuestionnaireResponse': {
+      component: QuestionnaireResponse,
+      name: "Questionnaires",
+    },
   };
 
   const statusDispatch = createEventDispatcher<{ 'status-update': string }>();
@@ -88,12 +157,13 @@
       if ($resources) {
         for (const rh of Object.values($resources) as ResourceHelper[]) {
           if (rh.resource.resourceType === 'Patient' && rh.resource?.meta?.tag?.find(t => t.system === PLACEHOLDER_SYSTEM)) {
-            continue;  
+            continue;
           }
-          if (!(rh.resource.resourceType in resourcesByType)) {
-            resourcesByType[rh.resource.resourceType] = {};
+          let type = components[rh.resource.resourceType].name;
+          if (!(type in resourcesByType)) {
+            resourcesByType[type] = {};
           }
-          resourcesByType[rh.resource.resourceType][rh.tempId] = rh;
+          resourcesByType[type][rh.tempId] = rh;
         }
       }
       return resourcesByType;
@@ -146,12 +216,12 @@
   header={resourceType + ' JSON'}
   placement="end"
   title={resourceType + ' JSON'}
-  style="display: flex;  overflow-y:hidden; height: 100dvh;"
+  style="display: flex;  overflow-y:hidden; height: 100dvh; width: fit-content; max-width: 80dvw; min-width: var(--bs-offcanvas-width);"
 >
   <Row class="d-flex" style="height: 100%">
     <Row class="d-flex pe-0" style="height:calc(100% - 50px)">
       <Col class="d-flex pe-0" style="height:100%">
-        <div class="d-flex pe-0 pb-0 code-container">
+        <div class="d-flex pe-0 pb-0 code-container w-100">
           <pre class="code"><code>{json}</code></pre>
         </div>
       </Col>
@@ -178,11 +248,11 @@
 
 
 {#if $categorizedResourceStore}
-  <Accordion>
+  <Accordion stayOpen>
     {#if Object.keys($categorizedResourceStore).length > 0}
       {#each Object.keys($categorizedResourceStore) as category}
         {#if Object.keys($categorizedResourceStore[category]).length > 0}
-          <AccordionItem on:toggle={() => updateBadge(category)}>
+          <AccordionItem class="resource-content resource-list-accordion" active={Object.keys($categorizedResourceStore[category]).length <= 3} on:toggle={() => updateBadge(category)}>
             <span slot="header">
               {category}
               {#if category === 'Patients'}
@@ -213,57 +283,72 @@
                 </Badge>
               {/if}
             </span>
-            <FormGroup>
-              {#each Object.keys($categorizedResourceStore[category]) as key}
-                <Card style="width: 100%; max-width: 100%" class="mb-2">
-                  <CardHeader>
-                    <Row>
-                      <Col class="d-flex justify-content-start align-items-center">
-                        <span style="font-size:small">{$categorizedResourceStore[category][key].resource.resourceType}</span>
+            {#each Object.keys($categorizedResourceStore[category]) as key, index}
+              <!-- <Card style="width: 100%; max-width: 100%" class="mb-2"> -->
+                <!-- <CardHeader>
+                  <Row>
+                    <Col class="d-flex justify-content-start align-items-center">
+                      <span style="font-size:small">{$categorizedResourceStore[category][key].resource.resourceType}</span>
+                    </Col>
+                    {#if $mode === 'advanced'}
+                      <Col class="d-flex justify-content-end align-items-center">
+                        <Button
+                          size="sm"
+                          color="secondary"
+                          outline
+                          on:click={() => setJson($categorizedResourceStore[category][key])}
+                        >
+                          View
+                        </Button>
                       </Col>
-                      {#if $mode === 'advanced'}
-                        <Col class="d-flex justify-content-end align-items-center">
-                          <Button
-                            size="sm"
-                            color="secondary"
-                            outline
-                            on:click={() => setJson($categorizedResourceStore[category][key])}
-                          >
-                            View
-                          </Button>
-                        </Col>
-                      {/if}
-                    </Row>
-                  </CardHeader>
-                  <Label style="width: 100%">
-                    <CardBody>
-                      <Row style="overflow: hidden">
-                        <Col class="resource-content justify-content-center align-items-center">
-                          {#if category in components}
-                            <svelte:component
-                              this={components[category]}
-                              content={{
-                                resource: $categorizedResourceStore[category][key].resource,
-                                entries: resourceCollection.flattenResources($categorizedResourceStore)
-                              }}
-                            />
-                            <!-- ResourceType: {category}
-                              Resource: {JSON.stringify($categorizedResourceStore[category][key].resource)} -->
-                          {:else if $categorizedResourceStore[category][key].resource.text?.div}
-                            {@html $categorizedResourceStore[category][key].resource.text?.div}
-                          {:else}
-                            {$categorizedResourceStore[category][key].tempId}
-                          {/if}
-                        </Col>
-                      </Row>
-                    </CardBody>
-                  </Label>
-                </Card>
-              {/each}
-            </FormGroup>
+                    {/if}
+                  </Row>
+                </CardHeader> -->
+                <Row class={index > 0 ? "border-top pt-2 mt-2" : ""} style="overflow: hidden">
+                  <Col class="justify-content-center align-items-center">
+                    {#if $categorizedResourceStore[category][key].resource.resourceType in components}
+                      <svelte:component
+                        this={components[$categorizedResourceStore[category][key].resource.resourceType].component}
+                        content={{
+                          resource: $categorizedResourceStore[category][key].resource,
+                          entries: resourceCollection.flattenResources($categorizedResourceStore)
+                        }}
+                      />
+                      <!-- ResourceType: {category}
+                        Resource: {JSON.stringify($categorizedResourceStore[category][key].resource)} -->
+                    {:else if $categorizedResourceStore[category][key].resource.text?.div}
+                      {@html $categorizedResourceStore[category][key].resource.text?.div}
+                    {:else}
+                      {$categorizedResourceStore[category][key].tempId}
+                    {/if}
+                  </Col>
+                  <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
+                    {#if $mode === 'advanced'}
+                      <Button
+                        size="sm"
+                        color="secondary"
+                        outline
+                        on:click={(event) => {
+                          event.stopPropagation();
+                          setJson($categorizedResourceStore[category][key])
+                        }}
+                      >
+                        View
+                      </Button>
+                    {/if}
+                  </Col>
+                </Row>
+              <!-- </Card> -->
+            {/each}
           </AccordionItem>
         {/if}
       {/each}
     {/if}
   </Accordion>
 {/if}
+
+<style>
+  :global(div.resource-list-accordion > h2.accordion-header > button.accordion-button) {
+    background-color: var(--bs-accordion-active-bg) !important;
+  }
+</style>

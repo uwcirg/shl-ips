@@ -50,7 +50,7 @@
 
 .accordion-item.resource-content > .accordion-collapse > .accordion-body {
   overflow: auto;
-  max-height: 52rem;
+  max-height: calc(65vh);
 }
 
 .code {
