@@ -28,7 +28,7 @@ export const DATA_CATEGORY_NAMES = {
 
 export const METHOD_NAMES = {
   "advance-directives-create-polst": {
-    name: "Patient Authored",
+    name: "patient-authored",
   },
   "advance-directives-search": {
     name: "from Repository",
@@ -43,22 +43,22 @@ export const METHOD_NAMES = {
     name: "from URL",
   },
   "occupational-data-for-health-form": {
-    name: "Patient Authored",
+    name: "patient-authored",
   },
   "patient-body-concerns-form": {
-    name: "Patient Authored",
+    name: "patient-authored",
   },
   "patient-identity-form": {
-    name: "Patient Authored",
+    name: "patient-authored",
   },
   "patient-medical-history-form": {
-    name: "Patient Authored",
+    name: "patient-authored",
   },
   "patient-care-needs-form": {
-    name: "Patient Authored",
+    name: "patient-authored",
   },
   "patient-story-form": {
-    name: "Patient Authored",
+    name: "patient-authored",
   },
 }
 
