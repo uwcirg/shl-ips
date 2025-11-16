@@ -114,7 +114,7 @@ export class FHIRDataService {
   }
 
   async fetchPatient(): Promise<ResourceHelper | undefined> {
-    let patient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient?identifier=${IDENTIFIER_SYSTEM}%7C${get(this.auth.userId)}`, {
+    let patient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient?identifier=${IDENTIFIER_SYSTEM}|${get(this.auth.userId)}`, {
         cache: "no-cache",
         headers: {
           "Authorization": `Bearer ${await this.auth.getAccessToken()}`
