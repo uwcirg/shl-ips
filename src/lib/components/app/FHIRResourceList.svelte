@@ -161,7 +161,8 @@
           if (rh.resource.resourceType === 'Patient' && rh.resource?.meta?.tag?.find(t => t.system === PLACEHOLDER_SYSTEM)) {
             continue;
           }
-          let type = components[rh.resource.resourceType].name;
+          let type = components[rh.resource.resourceType]?.name;
+          if (!type) { continue }
           if (!(type in resourcesByType)) {
             resourcesByType[type] = {};
           }
