@@ -7,7 +7,10 @@
   import {
     Accordion,
     AccordionItem,
+    Button,
+    Col,
     Icon,
+    Row,
     Spinner
   } from 'sveltestrap';
   import type {
@@ -200,6 +203,14 @@
     </AccordionItem>
   {/each}
 </Accordion>
+
+<Row class="d-flex justify-content-center mt-4">
+  <Col md="11">
+    <Button color="success" style="width:100%" href={'/share'}>
+      <b><Icon name="plus-lg" /></b> New Sharable Health Summary
+    </Button>
+  </Col>
+</Row>
 
 <style>
   :global(.at-load) {
