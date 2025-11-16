@@ -312,7 +312,7 @@
                               on:change={(e) => {
                                 let rh = { ...$resourcesByTypeStore[resourceType][key] };
                                 rh.include = e.target.checked;
-                                resourceCollection.collection.updateResource(rh);
+                                resourceCollection.updateResource(rh);
                               }}
                             />
                           {/if}
