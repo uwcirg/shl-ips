@@ -207,7 +207,7 @@
           resourceCollection.addSection(resourceResult.sectionKey, resourceResult.sectionTemplate);
         }
         if (!resourcesAdded) {
-          let mpResource = $masterPatient.resource;
+          let mpResource = JSON.parse(JSON.stringify($masterPatient.resource)) as Patient;
           delete mpResource.link; // Otherwise the IPS patient will be included with future $everything calls
           resourceCollection.addResource(mpResource);
         }
