@@ -107,6 +107,34 @@ export function download(filename:string, text:string) {
   document.body.removeChild(element);
 }
 
+export async function fetchEverything(reqUrl: RequestInfo | URL, options: RequestInit): Promise<Resource[]> {
+  const collected: Resource[] = []; // all resources from all pages
+
+  // First request URL
+  let url = reqUrl;
+
+  while (url) {
+    const response = await fetch(url, options);
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`FHIR request failed: ${response.status} ${errText}`);
+    }
+
+    const bundle = await response.json();
+
+    if (bundle.entry) {
+      bundle.entry.forEach(e => collected.push(e.resource));
+    }
+
+    // Find the next link if pagination is present
+    const nextLink = bundle.link?.find(l => l.relation === "next");
+    url = nextLink?.url || null; // continue if exists, otherwise stop
+  }
+
+  return collected;
+}
+
 export function getReferences(resourceContent: any, references: any[] | undefined=undefined): string[]{
     let referenceFieldKey = "reference";
     if (references === undefined) {
