@@ -10,6 +10,8 @@
     Icon,
     Input,
     Label,
+    ListGroup,
+    ListGroupItem,
     Portal,
     Row,
     Spinner } from 'sveltestrap';
@@ -48,8 +50,7 @@
   let epicHosts = SOF_ENDPOINTS["epic"];
   let cernerHosts = SOF_ENDPOINTS["cerner"];
   // let allHosts = [...epicHosts, ...cernerHosts];
-  let allHosts = [...epicHosts];
-  $: allHosts = allHosts.sort((e1, e2) => {
+  let allHosts = [...epicHosts].sort((e1, e2) => {
     if (sofHost?.endpoint === e1.endpoint) {
       return -1;
     }
@@ -59,14 +60,27 @@
     return e1.name.localeCompare(e2.name)
   });
   let selectOccurred = false;
-  let filteredHosts = allHosts;
+  let filteredHosts: any = [];
+  let otherHosts = allHosts;
   $: {
-    if (searchString && !selectOccurred) {
-      filteredHosts = allHosts.filter(e => e.name?.toLowerCase().includes(searchString.toLowerCase()));
-    } else {
-      filteredHosts = allHosts;
+    if (searchString) {
+      filteredHosts = allHosts.filter(e => sofHost?.name !== e.name && e.name?.toLowerCase().includes(searchString.toLowerCase()));
+      filteredHosts.sort((e1, e2) => e1.name.startsWith(searchString) ? -1 : 1);
+      otherHosts = allHosts.filter(e => sofHost?.name !== e.name && !filteredHosts.includes(e));
+      scrollResultsIntoView();
     }
     selectOccurred = false;
+  }
+
+  function scrollResultsIntoView() {
+    let results = document.getElementById("results");
+    if (results) {
+      results.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+          inline: "nearest"
+        });
+    }
   }
 
   async function prepareIps() {
@@ -92,10 +106,6 @@
   }
 
   onMount(async function() {
-    updateMenuPosition();
-    window.addEventListener('resize', updateMenuPosition);
-    window.addEventListener('scroll', updateMenuPosition, true);
-    document.addEventListener('click', handleOutsideClick);
     let method = sessionStorage.getItem('AUTH_METHOD');
     if (!method || method != 'sof') {
       return;
@@ -114,11 +124,6 @@
       }
     }
   });
-  onDestroy(() => {
-    window.removeEventListener('resize', updateMenuPosition);
-    window.removeEventListener('scroll', updateMenuPosition, true);
-    document.removeEventListener('click', handleOutsideClick);
-  })
 
   async function fetchData() {
     processing = true;
@@ -150,75 +155,78 @@
     }
   }
 
-  let isOpen = false;
-  let toggleRef: HTMLDivElement | undefined = undefined;
-  let menuStyle = '';
-  function handleOutsideClick(event: any) {
-    if (toggleRef && !toggleRef.contains(event.target)) {
-      isOpen = false;
-    }
-  }
-  
-  function updateMenuPosition() {
-    if (!toggleRef) return;
-    const rect = toggleRef.getBoundingClientRect();
-    if (!rect) return;
-    menuStyle = `
-      position: absolute;
-      top: ${rect.bottom + window.scrollY}px;
-      left: ${rect.left + window.scrollX}px;
-      width: ${rect.width}px;
-      z-index: 2000;
-    `;
-  }
-
 </script>
 
 <form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, sofHost?.name, prepareIps)}>
   <FormGroup>
-    <Dropdown {isOpen} toggle={() => {isOpen = !isOpen; updateMenuPosition();}}>
-      <DropdownToggle tag="div" class="d-inline-block" style="width:100%">
-        <div style="position:relative" bind:this={toggleRef}>
-          <Input
-            type="text"
-            bind:value={searchString}
-            id="provider-search"
-            on:click={() => isOpen = true}
-            placeholder="Search for a provider..."
-          />
-          <Icon name="search"
-            style="position: absolute;
-            cursor: pointer;
-            height: 25px;
-            width: 20px;
-            top: 6px;
-            right: 10px;
-            color: rgb(50, 50, 50);"/>
-        </div>
-      </DropdownToggle>
-      <Portal>
-        <DropdownMenu style={`max-height: 250px; overflow:scroll; ${menuStyle}`}>
-          {#each filteredHosts as host, index}
-            <DropdownItem
-              style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"
-              active={host.endpoint == sofHost?.endpoint}
-              on:click={() => {
-                searchString = host.name;
-                sofHost = host;
-                selectOccurred = true;
-                filteredHosts = allHosts;
-                isOpen = true;
-              }}
-            >
-              {host.name}
-            </DropdownItem>
-            {#if index === 0 && sofHost}
-              <DropdownItem divider />
-            {/if}
-          {/each}
-        </DropdownMenu>
-      </Portal>
-    </Dropdown>
+    <div style="width: 100%" class="d-inline-block mb-1">
+      <div style="position:relative">
+        <Input
+          type="text"
+          bind:value={searchString}
+          id="provider-search"
+          placeholder="Search for a provider..."
+        />
+        <Icon name="search"
+          style="position: absolute;
+          cursor: pointer;
+          height: 25px;
+          width: 20px;
+          top: 6px;
+          right: 10px;
+          color: rgb(50, 50, 50);"/>
+      </div>
+    </div>
+    {#if sofHost}
+    <ListGroup theme="light" class="mt-2 border rounded" flush>
+      <ListGroupItem color="primary">
+        <h6>Selected Provider</h6>
+      </ListGroupItem>
+      <ListGroupItem>
+        {sofHost.name}
+      </ListGroupItem>
+    </ListGroup>
+    {/if}
+    <ListGroup class="mt-2 border rounded" flush style="height: 250px; overflow:auto;">
+      {#if filteredHosts.length > 0}
+        <ListGroupItem id="results" color="secondary">
+          <h6>Results</h6>
+        </ListGroupItem>
+      {:else}
+        <ListGroupItem color="secondary">
+          <h6>{sofHost ? "Other " : ""}Providers</h6>
+        </ListGroupItem>
+      {/if}
+      {#each filteredHosts as host}
+        <ListGroupItem
+          active={host.endpoint == sofHost?.endpoint && host.name == sofHost?.name}
+          on:click={() => {
+            searchString = host.name;
+            sofHost = host;
+            selectOccurred = true;
+          }}
+        >
+          {host.name}
+        </ListGroupItem>
+      {/each}
+      {#if filteredHosts.length > 0}
+        <ListGroupItem color="secondary">
+          <h6>Other Providers</h6>
+        </ListGroupItem>
+      {/if}
+      {#each otherHosts as host}
+        <ListGroupItem
+          active={host.endpoint == sofHost?.endpoint && host.name == sofHost?.name}
+          on:click={() => {
+            searchString = host.name;
+            sofHost = host;
+            selectOccurred = true;
+          }}
+        >
+          {host.name}
+        </ListGroupItem>
+      {/each}
+    </ListGroup>
   </FormGroup>
 
   <Row>
