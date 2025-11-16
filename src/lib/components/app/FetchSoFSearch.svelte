@@ -97,10 +97,13 @@
         } catch (e) {
           authDispatch('sof-auth-fail', { data: false });
         }
+      } else {
+        throw Error("Please select a provider.");
       }
     } catch (e) {
       console.log('Failed', e);
-      fetchError = "Error preparing IPS";
+      fetchError = e.message ?? "Error preparing IPS";
+      processing = false;
     }
   }
 
@@ -125,6 +128,10 @@
   });
 
   async function fetchData() {
+    if (!sofHost) {
+      fetchError = "Please select a provider.";
+      return;
+    }
     processing = true;
     try {
       let retrievedResources = await getResourcesWithReferences(1);
@@ -156,7 +163,7 @@
 
 </script>
 
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, sofHost?.name, prepareIps)}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, sofHost?.name ?? "Unknown", prepareIps)}>
   <FormGroup>
     <div style="width: 100%" class="d-inline-block mb-1">
       <div style="position:relative">
@@ -182,7 +189,7 @@
         <h6>Selected Provider</h6>
       </ListGroupItem>
       <ListGroupItem>
-        {sofHost.name}
+        <div class="d-flex justify-content-between"><span>{sofHost.name}</span><Button close on:click={() => sofHost = null}></Button></div>
       </ListGroupItem>
     </ListGroup>
     {/if}
