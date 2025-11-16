@@ -349,7 +349,7 @@
 {/if}
 
 <style>
-  :global(div.resource-list-accordion > h2.accordion-header > button.accordion-button) {
-    background-color: var(--bs-accordion-active-bg) !important;
+  :global(div.resource-list-accordion:not(:has(div.accordion-collapse.show)) > h2.accordion-header > button.accordion-button) {
+    background-color: var(--bs-gray-200) !important;
   }
 </style>
