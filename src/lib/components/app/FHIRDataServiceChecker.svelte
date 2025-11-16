@@ -22,9 +22,6 @@
   export async function checkFHIRDataServiceBeforeFetch(categoryCode: string, sourceUrl: string, fetchCallback: Function) {
     category = categoryCode;
     source = sourceUrl;
-    if (!category || !source) {
-      return;
-    }
     callbackFn = fetchCallback;
     if (fhirDataService.datasetExists(category, source)) {
       toggle();
