@@ -45,6 +45,7 @@
   import QuestionnaireResponse from '$lib/components/resource-templates/QuestionnaireResponse.svelte';
 
   export let resourceCollection: ResourceCollection;
+  export let scroll: boolean = true;
 
   const components: Record<string, any> = {
     'AllergyIntolerance': {
@@ -248,11 +249,11 @@
 
 
 {#if $categorizedResourceStore}
-  <Accordion stayOpen>
+  <Accordion stayOpen class="w-100">
     {#if Object.keys($categorizedResourceStore).length > 0}
       {#each Object.keys($categorizedResourceStore) as category}
         {#if Object.keys($categorizedResourceStore[category]).length > 0}
-          <AccordionItem class="resource-content resource-list-accordion" active={Object.keys($categorizedResourceStore[category]).length <= 3} on:toggle={() => updateBadge(category)}>
+          <AccordionItem class="resource-content {scroll ? "scroll" : ""} resource-list-accordion" active={Object.keys($categorizedResourceStore[category]).length <= 3} on:toggle={() => updateBadge(category)}>
             <span slot="header">
               {category}
               {#if category === 'Patients'}

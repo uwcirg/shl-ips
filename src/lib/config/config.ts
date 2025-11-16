@@ -28,37 +28,37 @@ export const DATA_CATEGORY_NAMES = {
 
 export const METHOD_NAMES = {
   "advance-directives-create-polst": {
-    name: "patient-authored",
+    name: "Patient-Authored",
   },
   "advance-directives-search": {
-    name: "from Repository",
+    name: "Repository",
   },
   "provider-health-record-sof": {
-    name: "from EHR Sandbox",
+    name: "Sandbox EHR",
   },
   "provider-health-record-sof-search": {
-    name: "from EHR",
+    name: "Provider EHR",
   },
   "provider-health-record-url": {
-    name: "from URL",
+    name: "URL",
   },
   "occupational-data-for-health-form": {
-    name: "patient-authored",
+    name: "Patient-Authored",
   },
   "patient-body-concerns-form": {
-    name: "patient-authored",
+    name: "Patient-Authored",
   },
   "patient-identity-form": {
-    name: "patient-authored",
+    name: "Patient-Authored",
   },
   "patient-medical-history-form": {
-    name: "patient-authored",
+    name: "Patient-Authored",
   },
   "patient-care-needs-form": {
-    name: "patient-authored",
+    name: "Patient-Authored",
   },
   "patient-story-form": {
-    name: "patient-authored",
+    name: "Patient-Authored",
   },
 }
 

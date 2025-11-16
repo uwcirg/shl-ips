@@ -48,7 +48,7 @@
   }
 }
 
-.accordion-item.resource-content > .accordion-collapse > .accordion-body {
+.accordion-item.resource-content.scroll > .accordion-collapse > .accordion-body {
   overflow: auto;
   max-height: calc(65vh);
 }

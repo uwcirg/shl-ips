@@ -132,6 +132,10 @@ export class ResourceCollection implements IResourceCollection {
         return this.resources;
     }
 
+    getResourceCount() {
+        return Object.keys(get(this.resources)).length;
+    }
+
     getFHIRResources() {
         return this.flattenResources(get(this.resources)).map(rh => rh.resource);
     }

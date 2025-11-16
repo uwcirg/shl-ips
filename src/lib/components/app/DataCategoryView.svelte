@@ -1,23 +1,36 @@
 <script lang="ts">
   import { Accordion,
     AccordionItem,
+    Badge,
     Button,
+    ButtonGroup,
     Card,
     CardBody,
     CardHeader,
     CardFooter,
+    CardTitle,
+    CardSubtitle,
+    CardText,
     Col,
+    Dropdown,
+    DropdownItem,
+    DropdownMenu,
+    DropdownToggle,
+    Icon,
+    Offcanvas,
     Row,
     TabContent,
     TabPane
   } from 'sveltestrap';
   import { getContext } from 'svelte';
   import { get, type Writable } from 'svelte/store';
-  import { METHOD_SYSTEM, METHOD_NAMES, SOURCE_NAME_SYSTEM } from '$lib/config/config';
+  import { METHOD_SYSTEM, METHOD_NAMES, SOURCE_NAME_SYSTEM, PLACEHOLDER_SYSTEM } from '$lib/config/config';
+  import { download } from '$lib/utils/util';
   import FHIRDataService from '$lib/utils/FHIRDataService';
   import FHIRResourceList from '$lib/components/app/FHIRResourceList.svelte';
   import type { DataFormConfig } from '$lib/utils/types';
-    import { PLACEHOLDER_SYSTEM } from '../../config/config';
+  import type { ResourceCollection } from '$lib/utils/ResourceCollection';
+    import { CATEGORY_SYSTEM } from '../../config/config';
 
   // Top-level title and description
   export let title: string | undefined;
@@ -55,7 +68,145 @@
       document.querySelector(`span.${activeTab}-tab`)?.parentElement?.click();
     }
   }
+
+  function showDataset(source: string, dataset: ResourceCollection) {
+    let method = METHOD_NAMES[get(dataset.patient).meta.tag.find((tag) => tag.system === METHOD_SYSTEM)?.code]?.name;
+
+    let sourceString = source ? source : "Unknown dataset";
+    let methodString = method ? ` (${method})` : "";
+    setContent(
+      `${sourceString}${methodString}`,
+      dataset
+    );
+  }
+  function updateDataset(dataset: ResourceCollection) {
+    // TODO: autofill source/data in form
+    const accordionButton = document.querySelector(`div.${accordionClass} > h2 > button.accordion-button`);
+    if (accordionButton) {
+      const openCollapse = document.querySelector(`div.${accordionClass} > div.accordion-collapse.show`);
+      if (openCollapse === null) {
+        accordionButton.click();
+      }
+      const offset = 72;
+      const elementTop = accordionButton.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({top: elementTop - offset-10, behavior: 'smooth'});
+      activeTab = get(dataset.patient).meta.tag.find((tag) => tag.system === METHOD_SYSTEM)?.code;
+    }
+  }
+  function deleteDataset(category: string, source: string) {
+    fhirDataService.deleteDataset(category, source)
+  }
+
+  let isOpen = false;
+  let name = '';
+  let date = '';
+  let ocDataset: ResourceCollection;
+  function setContent(viewName: string, viewDataset: ResourceCollection) {
+    name = viewName;
+    date = new Date((get(viewDataset.patient)).meta.lastUpdated).toLocaleString(undefined, {
+      dateStyle: "medium",
+    })
+    ocDataset = viewDataset;
+    isOpen = true;
+  }
+  function toggle() {
+    isOpen = !isOpen;
+  }
 </script>
+
+<Offcanvas
+  {isOpen}
+  {toggle}
+  scroll
+  header={name}
+  placement="end"
+  title={name}
+  style="display: flex; overflow-y:hidden; height: 100dvh; max-width: calc(2 * var(--bs-offcanvas-width)); width: 80dvw; min-width: var(--bs-offcanvas-width);"
+>
+  <div class="d-flex justify-content-between align-items-center flex-nowrap w-100 p-2 bg-light rounded-top border-top border-start border-end" style="height: 50px">
+    <div class="flex-shrink-0">
+      <Icon name="calendar-check"/> {date}
+    </div>
+    <div class="ms-3 flex-shrink-0">
+      <Button
+        size="sm"
+        color="secondary"
+        outline
+        on:click={() => {
+          const accordionButtons = document.querySelectorAll(`div.resource-content:not(:has(div.accordion-collapse.show)) > h2 > button.accordion-button`);
+          for (const accordionButton of Array.from(accordionButtons)) {
+            accordionButton.click();
+          }
+        }}
+      >
+        Open All
+      </Button>
+      <Button
+        size="sm"
+        color="secondary"
+        outline
+        on:click={() => {
+          const accordionButtons = document.querySelectorAll(`div.resource-content:has(div.accordion-collapse.show) > h2 > button.accordion-button`);
+          for (const accordionButton of Array.from(accordionButtons)) {
+            accordionButton.click();
+          }
+        }}
+      >
+        Collapse All
+      </Button>
+    </div>
+  </div>
+  <div class="d-flex w-100" style="height: calc(100% - 100px);">
+    <Col class="d-flex pe-0 h-100 w-100" style="overflow: auto">
+      {#if ocDataset && isOpen}
+        {#key isOpen}
+        <FHIRResourceList
+          bind:resourceCollection={ocDataset}
+          bind:submitting={submitting}
+          scroll={false}
+          on:status-update={ ({ detail }) => { /*updateStatus(detail)*/ } }
+          on:error={ ({ detail }) => { /*showError(detail)*/ } }
+        />
+        {/key}
+      {/if}
+    </Col>
+  </div>
+  <Row class="d-flex pe-0" style="height: 50px">
+    <Col class="d-flex justify-content-start align-items-end" style="padding-top: 1rem">
+      <!-- <ButtonGroup>
+        <Button
+          size="sm"
+          outline
+          color="secondary"
+          on:click={() => download(name + '.json', json)}
+        >
+          <Icon name="download" /> Download
+        </Button>
+      </ButtonGroup> -->
+      <Button
+        size="sm"
+        outline
+        color="secondary"
+        on:click={() => { isOpen = false; updateDataset(ocDataset) }}
+      >
+        <Icon name="arrow-repeat" /> Update
+      </Button>
+    </Col>
+    <Col class="d-flex justify-content-end align-items-end" style="padding-top: 1rem">
+      <Button
+        size="sm"
+        outline
+        color="danger"
+        on:click={() => { isOpen = false; deleteDataset(
+          get(ocDataset.patient).meta.tag.find((tag) => tag.system === CATEGORY_SYSTEM)?.code,
+          get(ocDataset.patient).meta.tag.find((tag) => tag.system === SOURCE_NAME_SYSTEM)?.code || get(ocDataset.patient).meta.source.split("#")[0]
+        )}}
+      >
+        <Icon name="trash" /> Delete
+      </Button>
+    </Col>
+  </Row>
+</Offcanvas>
 
 {#if description}
   <p class="text-secondary"><em>{@html description}</em></p>
@@ -100,116 +251,84 @@
   </AccordionItem>
 </Accordion>
 {#if $userResources?.[category] && methodList?.length > 0 }
-<Accordion stayOpen>
-  <AccordionItem
-    class="my-data-accordion"
-    active
-  >
-    <h5 slot="header">Data Previously Downloaded</h5>
-  {#if $userResources[category]}
-    <div class="d-flex justify-content-end align-items-center flex-nowrap w-100 p-2 bg-light rounded-top border-top border-start border-end">
-      <div class="ms-3 flex-shrink-0">
-        <Button
-          size="sm"
-          color="secondary"
-          outline
-          on:click={(event) => {
-            const accordionButtons = document.querySelectorAll(`div.${category}-dataset:not(:has(div.accordion-collapse.show)) > h2 > button.accordion-button`);
-            for (const accordionButton of Array.from(accordionButtons)) {
-              accordionButton.click();
-            }
-          }}
-        >
-          Open All
-        </Button>
-      </div>
-      <div class="ms-3 flex-shrink-0">
-        <Button
-          size="sm"
-          color="secondary"
-          outline
-          on:click={(event) => {
-            const accordionButtons = document.querySelectorAll(`div.${category}-dataset:has(div.accordion-collapse.show) > h2 > button.accordion-button`);
-            for (const accordionButton of Array.from(accordionButtons)) {
-              accordionButton.click();
-            }
-          }}
-        >
-          Collapse All
-        </Button>
-      </div>
-    </div>
-    <Accordion stayOpen>
-      {#each Object.entries($userResources[category]).sort((a, b) => new Date((get(b[1].patient))?.meta?.lastUpdated) - new Date((get(a[1].patient))?.meta?.lastUpdated)) as [source, dataset]}
-        <AccordionItem class="{category}-dataset">
-          <div slot="header" class="d-flex justify-content-between align-items-center flex-nowrap w-100" style="max-width: calc(100% - 2.5rem);">
-            <div class="flex-grow-1" style="min-width: 0">
-              <h6
-                class="mt-1"
-                title={source}
-                style="max-width: 100%; overflow-wrap: anywhere;"
-              >
-                {get(dataset.patient).meta.tag.find((tag) => tag.system === SOURCE_NAME_SYSTEM)?.code || source}
-                ({METHOD_NAMES[get(dataset.patient).meta.tag.find((tag) => tag.system === METHOD_SYSTEM)?.code]?.name || "Unknown"})
-                for {
-                  get(dataset.patient).meta.tag.find((tag) => tag.system === PLACEHOLDER_SYSTEM)?.code === 'placeholder-patient' ?
-                    `${$masterPatient?.resource?.name?.[0]?.given?.join(" ")} ${$masterPatient?.resource?.name?.[0]?.family}` :
-                    `${get(dataset.patient).name?.[0]?.given?.join(" ")} ${get(dataset.patient).name?.[0]?.family}`
-                }
-              </h6>
-              <span style="max-width: 100%;">
-                              Updated {new Date((get(dataset.patient)).meta.lastUpdated).toLocaleString(undefined, {
-                              dateStyle: "medium",
-                            })}</span>
-            </div>
-            <div class="ms-3 flex-shrink-0">
-              <Button
-                size="sm"
-                color="secondary"
-                outline
-                on:click={(event) => {
-                  event.stopPropagation();
-                  const accordionButton = document.querySelector(`div.${accordionClass} > h2 > button.accordion-button`);
-                  if (accordionButton) {
-                    const openCollapse = document.querySelector(`div.${accordionClass} > div.accordion-collapse.show`);
-                    if (openCollapse === null) {
-                      accordionButton.click();
-                    }
-                    const offset = 72;
-                    const elementTop = accordionButton.getBoundingClientRect().top + window.scrollY;
-                    window.scrollTo({top: elementTop - offset-10, behavior: 'smooth'});
-                    activeTab = get(dataset.patient).meta.tag.find((tag) => tag.system === METHOD_SYSTEM)?.code;
-                  }
-                }}
-              >
-                Update
-              </Button>
-            </div>
-            <div class="ms-3 flex-shrink-0">
-              <Button
-                size="sm"
-                color="danger"
-                outline
-                on:click={(event) => {
-                  event.stopPropagation();
-                  fhirDataService.deleteDataset(category, source)
-                }}
-              >
-                Delete
-              </Button>
-            </div>
-          </div>
-          <FHIRResourceList
-            bind:resourceCollection={dataset}
-            bind:submitting={submitting}
-            on:status-update={ ({ detail }) => { /*updateStatus(detail)*/ } }
-            on:error={ ({ detail }) => { /*showError(detail)*/ } }
-          />
-        </AccordionItem>
-      {/each}
-    </Accordion>
-  {/if}
-  </AccordionItem>
+  <Accordion stayOpen>
+    <AccordionItem
+      class="my-data-accordion"
+      active
+    >
+      <h5 slot="header">Data Previously Downloaded</h5>
+      {#if $userResources[category]}
+        <Row class="g-4 d-flex justify-content-start">
+          {#each Object.entries($userResources[category]).sort((a, b) => new Date((get(b[1].patient))?.meta?.lastUpdated) - new Date((get(a[1].patient))?.meta?.lastUpdated)) as [source, dataset]}
+            <Col xs="12" sm="6" lg="4" style="">
+              <Card class="{category}-dataset h-100 w-100">
+                <CardHeader>
+                  <Row class="align-items-center">
+                    <Col>
+                      <CardText style="max-width: 100%;">
+                        <Icon name="calendar-check"/> {new Date((get(dataset.patient)).meta.lastUpdated).toLocaleString(undefined, {
+                          dateStyle: "medium",
+                        })}
+                      </CardText>
+                    </Col>
+                    <Col class="ps-0" style="max-width: fit-content">
+                      <Dropdown>
+                        <DropdownToggle tag="div">
+                          <Icon name="three-dots-vertical"></Icon>
+                        </DropdownToggle>
+                        <DropdownMenu>
+                          <DropdownItem on:click={() => showDataset(source, dataset)}><div class="d-flex justify-content-between w-100">View <Icon name="chevron-right"/></div></DropdownItem>
+                          <DropdownItem class="text-primary"on:click={() => updateDataset(dataset)}><Icon name="arrow-repeat"/> Update</DropdownItem>
+                          <DropdownItem divider />
+                          <DropdownItem class="text-danger" on:click={() => deleteDataset(category, source)}><Icon name="trash"/> Delete</DropdownItem>
+                        </DropdownMenu>
+                      </Dropdown>
+                    </Col>
+                  </Row>
+                </CardHeader>
+                <CardBody class="d-flex flex-column justify-content-between">
+                  <div>
+                    <Row class="align-items-top">
+                      <Col>
+                        <CardTitle
+                          title={source}
+                          style="max-width: 100%; overflow-wrap: anywhere;"
+                        >
+                          {get(dataset.patient).meta.tag.find((tag) => tag.system === SOURCE_NAME_SYSTEM)?.code || source}
+                        </CardTitle>
+                      </Col>
+                    </Row>
+                    <Row>
+                      <CardSubtitle class="mb-1 text-secondary">
+                        For {
+                          get(dataset.patient).meta.tag.find((tag) => tag.system === PLACEHOLDER_SYSTEM)?.code === 'placeholder-patient' ?
+                            `${$masterPatient?.resource?.name?.[0]?.given?.join(" ")} ${$masterPatient?.resource?.name?.[0]?.family}` :
+                            `${get(dataset.patient).name?.[0]?.given?.join(" ")} ${get(dataset.patient).name?.[0]?.family}`
+                        }
+                      </CardSubtitle>
+                    </Row>
+                    <Row>
+                      <Col class="pe-0">
+                        <Badge color="secondary">
+                          {METHOD_NAMES[get(dataset.patient).meta.tag.find((tag) => tag.system === METHOD_SYSTEM)?.code]?.name || "Unknown"}
+                        </Badge>
+                      </Col>
+                    </Row>
+                  </div>
+                  <Row class="mx-0 mt-3">
+                    <Button class="d-flex justify-content-between align-items-center" color="secondary" outline on:click={() => showDataset((get(dataset.patient).meta.tag.find((tag) => tag.system === SOURCE_NAME_SYSTEM)?.code || source), dataset)}>
+                      <Badge color="primary">{dataset.getResourceCount()}</Badge>
+                      <div>View </div>
+                      <Icon name="chevron-right"/>
+                    </Button>
+                  </Row>
+                </CardBody>
+              </Card>
+            </Col>
+          {/each}
+        </Row>
+      {/if}
+    </AccordionItem>
   </Accordion>
 {/if}
 
