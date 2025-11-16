@@ -5,6 +5,8 @@ import Demographic from '$lib/components/app/Demographic.svelte';
 import FetchSoF from '$lib/components/app/FetchSoF.svelte';
 import FetchSoFSearch from '$lib/components/app/FetchSoFSearch.svelte';
 import FetchUrl from '$lib/components/app/FetchUrl.svelte';
+import FetchCARINBB from '$lib/components/app/FetchCARINBB.svelte';
+import FetchTEFCA from '$lib/components/app/FetchTEFCA.svelte';
 import PatientStory from '$lib/components/app/PatientStory.svelte';
 import PatientMedical from '$lib/components/app/PatientMedical.svelte';
 import PatientNeeds from '$lib/components/app/PatientNeeds.svelte';
@@ -53,6 +55,20 @@ export default {
               description: "Fetch health summary data from a FHIR URL.",
               advanced: true,
               component: FetchUrl
+            },
+            {
+              method: "provider-health-record-carin",
+              tabTitle: "Blue Button",
+              description: "Fetch insurance data from an insurance provider demo server via SMART authorization.",
+              advanced: true,
+              component: FetchCARINBB
+            },
+            {
+              method: "provider-health-record-tefca",
+              tabTitle: "TEFCA",
+              description: "Fetch health summary data with a federated TEFCA query.",
+              advanced: true,
+              component: FetchTEFCA
             }
           ]
         },
