@@ -112,9 +112,11 @@ export class IPSResourceCollection extends ResourceCollection {
 
     addResource(resource: Resource, sectionKey?: string) {
         // Remove system identifier from IPS resources
-        resource.identifier = resource.identifier.filter(i => i.system !== IDENTIFIER_SYSTEM);
-        if (resource.identifier.length === 0) {
-            delete resource.identifier;
+        if (resource.identifier) {
+            resource.identifier = resource.identifier.filter(i => i.system !== IDENTIFIER_SYSTEM);
+            if (resource.identifier.length === 0) {
+                delete resource.identifier;
+            }
         }
         let rh = super.addResource(resource);
         if (sectionKey) {
