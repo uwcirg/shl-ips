@@ -11,6 +11,7 @@ import { derived, writable, get, type Writable, type Readable } from "svelte/sto
 import type { CategorizedResourceHelperMap } from "$lib/utils/types";
 import { ResourceCollection, type SerializedResourceCollection } from "$lib/utils/ResourceCollection";
 import type { ResourceHelperMap } from "$lib/utils/types";
+import { IDENTIFIER_SYSTEM } from "$lib/config/config";
 
 // This is both allowable and reverse order of loading
 const allowableResourceTypes = [
@@ -110,6 +111,11 @@ export class IPSResourceCollection extends ResourceCollection {
     }
 
     addResource(resource: Resource, sectionKey?: string) {
+        // Remove system identifier from IPS resources
+        resource.identifier = resource.identifier.filter(i => i.system !== IDENTIFIER_SYSTEM);
+        if (resource.identifier.length === 0) {
+            delete resource.identifier;
+        }
         let rh = super.addResource(resource);
         if (sectionKey) {
             if (!get(this.extensionSections)[sectionKey]) {
