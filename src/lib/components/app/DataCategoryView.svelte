@@ -123,7 +123,20 @@
   title={name}
   style="display: flex; overflow-y:hidden; height: 100dvh; max-width: calc(2 * var(--bs-offcanvas-width)); width: 80dvw; min-width: var(--bs-offcanvas-width);"
 >
-  <div class="d-flex justify-content-between align-items-center flex-nowrap w-100 p-2 bg-light rounded-top border-top border-start border-end" style="height: 50px">
+  <div class="
+      d-flex
+      justify-content-between
+      align-items-center
+      flex-nowrap
+      w-100
+      p-2
+      bg-light
+      rounded-top
+      border-top
+      border-start
+      border-end"
+    style="height: 50px"
+  >
     <div class="flex-shrink-0">
       <Icon name="calendar-check"/> {date}
     </div>
