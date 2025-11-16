@@ -19,6 +19,7 @@
     Label,
     Row
   } from 'sveltestrap';
+  import { get } from 'svelte/store';
   import { PLACEHOLDER_SYSTEM } from '$lib/config/config';
   import { ResourceHelper } from '$lib/utils/ResourceHelper.js';
   import type { ResourceCollection } from '$lib/utils/ResourceCollection.js';
@@ -284,43 +285,23 @@
                 </Badge>
               {/if}
             </span>
-            {#each Object.keys($categorizedResourceStore[category]) as key, index}
-              <!-- <Card style="width: 100%; max-width: 100%" class="mb-2"> -->
-                <!-- <CardHeader>
-                  <Row>
-                    <Col class="d-flex justify-content-start align-items-center">
-                      <span style="font-size:small">{$categorizedResourceStore[category][key].resource.resourceType}</span>
-                    </Col>
-                    {#if $mode === 'advanced'}
-                      <Col class="d-flex justify-content-end align-items-center">
-                        <Button
-                          size="sm"
-                          color="secondary"
-                          outline
-                          on:click={() => setJson($categorizedResourceStore[category][key])}
-                        >
-                          View
-                        </Button>
-                      </Col>
-                    {/if}
-                  </Row>
-                </CardHeader> -->
+            {#each Object.entries($categorizedResourceStore[category]).sort((a, b) => new Date((get(b[1].patient))?.meta?.lastUpdated) - new Date((get(a[1].patient))?.meta?.lastUpdated)) as [key, value], index}
                 <Row class={index > 0 ? "border-top pt-2 mt-2" : ""} style="overflow: hidden">
                   <Col class="justify-content-center align-items-center">
-                    {#if $categorizedResourceStore[category][key].resource.resourceType in components}
+                    {#if value.resource.resourceType in components}
                       <svelte:component
-                        this={components[$categorizedResourceStore[category][key].resource.resourceType].component}
+                        this={components[value.resource.resourceType].component}
                         content={{
-                          resource: $categorizedResourceStore[category][key].resource,
+                          resource: value.resource,
                           entries: resourceCollection.flattenResources($categorizedResourceStore)
                         }}
                       />
                       <!-- ResourceType: {category}
-                        Resource: {JSON.stringify($categorizedResourceStore[category][key].resource)} -->
-                    {:else if $categorizedResourceStore[category][key].resource.text?.div}
-                      {@html $categorizedResourceStore[category][key].resource.text?.div}
+                        Resource: {JSON.stringify(value.resource)} -->
+                    {:else if value.resource.text?.div}
+                      {@html value.resource.text?.div}
                     {:else}
-                      {$categorizedResourceStore[category][key].tempId}
+                      {value.tempId}
                     {/if}
                   </Col>
                   <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
@@ -331,7 +312,7 @@
                         outline
                         on:click={(event) => {
                           event.stopPropagation();
-                          setJson($categorizedResourceStore[category][key])
+                          setJson(value)
                         }}
                       >
                         View
@@ -350,6 +331,9 @@
 
 <style>
   :global(div.resource-list-accordion:not(:has(div.accordion-collapse.show)) > h2.accordion-header > button.accordion-button) {
-    background-color: var(--bs-gray-200) !important;
+    background-color: var(--bs-light) !important;
+  }
+  :global(div.resource-list-accordion:has(div.accordion-collapse.collapsing) > h2.accordion-header > button.accordion-button) {
+    background-color: var(--bs-accordion-active-bg) !important;
   }
 </style>
