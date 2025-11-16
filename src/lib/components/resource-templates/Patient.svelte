@@ -102,7 +102,7 @@
         {showContact ? 'Hide' : 'Show'} contact information <Icon style="font-size: x-small;"name={!showContact ? "caret-down" : "caret-up"} />
     </Button>
     {#if showContact}
-        <div style="overflow: scroll;">
+        <div style="overflow: auto;">
             {#if resource.telecom}
                 <table class="table table-bordered table-sm">
                     <thead>
