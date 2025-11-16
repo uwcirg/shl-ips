@@ -15,6 +15,7 @@
   import { authorize, endSession } from '$lib/utils/sofClient.js';
   import { createEventDispatcher, onMount } from 'svelte';
   import type { BundleEntry, Resource } from 'fhir/r4';
+  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
 
   export let disabled = false;
 
@@ -22,11 +23,20 @@
   
   const authDispatch = createEventDispatcher<{'sof-auth-init': SOFAuthEvent; 'sof-auth-fail': SOFAuthEvent}>();
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
+
+  const CATEGORY = "provider-health-record";
+  const METHOD = "provider-health-record-carinbb";
+  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
+
   let processing = false;
   let loadingSample = false;
   let fetchError = "";
   let result: ResourceRetrieveEvent = {
-    resources: undefined
+    resources: undefined,
+    category: CATEGORY,
+    method: METHOD,
+    source: undefined,
+    sourceName: undefined
   };
 
   let sofHostSelection = CARIN_HOSTS[0].id;
@@ -182,7 +192,13 @@
         resources = resources.flat();
         resources = [patient, ...resources];
         if (resources) {
-          result = { resources: await getResourcesWithReferences(resources, 1, accessToken) };
+          result = {
+            resources: await getResourcesWithReferences(resources, 1, accessToken),
+            category: CATEGORY,
+            method: METHOD,
+            source: sofHost?.url,
+            sourceName: sofHost?.name
+          };
           console.log(result.resources);
           resourceDispatch('update-resources', result);
         }
@@ -200,9 +216,8 @@
   });
 
 </script>
-<form on:submit|preventDefault={() => prepareIps()}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, sofHost?.name, prepareIps)}>
   <FormGroup>
-      <Label>Fetch CARIN Insurance data via SMART authorization</Label>
     {#each CARIN_HOSTS as host}
       <Row class="mx-2">
         <Input type="radio" bind:group={sofHostSelection} value={host.id} label={host.name} />
@@ -235,4 +250,6 @@
     {/if}
   </Row>
 </form>
+<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
+
 <span class="text-danger">{fetchError}</span>

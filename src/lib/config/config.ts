@@ -28,7 +28,7 @@ export const DATA_CATEGORY_NAMES = {
 
 export const METHOD_NAMES = {
   "advance-directives-create-polst": {
-    name: "Patient-Authored",
+    name: "Patient-authored",
   },
   "advance-directives-search": {
     name: "Repository",
@@ -42,23 +42,32 @@ export const METHOD_NAMES = {
   "provider-health-record-url": {
     name: "URL",
   },
+  "provider-health-record-carinbb": {
+    name: "Sandbox Insurance",
+  },
+  "provider-health-record-tefca": {
+    name: "TEFCA Query",
+  },
+  "provider-health-record-file": {
+    name: "File Upload",
+  },
   "occupational-data-for-health-form": {
-    name: "Patient-Authored",
+    name: "Patient-authored",
   },
   "patient-body-concerns-form": {
-    name: "Patient-Authored",
+    name: "Patient-authored",
   },
   "patient-identity-form": {
-    name: "Patient-Authored",
+    name: "Patient-authored",
   },
   "patient-medical-history-form": {
-    name: "Patient-Authored",
+    name: "Patient-authored",
   },
   "patient-care-needs-form": {
-    name: "Patient-Authored",
+    name: "Patient-authored",
   },
   "patient-story-form": {
-    name: "Patient-Authored",
+    name: "Patient-authored",
   },
 }
 

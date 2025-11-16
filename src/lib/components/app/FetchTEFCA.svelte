@@ -21,10 +21,23 @@
   import StateInput from '$lib/components/form/StateInput.svelte';
   import GenderInput from '$lib/components/form/GenderInput.svelte';
   import CountryInput from '$lib/components/form/CountryInput.svelte';
+  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
 
   export let disabled = false;
 
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
+
+  const CATEGORY = "provider-health-record";
+  const METHOD = "provider-health-record-tefca";
+  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
+
+  let resourceResult: ResourceRetrieveEvent = {
+      resources: undefined,
+      category: CATEGORY,
+      method: METHOD,
+      sourceName: undefined,
+      source: undefined
+  };
 
   let sources: Record<string, {selected: Boolean; destination: string; url: string}> = {
     MeldOpen: {selected: false, destination: "MeldOpen", url: "https://gw.interop.community/HeliosConnectathonSa/open"},
@@ -248,9 +261,11 @@
       if (resources.length === 0) {
         console.warn(`No resources found for patient ${patient.id} at ${hostname} for ${selectedSource}`);
       }
-
       result = {
         resources: resources,
+        category: CATEGORY,
+        method: METHOD,
+        sourceName: selectedSource,
         source: hostname
       };
       console.log(resources);
@@ -263,7 +278,7 @@
   }
 </script>
 
-<form on:submit|preventDefault={() => prepareIps()}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, selectedSource, prepareIps)}>
   <Label>Fetch US Core data via TEFCA query</Label>
   <FormGroup>
     <Row>
@@ -379,5 +394,6 @@
   </Row>
   {/if}
 </form>
+<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 
 <span class="text-danger">{fetchError}</span>

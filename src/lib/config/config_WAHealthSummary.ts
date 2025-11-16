@@ -5,6 +5,7 @@ import Demographic from '$lib/components/app/Demographic.svelte';
 import FetchSoF from '$lib/components/app/FetchSoF.svelte';
 import FetchSoFSearch from '$lib/components/app/FetchSoFSearch.svelte';
 import FetchUrl from '$lib/components/app/FetchUrl.svelte';
+import FetchFile from '$lib/components/app/FetchFile.svelte';
 import FetchCARINBB from '$lib/components/app/FetchCARINBB.svelte';
 import FetchTEFCA from '$lib/components/app/FetchTEFCA.svelte';
 import PatientStory from '$lib/components/app/PatientStory.svelte';
@@ -46,7 +47,7 @@ export default {
             {
               method: "provider-health-record-sof",
               tabTitle: "SMART Data Access",
-              description: "Fetch US Core data from a healthcare provider demo server via SMART authorization.",
+              description: "Fetch US Core data from a healthcare provider test server via SMART authorization.",
               component: FetchSoF
             },
             {
@@ -57,18 +58,25 @@ export default {
               component: FetchUrl
             },
             {
-              method: "provider-health-record-carin",
-              tabTitle: "Blue Button",
-              description: "Fetch insurance data from an insurance provider demo server via SMART authorization.",
+              method: "provider-health-record-carinbb",
+              tabTitle: "CARIN BB",
+              description: "Fetch CARIN insurance data from an insurance provider test server via SMART authorization.",
               advanced: true,
               component: FetchCARINBB
             },
             {
               method: "provider-health-record-tefca",
-              tabTitle: "TEFCA",
+              tabTitle: "TEFCA Query",
               description: "Fetch health summary data with a federated TEFCA query.",
               advanced: true,
               component: FetchTEFCA
+            },
+            {
+              method: "provider-health-record-file",
+              tabTitle: "File Upload",
+              description: "Upload resources from an IPS or SMART Health Card file.",
+              advanced: true,
+              component: FetchFile,
             }
           ]
         },

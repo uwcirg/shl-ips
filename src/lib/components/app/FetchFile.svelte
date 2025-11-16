@@ -7,24 +7,49 @@
         Label,
         Row,
         Spinner } from 'sveltestrap';
-    import type { SHCRetrieveEvent, IPSRetrieveEvent } from '$lib/utils/types';
+    import type { ResourceRetrieveEvent, SHCFile } from '$lib/utils/types';
+    import { getResourcesFromIPS, isSHCFile } from '$lib/utils/util';
+    import { verify } from '$lib/utils/shcDecoder.js';
     import { createEventDispatcher } from 'svelte';
+    import type { Composition } from 'fhir/r4';
+    import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
 
     export let disabled = false;
     
-    const shcDispatch = createEventDispatcher<{'shc-retrieved': SHCRetrieveEvent}>();
-    const ipsDispatch = createEventDispatcher<{'ips-retrieved': IPSRetrieveEvent}>();
+    const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
+
+    const CATEGORY = "provider-health-record";
+    const METHOD = "provider-health-record-file";
+    let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
+
+    let resourceResult: ResourceRetrieveEvent = {
+        resources: undefined,
+        category: CATEGORY,
+        method: METHOD,
+        sourceName: undefined,
+        source: undefined
+    };
 
     let uploadFiles: FileList | undefined;
     let processing = false;
     let fetchError = "";
+    let source: string | undefined;
 
-    let shcResult: SHCRetrieveEvent = {
-        shc: undefined
-    };
-    let ipsResult: IPSRetrieveEvent = {
-        ips: undefined
-    };
+    async function decodeSHC(shc: SHCFile) {
+      try {
+        if (shc && isSHCFile(shc)) {
+          const decoded = await verify(shc.verifiableCredential[0]);
+          const data = decoded.fhirBundle;
+          return data;
+        } else {
+          throw Error("Empty or invalid smart health card");
+        }
+    
+      } catch (e) {
+        console.log('Failed', e);
+        fetchError = "Error processing health card";
+      }
+    }
   
     async function retrieveIps() {
         processing = true;
@@ -37,20 +62,32 @@
                 filename = uploadFiles[0].name;
                 content = JSON.parse(new TextDecoder().decode(await uploadFiles[0].arrayBuffer()));
             }
-            processing = false;
-            if (content != undefined && content.verifiableCredential) {
-                shcResult = {
-                    shc: content,
-                    source: filename
-                };
-                
-                return shcDispatch('shc-retrieved', shcResult);
+            let bundle;
+            source = filename;
+            if (content == undefined) { throw Error("Error: file is empty."); }
+            if (content.verifiableCredential) {
+                bundle = await decodeSHC(content);
+            } else if (content.resourceType == "Bundle") {
+                bundle = content;
+            } else {
+                throw Error("Error: file must contain a FHIR Bundle.");
             }
-            ipsResult = {
-                ips: content,
-                source: filename
-            };
-            ipsDispatch('ips-retrieved', ipsResult);
+            if (!source) {
+                source = source || filename;
+            }
+            let resources;
+            let composition = bundle.entry.find(entry => entry.resource.resourceType === "Composition").resource as Composition;
+            if (composition && composition.type?.coding?.[0].system === "http://loinc.org" && composition.type?.coding?.[0].code === "60591-5") {
+                resources = getResourcesFromIPS(bundle);
+            } else {
+                resources = bundle.entry.map(entry => entry.resource);
+            }
+            if (!resources) { throw Error("Error: file contains no FHIR resources."); }
+            processing = false;
+            resourceResult.resources = resources;
+            resourceResult.source = source;
+            resourceResult.sourceName = filename;
+            resourceDispatch('update-resources', resourceResult);
         } catch (e) {
             processing = false;
             console.log('Failed', e);
@@ -59,9 +96,9 @@
     }
 </script>
 
-<form on:submit|preventDefault={() => retrieveIps()}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, source, retrieveIps)}>
     <FormGroup>
-        <Label>Upload Bundle (<code>.json</code> or signed <code>.smart-health-card</code>)</Label>
+        <Label>Upload a FHIR Bundle (<code>.json</code> or signed <code>.smart-health-card</code>)</Label>
         <Input type="file" name="file" bind:files={uploadFiles} />
     </FormGroup>
 
@@ -87,6 +124,7 @@
         {/if}
     </Row>
 </form>
+<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 
 <span class="text-danger">{fetchError}</span>
 
