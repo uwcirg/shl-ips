@@ -107,7 +107,7 @@ export function download(filename:string, text:string) {
   document.body.removeChild(element);
 }
 
-export async function fetchEverything(reqUrl: RequestInfo | URL, options: RequestInit): Promise<Resource[]> {
+export async function fetchEverything(reqUrl: string, options: RequestInit): Promise<Resource[]> {
   const collected: Resource[] = []; // all resources from all pages
 
   // First request URL
@@ -129,6 +129,9 @@ export async function fetchEverything(reqUrl: RequestInfo | URL, options: Reques
 
     // Find the next link if pagination is present
     const nextLink = bundle.link?.find(l => l.relation === "next");
+    if (url.startsWith("http://")) {
+      url = nextLink?.url.replace("http://", "https://");
+    }
     url = nextLink?.url || null; // continue if exists, otherwise stop
   }
 
