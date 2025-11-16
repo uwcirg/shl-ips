@@ -98,18 +98,19 @@ export class FHIRDataService {
   }
 
   async fetchDatasetFromPatientReference(patientReference: string): Promise<Array<Resource>> {
-    return fetchEverything(`${INTERMEDIATE_FHIR_SERVER_BASE}/${patientReference}/$everything`, {
-        cache: "no-cache",
-        headers: {
-          "Accept": "application/fhir+json",
-          "Authorization": `Bearer ${await this.auth.getAccessToken()}`
-        }
-      })
-      .then((data: Resource[]) => {
-        if (data?.length > 0) {
-          return data.filter((resource: Resource) => !(resource.resourceType === 'Patient' && resource.id === get(this.masterPatient).resource.id));
-        }
-      });
+    return fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/${patientReference}/$everything?_count=1000`, {
+      cache: "no-store",
+      headers: {
+        "Authorization": `Bearer ${await this.auth.getAccessToken()}`
+      }
+    })
+    .then((response) => response.text())
+    .then((data) => JSON.parse(data))
+    .then((data) => {
+      if (data?.entry?.length > 0) {
+        return data.entry.map((entry) => entry.resource).filter((resource) => !(resource.resourceType === 'Patient' && resource.id === get(this.masterPatient).resource.id));
+      }
+    });
   }
 
   async fetchPatient(): Promise<ResourceHelper | undefined> {
