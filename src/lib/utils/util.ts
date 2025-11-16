@@ -131,8 +131,9 @@ export async function fetchEverything(reqUrl: string, options: RequestInit): Pro
     const nextLink = bundle.link?.find(l => l.relation === "next");
     if (nextLink?.url.startsWith("http://")) {
       url = nextLink.url.replace("http://", "https://");
+    } else {
+      url = nextLink?.url || null; // continue if exists, otherwise stop
     }
-    url = nextLink?.url || null; // continue if exists, otherwise stop
   }
 
   return collected;
