@@ -43,7 +43,7 @@
     sourceName: undefined
   };
 
-  let searchString = "";
+  let searchString: string | undefined;
 
   let sofHost:SOFHost | undefined;
 
@@ -63,11 +63,11 @@
   let filteredHosts: any = [];
   let otherHosts = allHosts;
   $: {
-    if (searchString) {
-      filteredHosts = allHosts.filter(e => sofHost?.name !== e.name && e.name?.toLowerCase().includes(searchString.toLowerCase()));
+    if (searchString !== undefined) {
+      filteredHosts = searchString ? allHosts.filter(e => sofHost?.name !== e.name && e.name?.toLowerCase().includes(searchString?.toLowerCase())) : [];
       filteredHosts.sort((e1, e2) => e1.name.startsWith(searchString) ? -1 : 1);
       otherHosts = allHosts.filter(e => sofHost?.name !== e.name && !filteredHosts.includes(e));
-      scrollResultsIntoView();
+      setTimeout(() => scrollResultsIntoView(), 1);
     }
     selectOccurred = false;
   }
@@ -76,7 +76,6 @@
     let results = document.getElementById("results");
     if (results) {
       results.scrollIntoView({
-          behavior: "smooth",
           block: "nearest",
           inline: "nearest"
         });
@@ -199,6 +198,7 @@
       {/if}
       {#each filteredHosts as host}
         <ListGroupItem
+          class="selectable-list-item"
           active={host.endpoint == sofHost?.endpoint && host.name == sofHost?.name}
           on:click={() => {
             searchString = host.name;
@@ -216,6 +216,7 @@
       {/if}
       {#each otherHosts as host}
         <ListGroupItem
+          class="selectable-list-item"
           active={host.endpoint == sofHost?.endpoint && host.name == sofHost?.name}
           on:click={() => {
             searchString = host.name;
@@ -253,3 +254,12 @@
 </form>
 <FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 <span class="text-danger">{fetchError}</span>
+
+<style>
+  :global(.selectable-list-item) {
+    cursor: pointer;
+  }
+  :global(.selectable-list-item:hover) {
+    background-color: var(--bs-light);
+  }
+</style>
