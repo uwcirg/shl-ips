@@ -129,8 +129,8 @@ export async function fetchEverything(reqUrl: string, options: RequestInit): Pro
 
     // Find the next link if pagination is present
     const nextLink = bundle.link?.find(l => l.relation === "next");
-    if (url.startsWith("http://")) {
-      url = nextLink?.url.replace("http://", "https://");
+    if (nextLink?.url.startsWith("http://")) {
+      url = nextLink.url.replace("http://", "https://");
     }
     url = nextLink?.url || null; // continue if exists, otherwise stop
   }
