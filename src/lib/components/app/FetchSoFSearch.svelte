@@ -210,6 +210,7 @@
           on:click={() => {
             searchString = host.name;
             sofHost = host;
+            fetchError = "";
             selectOccurred = true;
           }}
         >
