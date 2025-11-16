@@ -24,7 +24,7 @@ import {
 import type { IAuthService, ResourceRetrieveEvent, UserDemographics } from "$lib/utils/types";
 import { ResourceHelper } from "$lib/utils/ResourceHelper";
 import type { Patient, Resource } from "fhir/r4";
-import { constructPatientResource, getDemographicsFromPatient } from "$lib/utils/util";
+import { constructPatientResource, getDemographicsFromPatient, fetchEverything } from "$lib/utils/util";
 import { uploadResources, getPatientReferenceFromTransactionResponse } from "$lib/utils/resourceUploader";
 
 export class FHIRDataService {
@@ -72,6 +72,20 @@ export class FHIRDataService {
     let patient: ResourceHelper = await this.getOrCreateMasterPatient();
     let patientLinks = patient.resource.link;
     if (patientLinks?.length > 0) {
+      let patients = await Promise.allSettled(patientLinks.map(async (link) => {
+        let datasetPatientReference = link.other.reference;
+        let patient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/${datasetPatientReference}`, {
+          cache: "no-cache",
+          headers: {
+            "Authorization": `Bearer ${await this.auth.getAccessToken()}`
+          }
+        })
+          .then((response) => response.text())
+          .then((data) => JSON.parse(data))
+          .then((data) => {
+            return data;
+          })
+      }))
       let userCategoryDatasetResults = await Promise.allSettled(patientLinks.map(async (link) => {
         let datasetPatientReference = link.other.reference;
         let dataset = await this.fetchDatasetFromPatientReference(datasetPatientReference);
@@ -84,24 +98,23 @@ export class FHIRDataService {
   }
 
   async fetchDatasetFromPatientReference(patientReference: string): Promise<Array<Resource>> {
-    return fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/${patientReference}/$everything`, {
-        cache: "no-store",
+    return fetchEverything(`${INTERMEDIATE_FHIR_SERVER_BASE}/${patientReference}/$everything`, {
+        cache: "no-cache",
         headers: {
+          "Accept": "application/fhir+json",
           "Authorization": `Bearer ${await this.auth.getAccessToken()}`
         }
       })
-      .then((response) => response.text())
-      .then((data) => JSON.parse(data))
-      .then((data) => {
-        if (data?.entry?.length > 0) {
-          return data.entry.map((entry) => entry.resource).filter((resource) => !(resource.resourceType === 'Patient' && resource.id === get(this.masterPatient).resource.id));
+      .then((data: Resource[]) => {
+        if (data?.length > 0) {
+          return data.filter((resource: Resource) => !(resource.resourceType === 'Patient' && resource.id === get(this.masterPatient).resource.id));
         }
       });
   }
 
   async fetchPatient(): Promise<ResourceHelper | undefined> {
     let patient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient?identifier=${IDENTIFIER_SYSTEM}%7C${get(this.auth.userId)}`, {
-        cache: "no-store",
+        cache: "no-cache",
         headers: {
           "Authorization": `Bearer ${await this.auth.getAccessToken()}`
         }
@@ -140,8 +153,19 @@ export class FHIRDataService {
         },
         body: JSON.stringify(patient)
       })
-      .then((response) => response.text())
-      .then((data) => JSON.parse(data));
+      .then((response) => {
+        if (response.ok) {
+          return response.text()
+        }
+        Promise.reject(response);
+      })
+      .then((data) => JSON.parse(data))
+      .catch((response) => {
+        console.log(response.status, response.statusText);
+        response.json().then((json: any) => {
+          console.log(json);
+        });
+      })
       savedPatient = updatedPatient;
     } else {
       if (patient.id) {
@@ -155,9 +179,23 @@ export class FHIRDataService {
         },
         body: JSON.stringify(patient)
       })
-      .then((response) => response.text())
-      .then((data) => JSON.parse(data));
+      .then((response) => {
+        if (response.ok) {
+          return response.text()
+        }
+        Promise.reject(response);
+      })
+      .then((data) => JSON.parse(data))
+      .catch((response) => {
+        console.log(response.status, response.statusText);
+        response.json().then((json: any) => {
+          console.log(json);
+        });
+      })
       savedPatient = newPatient;
+    }
+    if (savedPatient === undefined) {
+      throw new Error("Unable to create or update patient");
     }
     return this.setMasterPatient(savedPatient);
   }
@@ -310,11 +348,11 @@ export class FHIRDataService {
       this.deleteDataset(dataset.category, dataset.source);
     }
     let patientReference = await this.createDataset(dataset);
-    let newDataset = await this.fetchDatasetFromPatientReference(patientReference);
     let patient = get(this.masterPatient).resource;
     patient.link = patient.link ?? [];
     patient.link.push({ other: { reference: patientReference }, type: "seealso" });
     await this.createOrUpdateMasterPatient(patient);
+    let newDataset = await this.fetchDatasetFromPatientReference(patientReference);
     this.addDatasetToUserResources(newDataset);
   }
 }
