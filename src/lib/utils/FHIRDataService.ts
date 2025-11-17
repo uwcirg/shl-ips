@@ -323,7 +323,13 @@ export class FHIRDataService {
     }
     const datasetPatientId = get(dataset.patient).id;
     let patient = get(this.masterPatient).resource;
+    if (!patient.link) {
+      throw new Error('Patient has no linked datasets.');
+    }
     let datasetPatientLinkIndex = patient.link.findIndex((link) => link.other.reference === `Patient/${datasetPatientId}`);
+    if (datasetPatientLinkIndex === -1) {
+      throw new Error('Dataset does not exist in master patient.');
+    }
     if (datasetPatientLinkIndex > -1) {
       patient.link.splice(datasetPatientLinkIndex, 1);
     }
