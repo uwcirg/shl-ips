@@ -24,6 +24,7 @@ export default {
     title: "HL7 Standards-Based Patient Summary",
   },
   defaultRedirectURI: "/data",
+  advanced: true,
   pages: {
     home: {
       introComponent: Introduction

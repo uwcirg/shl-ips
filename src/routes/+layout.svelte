@@ -30,15 +30,20 @@
 
   const MODE_KEY = 'demo_mode';
   let mode: Writable<string> = writable('normal');
-  // set demo mode based on local storage state
-  window.localStorage[MODE_KEY] ? mode.set(JSON.parse(window.localStorage[MODE_KEY])) : mode.set('normal');
+  if (INSTANCE_CONFIG.advanced && window.localStorage[MODE_KEY]) {
+    // set demo mode based on local storage state
+    mode.set(JSON.parse(window.localStorage[MODE_KEY]));
+  } else {
+    $mode = 'normal';
+    window.localStorage.removeItem(MODE_KEY);
+  }
   setContext('mode', mode);
 
   let isOpen: Writable<boolean> = writable(false);
   setContext('isOpen', isOpen);
 
   $: {
-    if ($mode) window.localStorage[MODE_KEY] = JSON.stringify($mode);
+    if ($mode && INSTANCE_CONFIG.advanced) window.localStorage[MODE_KEY] = JSON.stringify($mode);
   }
 
   let prevPageSize: number | undefined;

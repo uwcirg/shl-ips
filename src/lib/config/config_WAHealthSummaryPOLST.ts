@@ -12,6 +12,7 @@ export default {
     title: "Provider Orders for Life-Sustaining Treatment",
   },
   defaultRedirectURI: "/summaries",
+  advanced: false,
   pages: {
     home: {
       introComponent: IntroductionPOLST

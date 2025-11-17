@@ -221,25 +221,27 @@
                   on:click={() => {
                     authService.logout();
                   }}><Icon name="box-arrow-right"/> Sign Out</DropdownItem>
-                  <DropdownItem divider />
-                  <DropdownItem header>Demo Options</DropdownItem>
-                  <DropdownItem
-                    on:click={() => {
-                      $mode = ($mode === 'advanced' ? 'normal' : 'advanced');
-                  }}>
-                    <Row class="mr-0" style="min-width:240px">
-                      <Col class="d-flex justify-content-start align-items-center pe-0">
-                        Show Advanced Features
-                      </Col>
-                      <Col class="d-flex justify-content-end ps-0">
-                        {#if $mode == 'advanced'}
-                        <Icon class="text-primary" name="toggle-on"></Icon>
-                        {:else}
-                        <Icon class="text-secondary" name="toggle-off"></Icon>
-                        {/if}
-                      </Col>
-                    </Row>
-                  </DropdownItem>
+                  {#if INSTANCE_CONFIG.advanced}
+                    <DropdownItem divider />
+                    <DropdownItem header>Demo Options</DropdownItem>
+                    <DropdownItem
+                      on:click={() => {
+                        $mode = ($mode === 'advanced' ? 'normal' : 'advanced');
+                    }}>
+                      <Row class="mr-0" style="min-width:240px">
+                        <Col class="d-flex justify-content-start align-items-center pe-0">
+                          Show Advanced Features
+                        </Col>
+                        <Col class="d-flex justify-content-end ps-0">
+                          {#if $mode == 'advanced'}
+                          <Icon class="text-primary" name="toggle-on"></Icon>
+                          {:else}
+                          <Icon class="text-secondary" name="toggle-off"></Icon>
+                          {/if}
+                        </Col>
+                      </Row>
+                    </DropdownItem>
+                  {/if}
                   <DropdownItem divider />
                   <DropdownItem header>Build: {VERSION_STRING}</DropdownItem>
                 </DropdownMenu>

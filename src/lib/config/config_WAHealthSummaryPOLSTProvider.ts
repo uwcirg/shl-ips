@@ -10,6 +10,7 @@ export default {
     title_style: "vertical-align: middle;font-size: 24px;display: inline-block;font-family: Verdana, sans-serif;color: rgb(161, 78, 78);"
   },
   defaultRedirectURI: "/provider",
+  advanced: false,
   pages: {
     home: {
       introComponent: IntroductionPOLSTProvider
