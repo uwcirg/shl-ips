@@ -57,7 +57,7 @@
       if (sofHost) {
         try {
           sessionStorage.setItem('AUTH_METHOD', 'sof');
-          authorize(sofHost.url, sofHost.clientId);// , sofHost.clientSecret);
+          authorize(sofHost.url, sofHost.clientId, sofHost.scope);
           authDispatch('sof-auth-init', { data: true });
         } catch (e) {
           authDispatch('sof-auth-fail', { data: false });

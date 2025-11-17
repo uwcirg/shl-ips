@@ -79,6 +79,29 @@ export const AUTH_REDIRECT_URI = import.meta.env.VITE_AUTH_REDIRECT_URI;
 export const AUTH_SILENT_REDIRECT_URI = import.meta.env.VITE_AUTH_SILENT_REDIRECT_URI;
 export const AUTH_POST_LOGOUT_URI = import.meta.env.VITE_AUTH_POST_LOGOUT_URI;
 
+export const SOF_PATIENT_RESOURCES = [
+  'Patient',
+  'AllergyIntolerance',
+  // 'MedicationStatement', // Not in EPIC USCDI R4
+  'MedicationRequest',
+  // 'Medication', // Pulled in via references - can't search by patient; "Only an _ID search is allowed."
+  'Condition',
+  'Encounter',
+  'Observation', // Handle specially for IPS codes - "Must have either code or category."
+  // 'Organization', // Pulled in via references - can't search by patient; "Only an _ID search is allowed."
+  'Immunization',
+  // 'Device',
+  // 'DeviceUseStatement', // Not in EPIC USCDI R4
+  'DiagnosticReport', // TODO change to subject
+  // 'ImagingStudy', // Not in EPIC USCDI R4
+  // 'Media', // Not in EPIC USCDI R4
+  // 'Practitioner', // Pulled in via references - can't search by patient; "Either name, family, or identifier is a required parameter."
+  // 'PractitionerRole',  // Pulled in via references - can't search by patient; "An identifier, practitioner, organization, location, or specialty parameter is required."
+  'Procedure', // TODO change to subject
+  // 'Specimen', // Not in EPIC USCDI R4
+  'QuestionnaireResponse',
+];
+
 export const SOF_HOSTS = [
   // {
   //   id: "epic-himss",
@@ -113,7 +136,8 @@ export const SOF_HOSTS = [
     name: "Oracle Cerner Test System",
     url: "https://fhir-myrecord.cerner.com/r4/ec2458f2-1e24-41c8-b71b-0e701af7583d",
     clientId: import.meta.env.VITE_CERNER_CLIENT_ID,
-    note: "nancysmart / Cerner01 <br> <a style='color: grey; font-size: small' href='https://docs.google.com/document/u/1/d/e/2PACX-1vQwyX3px4qi5t1O6_El6022zYt4ymKAWCrcgxcX5NvYGUJAkJ4WFwOnLoikow6rEccpFZzDWBdcBqsQ/pub' target='_blank' rel='noreferrer'>More credentials <span style='vertical-align: text-bottom; font-size: x-small' class='bi-chevron-double-right' /></a>"
+    note: "fredricksmart / Cerner01 <br> <a style='color: grey; font-size: small' href='https://docs.google.com/document/u/1/d/e/2PACX-1vQwyX3px4qi5t1O6_El6022zYt4ymKAWCrcgxcX5NvYGUJAkJ4WFwOnLoikow6rEccpFZzDWBdcBqsQ/pub' target='_blank' rel='noreferrer'>More credentials <span style='vertical-align: text-bottom; font-size: x-small' class='bi-chevron-double-right' /></a>",
+    scope: ['openid', 'fhirUser', 'launch/patient', ...SOF_PATIENT_RESOURCES.map(resourceType => `patient/${resourceType}.read`)].join(" ")
   },
   {
     id: "smit",
@@ -239,29 +263,6 @@ export const SOF_RESOURCES = [
   'Procedure', // TODO change to subject
   // 'Specimen', // Not in EPIC USCDI R4
   // 'QuestionnaireResponse',
-];
-
-export const SOF_PATIENT_RESOURCES = [
-  'Patient',
-  'AllergyIntolerance',
-  // 'MedicationStatement', // Not in EPIC USCDI R4
-  'MedicationRequest',
-  // 'Medication', // Pulled in via references - can't search by patient; "Only an _ID search is allowed."
-  'Condition',
-  'Encounter',
-  'Observation', // Handle specially for IPS codes - "Must have either code or category."
-  // 'Organization', // Pulled in via references - can't search by patient; "Only an _ID search is allowed."
-  'Immunization',
-  // 'Device',
-  // 'DeviceUseStatement', // Not in EPIC USCDI R4
-  'DiagnosticReport', // TODO change to subject
-  // 'ImagingStudy', // Not in EPIC USCDI R4
-  // 'Media', // Not in EPIC USCDI R4
-  // 'Practitioner', // Pulled in via references - can't search by patient; "Either name, family, or identifier is a required parameter."
-  // 'PractitionerRole',  // Pulled in via references - can't search by patient; "An identifier, practitioner, organization, location, or specialty parameter is required."
-  'Procedure', // TODO change to subject
-  // 'Specimen', // Not in EPIC USCDI R4
-  'QuestionnaireResponse',
 ];
 
 export const VIEWER_BASE = typeof window !== 'undefined' ? new URL(
