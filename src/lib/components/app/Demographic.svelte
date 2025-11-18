@@ -2,18 +2,12 @@
   import {
     Button,
     Col,
-    FormGroup,
-    Input,
-    Label,
     Row,
     Spinner
   } from 'sveltestrap';
-  import { createEventDispatcher, getContext } from 'svelte';
-  import type { ResourceRetrieveEvent } from '$lib/utils/types';
+  import { getContext } from 'svelte';
   import DemographicForm from '$lib/components/form/DemographicForm.svelte';
   import FHIRDataService from '$lib/utils/FHIRDataService';
-
-  export let disabled = false;
 
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
   let demographics = fhirDataService.demographics;
@@ -21,7 +15,7 @@
   let processing = false;
   async function saveDemographics() {
     processing = true;
-    let patientRH = await fhirDataService.saveDemographicsToPatient();
+    await fhirDataService.saveDemographicsToPatient();
     processing = false;
   }
 </script>

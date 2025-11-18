@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { UserManager } from 'oidc-client-ts';
   import { getContext, onMount } from 'svelte';
   import type { IAuthService } from '$lib/utils/types';
 

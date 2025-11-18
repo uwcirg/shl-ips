@@ -16,14 +16,11 @@
   import type {
     ResourceRetrieveEvent,
     DataFormConfig,
-    DatasetSubmitEvent,
     SOFAuthEvent
   } from '$lib/utils/types';
   import FHIRDataService from '$lib/utils/FHIRDataService';
   import DataCategoryView from '$lib/components/app/DataCategoryView.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
-
-  export let status = "";
 
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
   let masterPatient;
@@ -33,8 +30,6 @@
   let loading;
   $: loading = fhirDataService.loading;
 
-  const datasetDispatch = createEventDispatcher<{ 'dataset-submitted': DatasetSubmitEvent }>();
-  let submitting = false;
   let fetchError = "";
 
   let sections: Array<{

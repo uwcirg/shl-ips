@@ -1,5 +1,5 @@
 // import fetch from 'node-fetch';
-import { json, error, Request } from '@sveltejs/kit';
+import { json, error } from '@sveltejs/kit';
 import {
   CARIN_HOSTS,
   REDIRECT_URI

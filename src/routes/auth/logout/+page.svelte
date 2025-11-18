@@ -3,7 +3,7 @@
   import { Alert } from 'sveltestrap';
   import { goto } from '$app/navigation';
   import { getContext } from 'svelte';
-  import { IAuthService } from '$lib/utils/types';
+  import type { IAuthService } from '$lib/utils/types';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 
   let authService: IAuthService = getContext('authService');

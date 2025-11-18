@@ -397,7 +397,7 @@
   }
 </script>
 
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, sources[selectedSource].name, prepareIps)}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, sources[selectedSource].name, prepareIps)}>
   <Label>Select a source to search:</Label>
   <FormGroup>
     <Row>

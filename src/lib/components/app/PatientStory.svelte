@@ -129,7 +129,7 @@
   }
 
   function prepareIps() {
-    let resources: Resource = [];
+    let resources: Resource[] = [];
     let goalResources = goals.map(prepareGoalResource).filter((entry) => entry);
     if (goalResources.length > 0) {
       resources = [...resources, ...goalResources];
@@ -142,7 +142,16 @@
       return;
     }
     const section = JSON.parse(JSON.stringify(sectionTemplate));
-    section.text.div = `<div xmlns="http://www.w3.org/1999/xhtml"><p><strong>Patient Story</strong></p><p>${story}</p><p><strong>Patient's Goals</strong></p><ul>${goals.map(goal => `<li>${goal.value}</li>`).join('')}</ul></div>`;
+    let patientStoryHTML = story ? `<p><strong>Patient Story</strong></p><p>${story}</p>`: "";
+    let patientGoalsHTML = goalResources.length > 0
+      ? `<p><strong>Patient's Goals</strong></p><ul>${
+        goalResources.map(goal => `<li>${goal.description.text}</li>`).join('')
+      }</ul>`
+      : "";
+    section.text.div = `<div xmlns="http://www.w3.org/1999/xhtml">
+      ${patientStoryHTML}
+      ${patientGoalsHTML}
+    </div>`;
     section.extension[0].valueString = story;
     processing = false;
     let result:ResourceRetrieveEvent = {
@@ -214,7 +223,7 @@
         color="primary"
         style="width:fit-content"
         disabled={processing || disabled}
-        on:click={FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, SOURCE.name, prepareIps)}>
+        on:click={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, SOURCE.name, prepareIps)}>
         {#if !processing}
           Update your patient story and goals
         {:else}

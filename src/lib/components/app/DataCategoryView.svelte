@@ -32,8 +32,7 @@
   import type { ResourceCollection } from '$lib/utils/ResourceCollection';
     import { CATEGORY_SYSTEM } from '../../config/config';
 
-  // Top-level title and description
-  export let title: string | undefined;
+  // Top-level description
   export let description: string | undefined;
   
   export let category: string;

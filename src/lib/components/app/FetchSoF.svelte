@@ -153,7 +153,7 @@
     }
   }
 </script>
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, sofHost.name, prepareIps)}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, sofHost?.name ?? "Unknown", prepareIps)}>
   <FormGroup>
     {#each SOF_HOSTS as host}
       <Row class="mx-2">
@@ -182,7 +182,7 @@
       style="width:fit-content"
       disabled={processing || disabled || loadingSample}
       type="button"
-      on:click={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, defaultUrl, quickLoad)}>
+      on:click={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, defaultUrl, quickLoad)}>
         {#if !loadingSample}
           Quick Sample
         {:else}

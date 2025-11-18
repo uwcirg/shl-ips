@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Col, FormGroup, Label, Input, Row } from 'sveltestrap';
-  import { onMount } from 'svelte';
+  import { type Writable } from 'svelte/store';
   import GenderInput from '$lib/components/form/GenderInput.svelte';
   import StateInput from '$lib/components/form/StateInput.svelte';
   import CountryInput from '$lib/components/form/CountryInput.svelte';
@@ -11,7 +11,7 @@
   export let show: Array<DemographicFieldNames>;
   export let hide: Array<DemographicFieldNames>;
 
-  export let demographics: UserDemographics;
+  export let demographics: Writable<UserDemographics>;
 
   $: $demographics.pronouns = Object.values(pronounOptions).find((p) => p?.code === $demographics.pronouns?.code) ?? $demographics.pronouns;
   $: $demographics.religion = Object.values(religionOptions).find((p) => p?.code === $demographics.religion?.code) ?? $demographics.religion;
