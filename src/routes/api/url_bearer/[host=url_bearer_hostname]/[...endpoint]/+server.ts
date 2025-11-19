@@ -1,5 +1,5 @@
 // import fetch from 'node-fetch';
-import { json, error, Request } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { URL_BEARER_HOSTS } from '$lib/server/config';
 
 export const GET = async ({ params, url, request }: { params: { host: string }; url: URL; request: Request; }) => {

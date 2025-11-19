@@ -1,4 +1,4 @@
-import { error, Handle, Request } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { SERVER_API_BASE } from '$lib/server/config';
 import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 

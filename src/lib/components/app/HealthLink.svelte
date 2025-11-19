@@ -373,23 +373,6 @@
 </Row>
 
 <style>
-  img.qr {
-    height: 100%;
-  }
-  p.logo {
-    position: relative;
-    width: 250px;
-    height: 250px;
-  }
-  img.logo {
-    position: absolute;
-    background: white;
-    width: 100px;
-    left: calc(50% - 50px);
-    top: calc(50% - 1em);
-    border: 2px solid white;
-    box-sizing: border-box;
-  }
   :global(.shlbutton) {
     width: 300px !important;
   }

@@ -6,12 +6,13 @@
     Row
   } from 'sveltestrap';
   import type { IAuthService } from '$lib/utils/types';
-  import { User } from 'oidc-client-ts';
-  import { type SHLAdminParams, type SHLClient } from '$lib/utils/managementClient';
+  import { type User } from 'oidc-client-ts';
+  import type { SHLAdminParams } from '$lib/utils/types';
+  import { type SHLClient } from '$lib/utils/managementClient';
   import FHIRDataService from '$lib/utils/FHIRDataService';
 
   let authService: IAuthService = getContext('authService');
-  let user: User = authService.user;
+  let user: Writable<User | null> = authService.user;
 
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
 
@@ -55,11 +56,3 @@
   <!-- TODO: Replace with loader animation -->
   Loading...
 {/if}
-
-<style>
-  .main-row {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
-</style>

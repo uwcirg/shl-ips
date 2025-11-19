@@ -6,7 +6,7 @@ import {
   AUTH_POST_LOGOUT_URI
 } from '$lib/config/config';
 import { derived, writable, type Writable, type Readable } from 'svelte/store';
-import { User, UserManager } from 'oidc-client-ts';
+import { type User, UserManager } from 'oidc-client-ts';
 import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 import type { IAuthService } from '$lib/utils/types';
 
