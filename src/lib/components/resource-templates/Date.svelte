@@ -19,7 +19,7 @@
       date = `${start}${fields.period.end ? ' - '+end : ""}`;
     } else if (fields.range) {
       periodStartOnly = periodStartOnly && !fields.range.high;
-      date = `${fields.range.low ? fields.range.low : unk}${fields.range.high ? ` - ${fields.range.high}` : ''}`;
+      date = `${fields.range.low ? fields.range.low.value + fields.range.low.unit : unk}${fields.range.high ? ` - ${fields.range.high+fields.range.high.unit}` : ''}`;
     } else if (fields.date) {
       date = formatDate(fields.date);
     } else if (fields.dateTime) {
@@ -34,6 +34,12 @@
       postfix = fields.age.unit ?? "";
     } else if (fields.string) {
       date = formatDate(fields.string);
+    } else if (fields.codeableConcept) {
+      date = formatDate(
+        fields.codeableConcept.text ??
+        fields.codeableConcept.coding?.[0]?.display ??
+        `${fields.codeableConcept.coding?.[0]?.system}|${fields.codeableConcept.coding?.[0]?.code}`
+      );
     }
 
     if (periodStartOnly) {
