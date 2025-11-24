@@ -17,31 +17,139 @@ export async function base64toBlob(base64:string, type="application/octet-stream
   return window.URL.createObjectURL(await result.blob());
 }
 
-// Helper function to format dates as "dd-MMM-yyyy"
-export function formatDate(dateStr?: string) {
-  if (!dateStr) {
-    return '??';
+const DATE_PRECISION = {
+  "time": 4,
+  "day": 3,
+  "month": 2,
+  "year": 1
+}
+
+function isISODate(date: string) {
+  return date.match(/^(?:\d{4}|\d{4}-\d{2}|\d{4}-\d{2}-\d{2}|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+\-]\d{2}:\d{2})?)$/);
+}
+
+export function handlePartialISODate(dateStr?: string): { date: Date, precision: number } | null {
+  if (!dateStr) { return null; }
+  // Check for valid ISO date format
+  if (!isISODate(dateStr)) {
+    return null;
   }
-  // Handle partial dates
-  let options: Intl.DateTimeFormatOptions = {};
-  const yearMatch = /^\d{4}/;               // "2023"
-  const yearMonthMatch = /^\d{4}-\d{2}/;    // "2023-05"
-  const fullDateMatch = /^\d{4}-\d{2}-\d{2}/; // "2023-05-10"
-  if (yearMatch.test(dateStr)) {
-    options.year = 'numeric';
-  }
-  if (yearMonthMatch.test(dateStr)) {
-    options.month = 'short';
-  }
-  if (fullDateMatch.test(dateStr)) {
-    options.day = '2-digit';
+
+  let precision: number | null = null;
+
+  if (dateStr.match(/T\d{2}:\d{2}/)) {
+    precision = DATE_PRECISION.time;
+  } else {
+    // Add time if missing
+    dateStr = `${dateStr}T00:00:00`;
+    // Handle partial ISO dates
+    const yearMatch = /^\d{4}/;                 // "2023"
+    const yearMonthMatch = /^\d{4}-\d{2}/;      // "2023-05"
+    const fullDateMatch = /^\d{4}-\d{2}-\d{2}/; // "2023-05-10"
+    if (yearMatch.test(dateStr)) {
+      precision = DATE_PRECISION.year;
+    }
+    if (yearMonthMatch.test(dateStr)) {
+      precision = DATE_PRECISION.month;
+    }
+    if (fullDateMatch.test(dateStr)) {
+      precision = DATE_PRECISION.day;
+    }
+    if (!precision) {
+      return null;
+    }
   }
   try {
     const date = new Date(dateStr);
-    let result = date.toLocaleDateString('en-GB', options);
-    if (result === 'Invalid Date') {
+    if (isNaN(date.getTime())) {
+      return null;
+    }
+    return {date, precision};
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+// Return a Date object from a string (partial ISO or full-date format)
+export function normalizeDateString(dateStr?: string): { date: Date, precision: number } | null {
+  if (!dateStr) { return null; }
+  try {
+    const normalizedDate = handlePartialISODate(dateStr);
+    if (normalizedDate !== null) {
+      return normalizedDate;
+    }
+    // See if non-ISO date can be parsed
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+      return null;
+    }
+    let precision = DATE_PRECISION.year;
+    return {date, precision};
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * Convert Age/unit → estimated date if birthDate is known
+ */
+function deriveDateFromAge(ageObj: { value: number, unit: any}, birthDateStr: string): { date: Date, precision: number } | null {
+  let birth = new Date(birthDateStr);
+  if (isNaN(birth.getTime())) return null;
+
+  const { value, unit } = ageObj;
+  const numeric = Number(value);
+  if (isNaN(numeric)) return null;
+
+  let result = new Date(birth);
+
+  if (unit.toLowerCase().startsWith("year") || unit.toLowerCase() === "a") {
+    result.setFullYear(result.getFullYear() + numeric);
+    return { date: result, precision: DATE_PRECISION.year };
+  }
+  if (unit.toLowerCase().startsWith("month") || unit.toLowerCase() === "mo") {
+    result.setMonth(result.getMonth() + numeric);
+    return { date: result, precision: DATE_PRECISION.month };
+  }
+  if (unit.toLowerCase().startsWith("week") || unit.toLowerCase() === "wk") {
+    result.setDate(result.getDate() + numeric * 7);
+    return { date: result, precision: DATE_PRECISION.day };
+  }
+  if (unit.toLowerCase().startsWith("day") || unit.toLowerCase() === "d") {
+    result.setDate(result.getDate() + numeric);
+    return { date: result, precision: DATE_PRECISION.day };
+  }
+
+  return null;
+}
+
+
+// Helper function to format dates as "dd-MMM-yyyy" to the known precision
+export function formatDate(dateStr?: string) {
+  if (!dateStr) { return "??"; }
+  
+  // Handle partial dates
+  let options: Intl.DateTimeFormatOptions = {};
+  try {
+    const normalizedDate = normalizeDateString(dateStr);
+    if (normalizedDate === null) {
       return dateStr;
     }
+    switch (normalizedDate.precision) {
+      // Falls through, less precise values get fewer formatting options added
+      case DATE_PRECISION.time:
+      case DATE_PRECISION.day:
+        options.day = '2-digit';
+      case DATE_PRECISION.month:
+        options.month = 'short';
+      case DATE_PRECISION.year:
+        options.year = 'numeric';
+        break;
+      case null:
+        return dateStr;
+    }
+    let result = normalizedDate.date.toLocaleDateString('en-GB', options);
     return result;
   } catch (e) {
     return dateStr;
@@ -57,12 +165,81 @@ export function hasChoiceDTField(prefix: string, resource: Resource): boolean {
 }
 
 export function choiceDTFields(prefix: string, resource: Resource): DateTimeFields {
+  if (!resource  || !prefix) return {};
+  if (resource[prefix]) {
+    let datatype;
+    if (typeof resource[prefix] === 'string') {
+      datatype = "string";
+    } else if  (resource[prefix].code) {
+      datatype = "codeableConcept";
+    } else if (resource[prefix].start || resource[prefix].end) {
+      datatype = "period";
+    } else if (resource[prefix].high || resource[prefix].low) {
+      datatype = "range";
+    } else if (resource[prefix].value && resource[prefix].unit === "a") {
+      datatype = "age";
+    } else if (resource[prefix].value) {
+      datatype = "duration";
+    }
+    if (datatype) {
+      return { [datatype]: resource[prefix] };
+    } else {
+      return {};
+    }
+  }
+
+  if (!hasChoiceDTField(prefix, resource)) return null;
   const prefixedFields = Object.keys(resource).filter(k => k.startsWith(prefix));
   const fields: DateTimeFields = prefixedFields.reduce((acc: DateTimeFields, k: string) => {
     acc[lowerCaseFirst(k.replace(prefix, ''))] = resource[k];
     return acc;
   }, {});
   return fields;
+}
+
+export function getFHIRDateAndPrecision(resource: Resource, prefix: string, patientBirthDate?: string): { date: Date, precision: number } | null {
+  const fields = choiceDTFields(prefix, resource);
+  if (!fields) return null;
+  // Case: plain string date
+  let val = fields.dateTime || fields.date || fields.string;
+  if (val) {
+    const result = normalizeDateString(val);
+    if (result) return result;
+  }
+
+  val = fields.period || fields.age || fields.range || fields.duration;
+  if (!val) return null;
+  // Case: Period → start > end
+  if (val.start) {
+    const result = normalizeDateString(val.start);
+    if (result) return result;
+  }
+  if (val.end) {
+    const result = normalizeDateString(val);
+    if (result) return result;
+  }
+  // Case: Age → convert if birth date known
+  if (val.value && val.unit && patientBirthDate) {
+    const result = deriveDateFromAge(val, patientBirthDate);
+    if (result) return result;
+    return null;
+  }
+  // Case: Range → approximate midpoint if birth date known & units match
+  if (val.low?.value && val.high?.value && val.low.unit === val.high.unit) {
+    if (patientBirthDate) {
+      const avgAge = {
+        value: (val.low.value + val.high.value) / 2,
+        unit: val.low.unit,
+      };
+      const result = deriveDateFromAge(avgAge, patientBirthDate);
+      if (result?.precision === DATE_PRECISION.year && val.high.value - val.low.value > 1) {
+        result.precision = 1 / (val.high.value - val.low.value);
+      };
+      if (result) return result;
+    }
+    return null;
+  }
+  return null;
 }
 
 // For machine-readable content, use the reference in the Composition.section.entry to retrieve resource from Bundle
