@@ -17,7 +17,7 @@
   import { PATIENT_IPS, EXAMPLE_IPS, IPS_DEFAULT, BEARER_AUTHORIZATION } from '$lib/config/config';
   import type { SHCRetrieveEvent, IAuthService, IPSRetrieveEvent, ResourceRetrieveEvent } from '$lib/utils/types';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
-  import { getResourcesFromIPS } from '$lib/utils/util';
+  import { getResourcesFromIPS, isIPSBundle } from '$lib/utils/util';
 
   export let disabled = false;
 
@@ -144,19 +144,16 @@
         return shcDispatch('shc-retrieved', shcResult);
       }
 
-      if (
-        !(summaryUrlValidated?.toString().includes('$summary') ||
-         summaryUrlValidated?.toString().includes('Bundle'))
-      ) {
-        throw new Error("Error preparing IPS: URL must return an IPS Bundle.");
+      if (!isIPSBundle(content)) {
+        throw Error("Error: URL must return a FHIR IPS Bundle.");
       }
 
       let result = {
         resources: getResourcesFromIPS(content),
         category: CATEGORY,
         method: METHOD,
-        source: getSourceName(summaryUrlValidated),
-        sourceName: name
+        source: hostname,
+        sourceName: getSourceName(summaryUrlValidated)
       };
       // ipsDispatch('ips-retrieved', ipsResult);
       resourceDispatch('update-resources', result);

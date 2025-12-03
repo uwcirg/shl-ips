@@ -335,13 +335,24 @@ export function getReferences(resourceContent: any, references: any[] | undefine
     return references;
   }
 
-export function getResourcesFromIPS(ips: Bundle): Resource[] {
+export function isIPSBundle(bundle: Bundle): boolean {
+  let composition = bundle?.entry?.find(entry => entry.resource?.resourceType === "Composition");
+  return (
+    bundle !== undefined
+    && bundle.resourceType === "Bundle"
+    && bundle.type === "document"
+    && composition !== undefined
+    && composition.type?.coding?.[0]?.system === "http://loinc.org"
+    && composition.type?.coding?.[0]?.code === "60591-5"
+  );
+}
+
+export function getResourcesFromIPS(ips: Bundle): Resource[] | null {
   let entries = ips.entry;
+  if (!entries) return null;
   let resources = [] as Resource[];
-  if (!entries) return resources;
   entries.forEach((entry: BundleEntry) => {
       if (!entry.resource) return;
-      // if (entry.resource.resourceType == 'Condition') return; // Omit conditions until ips fhir server is upgraded
       if (entry.resource.resourceType == 'Composition') return;
       if ('extension' in entry.resource && entry.resource.extension) {
           entry.resource.extension = entry.resource.extension.filter(function(item) {
