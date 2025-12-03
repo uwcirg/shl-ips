@@ -23,6 +23,8 @@
   import { PLACEHOLDER_SYSTEM } from '$lib/config/config';
   import { ResourceHelper } from '$lib/utils/ResourceHelper.js';
   import type { ResourceCollection } from '$lib/utils/ResourceCollection.js';
+  import { getFHIRDateAndPrecision } from '$lib/utils/util';
+  import type { Resource } from 'fhir/r4';
 
   import AdvanceDirective from '$lib/components/resource-templates/AdvanceDirective.svelte';
   import AllergyIntolerance from '$lib/components/resource-templates/AllergyIntolerance.svelte';
@@ -48,101 +50,134 @@
   export let resourceCollection: ResourceCollection;
   export let scroll: boolean = true;
 
-  const components: Record<string, any> = {
-    'AllergyIntolerance': {
-      component: AllergyIntolerance,
-      name: "Allergies and Intolerances",
-    },
-    'Condition': {
-      component: Condition,
-      name: "Conditions",
-    },
-    'Consent': {
-      component: AdvanceDirective,
-      name: "Advance Directives",
-    },
-    'Device': {
-      component: Device,
-      name: "Devices",
-    },
-    'DeviceUseStatement': {
-      component: DeviceUseStatement,
-      name: "Devices",
-    },
-    'DiagnosticReport': {
-      component: DiagnosticReport,
-      name: "Diagnostics",
-    },
-    'DocumentReference': {
-      component: AdvanceDirective,
-      name: "Documents",
-    },
-    'Encounter': {
-      component: Encounter,
-      name: "Encounters",
-    },
-    'Goal': {
-      component: Goal,
-      name: "Goals",
-    },
-    'Immunization': {
-      component: Immunization,
-      name: "Immunizations",
-    },
-    'Location': {
-      component: Location,
-      name: "Locations",
-    },
-    'Medication': {
-      component: Medication,
-      name: "Medications",
-    },
-    'MedicationRequest': {
-      component: MedicationRequest,
-      name: "Medications",
-    },
-    'MedicationStatement': {
-      component: MedicationStatement,
-      name: "Medications",
-    },
-    'Observation': {
-      component: Observation,
-      name: "Observations/Results",
-    },
-    'Organization': {
-      component: Organization,
-      name: "Organizations",
-    },
-    'Patient': {
-      component: Patient,
-      name: "Patient",
-    },
-    'Practitioner': {
-      component: Practitioner,
-      name: "Practitioners",
-    },
-    'Procedure': {
-      component: Procedure,
-      name: "Procedures",
-    },
-    'Patient Story': {
-      component: Goal,
-      name: "Patient Story",
-    },
-    'Occupational Data': {
-      component: Observation,
-      name: "Occupational Data",
-    },
-    'Advance Directives': {
-      component: AdvanceDirective,
-      name: "Advance Directives",
-    },
-    'QuestionnaireResponse': {
-      component: QuestionnaireResponse,
-      name: "Questionnaires",
-    },
+  function lastUpdatedSort(a, b) {
+    let aDate = a?.meta?.lastUpdated;
+    let bDate = b?.meta?.lastUpdated;
+    if (aDate && !bDate) return 1;
+    if (bDate && !aDate) return -1;
+    if (!aDate && !bDate) return 0;
+    return (new Date(aDate) as any) - (new Date(bDate) as any);
   };
 
+  function getResourceSortDate(resource: Resource, fieldsOrPrefixes: string[] = []): {date: number, precision: number} | null {
+    const birthdate = get(resourceCollection.patient)?.birthDate;
+    for (const field of fieldsOrPrefixes) {
+      const val = getFHIRDateAndPrecision(resource, field, birthdate);
+      if (val) return val;
+    }
+    return null;
+  }
+
+  function resourceSort(a: Resource, b: Resource, order: 'asc' | 'desc' = 'desc') {
+    let orderFactor = order === 'asc' ? 1 : -1;
+    
+    let aVal: {date: number, precision: number} | null = getResourceSortDate(a, resourceConfig[a.resourceType].sortFields);
+    let bVal: {date: number, precision: number} | null = getResourceSortDate(b, resourceConfig[b.resourceType].sortFields);
+    if (aVal && !bVal) return 1 * orderFactor;
+    if (bVal && !aVal) return -1 * orderFactor;
+    if (!aVal && !bVal) return lastUpdatedSort(a, b) * orderFactor;
+    let val = aVal.date - bVal.date;
+    if (val === 0) val = bVal.precision - aVal.precision;
+    return val * orderFactor;
+  }
+
+  const resourceConfig: Record<string, any> = {
+    'AllergyIntolerance': {
+      category: 'Allergies and Intolerances',
+      component: AllergyIntolerance,
+      sortFields: ['onset', 'lastOccurrence', 'recordedDate']
+    },
+    'Condition': {
+      category: 'Conditions',
+      component: Condition,
+      sortFields: ['onset', 'abatement', 'recordedDate']
+    },
+    'Consent': {
+      category: 'Advance Directives',
+      component: AdvanceDirective,
+      sortFields: ['dateTime']
+    },
+    'Device': {
+      category: 'Devices',
+      component: Device,
+    },
+    'DeviceUseStatement': {
+      category: 'Devices',
+      component: DeviceUseStatement,
+      sortFields: ['timing', 'recordedOn']
+    },
+    'DiagnosticReport': {
+      category: 'Diagnostics',
+      component: DiagnosticReport,
+      sortFields: ['effective', 'instant']
+    },
+    'DocumentReference': {
+      category: 'Documents',
+      component: AdvanceDirective,
+      sortFields: ['date']
+    },
+    'Encounter': {
+      category: 'Encounters',
+      component: Encounter,
+      sortFields: ['period']
+    },
+    'Goal': {
+      category: 'Goals',
+      component: Goal,
+      sortFields: ['start', 'target']
+    },
+    'Immunization': {
+      category: 'Immunizations',
+      component: Immunization,
+      sortFields: ['occurrence']
+    },
+    'Location': {
+      category: 'Locations',
+      component: Location,
+    },
+    'Medication': {
+      category: 'Medications',
+      component: Medication,
+    },
+    'MedicationRequest': {
+      category: 'Medications',
+      component: MedicationRequest,
+      sortFields: ['reported', 'authoredOn']
+    },
+    'MedicationStatement': {
+      category: 'Medications',
+      component: MedicationStatement,
+      sortFields: ['effective', 'dateAsserted']
+    },
+    'Observation': {
+      category: 'Observations/Results',
+      component: Observation,
+      sortFields: ['effective', 'issued']
+    },
+    'Organization': {
+      category: 'Organizations',
+      component: Organization,
+    },
+    'Patient': {
+      category: 'Patient',
+      component: Patient,
+    },
+    'Practitioner': {
+      category: 'Practitioners',
+      component: Practitioner,
+    },
+    'Procedure': {
+      category: 'Procedures',
+      component: Procedure,
+      sortFields: ['performed']
+    },
+    'QuestionnaireResponse': {
+      category: 'Questionnaires',
+      component: QuestionnaireResponse,
+      sortFields: ['authored']
+    }
+  };
+  
   const statusDispatch = createEventDispatcher<{ 'status-update': string }>();
   const errorDispatch = createEventDispatcher<{ error: string }>();
 
@@ -161,7 +196,7 @@
           if (rh.resource.resourceType === 'Patient' && rh.resource?.meta?.tag?.find(t => t.system === PLACEHOLDER_SYSTEM)) {
             continue;
           }
-          let type = components[rh.resource.resourceType]?.name;
+          let type = resourceConfig[rh.resource.resourceType]?.category;
           if (!type) { continue }
           if (!(type in resourcesByType)) {
             resourcesByType[type] = {};
@@ -286,12 +321,15 @@
                 </Badge>
               {/if}
             </span>
-            {#each Object.entries($categorizedResourceStore[category]).sort((a, b) => new Date((get(b[1].patient))?.meta?.lastUpdated) - new Date((get(a[1].patient))?.meta?.lastUpdated)) as [key, value], index}
+            {#each Object.values($categorizedResourceStore[category]).sort((a, b) => {
+              let value = resourceSort(a.resource, b.resource);
+              return value;
+            }) as value, index}
                 <Row class={index > 0 ? "border-top pt-2 mt-2" : ""} style="overflow: hidden">
                   <Col class="justify-content-center align-items-center">
-                    {#if value.resource.resourceType in components}
+                    {#if value.resource.resourceType in resourceConfig}
                       <svelte:component
-                        this={components[value.resource.resourceType].component}
+                        this={resourceConfig[value.resource.resourceType].component}
                         content={{
                           resource: value.resource,
                           entries: resourceCollection.flattenResources($categorizedResourceStore)
