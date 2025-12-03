@@ -242,7 +242,7 @@
           {#if formConfig.title}<h5 class="my-2">{formConfig.title}</h5>{/if}
           {#if formConfig.description}<p class="text-secondary"><em>{@html formConfig.description}</em></p>{/if}
           {#if formConfig.component}
-            <svelte:component this={formConfig.component} disabled={!!$loading} on:update-resources on:sof-auth-init on:sof-auth-fail />
+            <svelte:component this={formConfig.component} disabled={$loading} on:update-resources on:sof-auth-init on:sof-auth-fail />
           {/if}
         </TabPane>
         {/if}
@@ -252,7 +252,7 @@
       {#if forms[0].title}<h5 class="my-2">{forms[0].title}</h5>{/if}
       {#if forms[0].description}<p class="text-secondary"><em>{@html forms[0].description}</em></p>{/if}
       {#if forms[0].component}
-        <svelte:component this={forms[0].component} disabled={!!$loading} on:update-resources on:sof-auth-init on:sof-auth-fail />
+        <svelte:component this={forms[0].component} disabled={$loading} on:update-resources on:sof-auth-init on:sof-auth-fail />
       {/if}
     {/if}
     {#if $mode === "advanced" && forms.some(form => form.advanced)}

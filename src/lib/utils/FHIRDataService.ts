@@ -34,7 +34,7 @@ export class FHIRDataService {
   masterPatient: Writable<ResourceHelper>;
   demographics: Writable<UserDemographics>;
   patientLinks: Readable<Array<any>>;
-  loading: Writable<Promise<any> | undefined> = writable(undefined);
+  loading: Writable<boolean>;
 
   constructor(auth: IAuthService) {
     this.auth = auth;
@@ -42,6 +42,7 @@ export class FHIRDataService {
     this.masterPatient = writable(null);
     this.demographics = writable({});
     this.patientLinks = derived(this.masterPatient, ($masterPatient) => $masterPatient.resource.link);
+    this.loading = writable(false);
   }
 
   // Get the cached, fetched, or newly created master patient
@@ -61,11 +62,12 @@ export class FHIRDataService {
   }
 
   async loadUserData(): Promise<void> {
-    let fetchPromise = this.fetchUserResources();
-    this.loading.set(fetchPromise);
-    let resourceCollections: Array<Array<Resource>> = await fetchPromise;
+    this.loading.set(true);
+    // Load bare minimum for datasets to be operated on
+    let resourceCollections: Array<Array<Resource>> = await this.seedUserResources();
     resourceCollections.map((collection) => this.addDatasetToUserResources(collection));
-    this.loading.set(undefined);
+    this.loading.set(false);
+
   }
 
   private async fetchUserResources(): Promise<Array<Array<Resource>>> {
