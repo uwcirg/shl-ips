@@ -12,6 +12,7 @@ import type { Patient, Resource } from "fhir/r4";
 import { writable, derived, get, type Writable, type Readable } from "svelte/store";
 import type { ResourceHelperMap, IResourceCollection } from "$lib/utils/types";
 import type { SerializedResourceHelper } from "$lib/utils/ResourceHelper";
+import { CATEGORY_SYSTEM, METHOD_SYSTEM, SOURCE_NAME_SYSTEM, PLACEHOLDER_SYSTEM } from "$lib/config/config";
 
 export interface SerializedResourceCollection {
     resources: SerializedResourceHelper[];
@@ -19,6 +20,7 @@ export interface SerializedResourceCollection {
 }
 
 export class ResourceCollection implements IResourceCollection {
+    public id: string = crypto.randomUUID();
     public resources: Writable<ResourceHelperMap> = writable({});
     public selectedPatient: Writable<string>;
     public patientReference: Readable<string>;
@@ -128,6 +130,16 @@ export class ResourceCollection implements IResourceCollection {
         this._updateAllPatientRefs();
     }
 
+    removeResources(resources: Resource[]) {
+        let resourceHelpers = resources.map(r => new ResourceHelper(r));
+        this.resources.update((curr) => {
+            resourceHelpers.forEach(rh => {
+                delete curr[rh.tempId];
+            });
+            return { ...curr };
+        });
+    }
+
     getResources() {
         return this.resources;
     }
@@ -146,6 +158,28 @@ export class ResourceCollection implements IResourceCollection {
 
     flattenResources(resources: ResourceHelperMap) {
         return Object.values(resources);
+    }
+
+    getTags(): {
+        category: string,
+        method: string,
+        source: string,
+        sourceName: string,
+        placeholder: boolean
+    } {
+        const patient = get(this.patient);
+        const category = patient.meta.tag.filter((tag) => tag.system === CATEGORY_SYSTEM)?.[0]?.code;
+        const method = patient.meta.tag.filter((tag) => tag.system === METHOD_SYSTEM)?.[0]?.code;
+        const source = patient.meta.source?.split('#')[0];
+        const sourceName = patient.meta.tag.filter((tag) => tag.system === SOURCE_NAME_SYSTEM)?.[0]?.code ?? source;
+        const placeholder = patient.meta.tag.filter((tag) => tag.system === PLACEHOLDER_SYSTEM)?.[0]?.code;
+        return {
+            category,
+            method,
+            source,
+            sourceName,
+            placeholder
+        }
     }
 
     toJson(): string {

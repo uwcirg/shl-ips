@@ -207,3 +207,10 @@ export interface IResourceCollection {
   patientReference: Readable<string>;
   patient: Readable<Patient | undefined>;
 }
+
+import { State } from '$lib/utils/StateManager';
+export type Status =
+  | { state: typeof State.IDLE; }
+  | { state: typeof State.LOADING; message?: string }
+  | { state: typeof State.ERROR; message?: string; error?: Error }
+  | { state: typeof State.SYNCED; timestamp: Date };

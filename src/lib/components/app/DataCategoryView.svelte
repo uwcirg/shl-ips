@@ -19,18 +19,18 @@
     Icon,
     Offcanvas,
     Row,
+    Spinner,
     TabContent,
     TabPane
   } from 'sveltestrap';
   import { getContext } from 'svelte';
-  import { get, type Writable } from 'svelte/store';
-  import { METHOD_SYSTEM, METHOD_NAMES, SOURCE_NAME_SYSTEM, PLACEHOLDER_SYSTEM } from '$lib/config/config';
-  import { download } from '$lib/utils/util';
+  import { derived, get, writable, type Writable, type Readable } from 'svelte/store';
+  import { METHOD_NAMES } from '$lib/config/config';
   import FHIRDataService from '$lib/utils/FHIRDataService';
   import FHIRResourceList from '$lib/components/app/FHIRResourceList.svelte';
   import type { DataFormConfig } from '$lib/utils/types';
   import type { ResourceCollection } from '$lib/utils/ResourceCollection';
-    import { CATEGORY_SYSTEM } from '../../config/config';
+  import DatasetStatusLoader from '$lib/components/app/DatasetStatusLoader.svelte';
 
   // Top-level description
   export let description: string | undefined;
@@ -68,17 +68,20 @@
     }
   }
 
-  function showDataset(source: string, dataset: ResourceCollection) {
-    let method = METHOD_NAMES[get(dataset.patient).meta.tag.find((tag) => tag.system === METHOD_SYSTEM)?.code]?.name;
+  function showDataset(collection: ResourceCollection) {
+    let { method, source, sourceName } = collection.getTags();
+    let methodName = METHOD_NAMES[method]?.name;
 
-    let sourceString = source ? source : "Unknown dataset";
-    let methodString = method ? ` (${method})` : "";
+    let sourceString = sourceName ?? "Unknown source";
+    let methodString = methodName ? ` (${methodName})` : "";
     setContent(
       `${sourceString}${methodString}`,
-      dataset
+      collection
     );
   }
-  function updateDataset(dataset: ResourceCollection) {
+
+  function goToCollectionMethod(collection: ResourceCollection) {
+    let { method } = collection.getTags();
     // TODO: autofill source/data in form
     const accordionButton = document.querySelector(`div.${accordionClass} > h2 > button.accordion-button`);
     if (accordionButton) {
@@ -89,23 +92,37 @@
       const offset = 72;
       const elementTop = accordionButton.getBoundingClientRect().top + window.scrollY;
       window.scrollTo({top: elementTop - offset-10, behavior: 'smooth'});
-      activeTab = get(dataset.patient).meta.tag.find((tag) => tag.system === METHOD_SYSTEM)?.code;
+      activeTab = method;
     }
   }
+
   function deleteDataset(category: string, source: string) {
-    fhirDataService.deleteDataset(category, source)
+    fhirDataService.deleteDataset(category, source);
   }
 
   let isOpen = false;
   let name = '';
   let date = '';
-  let ocDataset: ResourceCollection;
-  function setContent(viewName: string, viewDataset: ResourceCollection) {
+  let ocCategory: Writable<string> = writable('');
+  let ocSource: Writable<string> = writable('');
+  let ocDataset: Readable<any> = derived(
+    [userResources, ocCategory, ocSource], 
+    ([$userResources, $ocCategory, $ocSource]) => {
+      if (!$userResources || !$ocCategory || !$ocSource) {
+        return;
+      }
+      let dataset = $userResources?.[$ocCategory]?.[$ocSource];
+      return dataset;
+    }
+  );
+  function setContent(viewName: string, viewCollection: ResourceCollection) {
+    let { category, source } = viewCollection.getTags();
+    ocCategory.set(category);
+    ocSource.set(source);
     name = viewName;
-    date = new Date((get(viewDataset.patient)).meta.lastUpdated).toLocaleString(undefined, {
+    date = new Date((get(viewCollection.patient)).meta.lastUpdated).toLocaleString(undefined, {
       dateStyle: "medium",
     })
-    ocDataset = viewDataset;
     isOpen = true;
   }
   function toggle() {
@@ -170,16 +187,19 @@
   </div>
   <div class="d-flex w-100" style="height: calc(100% - 100px);">
     <Col class="d-flex pe-0 h-100 w-100" style="overflow: auto">
-      {#if ocDataset && isOpen}
-        {#key isOpen}
-        <FHIRResourceList
-          bind:resourceCollection={ocDataset}
-          bind:submitting={submitting}
-          scroll={false}
-          on:status-update={ ({ detail }) => { /*updateStatus(detail)*/ } }
-          on:error={ ({ detail }) => { /*showError(detail)*/ } }
-        />
-        {/key}
+      {#if $ocDataset && isOpen}
+        <DatasetStatusLoader status={$ocDataset.status} size="md">
+          <div slot="loader" class="d-flex justify-content-center align-items-center w-100">
+            <Spinner slot="loader" size="md" color="secondary" />
+          </div>
+          <FHIRResourceList
+            resourceCollection={$ocDataset.collection}
+            bind:submitting={submitting}
+            scroll={false}
+            on:status-update={ ({ detail }) => { /*updateStatus(detail)*/ } }
+            on:error={ ({ detail }) => { /*showError(detail)*/ } }
+          />
+        </DatasetStatusLoader>
       {/if}
     </Col>
   </div>
@@ -199,7 +219,7 @@
         size="sm"
         outline
         color="secondary"
-        on:click={() => { isOpen = false; updateDataset(ocDataset) }}
+        on:click={() => { isOpen = false; goToCollectionMethod($ocDataset) }}
       >
         <Icon name="arrow-repeat" /> Update
       </Button>
@@ -209,10 +229,11 @@
         size="sm"
         outline
         color="danger"
-        on:click={() => { isOpen = false; deleteDataset(
-          get(ocDataset.patient).meta.tag.find((tag) => tag.system === CATEGORY_SYSTEM)?.code,
-          get(ocDataset.patient).meta.tag.find((tag) => tag.system === SOURCE_NAME_SYSTEM)?.code || get(ocDataset.patient).meta.source.split("#")[0]
-        )}}
+        on:click={() => {
+          isOpen = false;
+          let {category, sourceName} = $ocDataset.collection.getTags();
+          deleteDataset(category, sourceName);
+        }}
       >
         <Icon name="trash" /> Delete
       </Button>
@@ -272,25 +293,29 @@
       {#if $userResources[category]}
         <Row class="g-4 d-flex justify-content-start">
           {#each Object.entries($userResources[category]).sort((a, b) => new Date((get(b[1].patient))?.meta?.lastUpdated) - new Date((get(a[1].patient))?.meta?.lastUpdated)) as [source, dataset]}
+            {@const status = dataset.status}
+            {@const collection = dataset.collection}
+            {@const { method, sourceName, placeholder } = collection.getTags()}
+            {@const patient = get(collection.patient)}
             <Col xs="12" sm="6" lg="4" style="">
               <Card class="{category}-dataset h-100 w-100">
                 <CardHeader>
                   <Row class="align-items-center">
                     <Col>
                       <CardText style="max-width: 100%;">
-                        <Icon name="calendar-check"/> {new Date((get(dataset.patient)).meta.lastUpdated).toLocaleString(undefined, {
+                        <Icon name="calendar-check"/> {new Date(patient.meta.lastUpdated).toLocaleString(undefined, {
                           dateStyle: "medium",
                         })}
                       </CardText>
                     </Col>
                     <Col class="ps-0" style="max-width: fit-content">
                       <Dropdown>
-                        <DropdownToggle tag="div">
-                          <Icon name="three-dots-vertical"></Icon>
+                        <DropdownToggle tag="div" style="cursor: pointer">
+                          <Icon name="three-dots-vertical" style="cursor: pointer"></Icon>
                         </DropdownToggle>
                         <DropdownMenu>
-                          <DropdownItem on:click={() => showDataset(source, dataset)}><div class="d-flex justify-content-between w-100">View <Icon name="chevron-right"/></div></DropdownItem>
-                          <DropdownItem class="text-primary"on:click={() => updateDataset(dataset)}><Icon name="arrow-repeat"/> Update</DropdownItem>
+                          <DropdownItem on:click={() => showDataset(collection)}><div class="d-flex justify-content-between w-100">View <Icon name="chevron-right"/></div></DropdownItem>
+                          <DropdownItem class="text-primary"on:click={() => goToCollectionMethod(collection)}><Icon name="arrow-repeat"/> Update</DropdownItem>
                           <DropdownItem divider />
                           <DropdownItem class="text-danger" on:click={() => deleteDataset(category, source)}><Icon name="trash"/> Delete</DropdownItem>
                         </DropdownMenu>
@@ -306,30 +331,34 @@
                           title={source}
                           style="max-width: 100%; overflow-wrap: anywhere;"
                         >
-                          {get(dataset.patient).meta.tag.find((tag) => tag.system === SOURCE_NAME_SYSTEM)?.code || source}
+                          {sourceName}
                         </CardTitle>
                       </Col>
                     </Row>
                     <Row>
                       <CardSubtitle class="mb-1 text-secondary">
                         For {
-                          get(dataset.patient).meta.tag.find((tag) => tag.system === PLACEHOLDER_SYSTEM)?.code === 'placeholder-patient' ?
+                          placeholder ?
                             `${$masterPatient?.resource?.name?.[0]?.given?.join(" ")} ${$masterPatient?.resource?.name?.[0]?.family}` :
-                            `${get(dataset.patient).name?.[0]?.given?.join(" ")} ${get(dataset.patient).name?.[0]?.family}`
+                            `${patient.name?.[0]?.given?.join(" ")} ${patient.name?.[0]?.family}`
                         }
                       </CardSubtitle>
                     </Row>
                     <Row>
                       <Col class="pe-0">
                         <Badge color="secondary">
-                          {METHOD_NAMES[get(dataset.patient).meta.tag.find((tag) => tag.system === METHOD_SYSTEM)?.code]?.name || "Unknown"}
+                          {METHOD_NAMES[method]?.name || "Unknown"}
                         </Badge>
                       </Col>
                     </Row>
                   </div>
                   <Row class="mx-0 mt-3">
-                    <Button class="d-flex justify-content-between align-items-center" color="secondary" outline on:click={() => showDataset((get(dataset.patient).meta.tag.find((tag) => tag.system === SOURCE_NAME_SYSTEM)?.code || source), dataset)}>
-                      <Badge color="primary">{dataset.getResourceCount()}</Badge>
+                    <Button class="d-flex justify-content-between align-items-center" color="secondary" outline on:click={() => showDataset(collection)}>
+                      <div class="d-flex align-items-center" style="min-width: 37px">
+                        <DatasetStatusLoader status={status}>
+                          <Badge color="primary">{collection.getResourceCount()}</Badge>
+                        </DatasetStatusLoader>
+                      </div>
                       <div>View </div>
                       <Icon name="chevron-right"/>
                     </Button>

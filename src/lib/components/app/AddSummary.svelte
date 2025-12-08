@@ -3,7 +3,7 @@
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { getContext } from 'svelte';
-  import { type Writable, get } from 'svelte/store';
+  import { get, derived, writable, type Writable, type Readable } from 'svelte/store';
   import {
     Accordion,
     AccordionItem,
@@ -12,17 +12,23 @@
     Card,
     CardBody,
     CardHeader,
+    CardSubtitle,
+    CardText,
+    CardTitle,
     Col,
+    Dropdown,
+    DropdownItem,
+    DropdownMenu,
+    DropdownToggle,
     FormGroup,
     Icon,
     Input,
     Label,
+    Offcanvas,
     Row,
     Spinner,
-    TabContent,
-    TabPane
   } from 'sveltestrap';
-  import { DATA_CATEGORY_NAMES, METHOD_SYSTEM, SOURCE_NAME_SYSTEM } from '$lib/config/config';
+  import { DATA_CATEGORY_NAMES, METHOD_NAMES, METHOD_SYSTEM } from '$lib/config/config';
   import ResourceSelector from '$lib/components/app/ResourceSelector.svelte';
   import {
     getResourcesFromIPS,
@@ -45,6 +51,8 @@
   import { PLACEHOLDER_SYSTEM } from '$lib/config/config';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import { methodSectionHelper } from '$lib/utils/sectionTemplateUtil';
+  import DatasetStatusLoader from '$lib/components/app/DatasetStatusLoader.svelte';
+  import { ResourceCollection } from '$lib/utils/ResourceCollection';
  
   export let status = "";
   
@@ -316,14 +324,158 @@
   }
 
   const categoryNameFor = (category: string) => DATA_CATEGORY_NAMES[category]?.name || category;
-  const keyFor = (category: string, source: string) => `${source} (${categoryNameFor(category)})`;
-  let statemap: Record<string, boolean> = {};
-  function toggleState(category: string, source: string) {
-    let key = keyFor(category, source);
-    statemap[key] = !statemap[key];
-    statemap = statemap;
+  const keyFor = (collection: ResourceCollection) => {
+    const { category, sourceName } = collection.getTags();
+    return `${sourceName} (${categoryNameFor(category)})`
+  };
+  let datasets: Writable<Record<string, ResourceCollection>> = writable({});
+  function addDataset(collection: ResourceCollection) {
+    $datasets[collection.id] = collection;
+    let { category, source, sourceName } = collection.getTags();
+    handleNewResources({
+      resources: collection.getFHIRResources(),
+      source,
+      sourceName,
+      category
+    });
+  }
+  function removeDataset(collection: ResourceCollection) {
+    delete $datasets[collection.id];
+    $datasets = $datasets;
+    resourceCollection.removeResources(collection.getFHIRResources());
+  }
+
+
+  let loadingMap: Record<string, boolean> = {};
+
+  function showDataset(collection: ResourceCollection) {
+    let { method, source, sourceName } = collection.getTags();
+    let methodName = METHOD_NAMES[method]?.name;
+  
+    let sourceString = sourceName ?? "Unknown source";
+    let methodString = methodName ? ` (${methodName})` : "";
+    setContent(
+      `${sourceString}${methodString}`,
+      collection
+    );
+  }
+
+  let isOpen = false;
+  let name = '';
+  let date = '';
+  let ocCategory: Writable<string> = writable('');
+  let ocSource: Writable<string> = writable('');
+  let ocDataset: Readable<any> = derived(
+    [userResources, ocCategory, ocSource], 
+    ([$userResources, $ocCategory, $ocSource]) => {
+      if (!$userResources || !$ocCategory || !$ocSource) {
+        return;
+      }
+      let dataset = $userResources?.[$ocCategory]?.[$ocSource];
+      return dataset;
+    }
+  );
+  function setContent(viewName: string, viewCollection: ResourceCollection) {
+    let { category, source } = viewCollection.getTags();
+    ocCategory.set(category);
+    ocSource.set(source);
+    name = viewName;
+    date = new Date((get(viewCollection.patient)).meta.lastUpdated).toLocaleString(undefined, {
+      dateStyle: "medium",
+    })
+    isOpen = true;
+  }
+  function toggle() {
+    isOpen = !isOpen;
   }
 </script>
+
+<Offcanvas
+  {isOpen}
+  {toggle}
+  scroll
+  header={name}
+  placement="end"
+  title={name}
+  style="display: flex; overflow-y:hidden; height: 100dvh; max-width: calc(2 * var(--bs-offcanvas-width)); width: 80dvw; min-width: var(--bs-offcanvas-width);"
+>
+  <div class="
+      d-flex
+      justify-content-between
+      align-items-center
+      flex-nowrap
+      w-100
+      p-2
+      bg-light
+      rounded-top
+      border-top
+      border-start
+      border-end"
+    style="height: 50px"
+  >
+    <div class="flex-shrink-0">
+      <Icon name="calendar-check"/> {date}
+    </div>
+    <div class="ms-3 flex-shrink-0">
+      <Button
+        size="sm"
+        color="secondary"
+        outline
+        on:click={() => {
+          const accordionButtons = document.querySelectorAll(`div.resource-content:not(:has(div.accordion-collapse.show)) > h2 > button.accordion-button`);
+          for (const accordionButton of Array.from(accordionButtons)) {
+            accordionButton.click();
+          }
+        }}
+      >
+        Open All
+      </Button>
+      <Button
+        size="sm"
+        color="secondary"
+        outline
+        on:click={() => {
+          const accordionButtons = document.querySelectorAll(`div.resource-content:has(div.accordion-collapse.show) > h2 > button.accordion-button`);
+          for (const accordionButton of Array.from(accordionButtons)) {
+            accordionButton.click();
+          }
+        }}
+      >
+        Collapse All
+      </Button>
+    </div>
+  </div>
+  <div class="d-flex w-100" style="height: calc(100% - 100px);">
+    <Col class="d-flex pe-0 h-100 w-100" style="overflow: auto">
+      {#if $ocDataset && isOpen} <!-- Page freezes without this check -->
+        <DatasetStatusLoader status={$ocDataset.status} size="md">
+          <div slot="loader" class="d-flex justify-content-center align-items-center w-100">
+            <Spinner slot="loader" size="md" color="secondary" />
+          </div>
+          <FHIRResourceList
+            resourceCollection={$ocDataset.collection}
+            bind:submitting={submitting}
+            scroll={false}
+            on:status-update={ ({ detail }) => { /*updateStatus(detail)*/ } }
+            on:error={ ({ detail }) => { /*showError(detail)*/ } }
+          />
+        </DatasetStatusLoader>
+      {/if}
+    </Col>
+  </div>
+  <Row class="d-flex pe-0" style="height: 50px">
+    <Col class="d-flex justify-content-start align-items-end" style="padding-top: 1rem">
+      <Button
+        size="sm"
+        outline
+        color="success"
+        on:click={() => { isOpen = false; addDataset($ocDataset.collection) }}
+      >
+        <Icon name="plus-circle" /> Add to summary
+      </Button>
+    </Col>
+  </Row>
+</Offcanvas>
 
 <h4>Create a Shareable Health Summary</h4>
 <p>Create a Health Summary, which can be shared with providers, family members, and others with a QR code or URL.</p>
@@ -373,50 +525,93 @@
             <h6 class="mt-1">{categoryNameFor(category)}</h6>
           </CardHeader>
           <CardBody>
-            {#each Object.entries(datasetsBySource) as [source, dataset]}
-            <AccordionItem>
-              <div slot="header" class="d-flex justify-content-between align-items-center flex-nowrap w-100" style="max-width: calc(100% - 2.5rem);">
-                <div class="flex-grow-1 text-break">
-                  <h6
-                    class="mt-1"
-                    title={source}
-                    style="max-width: 100%; overflow-wrap: anywhere;"
-                  >
-                    {source}
-                  </h6>
-                </div>
-                <div class="ms-3 flex-shrink-0">
-                  {#if !statemap[keyFor(category, source)]}
-                  <Button
-                    size="sm"
-                    color="success"
-                    outline
-                    disabled={statemap[keyFor(category, source)]}
-                    on:click={(event) => {
-                      event.stopPropagation();
-                      toggleState(category, source);
-                      handleNewResources({
-                        resources: dataset.getFHIRResources(),
-                        source,
-                        category
-                      });
-                    }}
-                  >
-                    Add
-                  </Button>
-                  {:else}
-                    <span class="text-secondary">Added <Icon name="check-circle-fill" style="color: var(--bs-success)"/></span>
-                  {/if}
-                </div>
-              </div>
-              <FHIRResourceList
-                bind:resourceCollection={dataset}
-                bind:submitting={submitting}
-                on:status-update={ ({ detail }) => { updateStatus(detail) } }
-                on:error={ ({ detail }) => { showError(detail) } }
-              />
-            </AccordionItem>
-            {/each}
+            {#if $userResources[category]}
+              <Row class="g-4 d-flex justify-content-start">
+                {#each Object.entries($userResources[category]).sort((a, b) => new Date((get(b[1].patient))?.meta?.lastUpdated) - new Date((get(a[1].patient))?.meta?.lastUpdated)) as [source, dataset]}
+                  {@const status = dataset.status}
+                  {@const collection = dataset.collection}
+                  {@const { method, sourceName, placeholder } = collection.getTags()}
+                  {@const patient = get(collection.patient)}
+                  <Col xs="12" sm="6" lg="4" style="">
+                    <Card class="{category}-dataset h-100 w-100">
+                      <CardHeader>
+                        <Row class="align-items-center">
+                          <Col>
+                            <CardText style="max-width: 100%;">
+                              <Icon name="calendar-check"/> {new Date(patient.meta.lastUpdated).toLocaleString(undefined, {
+                                dateStyle: "medium",
+                              })}
+                            </CardText>
+                          </Col>
+                          <Col class="ps-0" style="max-width: fit-content">
+                            <Dropdown>
+                              <DropdownToggle tag="div">
+                                <Icon name="three-dots-vertical" style="cursor: pointer"></Icon>
+                              </DropdownToggle>
+                              <DropdownMenu>
+                                <DropdownItem on:click={() => showDataset(collection)}><div class="d-flex justify-content-between w-100">View <Icon name="chevron-right"/></div></DropdownItem>
+                              </DropdownMenu>
+                            </Dropdown>
+                          </Col>
+                        </Row>
+                      </CardHeader>
+                      <CardBody class="d-flex flex-column justify-content-between">
+                        <div>
+                          <Row class="align-items-top">
+                            <Col>
+                              <CardTitle
+                                title={source}
+                                style="max-width: 100%; overflow-wrap: anywhere;"
+                              >
+                                {sourceName}
+                              </CardTitle>
+                            </Col>
+                          </Row>
+                          <Row>
+                            <CardSubtitle class="mb-1 text-secondary">
+                              For {
+                                placeholder ?
+                                  `${$masterPatient?.resource?.name?.[0]?.given?.join(" ")} ${$masterPatient?.resource?.name?.[0]?.family}` :
+                                  `${patient.name?.[0]?.given?.join(" ")} ${patient.name?.[0]?.family}`
+                              }
+                            </CardSubtitle>
+                          </Row>
+                          <Row>
+                            <Col class="pe-0">
+                              <Badge color="secondary">
+                                {METHOD_NAMES[method]?.name || "Unknown"}
+                              </Badge>
+                            </Col>
+                          </Row>
+                        </div>
+                        <Row class="mx-0 mt-3">
+                          <Button 
+                            class="d-flex w-100 justify-content-between align-items-center"
+                            color="success"
+                            outline
+                            disabled={$datasets[collection.id] || loadingMap[keyFor(collection)]}
+                            on:click={(event) => { addDataset(collection); }}
+                          >
+                            <div class="d-flex align-items-center" style="min-width: 37px">
+                              <DatasetStatusLoader status={status} bind:isLoading={loadingMap[keyFor(collection)]}>
+                                <Badge color="primary">{collection.getResourceCount()}</Badge>
+                              </DatasetStatusLoader>
+                            </div>
+                            {#if !$datasets[collection.id]}
+                              <div>Add</div>
+                              <Icon name="plus-circle"/>
+                            {:else}
+                              <span class="text-secondary">Added</span>
+                              <Icon name="check-circle-fill" color="success"/>
+                            {/if}
+                          </Button>
+                        </Row>
+                      </CardBody>
+                    </Card>
+                  </Col>
+                {/each}
+              </Row>
+            {/if}
           </CardBody>
         </Card>
       {/each}
@@ -427,10 +622,10 @@
       <h5 slot="header" class="my-2" id="select-data">2. Directly edit your health summary content</h5>
       <h5>Included Data</h5>
       <div class="my-2">
-        {#each Object.keys(statemap).filter((key) => statemap[key]) as name}
-          <Badge href="" color="light" class="border d-inline-flex align-items-center text-secondary me-1">
-            <span class="me-1" style="font-size: 1.5em"><Icon name="x"/></span>
-            {name}
+        {#each Object.values($datasets) as dataset}
+          <Badge href="" color="light" class="border d-inline-flex align-items-center text-secondary me-1 mb-1">
+            <div class="me-1" style="font-size: 1.5em; cursor: pointer" on:click={() => removeDataset(dataset)}><Icon name="x"/></div>
+            {keyFor(dataset)}
           </Badge>
         {/each}
       </div>
