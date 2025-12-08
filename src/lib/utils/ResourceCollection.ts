@@ -145,7 +145,12 @@ export class ResourceCollection implements IResourceCollection {
     }
 
     getResourceCount() {
-        return Object.keys(get(this.resources)).length;
+        const hasPlaceholderPatient = get(this.patient).meta.tag.filter((tag) => tag.system === PLACEHOLDER_SYSTEM)?.[0]?.code;
+        let total = Object.keys(get(this.resources)).length;
+        if (hasPlaceholderPatient) {
+            return total - 1;
+        }
+        return total;
     }
 
     getFHIRResources() {
