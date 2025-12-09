@@ -3,19 +3,9 @@
     AccordionItem,
     Badge,
     Button,
-    ButtonGroup,
-    Card,
-    CardBody,
-    CardHeader,
-    CardFooter,
-    CardTitle,
-    CardSubtitle,
-    CardText,
     Col,
-    Dropdown,
     DropdownItem,
     DropdownMenu,
-    DropdownToggle,
     Icon,
     Offcanvas,
     Row,
@@ -26,11 +16,12 @@
   import { getContext } from 'svelte';
   import { derived, get, writable, type Writable, type Readable } from 'svelte/store';
   import { METHOD_NAMES } from '$lib/config/config';
+  import DatasetStatusLoader from '$lib/components/app/DatasetStatusLoader.svelte';
+  import DatasetView from '$lib/components/app/DatasetView.svelte';
   import FHIRDataService from '$lib/utils/FHIRDataService';
   import FHIRResourceList from '$lib/components/app/FHIRResourceList.svelte';
   import type { DataFormConfig } from '$lib/utils/types';
   import type { ResourceCollection } from '$lib/utils/ResourceCollection';
-  import DatasetStatusLoader from '$lib/components/app/DatasetStatusLoader.svelte';
 
   // Top-level description
   export let description: string | undefined;
@@ -295,76 +286,24 @@
           {#each Object.entries($userResources[category]).sort((a, b) => new Date((get(b[1].patient))?.meta?.lastUpdated) - new Date((get(a[1].patient))?.meta?.lastUpdated)) as [source, dataset]}
             {@const status = dataset.status}
             {@const collection = dataset.collection}
-            {@const { method, sourceName, placeholder } = collection.getTags()}
-            {@const patient = get(collection.patient)}
             <Col xs="12" sm="6" lg="4" style="">
-              <Card class="{category}-dataset h-100 w-100">
-                <CardHeader>
-                  <Row class="align-items-center">
-                    <Col>
-                      <CardText style="max-width: 100%;">
-                        <Icon name="calendar-check"/> {new Date(patient.meta.lastUpdated).toLocaleString(undefined, {
-                          dateStyle: "medium",
-                        })}
-                      </CardText>
-                    </Col>
-                    <Col class="ps-0" style="max-width: fit-content">
-                      <Dropdown>
-                        <DropdownToggle tag="div" style="cursor: pointer">
-                          <Icon name="three-dots-vertical" style="cursor: pointer"></Icon>
-                        </DropdownToggle>
-                        <DropdownMenu>
-                          <DropdownItem on:click={() => showDataset(collection)}><div class="d-flex justify-content-between w-100">View <Icon name="chevron-right"/></div></DropdownItem>
-                          <DropdownItem class="text-primary"on:click={() => goToCollectionMethod(collection)}><Icon name="arrow-repeat"/> Update</DropdownItem>
-                          <DropdownItem divider />
-                          <DropdownItem class="text-danger" on:click={() => deleteDataset(category, source)}><Icon name="trash"/> Delete</DropdownItem>
-                        </DropdownMenu>
-                      </Dropdown>
-                    </Col>
-                  </Row>
-                </CardHeader>
-                <CardBody class="d-flex flex-column justify-content-between">
-                  <div>
-                    <Row class="align-items-top">
-                      <Col>
-                        <CardTitle
-                          title={source}
-                          style="max-width: 100%; overflow-wrap: anywhere;"
-                        >
-                          {sourceName}
-                        </CardTitle>
-                      </Col>
-                    </Row>
-                    <Row>
-                      <CardSubtitle class="mb-1 text-secondary">
-                        For {
-                          placeholder ?
-                            `${$masterPatient?.resource?.name?.[0]?.given?.join(" ")} ${$masterPatient?.resource?.name?.[0]?.family}` :
-                            `${patient.name?.[0]?.given?.join(" ")} ${patient.name?.[0]?.family}`
-                        }
-                      </CardSubtitle>
-                    </Row>
-                    <Row>
-                      <Col class="pe-0">
-                        <Badge color="secondary">
-                          {METHOD_NAMES[method]?.name || "Unknown"}
-                        </Badge>
-                      </Col>
-                    </Row>
+              <DatasetView {dataset} {masterPatient}>
+                <DropdownMenu slot="menu">
+                  <DropdownItem on:click={() => showDataset(collection)}><div class="d-flex justify-content-between w-100">View <Icon name="chevron-right"/></div></DropdownItem>
+                  <DropdownItem class="text-primary"on:click={() => goToCollectionMethod(collection)}><Icon name="arrow-repeat"/> Update</DropdownItem>
+                  <DropdownItem divider />
+                  <DropdownItem class="text-danger" on:click={() => deleteDataset(category, source)}><Icon name="trash"/> Delete</DropdownItem>
+                </DropdownMenu>
+                <Button slot="footer" class="d-flex justify-content-between align-items-center" color="secondary" outline on:click={() => showDataset(collection)}>
+                  <div class="d-flex align-items-center" style="min-width: 37px">
+                    <DatasetStatusLoader {status}>
+                      <Badge color="primary">{collection.getResourceCount()}</Badge>
+                    </DatasetStatusLoader>
                   </div>
-                  <Row class="mx-0 mt-3">
-                    <Button class="d-flex justify-content-between align-items-center" color="secondary" outline on:click={() => showDataset(collection)}>
-                      <div class="d-flex align-items-center" style="min-width: 37px">
-                        <DatasetStatusLoader status={status}>
-                          <Badge color="primary">{collection.getResourceCount()}</Badge>
-                        </DatasetStatusLoader>
-                      </div>
-                      <div>View </div>
-                      <Icon name="chevron-right"/>
-                    </Button>
-                  </Row>
-                </CardBody>
-              </Card>
+                  <div>View </div>
+                  <Icon name="chevron-right"/>
+                </Button>
+              </DatasetView>
             </Col>
           {/each}
         </Row>

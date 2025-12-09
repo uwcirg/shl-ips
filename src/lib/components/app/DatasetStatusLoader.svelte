@@ -11,20 +11,15 @@
 </script>
 
 {#if $status?.state === StateManager.State.LOADING}
-  {#if $$slots.loader}
-    <slot name="loader" />
-  {:else}
+  <slot name="loader">
     <Spinner color={color} size={size} />
-  {/if}
+  </slot>
 {:else if $status?.state === StateManager.State.ERROR}
-  {#if $$slots.error}
-    <slot name="error" />
-  {:else}
+  <slot name="error">
     <Icon name="exclamation-triangle" color="danger" size={size}/>
-  {/if}
+  </slot>
 {:else}
-  {#if $$slots.content}
-    <slot name="content" />
-  {/if}
-  <slot />
+  <slot name="content">
+    <slot/>
+  </slot>
 {/if}

@@ -12,14 +12,9 @@
     Card,
     CardBody,
     CardHeader,
-    CardSubtitle,
-    CardText,
-    CardTitle,
     Col,
-    Dropdown,
     DropdownItem,
     DropdownMenu,
-    DropdownToggle,
     FormGroup,
     Icon,
     Input,
@@ -52,6 +47,7 @@
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import { methodSectionHelper } from '$lib/utils/sectionTemplateUtil';
   import DatasetStatusLoader from '$lib/components/app/DatasetStatusLoader.svelte';
+  import DatasetView from '$lib/components/app/DatasetView.svelte';
   import { ResourceCollection } from '$lib/utils/ResourceCollection';
  
   export let status = "";
@@ -533,81 +529,32 @@
                   {@const { method, sourceName, placeholder } = collection.getTags()}
                   {@const patient = get(collection.patient)}
                   <Col xs="12" sm="6" lg="4" style="">
-                    <Card class="{category}-dataset h-100 w-100">
-                      <CardHeader>
-                        <Row class="align-items-center">
-                          <Col>
-                            <CardText style="max-width: 100%;">
-                              <Icon name="calendar-check"/> {new Date(patient.meta.lastUpdated).toLocaleString(undefined, {
-                                dateStyle: "medium",
-                              })}
-                            </CardText>
-                          </Col>
-                          <Col class="ps-0" style="max-width: fit-content">
-                            <Dropdown>
-                              <DropdownToggle tag="div">
-                                <Icon name="three-dots-vertical" style="cursor: pointer"></Icon>
-                              </DropdownToggle>
-                              <DropdownMenu>
-                                <DropdownItem on:click={() => showDataset(collection)}><div class="d-flex justify-content-between w-100">View <Icon name="chevron-right"/></div></DropdownItem>
-                              </DropdownMenu>
-                            </Dropdown>
-                          </Col>
-                        </Row>
-                      </CardHeader>
-                      <CardBody class="d-flex flex-column justify-content-between">
-                        <div>
-                          <Row class="align-items-top">
-                            <Col>
-                              <CardTitle
-                                title={source}
-                                style="max-width: 100%; overflow-wrap: anywhere;"
-                              >
-                                {sourceName}
-                              </CardTitle>
-                            </Col>
-                          </Row>
-                          <Row>
-                            <CardSubtitle class="mb-1 text-secondary">
-                              For {
-                                placeholder ?
-                                  `${$masterPatient?.resource?.name?.[0]?.given?.join(" ")} ${$masterPatient?.resource?.name?.[0]?.family}` :
-                                  `${patient.name?.[0]?.given?.join(" ")} ${patient.name?.[0]?.family}`
-                              }
-                            </CardSubtitle>
-                          </Row>
-                          <Row>
-                            <Col class="pe-0">
-                              <Badge color="secondary">
-                                {METHOD_NAMES[method]?.name || "Unknown"}
-                              </Badge>
-                            </Col>
-                          </Row>
+                    <DatasetView {dataset} {masterPatient}>
+                      <DropdownMenu slot="menu">
+                        <DropdownItem on:click={() => showDataset(collection)}><div class="d-flex justify-content-between w-100">View <Icon name="chevron-right"/></div></DropdownItem>
+                      </DropdownMenu>
+                      <Button
+                        slot="footer"
+                        class="d-flex w-100 justify-content-between align-items-center"
+                        color="success"
+                        outline
+                        disabled={$datasets[collection.id] || loadingMap[keyFor(collection)]}
+                        on:click={(event) => { addDataset(collection); }}
+                      >
+                        <div class="d-flex align-items-center" style="min-width: 37px">
+                          <DatasetStatusLoader status={status} bind:isLoading={loadingMap[keyFor(collection)]}>
+                            <Badge color="primary">{collection.getResourceCount()}</Badge>
+                          </DatasetStatusLoader>
                         </div>
-                        <Row class="mx-0 mt-3">
-                          <Button 
-                            class="d-flex w-100 justify-content-between align-items-center"
-                            color="success"
-                            outline
-                            disabled={$datasets[collection.id] || loadingMap[keyFor(collection)]}
-                            on:click={(event) => { addDataset(collection); }}
-                          >
-                            <div class="d-flex align-items-center" style="min-width: 37px">
-                              <DatasetStatusLoader status={status} bind:isLoading={loadingMap[keyFor(collection)]}>
-                                <Badge color="primary">{collection.getResourceCount()}</Badge>
-                              </DatasetStatusLoader>
-                            </div>
-                            {#if !$datasets[collection.id]}
-                              <div>Add</div>
-                              <Icon name="plus-circle"/>
-                            {:else}
-                              <span class="text-secondary">Added</span>
-                              <Icon name="check-circle-fill" color="success"/>
-                            {/if}
-                          </Button>
-                        </Row>
-                      </CardBody>
-                    </Card>
+                        {#if !$datasets[collection.id]}
+                          <div>Add</div>
+                          <Icon name="plus-circle"/>
+                        {:else}
+                          <span class="text-secondary">Added</span>
+                          <Icon name="check-circle-fill" color="success"/>
+                        {/if}
+                      </Button>
+                    </DatasetView>
                   </Col>
                 {/each}
               </Row>
