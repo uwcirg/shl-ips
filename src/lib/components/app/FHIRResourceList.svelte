@@ -359,7 +359,6 @@
                     {/if}
                   </Col>
                 </Row>
-              <!-- </Card> -->
             {/each}
           </AccordionItem>
         {/if}

@@ -275,71 +275,61 @@
                 </Badge>
               {/if}
             </span>
-            <FormGroup>
-              {#each Object.keys($resourcesByTypeStore[resourceType]) as key}
-                <Card style="width: 100%; max-width: 100%" class="mb-2">
-                  <CardHeader>
-                    <Row>
-                      <Col class="d-flex justify-content-start align-items-center">
-                        <span style="font-size:small">{resourceType}</span>
-                      </Col>
-                      {#if $mode === 'advanced'}
-                        <Col class="d-flex justify-content-end align-items-center">
-                          <Button
-                            size="sm"
-                            color="secondary"
-                            outline
-                            on:click={() => setJson($resourcesByTypeStore[resourceType][key])}
-                          >
-                            View
-                          </Button>
-                        </Col>
-                      {/if}
-                    </Row>
-                  </CardHeader>
-                  <Label style="width: 100%">
-                    <CardBody>
-                      <Row style="overflow:hidden">
-                        <Col xs="auto" class="d-flex align-items-top pt-4 pe-0">
-                          {#if resourceType === 'Patient'}
-                            <Input id={key} type="radio" bind:group={$selectedPatient} value={key} />
-                          {:else}
-                            <Input
-                              id={key}
-                              type="checkbox"
-                              checked={$resourcesByTypeStore[resourceType][key].include}
-                              value={key}
-                              on:change={(e) => {
-                                let rh = { ...$resourcesByTypeStore[resourceType][key] };
-                                rh.include = e.target.checked;
-                                resourceCollection.updateResource(rh);
-                              }}
-                            />
-                          {/if}
-                        </Col>
-                        <Col class="resource-content justify-content-center align-items-center">
-                          {#if resourceType in components}
-                            <svelte:component
-                              this={components[resourceType]}
-                              content={{
-                                resource: $resourcesByTypeStore[resourceType][key].resource,
-                                entries: resourceCollection.flattenResources($resourcesByTypeStore)
-                              }}
-                            />
-                            <!-- ResourceType: {resourceType}
-                              Resource: {JSON.stringify($resourcesByTypeStore[resourceType][key].resource)} -->
-                          {:else if $resourcesByTypeStore[resourceType][key].resource.text?.div}
-                            {@html $resourcesByTypeStore[resourceType][key].resource.text?.div}
-                          {:else}
-                            {$resourcesByTypeStore[resourceType][key].tempId}
-                          {/if}
-                        </Col>
-                      </Row>
-                    </CardBody>
-                  </Label>
-                </Card>
-              {/each}
-            </FormGroup>
+            {#each Object.keys($resourcesByTypeStore[resourceType]) as key, index}
+              <Label style="width: 100%">
+                <Row class={index > 0 ? "border-top pt-2 mt-2" : ""} style="overflow:hidden">
+                  <Col xs="auto" class="d-flex align-items-top pt-4 pe-0">
+                    {#if resourceType === 'Patient'}
+                      <Input id={key} type="radio" bind:group={$selectedPatient} value={key} />
+                    {:else}
+                      <Input
+                        id={key}
+                        type="checkbox"
+                        checked={$resourcesByTypeStore[resourceType][key].include}
+                        value={key}
+                        on:change={(e) => {
+                          let rh = { ...$resourcesByTypeStore[resourceType][key] };
+                          rh.include = e.target.checked;
+                          resourceCollection.updateResource(rh);
+                        }}
+                      />
+                    {/if}
+                  </Col>
+                  <Col class="resource-content justify-content-center align-items-center">
+                    {#if resourceType in components}
+                      <svelte:component
+                        this={components[resourceType]}
+                        content={{
+                          resource: $resourcesByTypeStore[resourceType][key].resource,
+                          entries: resourceCollection.flattenResources($resourcesByTypeStore)
+                        }}
+                      />
+                      <!-- ResourceType: {resourceType}
+                        Resource: {JSON.stringify($resourcesByTypeStore[resourceType][key].resource)} -->
+                    {:else if $resourcesByTypeStore[resourceType][key].resource.text?.div}
+                      {@html $resourcesByTypeStore[resourceType][key].resource.text?.div}
+                    {:else}
+                      {$resourcesByTypeStore[resourceType][key].tempId}
+                    {/if}
+                  </Col>
+                  <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
+                    {#if $mode === 'advanced'}
+                      <Button
+                        size="sm"
+                        color="secondary"
+                        outline
+                        on:click={(event) => {
+                          event.stopPropagation();
+                          setJson($resourcesByTypeStore[resourceType][key])
+                        }}
+                      >
+                        View
+                      </Button>
+                    {/if}
+                  </Col>
+                </Row>
+              </Label>
+            {/each}
           </AccordionItem>
         {/if}
       {/each}
