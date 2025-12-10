@@ -283,7 +283,11 @@
       <h5 slot="header">Data Previously Downloaded</h5>
       {#if $userResources[category]}
         <Row class="g-4 d-flex justify-content-start">
-          {#each Object.entries($userResources[category]).sort((a, b) => new Date((get(b[1].patient))?.meta?.lastUpdated) - new Date((get(a[1].patient))?.meta?.lastUpdated)) as [source, dataset]}
+          {#each Object.entries($userResources[category]).sort((a, b) => {
+            let aDate = new Date(get(a[1].collection.patient)?.meta?.lastUpdated);
+            let bDate = new Date(get(b[1].collection.patient)?.meta?.lastUpdated);
+            return bDate - aDate;
+          }) as [source, dataset]}
             {@const status = dataset.status}
             {@const collection = dataset.collection}
             <Col xs="12" sm="6" lg="4" style="">
