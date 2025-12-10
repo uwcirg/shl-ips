@@ -1,13 +1,17 @@
 <script lang="ts">
   import {
     Button,
+    Col,
+    Icon,
     Modal,
     ModalBody,
     ModalHeader,
     ModalFooter,
-    Icon
+    Row
   } from 'sveltestrap';
+  import { get, writable } from 'svelte/store';
   import { FHIRDataService } from '$lib/utils/FHIRDataService';
+  import DatasetView from '$lib/components/app/DatasetView.svelte';
   import { getContext } from 'svelte';
   
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
@@ -16,14 +20,17 @@
   let open = false;
   const toggle = () => (open = !open);
 
-  let category;
-  let source;
+  let category: string;
+  let source: string;
+
+  let dataset = writable({});
 
   export async function checkFHIRDataServiceBeforeFetch(categoryCode: string, sourceUrl: string, fetchCallback: Function) {
     category = categoryCode;
     source = sourceUrl;
     callbackFn = fetchCallback;
     if (fhirDataService.datasetExists(category, source)) {
+      $dataset = get(fhirDataService.userResources)[category][source];
       toggle();
     } else {
       return await callbackFn();
@@ -35,6 +42,11 @@
   <ModalHeader {toggle}>Overwrite existing data from this source?</ModalHeader>
   <ModalBody>
     This will overwrite the data you have already added from this source. Press "Cancel" if you would like to keep or review your data before continuing.
+    <Row class="mt-3">
+      <Col>
+        <DatasetView dataset={$dataset} masterPatient={fhirDataService.masterPatient} />
+      </Col>
+    </Row>
   </ModalBody>
   <ModalFooter>
     <Button color="danger" on:click={toggle}>Cancel</Button>
