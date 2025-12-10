@@ -278,7 +278,7 @@
   }
 </script>
 
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, selectedSource, prepareIps)}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, hostname, prepareIps)}>
   <Label>Fetch US Core data via TEFCA query</Label>
   <FormGroup>
     <Row>

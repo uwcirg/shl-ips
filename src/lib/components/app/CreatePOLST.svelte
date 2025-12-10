@@ -351,7 +351,7 @@
 
 </script>
 
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, SOURCE.name, submit)}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, SOURCE.url, submit)}>
   <p>To prepare a new POLST form, specify your preferences below.</p>
   <DemographicForm demographics={userFormDemographics} show={['first', 'last', 'gender', 'dob', 'phone']} />
   <Row>

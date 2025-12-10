@@ -153,7 +153,7 @@
     }
   }
 </script>
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, sofHost?.name ?? "Unknown", prepareIps)}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, sofHost?.url ?? "Unknown", prepareIps)}>
   <FormGroup>
     {#each SOF_HOSTS as host}
       <Row class="mx-2">

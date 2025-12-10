@@ -223,7 +223,7 @@
         color="primary"
         style="width:fit-content"
         disabled={processing || disabled}
-        on:click={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, SOURCE.name, prepareIps)}>
+        on:click={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, SOURCE.url, prepareIps)}>
         {#if !processing}
           Update your patient story and goals
         {:else}
