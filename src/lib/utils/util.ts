@@ -336,7 +336,7 @@ export function getReferences(resourceContent: any, references: any[] | undefine
   }
 
 export function isIPSBundle(bundle: Bundle): boolean {
-  let composition = bundle?.entry?.find(entry => entry.resource?.resourceType === "Composition");
+  let composition = bundle?.entry?.find(entry => entry.resource?.resourceType === "Composition").resource as Composition;
   return (
     bundle !== undefined
     && bundle.resourceType === "Bundle"
