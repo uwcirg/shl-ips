@@ -171,26 +171,6 @@ export const CARIN_RESOURCES = [
   'List',
 ];
 
-export const CARIN_RESOURCES = [
-  'Patient',
-  'Coverage',
-  'Practitioner',
-  'Organization',
-  'RelatedPerson',
-  'ExplanationOfBenefit',
-  'Procedure',
-  'MedicationRequest',
-  'Immunization',
-  'CareTeam',
-  'Condition',
-  'CarePlan',
-  'Observation',
-  'AllergyIntolerance',
-  'Goal',
-  'DocumentReference',
-  'List',
-];
-
 export const CARIN_HOSTS = [
   // {
   //   id: "acentra",
