@@ -50,15 +50,17 @@
         </Card>
       </Col>
     {:else}
-      <Card color="light" style="width: 60%">
-        <CardBody>
-          <Row class="d-flex justify-content-center align-items-center px-1">
-            <Button color="primary" size="lg" on:click={() => checkAuth()}
-              >Sign Up or Sign In</Button
-            >
-          </Row>
-        </CardBody>
-      </Card>
+      <Col class="col-sm-12 col-md-8">
+        <Card color="light">
+          <CardBody>
+            <Row class="d-flex justify-content-center align-items-center px-3">
+              <Button color="primary" size="lg" on:click={() => checkAuth()}
+                >Sign Up or Sign In</Button
+              >
+            </Row>
+          </CardBody>
+        </Card>
+      </Col>
     {/if}
   </Row>
 </Row>
