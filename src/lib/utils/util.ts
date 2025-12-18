@@ -1,8 +1,8 @@
 import * as jose from 'jose';
 import * as pako from 'pako';
 import issuerKeys from '$lib/utils/issuer.private.jwks.json';
-import type { Bundle, BundleEntry, Patient, Resource } from 'fhir/r4';
-import type { DemographicFields, DateTimeFields, SHCFile } from '$lib/utils/types';
+import type { Bundle, BundleEntry, Extension, Identifier, Patient, Resource } from 'fhir/r4';
+import type { UserDemographics, DateTimeFields, SHCFile } from '$lib/utils/types';
 
 export const base64url = jose.base64url;
 
@@ -17,31 +17,139 @@ export async function base64toBlob(base64:string, type="application/octet-stream
   return window.URL.createObjectURL(await result.blob());
 }
 
-// Helper function to format dates as "dd-MMM-yyyy"
-export function formatDate(dateStr?: string) {
-  if (!dateStr) {
-    return '??';
+const DATE_PRECISION = {
+  "time": 4,
+  "day": 3,
+  "month": 2,
+  "year": 1
+}
+
+function isISODate(date: string) {
+  return date.match(/^(?:\d{4}|\d{4}-\d{2}|\d{4}-\d{2}-\d{2}|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+\-]\d{2}:\d{2})?)$/);
+}
+
+export function handlePartialISODate(dateStr?: string): { date: Date, precision: number } | null {
+  if (!dateStr) { return null; }
+  // Check for valid ISO date format
+  if (!isISODate(dateStr)) {
+    return null;
   }
-  // Handle partial dates
-  let options: Intl.DateTimeFormatOptions = {};
-  const yearMatch = /^\d{4}/;               // "2023"
-  const yearMonthMatch = /^\d{4}-\d{2}/;    // "2023-05"
-  const fullDateMatch = /^\d{4}-\d{2}-\d{2}/; // "2023-05-10"
-  if (yearMatch.test(dateStr)) {
-    options.year = 'numeric';
-  }
-  if (yearMonthMatch.test(dateStr)) {
-    options.month = 'short';
-  }
-  if (fullDateMatch.test(dateStr)) {
-    options.day = '2-digit';
+
+  let precision: number | null = null;
+
+  if (dateStr.match(/T\d{2}:\d{2}/)) {
+    precision = DATE_PRECISION.time;
+  } else {
+    // Add time if missing
+    dateStr = `${dateStr}T00:00:00`;
+    // Handle partial ISO dates
+    const yearMatch = /^\d{4}/;                 // "2023"
+    const yearMonthMatch = /^\d{4}-\d{2}/;      // "2023-05"
+    const fullDateMatch = /^\d{4}-\d{2}-\d{2}/; // "2023-05-10"
+    if (yearMatch.test(dateStr)) {
+      precision = DATE_PRECISION.year;
+    }
+    if (yearMonthMatch.test(dateStr)) {
+      precision = DATE_PRECISION.month;
+    }
+    if (fullDateMatch.test(dateStr)) {
+      precision = DATE_PRECISION.day;
+    }
+    if (!precision) {
+      return null;
+    }
   }
   try {
     const date = new Date(dateStr);
-    let result = date.toLocaleDateString('en-GB', options);
-    if (result === 'Invalid Date') {
+    if (isNaN(date.getTime())) {
+      return null;
+    }
+    return {date, precision};
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+// Return a Date object from a string (partial ISO or full-date format)
+export function normalizeDateString(dateStr?: string): { date: Date, precision: number } | null {
+  if (!dateStr) { return null; }
+  try {
+    const normalizedDate = handlePartialISODate(dateStr);
+    if (normalizedDate !== null) {
+      return normalizedDate;
+    }
+    // See if non-ISO date can be parsed
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+      return null;
+    }
+    let precision = DATE_PRECISION.year;
+    return {date, precision};
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * Convert Age/unit → estimated date if birthDate is known
+ */
+function deriveDateFromAge(ageObj: { value: number, unit: any}, birthDateStr: string): { date: Date, precision: number } | null {
+  let birth = new Date(birthDateStr);
+  if (isNaN(birth.getTime())) return null;
+
+  const { value, unit } = ageObj;
+  const numeric = Number(value);
+  if (isNaN(numeric)) return null;
+
+  let result = new Date(birth);
+
+  if (unit.toLowerCase().startsWith("year") || unit.toLowerCase() === "a") {
+    result.setFullYear(result.getFullYear() + numeric);
+    return { date: result, precision: DATE_PRECISION.year };
+  }
+  if (unit.toLowerCase().startsWith("month") || unit.toLowerCase() === "mo") {
+    result.setMonth(result.getMonth() + numeric);
+    return { date: result, precision: DATE_PRECISION.month };
+  }
+  if (unit.toLowerCase().startsWith("week") || unit.toLowerCase() === "wk") {
+    result.setDate(result.getDate() + numeric * 7);
+    return { date: result, precision: DATE_PRECISION.day };
+  }
+  if (unit.toLowerCase().startsWith("day") || unit.toLowerCase() === "d") {
+    result.setDate(result.getDate() + numeric);
+    return { date: result, precision: DATE_PRECISION.day };
+  }
+
+  return null;
+}
+
+
+// Helper function to format dates as "dd-MMM-yyyy" to the known precision
+export function formatDate(dateStr?: string) {
+  if (!dateStr) { return "??"; }
+  
+  // Handle partial dates
+  let options: Intl.DateTimeFormatOptions = {};
+  try {
+    const normalizedDate = normalizeDateString(dateStr);
+    if (normalizedDate === null) {
       return dateStr;
     }
+    switch (normalizedDate.precision) {
+      // Falls through, less precise values get fewer formatting options added
+      case DATE_PRECISION.time:
+      case DATE_PRECISION.day:
+        options.day = '2-digit';
+      case DATE_PRECISION.month:
+        options.month = 'short';
+      case DATE_PRECISION.year:
+        options.year = 'numeric';
+        break;
+      case null:
+        return dateStr;
+    }
+    let result = normalizedDate.date.toLocaleDateString('en-GB', options);
     return result;
   } catch (e) {
     return dateStr;
@@ -57,12 +165,81 @@ export function hasChoiceDTField(prefix: string, resource: Resource): boolean {
 }
 
 export function choiceDTFields(prefix: string, resource: Resource): DateTimeFields {
+  if (!resource  || !prefix) return {};
+  if (resource[prefix]) {
+    let datatype;
+    if (typeof resource[prefix] === 'string') {
+      datatype = "string";
+    } else if  (resource[prefix].code) {
+      datatype = "codeableConcept";
+    } else if (resource[prefix].start || resource[prefix].end) {
+      datatype = "period";
+    } else if (resource[prefix].high || resource[prefix].low) {
+      datatype = "range";
+    } else if (resource[prefix].value && resource[prefix].unit === "a") {
+      datatype = "age";
+    } else if (resource[prefix].value) {
+      datatype = "duration";
+    }
+    if (datatype) {
+      return { [datatype]: resource[prefix] };
+    } else {
+      return {};
+    }
+  }
+
+  if (!hasChoiceDTField(prefix, resource)) return null;
   const prefixedFields = Object.keys(resource).filter(k => k.startsWith(prefix));
   const fields: DateTimeFields = prefixedFields.reduce((acc: DateTimeFields, k: string) => {
     acc[lowerCaseFirst(k.replace(prefix, ''))] = resource[k];
     return acc;
   }, {});
   return fields;
+}
+
+export function getFHIRDateAndPrecision(resource: Resource, prefix: string, patientBirthDate?: string): { date: Date, precision: number } | null {
+  const fields = choiceDTFields(prefix, resource);
+  if (!fields) return null;
+  // Case: plain string date
+  let val = fields.dateTime || fields.date || fields.string;
+  if (val) {
+    const result = normalizeDateString(val);
+    if (result) return result;
+  }
+
+  val = fields.period || fields.age || fields.range || fields.duration;
+  if (!val) return null;
+  // Case: Period → start > end
+  if (val.start) {
+    const result = normalizeDateString(val.start);
+    if (result) return result;
+  }
+  if (val.end) {
+    const result = normalizeDateString(val);
+    if (result) return result;
+  }
+  // Case: Age → convert if birth date known
+  if (val.value && val.unit && patientBirthDate) {
+    const result = deriveDateFromAge(val, patientBirthDate);
+    if (result) return result;
+    return null;
+  }
+  // Case: Range → approximate midpoint if birth date known & units match
+  if (val.low?.value && val.high?.value && val.low.unit === val.high.unit) {
+    if (patientBirthDate) {
+      const avgAge = {
+        value: (val.low.value + val.high.value) / 2,
+        unit: val.low.unit,
+      };
+      const result = deriveDateFromAge(avgAge, patientBirthDate);
+      if (result?.precision === DATE_PRECISION.year && val.high.value - val.low.value > 1) {
+        result.precision = 1 / (val.high.value - val.low.value);
+      };
+      if (result) return result;
+    }
+    return null;
+  }
+  return null;
 }
 
 // For machine-readable content, use the reference in the Composition.section.entry to retrieve resource from Bundle
@@ -107,6 +284,38 @@ export function download(filename:string, text:string) {
   document.body.removeChild(element);
 }
 
+export async function fetchEverything(reqUrl: string, options: RequestInit): Promise<Resource[]> {
+  const collected: Resource[] = []; // all resources from all pages
+
+  // First request URL
+  let url = reqUrl;
+
+  while (url) {
+    const response = await fetch(url, options);
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`FHIR request failed: ${response.status} ${errText}`);
+    }
+
+    const bundle = await response.json();
+
+    if (bundle.entry) {
+      bundle.entry.forEach(e => collected.push(e.resource));
+    }
+
+    // Find the next link if pagination is present
+    const nextLink = bundle.link?.find(l => l.relation === "next");
+    if (nextLink?.url.startsWith("http://")) {
+      url = nextLink.url.replace("http://", "https://");
+    } else {
+      url = nextLink?.url || null; // continue if exists, otherwise stop
+    }
+  }
+
+  return collected;
+}
+
 export function getReferences(resourceContent: any, references: any[] | undefined=undefined): string[]{
     let referenceFieldKey = "reference";
     if (references === undefined) {
@@ -126,16 +335,25 @@ export function getReferences(resourceContent: any, references: any[] | undefine
     return references;
   }
 
-export function getResourcesFromIPS(ips: Bundle) {
+export function isIPSBundle(bundle: Bundle): boolean {
+  let composition = bundle?.entry?.find(entry => entry.resource?.resourceType === "Composition").resource as Composition;
+  return (
+    bundle !== undefined
+    && bundle.resourceType === "Bundle"
+    && bundle.type === "document"
+    && composition !== undefined
+    && composition.type?.coding?.[0]?.system === "http://loinc.org"
+    && composition.type?.coding?.[0]?.code === "60591-5"
+  );
+}
+
+export function getResourcesFromIPS(ips: Bundle): Resource[] | null {
   let entries = ips.entry;
+  if (!entries) return null;
   let resources = [] as Resource[];
-  if (!entries) return resources;
   entries.forEach((entry: BundleEntry) => {
       if (!entry.resource) return;
-      // if (entry.resource.resourceType == 'Condition') return; // Omit conditions until ips fhir server is upgraded
       if (entry.resource.resourceType == 'Composition') return;
-
-      entry.resource.id = entry.fullUrl;
       if ('extension' in entry.resource && entry.resource.extension) {
           entry.resource.extension = entry.resource.extension.filter(function(item) {
               return item.url !== "http://hl7.org/fhir/StructureDefinition/narrativeLink";
@@ -205,15 +423,46 @@ export function clearURLOfParams(url: URL) {
   return url;
 }
 
-export function constructPatientResource (props: DemographicFields = {}) {
-  let patient: Patient = {
-    resourceType: 'Patient',
-    active: true
+export function getDemographicsFromPatient(patient: Patient): UserDemographics {
+  let demographics: UserDemographics = {
+    first: patient.name?.[0].given?.[0],
+    last: patient.name?.[0].family,
+    dob: patient.birthDate,
+    gender: patient.gender,
+    mrn: patient.identifier?.find((i) => i.type?.coding?.[0].code === 'MR')?.value,
+    phone: patient.telecom?.find((t) => t.system === 'phone')?.value,
+    email: patient.telecom?.find((t) => t.system === 'email')?.value,
+    address1: patient.address?.[0].line?.[0],
+    address2: patient.address?.[0].line?.slice(1).join(' '),
+    city: patient.address?.[0].city,
+    state: patient.address?.[0].state,
+    zip: patient.address?.[0].postalCode,
+    country: patient.address?.[0].country,
+    culture: patient.extension?.find((e) => e.url === 'http://healthintersections.com.au/fhir/StructureDefinition/patient-cultural-background')?.valueString,
+    community: patient.extension?.find((e) => e.url === 'http://hl7.org.au/fhir/StructureDefinition/community-affiliation')?.valueString,
+    pronouns: patient.extension?.find((e) => e.url === 'http://hl7.org/fhir/StructureDefinition/individual-pronouns')?.valueCodeableConcept?.coding?.[0],
+    sexCharacteristics: patient.extension?.find((e) => e.url === 'http://hl7.org.au/fhir/StructureDefinition/sex-characteristic-variation')?.valueCodeableConcept?.coding?.[0],
+    religion: patient.extension?.find((e) => e.url === 'http://hl7.org/fhir/StructureDefinition/patient-religion')?.valueCodeableConcept?.coding?.[0],
+    preferredLanguage: patient.communication?.find((e) => e.preferred)?.language?.text,
+    spokenLanguages: patient.communication?.filter((e) => !e.preferred).map((e) => e.language.text).join(', '),
   };
+  return Object.fromEntries(Object.entries(demographics).filter(([_, v]) => v)); // don't return empty fields
+}
+
+export function constructPatientResource (
+  props: UserDemographics & { customIdentifiers: Identifier[], customExtensions: Extension[] } = {},
+  patient: Patient = { resourceType: 'Patient', active: true }
+): Patient {
+  if (props.id) {
+    patient.id = props.id;
+  }
   if (props.first || props.last) {
     patient.name = [ {} ];
     if (props.first) patient.name[0].given = [props.first];
     if (props.last) patient.name[0].family = props.last;
+  }
+  if (props.dob) {
+    patient.birthDate = props.dob;
   }
   if (props.gender) {
     patient.gender = props.gender;
@@ -238,11 +487,9 @@ export function constructPatientResource (props: DemographicFields = {}) {
       });
     }
   }
-  if (props.dob) {
-    patient.birthDate = props.dob;
-  }
+  let identifiers: Identifier[] = [];
   if (props.mrn) {
-    patient.identifier = [
+    identifiers.push(
       {
         use: 'usual',
         type: {
@@ -257,9 +504,22 @@ export function constructPatientResource (props: DemographicFields = {}) {
         },
         system: 'http://hospital.smarthealthit.org',
         value: props.mrn
-      }
-    ]
+      });
   }
+
+  if (props.customIdentifiers) {
+    let identifiersToUpdate = patient.identifiers ?? [];
+    let newIdentifiers = [...props.customIdentifiers, ...identifiers];
+    for (const newIdentifier of newIdentifiers) {
+      identifiersToUpdate = identifiersToUpdate.filter((i) => i.system !== newIdentifier.system);
+      identifiersToUpdate.push(newIdentifier);
+    }
+    identifiers = identifiersToUpdate;
+  }
+  if (identifiers.length > 0) {
+    patient.identifier = identifiers;
+  }
+
   if (props.address1 || props.address2 || props.city || props.state || props.zip || props.country) {
     patient.address = [{}];
     if (props.address1) patient.address[0].line = [props.address1];
@@ -270,7 +530,7 @@ export function constructPatientResource (props: DemographicFields = {}) {
     if (props.country) patient.address[0].country = props.country;
   }
   
-  let extensions = [];
+  let extensions: Extension[] = [];
   if (props.religion) {
     extensions.push({
       "url" : "http://hl7.org/fhir/StructureDefinition/patient-religion",
@@ -307,6 +567,15 @@ export function constructPatientResource (props: DemographicFields = {}) {
       }
     });
   }
+  if (props.customExtensions) {
+    let extensionsToUpdate = patient.extension ?? [];
+    let newExtensions = [...props.customExtensions, ...extensions];
+    for (const newExtension of newExtensions) {
+      extensionsToUpdate = extensionsToUpdate.filter((i) => i.system !== newExtension.system);
+      extensionsToUpdate.push(newExtension);
+    }
+    extensions = extensionsToUpdate;
+  }
   if (extensions.length > 0) {
     patient.extension = extensions;
   }
@@ -315,7 +584,7 @@ export function constructPatientResource (props: DemographicFields = {}) {
 }
 
 export function buildPatientSearchQuery(
-  props: DemographicFields = {},
+  props: UserDemographics = {},
   callback: Function = ((q: string) => q)
 ) {
   let query = "?_count=1&";

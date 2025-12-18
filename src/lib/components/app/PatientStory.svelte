@@ -11,9 +11,18 @@
   } from '@sveltestrap/sveltestrap';
   import { createEventDispatcher } from 'svelte';
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
-  import type { Goal, CompositionSection } from 'fhir/r4';
-  
-  export let sectionKey: string = "Patient Story";
+  import type { Goal, Observation, Resource, CompositionSection } from 'fhir/r4';
+  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
+
+  export let disabled = false;
+
+  const CATEGORY = 'patient-story';
+  const METHOD = 'patient-story-form';
+  const SOURCE = {
+    url: window.location.origin,
+    name: 'My Story'
+  };
+  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let processing = false;
   let fetchError = '';
@@ -38,7 +47,7 @@
     },
     text: {
       status: "generated",
-      div: "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>[Patient Story]</p>\n<p><strong>Patient's Goals</strong></p>\n<ul>\n<li>Maintain blood sugar levels within normal range (in progress)</li>\n</ul>\n</div>"
+      div: "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>${story}</p>\n<p><strong>Patient's Goals</strong></p><ul>${goals}</ul></div>"
     },
     extension: [
       {
@@ -48,6 +57,24 @@
     ],
     entry: []
   };
+
+  let observationResourceTemplate: Observation = {
+    resourceType: "Observation",
+    status: "final",
+    code: {
+      coding: [
+        {
+          system: "http://loinc.org",
+          code: "51855-5",
+          display: "Patient Note"
+        }
+      ]
+    },
+    valueString: "",
+    subject: {
+      reference: "Patient/pat1"
+    },
+  }
   
   let goalResourceTemplate: Goal = {
     resourceType: "Goal",
@@ -82,6 +109,9 @@
   };
 
   function prepareGoalResource(goal: any) {
+    if (!goal.value) {
+      return;
+    }
     let goalResource = JSON.parse(JSON.stringify(goalResourceTemplate));
     goalResource.statusDate = new Date().toISOString().slice(0, 10);
     goalResource.description.text = goal.value;
@@ -89,18 +119,47 @@
     return goalResource;
   }
 
-
+  function prepareObservationResource() {
+    if (!story) {
+      return;
+    }
+    let observationResource = JSON.parse(JSON.stringify(observationResourceTemplate));
+    observationResource.valueString = story;
+    return observationResource;
+  }
 
   function prepareIps() {
-    const resources = goals.map(prepareGoalResource);
+    let resources: Resource[] = [];
+    let goalResources = goals.map(prepareGoalResource).filter((entry) => entry);
+    if (goalResources.length > 0) {
+      resources = [...resources, ...goalResources];
+    }
+    let observationResource = prepareObservationResource();
+    if (observationResource) {
+      resources.push(observationResource);
+    }
+    if (resources.length == 0) {
+      return;
+    }
     const section = JSON.parse(JSON.stringify(sectionTemplate));
-    section.text.div = `<div xmlns="http://www.w3.org/1999/xhtml"><p><strong>Patient Story</strong></p><p>${story}</p><p><strong>Patient's Goals</strong></p><ul>${goals.map(goal => `<li>${goal.value}</li>`).join('')}</ul></div>`;
+    let patientStoryHTML = story ? `<p><strong>Patient Story</strong></p><p>${story}</p>`: "";
+    let patientGoalsHTML = goalResources.length > 0
+      ? `<p><strong>Patient's Goals</strong></p><ul>${
+        goalResources.map(goal => `<li>${goal.description.text}</li>`).join('')
+      }</ul>`
+      : "";
+    section.text.div = `<div xmlns="http://www.w3.org/1999/xhtml">
+      ${patientStoryHTML}
+      ${patientGoalsHTML}
+    </div>`;
     section.extension[0].valueString = story;
     processing = false;
     let result:ResourceRetrieveEvent = {
       resources: resources,
-      sectionKey: sectionKey,
-      sectionTemplate: section
+      category: CATEGORY,
+      method: METHOD,
+      source: SOURCE.url,
+      sourceName: SOURCE.name
     }
     resourceDispatch('update-resources', result);
     console.log(resources);
@@ -120,7 +179,6 @@
 </script>
 
 <form on:submit|preventDefault={() => {}}>
-  <p class="text-secondary"><em>Describe your story and goals for care.</em></p>
   <h5>My Story</h5>
   <Label class="text-secondary">Who are you? How would you describe your health? What matters to you?</Label>
   <Row>
@@ -134,9 +192,9 @@
   <Label class="text-secondary">What specific outcomes are important to you from your care?</Label>
   {#each goals as goal, i}
     <Row class="mb-1">
-      <Col xs="auto">
+      <Col>
         <FormGroup style="font-size:small" class="text-secondary" label="Goal">
-          <Input type="text" bind:value={goal.value} style="width: 400px"/>
+          <Input type="text" bind:value={goal.value}/>
         </FormGroup>
       </Col>
       <Col xs="auto" class="pt-1">
@@ -161,7 +219,11 @@
 
   <Row>
     <Col xs="auto">
-      <Button color="primary" style="width:fit-content" disabled={processing} on:click={prepareIps}>
+      <Button
+        color="primary"
+        style="width:fit-content"
+        disabled={processing || disabled}
+        on:click={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, SOURCE.url, prepareIps)}>
         {#if !processing}
           Update your patient story and goals
         {:else}
@@ -174,7 +236,12 @@
         <Spinner color="primary" type="border" size="md"/>
       </Col>
     {/if}
+    {#if disabled}
+      <Col xs="auto" class="d-flex align-items-center px-0">
+        Please wait...
+      </Col>
+    {/if}
   </Row>
 </form>
-
+<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 <span class="text-danger">{fetchError}</span>

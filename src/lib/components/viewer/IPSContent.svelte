@@ -92,12 +92,14 @@
     }
     let patient = ips.entry?.filter((entry) => entry.resource?.resourceType === 'Patient').map((entry) => entry.resource);
     if (patient?.[0]) {
-      content ["Patient"] = {
+      let patientName = patient[0].name?.[0]?.text ??
+        `${patient[0].name?.[0]?.prefix ?? ""} ${patient[0].name?.[0]?.given?.join(' ') ?? ""} ${patient[0].name?.[0]?.family ?? ""}`;
+      content["Patient"] = {
         section: {
           text: {
             status: 'generated',
             div: patient[0].text?.div ??
-                `<b>${patient[0].name?.[0]?.text ?? `${(patient[0].name?.[0]?.prefix ?? "") (patient[0].name?.[0]?.given?.join(' ') ?? "") (patient[0].name?.[0]?.family ?? "")}`}</b><br>
+                `<b>${patientName}</b><br>
                   Birth Date: ${patient[0].birthDate ?? ""}<br>
                   Gender: ${patient[0].gender ?? ""}`
           }
@@ -117,9 +119,9 @@
       let useText = entries.filter((entry) => entry.resourceType in components).length === 0;
 
       let sectionContent = {
-        section: section,
-        entries: entries,
-        useText: useText
+        section: section, // Composition.section
+        entries: entries, // Resources from Composition.section.entry
+        useText: useText  // True when section contains unsupported resource types
       };
       content[title] = sectionContent;
     });
@@ -156,6 +158,14 @@
     }
     return result;
   };
+
+  function getSections() {
+    return Object.entries(ipsContent).sort((a, b) => {
+      if (a[0] === "Patient") { return -1; }
+      if (b[0] === "Patient") { return 1; }
+      return a[0].localeCompare(b[0]);
+    });
+  }
 
   let showInfo = false;
   let infoMessage = "";
@@ -223,11 +233,11 @@
 {#if showInfo}
   <Row class="text-info">{infoMessage}</Row>
 {/if}
-{#each Object.entries(ipsContent) as [title, sectionContent]}
+{#each getSections() as [title, sectionContent]}
   <Row class="mx-0">
     <!--wrap in accordion with title-->
     <Accordion class="mt-3">
-      <AccordionItem active class="ips-section">
+      <AccordionItem active class="resource-content">
         <h6 slot="header" class="my-2">{title}</h6>
         {#if sectionContent.useText || mode === "text"}
           {#if sectionContent.section.text?.div}
@@ -256,7 +266,7 @@
               {#each sectionContent.entries as resource, index}
                 <CardBody class={index > 0 ? "border-top" : ""}>
                   <Row style="overflow:hidden" class="d-flex justify-content-end align-content-center">
-                    <Col class="flex-grow-1" style="overflow:hidden">
+                    <Col class="justify-content-center align-items-center">
                       {#if mode === "app" && resource.resourceType in components}
                         <svelte:component
                           this={components[resource.resourceType]}
@@ -268,12 +278,14 @@
                         {/if}
                       {/if}
                     </Col>
-                    <Col class="d-flex flex-row-reverse justify-content-end align-items-start" style="max-width: max-content">
+                    <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
                       <Button
-                          size="sm"
-                          color="secondary"
-                          outline
-                          on:click={() => setJson(resource)}
+                        size="sm"
+                        color="secondary"
+                        outline
+                        on:click={(event) => {
+                          setJson(resource)
+                        }}
                       >
                         View
                       </Button>
@@ -287,69 +299,3 @@
     </Accordion>
   </Row>
 {/each}
-
-<style>
-  /* Table styling */
-  :global(.ips-section table) {
-    border-collapse: collapse !important;
-    width: 100% !important;
-  }
-
-  :global(.ips-section th) {
-    border: 1px solid lightgray !important;
-    padding: 0 7px !important;
-    text-align: center !important;
-  }
-
-  :global(.ips-section td) {
-    margin-left: 2em !important;
-  }
-
-  :global(.ips-section thead) {
-    background-color: #0c63e4;
-    color: white;
-  }
-
-  /* Alternating table row coloring */
-  :global(.ips-section tbody tr:nth-child(odd)) {
-    background-color: #fff;
-    border: 1px solid lightgray;
-  }
-  :global(.ips-section tbody tr:nth-child(even)) {
-    background-color: #e7f1ff;
-    border: 1px solid lightgray;
-  }
-  
-  /* Sticky table header */
-  :global(.ips-section th) {
-    background: #0c63e4;
-    position: sticky;
-    top: -17px;
-  }
-
-  /* First column of generated table is usually most important */
-  :global(.ips-section td:first-child) {
-    font-weight: bold;
-  }
-
-  /* Limit height for section content window */
-  :global(.ips-section > .accordion-collapse > .accordion-body) {
-    overflow: auto !important;
-    max-height: 52rem !important;
-  }
-
-  .code {
-        overflow:auto;
-        margin: 0;
-        padding: 10px;
-    }
-    .code-container {
-        background-color: #f5f5f5;
-        border-radius: 10px;
-        border: 1px solid rgb(200, 200, 200);
-        overflow: hidden;
-    }
-    :global(div.offcanvas-body) {
-        overflow-y: hidden !important;
-    }
-</style>

@@ -27,6 +27,7 @@
   import { goto } from '$app/navigation';
   import type { Writable } from 'svelte/store';
   import type { SHLAdminParams, SHLClient } from '$lib/utils/managementClient';
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 
   export let shl: SHLAdminParams;
   let shlControlled: SHLAdminParams;
@@ -75,7 +76,7 @@
     const qrCodeURI = await href.then(href => QRCode.toDataURL(href, { errorCorrectionLevel: 'M', margin: 0 }));
 
     // load the images
-    const uris = [qrCodeURI, "/img/qr-banner-top.png", "/img/qr-banner-bottom.png"];
+    const uris = [qrCodeURI, `${INSTANCE_CONFIG.imgPath}/qr-banner-top.png`, `${INSTANCE_CONFIG.imgPath}/qr-banner-bottom.png`];
     const [qrCode, header, footer] = await Promise.all(
         uris.map(uri => new Promise((resolve, reject) => {
         const img = new Image();
@@ -148,7 +149,7 @@
   }
 
   async function addFile() {
-    goto(`/create?shlid=${shl.id}`);
+    goto(`/share?shlid=${shl.id}`);
   }
 
   async function deleteFile(fileContent:string) {
@@ -175,7 +176,7 @@
 
 <Row cols={{ md: 2, xs: 1 }}>
   <Col class="d-flex justify-content-center">
-    <Card class="mb-3" color="light">
+    <Card class="card-300 mb-3" color="light">
       <CardHeader>
         <CardTitle>
           <Icon name={shl.passcode ? 'lock' : 'unlock'} />
@@ -183,7 +184,7 @@
         </CardTitle>
         {#if shl.exp}
           <CardSubtitle color="success">
-            Expires: {new Date(shl.exp * 1000).toISOString().slice(0, 10)}
+            Expires: {new Date(shl.exp * 1000).toLocaleDateString()}
           </CardSubtitle>
         {/if}
       </CardHeader>
@@ -207,7 +208,7 @@
                     navigator.share({
                       files: [file],
                       url: await href,
-                      text: `${(shl.label ? `${shl.label}\n\n` : "")}Here's my WA Health Summary:\n\n`
+                      text: `${(shl.label ? `${shl.label}\n\n` : "")}Here's my Health Summary:\n\n`
                     });
                   } else {
                     navigator.share({ url: await href, title: shl.label });
@@ -293,7 +294,7 @@
             name="passcode"
             type={type}
             autocomplete="off"
-            bind:value={shlControlled.config.passcode}
+            bind:value={shlControlled.passcode}
             placeholder="Assign Passcode"
           />
           <Icon name={icon}
@@ -309,9 +310,9 @@
         <Button
           size="sm"
           color="primary"
-          disabled={(shl.passcode || '') === (shlControlled.config.passcode || '')}
+          disabled={(shl.passcode || '') === (shlControlled.passcode || '')}
           on:click={async () => {
-            await shlClient.resetShl({ ...shl, passcode: shlControlled.config.passcode });
+            await shlClient.resetShl({ ...shl, passcode: shlControlled.passcode });
             $shlStore = await shlClient.getUserShls();
           }}><Icon name="lock" /> Update Passcode</Button>
         <Button size="sm" on:click={toggle} color="danger"><Icon name="trash3" /> Delete Summary Link</Button>
@@ -337,7 +338,7 @@
         <p><em>No Summaries found</em></p>
       {/if}
       {#each shl.files as file (file.contentHash)}
-        <Card class="mb-2" color="light">
+        <Card class="card-300 mb-2" color="light">
           <CardHeader>
             <Row class="align-items-center">
               <Col xs=6 class="align-items-center">
@@ -383,7 +384,7 @@
     margin-top: 1em;
     margin-bottom: 1em;
   }
-  :global(div.card) {
+  :global(div.card.card-300) {
     max-width: 300px;
   }
   :global(.card-title) {

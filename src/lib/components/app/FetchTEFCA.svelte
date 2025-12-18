@@ -12,7 +12,8 @@
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
   import { createEventDispatcher } from 'svelte';
   import { constructResourceUrl } from '$lib/utils/sofClient';
-  import { SOF_PATIENT_RESOURCES } from '$lib/config';
+  import { SOF_PATIENT_RESOURCES } from '$lib/config/config';
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import {
     constructPatientResource,
     buildPatientSearchQuery
@@ -20,8 +21,23 @@
   import StateInput from '$lib/components/form/StateInput.svelte';
   import GenderInput from '$lib/components/form/GenderInput.svelte';
   import CountryInput from '$lib/components/form/CountryInput.svelte';
+  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
+
+  export let disabled = false;
 
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
+
+  const CATEGORY = "provider-health-record";
+  const METHOD = "provider-health-record-tefca";
+  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
+
+  let resourceResult: ResourceRetrieveEvent = {
+      resources: undefined,
+      category: CATEGORY,
+      method: METHOD,
+      sourceName: undefined,
+      source: undefined
+  };
 
   let sources: Record<string, {selected: Boolean; destination: string; url: string}> = {
     MeldOpen: {selected: false, destination: "MeldOpen", url: "https://gw.interop.community/HeliosConnectathonSa/open"},
@@ -261,14 +277,16 @@
         }
       ));
       const resources = await fetchPatientData(patient.id);
-      hostname = baseUrl;
+      hostname = sources[selectedSource].url;
       processing = false;
       if (resources.length === 0) {
         console.warn(`No resources found for patient ${patient.id} at ${hostname} for ${selectedSource}`);
       }
-
       result = {
         resources: resources,
+        category: CATEGORY,
+        method: METHOD,
+        sourceName: selectedSource,
         source: hostname
       };
       console.log(resources);
@@ -281,7 +299,7 @@
   }
 </script>
 
-<form on:submit|preventDefault={() => prepareIps()}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, sources[selectedSource].url, prepareIps)}>
   <Label>Fetch US Core data via TEFCA query</Label>
   <FormGroup>
     <Row>
@@ -318,7 +336,7 @@
   {#if selectedSource}
   <FormGroup>
     <Label>Enter your information to locate your data</Label>
-    <p class="text-secondary"><em>WA Health Summary does not save this information</em></p>
+    <p class="text-secondary"><em>{INSTANCE_CONFIG.title} does not save this information</em></p>
     <Row cols={{ md: 2, sm: 1 }}>
       <Col>
         <Label>Name</Label>
@@ -376,7 +394,7 @@
   
   <Row>
     <Col xs="auto">
-      <Button color="primary" style="width:fit-content" disabled={processing} type="submit">
+      <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
         {#if !processing}
           Fetch Data
         {:else}
@@ -389,8 +407,14 @@
         <Spinner color="primary" type="border" size="md"/>
       </Col>
     {/if}
+    {#if disabled}
+      <Col xs="auto" class="d-flex align-items-center px-0">
+        Please wait...
+      </Col>
+    {/if}
   </Row>
   {/if}
 </form>
+<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 
 <span class="text-danger">{fetchError}</span>

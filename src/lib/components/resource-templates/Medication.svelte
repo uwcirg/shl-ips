@@ -6,7 +6,8 @@
 
   export let content: ResourceTemplateParams<Medication>; // Define a prop to pass the data to the component
 
-  let resource: Medication = content.resource;
+  let resource: Medication;
+  $: if (content) resource = content.resource;
 
   let showComposition = false;
 </script>

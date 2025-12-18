@@ -19,7 +19,8 @@
   import IPSContent from '$lib/components/viewer/IPSContent.svelte';
   import Demo from '$lib/components/viewer/Demo.svelte';
   
-  import { SHOW_VIEWER_DEMO } from "$lib/config";
+  import { SHOW_VIEWER_DEMO } from "$lib/config/config";
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 
   let shlContents: Bundle[] = [];
 
@@ -93,7 +94,7 @@
 
   // Retrieving SHL
   async function retrieve(){
-    const recipient = "WA Health Summary Viewer";
+    const recipient = `${INSTANCE_CONFIG.title} Viewer`;
 
     let retrieveResult;
     let passcode;
@@ -113,7 +114,7 @@
         // Failed the password requirement
         const needPasscode = shlClient.flag({ shl: shl ?? "" })?.includes('P');
         if (needPasscode) {
-          passcode = prompt("WA Health Summary Viewer\n----------------------------------------\nEnter a passcode to access this SMART Health Link");
+          passcode = prompt(`${INSTANCE_CONFIG.title} Viewer\n----------------------------------------\nEnter a passcode to access this SMART Health Link`);
         }
       }
     } catch (e) {
@@ -150,7 +151,7 @@
             } else if (retrieveResult.status === 401) {
                 // Failed the password requirement
                 while (retrieveResult.status === 401) {
-                  passcode = prompt(`WA Health Summary Viewer\n----------------------------------------\nIncorrect passcode.\nEnter a passcode to access this SMART Health Link`);
+                  passcode = prompt(`${INSTANCE_CONFIG.title} Viewer\n----------------------------------------\nIncorrect passcode.\nEnter a passcode to access this SMART Health Link`);
                     try {
                         retrieveResult = await shlClient.retrieve({
                             shl: shl ?? "",
@@ -267,7 +268,7 @@
     {/each}
     {#if SHOW_VIEWER_DEMO}
       <TabPane tabId="demo" active={shlContents.length === 0} style="padding-top:10px">
-        <span class="demo-tab" slot="tab">Demo</span>
+        <span class="demo-tab" slot="tab">IPS Sandbox</span>
         <Demo bundle={shlContents[0]} mode={$displayMode} />
       </TabPane>
     {/if}
@@ -276,49 +277,3 @@
   <!-- Single tab view -->
   <IPSContent bundle={shlContents[0]} mode={$displayMode} />
 {/if}
-
-<style lang="css">
-  :global(.loader) {
-    width: 100%;
-    height: 150px;
-    margin: 40px;
-    display: block;
-    position: relative;
-    background: #FFF;
-    box-sizing: border-box;
-  }
-  :global(.loader::after) {
-    content: '';  
-    width: calc(100% - 30px);
-    height: calc(100% - 30px);
-    top: 15px;
-    left: 15px;
-    position: absolute;
-    background-image: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.5) 50%, transparent 80%),
-    linear-gradient(#DDD 56px, transparent 0), /* box 1 */
-    linear-gradient(#DDD 24px, transparent 0), /* box 2 */
-    linear-gradient(#DDD 18px, transparent 0), /* box 3 */
-    linear-gradient(#DDD 66px, transparent 0); /* box 4 */
-    background-repeat: no-repeat;
-    background-size: 75px 130px, /* wave */
-            55px 56px, /* box 1 */
-            160px 30px, /* box 2 */
-            220px 20px, /* box 3 */
-            290px 56px; /* box 4 */
-    background-position: 0% 0, /* box 1 */
-              0px 0px, /* box 1 */
-              70px 5px, /* box 1 */
-              70px 38px, /* box 1 */
-              0px 66px; /* box 1 */
-    box-sizing: border-box;
-    animation: animloader 1s linear infinite;
-  }
-  @keyframes -global-animloader {
-    0% {
-      background-position: 0% 0, 0 0, 70px 5px, 70px 38px, 0px 66px;
-    }
-    100% {
-      background-position: 150% 0, 0 0, 70px 5px, 70px 38px, 0px 66px;
-    }
-  }
-</style>

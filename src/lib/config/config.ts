@@ -1,16 +1,106 @@
 // import {PUBLIC_BASE_URL} from '$env/static/public';
+import PUBLIC_PROVIDER_ENDPOINTS from '$lib/config/public-provider-endpoints.json';
+
+export const DEMO_WARNING = import.meta.env.VITE_DEMO_WARNING;
 
 export const API_BASE = import.meta.env.VITE_API_BASE;
 
 export const INTERMEDIATE_FHIR_SERVER_BASE = import.meta.env.VITE_INTERMEDIATE_FHIR_SERVER_BASE;
+export const IDENTIFIER_SYSTEM = 'http://keycloak.cirg.uw.edu';
+export const CATEGORY_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-category';
+export const METHOD_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-method';
+export const PLACEHOLDER_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-placeholder';
+export const SOURCE_NAME_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-source-name';
+export const DATA_CATEGORY_NAMES = {
+  "occupational-data-for-health": {
+    name: "Health-Related Work Info",
+  },
+  "patient-story": {
+    name: "Patient Story"
+  },
+  "advance-directives": {
+    name: "Advance Directives",
+  },
+  "provider-health-record": {
+    name: "Provider Health Records",
+  }
+}
 
-export const VERSION_STRING = import.meta.env.VITE_VERSION_STRING;
+export const METHOD_NAMES = {
+  "advance-directives-create-polst": {
+    name: "Patient-authored",
+  },
+  "advance-directives-search": {
+    name: "Repository",
+  },
+  "provider-health-record-sof": {
+    name: "Sandbox EHR",
+  },
+  "provider-health-record-sof-search": {
+    name: "Provider EHR",
+  },
+  "provider-health-record-url": {
+    name: "URL",
+  },
+  "provider-health-record-carinbb": {
+    name: "Sandbox Insurance",
+  },
+  "provider-health-record-tefca": {
+    name: "TEFCA Query",
+  },
+  "provider-health-record-file": {
+    name: "File Upload",
+  },
+  "occupational-data-for-health-form": {
+    name: "Patient-authored",
+  },
+  "patient-body-concerns-form": {
+    name: "Patient-authored",
+  },
+  "patient-identity-form": {
+    name: "Patient-authored",
+  },
+  "patient-medical-history-form": {
+    name: "Patient-authored",
+  },
+  "patient-care-needs-form": {
+    name: "Patient-authored",
+  },
+  "patient-story-form": {
+    name: "Patient-authored",
+  },
+}
+
+export const VERSION_STRING = import.meta.env.VITE_APP_VERSION_STRING;
 
 export const AUTH_URL = import.meta.env.VITE_AUTH_URL;
 export const AUTH_CLIENT_ID = import.meta.env.VITE_AUTH_CLIENT_ID;
 export const AUTH_REDIRECT_URI = import.meta.env.VITE_AUTH_REDIRECT_URI;
 export const AUTH_SILENT_REDIRECT_URI = import.meta.env.VITE_AUTH_SILENT_REDIRECT_URI;
 export const AUTH_POST_LOGOUT_URI = import.meta.env.VITE_AUTH_POST_LOGOUT_URI;
+
+export const SOF_PATIENT_RESOURCES = [
+  'Patient',
+  'AllergyIntolerance',
+  // 'MedicationStatement', // Not in EPIC USCDI R4
+  'MedicationRequest',
+  // 'Medication', // Pulled in via references - can't search by patient; "Only an _ID search is allowed."
+  'Condition',
+  'Encounter',
+  'Observation', // Handle specially for IPS codes - "Must have either code or category."
+  // 'Organization', // Pulled in via references - can't search by patient; "Only an _ID search is allowed."
+  'Immunization',
+  // 'Device',
+  // 'DeviceUseStatement', // Not in EPIC USCDI R4
+  'DiagnosticReport', // TODO change to subject
+  // 'ImagingStudy', // Not in EPIC USCDI R4
+  // 'Media', // Not in EPIC USCDI R4
+  // 'Practitioner', // Pulled in via references - can't search by patient; "Either name, family, or identifier is a required parameter."
+  // 'PractitionerRole',  // Pulled in via references - can't search by patient; "An identifier, practitioner, organization, location, or specialty parameter is required."
+  'Procedure', // TODO change to subject
+  // 'Specimen', // Not in EPIC USCDI R4
+  'QuestionnaireResponse',
+];
 
 export const SOF_HOSTS = [
   // {
@@ -34,35 +124,39 @@ export const SOF_HOSTS = [
   //   clientId: import.meta.env.VITE_EPIC_CLIENT_ID,
   //   note: "cwilson / tokay"
   // },
-  {
-    id: "epic-cthon-2025-09",
-    name: "Epic - 2025-09 Connectathon",
-    url: "https://connectathon.epic.com/Interconnect-Fhir-OAuth/api/FHIR/R4",
-    clientId: import.meta.env.VITE_EPIC_CTHON_2025_09_CLIENT_ID,
-    note: "jwjips / epic"
-  },
+  // {
+  //   id: "epic-cthon-2025-09",
+  //   name: "Epic - 2025-09 Connectathon",
+  //   url: "https://connectathon.epic.com/Interconnect-Fhir-OAuth/api/FHIR/R4",
+  //   clientId: import.meta.env.VITE_EPIC_CTHON_2025_09_CLIENT_ID,
+  //   note: "jwjips / epic"
+  // },
   {
     id: "epic",
-    name: "Epic Demo",
+    name: "Epic Test System",
     url: "https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4",
     clientId: import.meta.env.VITE_EPIC_CLIENT_ID,
     note: "fhircamila / epicepic1 <br> <a style='color: grey; font-size: small' href='https://fhir.epic.com/Documentation?docId=testpatients' target='_blank' rel='noreferrer'>More credentials <span style='vertical-align: text-bottom; font-size: x-small' class='bi-chevron-double-right' /></a>"
   },
   { 
     id: "cerner",
-    name: "Oracle Cerner Demo",
+    name: "Oracle Cerner Test System",
     url: "https://fhir-myrecord.cerner.com/r4/ec2458f2-1e24-41c8-b71b-0e701af7583d",
     clientId: import.meta.env.VITE_CERNER_CLIENT_ID,
-    note: "nancysmart / Cerner01 <br> <a style='color: grey; font-size: small' href='https://docs.google.com/document/u/1/d/e/2PACX-1vQwyX3px4qi5t1O6_El6022zYt4ymKAWCrcgxcX5NvYGUJAkJ4WFwOnLoikow6rEccpFZzDWBdcBqsQ/pub' target='_blank' rel='noreferrer'>More credentials <span style='vertical-align: text-bottom; font-size: x-small' class='bi-chevron-double-right' /></a>"
+    note: "fredricksmart / Cerner01 <br> <a style='color: grey; font-size: small' href='https://docs.google.com/document/u/1/d/e/2PACX-1vQwyX3px4qi5t1O6_El6022zYt4ymKAWCrcgxcX5NvYGUJAkJ4WFwOnLoikow6rEccpFZzDWBdcBqsQ/pub' target='_blank' rel='noreferrer'>More credentials <span style='vertical-align: text-bottom; font-size: x-small' class='bi-chevron-double-right' /></a>",
+    scope: ['openid', 'fhirUser', 'launch/patient', ...SOF_PATIENT_RESOURCES.map(resourceType => `patient/${resourceType}.read`)].join(" ")
   },
   {
     id: "smit",
-    name: "SMART Health IT Demo",
+    name: "SMART Health IT Test System",
     url: "https://launch.smarthealthit.org/v/r4/sim/WzMsIiIsIiIsIkFVVE8iLDAsMCwwLCIiLCIiLCIiLCIiLCIiLCIiLCIiLDAsMF0/fhir",
     clientId: "<no client id>",
     note: "Credentials provided"
   },
 ];
+export const EPIC_CLIENT_ID = import.meta.env.VITE_EPIC_CLIENT_ID;
+export const CERNER_CLIENT_ID = import.meta.env.VITE_CERNER_CLIENT_ID;
+export const SOF_ENDPOINTS = PUBLIC_PROVIDER_ENDPOINTS;
 
 export const CARIN_RESOURCES = [
   'Patient',
@@ -133,53 +227,53 @@ export const CARIN_HOSTS = [
   // },
   // Connectathon Testing Servers
   //////////////////////////////////////////////////////////////////////////////
-  {
-    id: "cpcds",
-    name: "CPCDS Demo",
-    url: "https://cpcds-server.lantanagroup.com/fhir",
-    clientId: import.meta.env.VITE_CPCDS_CLIENT_ID,
-    scope: "openid fhirUser launch/patient patient/*.read",
-    note: "Patient1 / password"
-  },
-  {
-    id: "inferno",
-    name: "Inferno Test Suite",
-    url: "https://inferno.healthit.gov/suites/custom/c4bb_v200_client/fhir",
-    clientId: import.meta.env.VITE_INFERNO_CLIENT_ID,
-    scope: 'openid fhirUser launch/patient patient/*.read',
-    note: "Credentials provided"
-  },
-  {
-    id: "onyx",
-    name: "ONYX",
-    url: "https://api-dmdh-alpha.safhir.io/v1/api/carin-bb/",
-    clientId: import.meta.env.VITE_ONYX_CLIENT_ID,
-    scope: 'openid fhirUser launch/patient patient/Coverage.read patient/ExplanationOfBenefit.read fhirUser launch/patient patient/Condition.read patient/Device.read patient/DiagnosticReport.read patient/DocumentReference.read patient/Encounter.read patient/Goal.read patient/Immunization.read patient/Location.read patient/Medication.read patient/MedicationRequest.read patient/Observation.read patient/Organization.read patient/Practitioner.read patient/PractitionerRole.read patient/Procedure.read patient/Provenance.read patient/AllergyIntolerance.read patient/CareTeam.read patient/MedicationDispense.read patient/QuestionnaireResponse.read patient/RelatedPerson.read patient/ServiceRequest.read openid offline_access patient/Patient.read patient/CarePlan.read patient/HealthcareService.read patient/Media.read patient/Questionnaire.read patient/Specimen.read patient/InsurancePlan.read',
-    note: "test30081@dmd.com / Track@04"
-  },
-  {
-    id: "deloitte",
-    name: "Deloitte’s State Medicaid Agency",
-    url: "https://deloitte.connectathons.com/",
-    clientId: import.meta.env.VITE_DELOITTE_CLIENT_ID,
-    scope: 'openid fhirUser launch/patient patient/*.read',
-    note: "norma_sparks / UserPass123!"
-  },
-  {
-    id: "smilecarinbb",
-    name: "Smile CDR",
-    url: "https://cdr-qa.p2p.azure.smilecdr.com/payer-fhir/",
-    clientId: import.meta.env.VITE_SMILECARINBB_CLIENT_ID,
-    scope: 'openid fhirUser launch/patient patient/*.read',
-    note: "u_washington / password1!"
-  },
+  // {
+  //   id: "cpcds",
+  //   name: "CPCDS Demo",
+  //   url: "https://cpcds-server.lantanagroup.com/fhir",
+  //   clientId: import.meta.env.VITE_CPCDS_CLIENT_ID,
+  //   scope: "openid fhirUser launch/patient patient/*.read",
+  //   note: "Patient1 / password"
+  // },
+  // {
+  //   id: "inferno",
+  //   name: "Inferno Test Suite",
+  //   url: "https://inferno.healthit.gov/suites/custom/c4bb_v200_client/fhir",
+  //   clientId: import.meta.env.VITE_INFERNO_CLIENT_ID,
+  //   scope: 'openid fhirUser launch/patient patient/*.read',
+  //   note: "Credentials provided"
+  // },
+  // {
+  //   id: "onyx",
+  //   name: "ONYX",
+  //   url: "https://api-dmdh-alpha.safhir.io/v1/api/carin-bb/",
+  //   clientId: import.meta.env.VITE_ONYX_CLIENT_ID,
+  //   scope: 'openid fhirUser launch/patient patient/Coverage.read patient/ExplanationOfBenefit.read fhirUser launch/patient patient/Condition.read patient/Device.read patient/DiagnosticReport.read patient/DocumentReference.read patient/Encounter.read patient/Goal.read patient/Immunization.read patient/Location.read patient/Medication.read patient/MedicationRequest.read patient/Observation.read patient/Organization.read patient/Practitioner.read patient/PractitionerRole.read patient/Procedure.read patient/Provenance.read patient/AllergyIntolerance.read patient/CareTeam.read patient/MedicationDispense.read patient/QuestionnaireResponse.read patient/RelatedPerson.read patient/ServiceRequest.read openid offline_access patient/Patient.read patient/CarePlan.read patient/HealthcareService.read patient/Media.read patient/Questionnaire.read patient/Specimen.read patient/InsurancePlan.read',
+  //   note: "test30081@dmd.com / Track@04"
+  // },
+  // {
+  //   id: "deloitte",
+  //   name: "Deloitte’s State Medicaid Agency",
+  //   url: "https://deloitte.connectathons.com/",
+  //   clientId: import.meta.env.VITE_DELOITTE_CLIENT_ID,
+  //   scope: 'openid fhirUser launch/patient patient/*.read',
+  //   note: "norma_sparks / UserPass123!"
+  // },
+  // {
+  //   id: "smilecarinbb",
+  //   name: "Smile CDR",
+  //   url: "https://cdr-qa.p2p.azure.smilecdr.com/payer-fhir/",
+  //   clientId: import.meta.env.VITE_SMILECARINBB_CLIENT_ID,
+  //   scope: 'openid fhirUser launch/patient patient/*.read',
+  //   note: "u_washington / password1!"
+  // },
   /////////////////////////////////////////////////////////////////////////////
 ]
 
 export const BEARER_AUTHORIZATION = {
   'EpicHIMSS': import.meta.env.VITE_EPIC_CLIENT_ID
 }
-export const SOF_REDIRECT_URI = '/create';
+export const SOF_REDIRECT_URI = '/data';
 export const SOF_RESOURCES = [
   'Patient',
   'AllergyIntolerance',
@@ -202,33 +296,10 @@ export const SOF_RESOURCES = [
   // 'QuestionnaireResponse',
 ];
 
-export const SOF_PATIENT_RESOURCES = [
-  'Patient',
-  'AllergyIntolerance',
-  // 'MedicationStatement', // Not in EPIC USCDI R4
-  'MedicationRequest',
-  // 'Medication', // Pulled in via references - can't search by patient; "Only an _ID search is allowed."
-  'Condition',
-  'Encounter',
-  'Observation', // Handle specially for IPS codes - "Must have either code or category."
-  // 'Organization', // Pulled in via references - can't search by patient; "Only an _ID search is allowed."
-  'Immunization',
-  // 'Device',
-  // 'DeviceUseStatement', // Not in EPIC USCDI R4
-  'DiagnosticReport', // TODO change to subject
-  // 'ImagingStudy', // Not in EPIC USCDI R4
-  // 'Media', // Not in EPIC USCDI R4
-  // 'Practitioner', // Pulled in via references - can't search by patient; "Either name, family, or identifier is a required parameter."
-  // 'PractitionerRole',  // Pulled in via references - can't search by patient; "An identifier, practitioner, organization, location, or specialty parameter is required."
-  'Procedure', // TODO change to subject
-  // 'Specimen', // Not in EPIC USCDI R4
-  'QuestionnaireResponse',
-];
-
-export const VIEWER_BASE = new URL(
+export const VIEWER_BASE = typeof window !== 'undefined' ? new URL(
   (import.meta.env.VITE_VIEWER_BASE ? import.meta.env.VITE_VIEWER_BASE : `/ips`)+'#',
   window.location.href
-).toString();
+).toString() : undefined;
 export const SHOW_VIEWER_DEMO = import.meta.env.VITE_SHOW_VIEWER_DEMO;
 
 export const PATIENT_IPS = {
@@ -239,7 +310,6 @@ export const EXAMPLE_IPS = {
   'Epic $summary Connectathon 2025-05': 'https://connectathon.epic.com/Interconnect-Fhir-Oauth/api/FHIR/R4/Patient/e5ZHnklVuYuT85PnDVOepOg3/$summary',
   'Epic HIMSS': 'https://ihe-nimbus.epic.com/Interconnect-FHIR-Open/api/FHIR/R4/Patient/e1o-b5iIsAPxRiD2Ct8KekQ3/$summary',
   'Maria SEATTLE Gravitate': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/14599/$summary',
-  'Peter Kieth Jordan': 'https://raw.githubusercontent.com/jddamore/IPSviewer/4eedba9df34afbf3eb20d98c49d36afc7f9ce104/samples/connectathon_Jan2025/new_IPS_Example.json',
   'Johanna Petronella Maria (Jo) van Putten-van der Giessen': "https://raw.githubusercontent.com/jddamore/IPSviewer/4eedba9df34afbf3eb20d98c49d36afc7f9ce104/samples/connectathon_archive/NL_core_patient_01.json",
   'Martha Mum': 'https://hl7-ips-server.hl7.org/fhir/Patient/15/$summary',
   'MEDITECH 1': 'https://dev-mtx-interop.meditech.com:443/v2/ips/STU1/Patient/f3b430be-1f8a-53d3-8261-4ffbafa05a61/$summary',

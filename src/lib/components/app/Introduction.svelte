@@ -1,0 +1,14 @@
+<h2 class="page-title">Your health story, in your hands</h2>
+<p class="info-paragraph">
+  Welcome to WA Health Summary, the Washington State Department of Health's platform for creating and sharing your personal health summaries.
+</p>
+<p class="info-paragraph">
+  WA Health Summary lets people obtain and personally control the sharing of their health information with any health care provider, family member or other individuals of their choosing, using a simple web link or QR code.
+</p>
+
+<style>
+  .page-title {
+    color: rgb(34, 72, 156);
+    margin-bottom: 1rem;
+  }
+</style>

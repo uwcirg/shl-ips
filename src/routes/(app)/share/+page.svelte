@@ -5,7 +5,10 @@
   import type { Writable } from 'svelte/store';
   import type { SHLAdminParams, SHLClient } from '$lib/utils/managementClient';
   import type { SHLSubmitEvent, SHCFile } from '$lib/utils/types';
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import AddFile from '$lib/components/app/AddFile.svelte';
+
+  let component = INSTANCE_CONFIG.pages.share.component ?? AddFile;
 
   let shlClient: SHLClient = getContext('shlClient');
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
@@ -18,7 +21,7 @@
     if (shlIdParam) {
       shl = $shlStore.find((s) => s.id === shlIdParam);
       if (shl == null) {
-        goto('/create');
+        goto('/share');
       }
     }
   }
@@ -42,16 +45,16 @@
 
 </script>
 
+<svelte:head>
+    <title>Create a Health Link - {INSTANCE_CONFIG.title}</title>
+</svelte:head>
+
 {#if shl}
 <h4>Add another summary to "{shl.label}"</h4>
 <br>
 {/if}
 
-<svelte:head>
-    <title>Create a Summary - WA Health Summary</title> 
-</svelte:head>
-
-<AddFile
+<svelte:component this={component}
   status={shlStatus}
   on:shl-submitted={async ({ detail }) => {
     patientName = detail.patientName ?? "";

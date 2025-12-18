@@ -5,49 +5,54 @@
     Col,
     Row
   } from '@sveltestrap/sveltestrap';
-  import { AuthService } from '$lib/utils/AuthService';
-  import type { User } from 'oidc-client-ts';
-  import { type SHLAdminParams, type SHLClient } from '$lib/utils/managementClient';
+  import type { IAuthService } from '$lib/utils/types';
+  import { type User } from 'oidc-client-ts';
+  import type { SHLAdminParams } from '$lib/utils/types';
+  import { type SHLClient } from '$lib/utils/managementClient';
+  import FHIRDataService from '$lib/utils/FHIRDataService';
 
-  let authService = AuthService.Instance;
+  let authService: IAuthService = getContext('authService');
+  let user: Writable<User | null> = authService.user;
+
+  let fhirDataService: FHIRDataService = getContext('fhirDataService');
 
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
   let shlClient: SHLClient = getContext('shlClient');
 
-  let currentUser: Promise<User | undefined>;
-  
-  onMount(async () => {
-    currentUser = authService.getUser().then((user) => {
-      if (!user) {
-        return authService.login().then(() => {
-          return authService.getUser().then((user) => user ?? undefined);
-        });
+  $: {
+    (async () => {
+      if ($user) {
+        $shlStore = await shlClient.getUserShls();
       }
-      return user;
-    });
-    currentUser.then(async (user) => {
-      window.dispatchEvent(new CustomEvent('userFound', { 
-        detail: { message: 'Hello from another component!' } 
-      }));
-      $shlStore = await shlClient.getUserShls();
-      return user;
-    });
+    })();
+  }
+
+  async function checkUser() {
+    user = authService.user;
+    if ($user) {
+      let now = Date.now() / 1000;
+      if (($user.expires_at ?? 0) < now) {
+        await authService.renewToken();
+      }
+    } else {
+      await authService.renewToken();
+    }
+  }
+
+  onMount(async () => {
+    await checkUser();
+    await fhirDataService.loadUserData();
+    await shlClient.getUserShls();
   });
 
 </script>
-{#await currentUser}
-  Authorizing...
-{:then}
-  {#await authService.getProfile() then profile}
-    {#if profile}
-      <Row class="main-row">
-        <Col>
-          <slot />
-        </Col>
-      </Row>
-    {:else}
-      <!-- TODO: Replace with loader animation -->
-      Authorizing...
-    {/if}
-  {/await}
-{/await}
+{#if $user}
+  <Row class="flex-fill">
+    <Col class = "d-flex flex-column">
+      <slot />
+    </Col>
+  </Row>
+{:else}
+  <!-- TODO: Replace with loader animation -->
+  Loading...
+{/if}

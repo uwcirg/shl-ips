@@ -11,6 +11,17 @@
   import { createEventDispatcher } from 'svelte';
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
   import type { CodeableConcept, Condition, MedicationStatement } from 'fhir/r4';
+  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
+
+  export let disabled = false;
+
+  const CATEGORY = 'patient-story';
+  const METHOD = 'patient-medical-history-form';
+  const SOURCE = {
+    url: window.location.origin,
+    name: 'My Medical History'
+  };
+  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let processing = false;
   let fetchError = '';
@@ -32,7 +43,7 @@
     ]
   };
 
-  let issueLevelOptions: Record<string, CodeableConcept|undefined> = {
+  let issueSeverityOptions: Record<string, CodeableConcept|undefined> = {
     '': undefined,
     'Major life challenge': {
       "system": "http://snomed.info/sct",
@@ -118,7 +129,7 @@
     if (entry.name === '' && entry.detail === '') return;
     let currentCondition = JSON.parse(JSON.stringify(currentConditionTemplate));
     currentCondition.code.text = entry.name;
-    currentCondition.severity.coding.push(issueLevelOptions[entry.detail]);
+    currentCondition.severity.coding.push(issueSeverityOptions[entry.detail]);
     currentCondition.severity.text = entry.detail;
     currentCondition.recordedDate = new Date().toISOString().slice(0, 10);;
     return currentCondition;
@@ -148,7 +159,11 @@
     const pastConditions = entries.history.map(preparePastConditionResource).filter((entry) => entry !== undefined);
     const resources = [...currentConditions, ...medications, ...pastConditions];
     let result:ResourceRetrieveEvent = {
-      resources: resources
+      resources: resources,
+      category: CATEGORY,
+      method: METHOD,
+      source: SOURCE.url,
+      sourceName: SOURCE.name
     }
     resourceDispatch('update-resources', result);
   }
@@ -165,20 +180,21 @@
     }
   }
 </script>
-<p class="text-secondary"><em>This section will show health issues found in your IPS, where they are from, and will let you remove existing health issues or add new issues that are important to you.</em></p>
+
+<!-- <p class="text-secondary"><em>This section will show health issues found in your IPS, where they are from, and will let you remove existing health issues or add new issues that are important to you.</em></p> -->
 <form on:submit|preventDefault={() => {}}>
   <h5>Ongoing Health Issues</h5>
   {#each entries.problems as problem, i}
-    <Row class="mb-1">
-      <Col xs="auto">
+    <Row class="mb-1" style="width: 100%">
+      <Col>
         <FormGroup style="font-size:small" class="text-secondary" label="Health Issue">
-          <Input type="text" bind:value={problem.name} style="width: 400px" />
+          <Input type="text" bind:value={problem.name} style="width: 100%; min-width: 200px" />
         </FormGroup>
       </Col>
-      <Col xs="auto">
-        <FormGroup style="font-size:small" class="text-secondary" label="Level">
-          <Input type="select" bind:value={problem.detail} style="width: 200px">
-            {#each Object.keys(issueLevelOptions) as option}
+      <Col>
+        <FormGroup style="font-size:small" class="text-secondary" label="Severity">
+          <Input type="select" bind:value={problem.detail} style="width: 100%; min-width: 150px">
+            {#each Object.keys(issueSeverityOptions) as option}
               <option style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
                 {option}
               </option>
@@ -186,7 +202,7 @@
           </Input>
         </FormGroup>
       </Col>
-      <Col xs="auto">
+      <Col xs="auto" class="align-items-end">
         <Button color="danger" outline on:click={() => removeEntry('problems', i)}>
           {#if entries.problems.length > 1}
             Remove
@@ -202,20 +218,20 @@
       <Button color="secondary" outline style="width:fit-content" on:click={() => addEntry('problems')}><Icon name="plus"></Icon>Add Health Issue</Button>
     </Col>
   </Row>
-  <h5>Medications</h5>
+  <h5>Medications I'm Taking Currently</h5>
   {#each entries.medications as medication, i}
-    <Row class="mb-1">
-      <Col xs="auto">
+    <Row class="mb-1" style="width: 100%">
+      <Col>
         <FormGroup style="font-size:small" class="text-secondary" label="Medication">
-          <Input type="text" bind:value={medication.name} style="width: 400px" />
+          <Input type="text" bind:value={medication.name} style="width: 100%; min-width: 200px" />
         </FormGroup>
       </Col>
-      <Col xs="auto">
-        <FormGroup style="font-size:small" class="text-secondary" label="Dosage">
-          <Input type="text" bind:value={medication.detail} style="width: 200px" />
+      <Col>
+        <FormGroup style="font-size:small" class="text-secondary" label="Dose and Time of Day">
+          <Input type="text" bind:value={medication.detail} style="width: 100%; min-width: 150px" />
         </FormGroup>
       </Col>
-      <Col xs="auto">
+      <Col xs="auto" class="align-items-end">
         <Button color="danger" outline on:click={() => removeEntry('medications', i)}>
           {#if entries.medications.length > 1}
             Remove
@@ -234,18 +250,18 @@
 
   <h5>Past Events/Illnesses</h5>
   {#each entries.history as history, i}
-    <Row class="mb-1">
-      <Col xs="auto">
+    <Row class="mb-1" style="width: 100%">
+      <Col>
         <FormGroup style="font-size:small" class="text-secondary" label="Event/Illness">
-          <Input type="text" bind:value={history.name} style="width: 400px" />
+          <Input type="text" bind:value={history.name} style="width: 100%; min-width: 200px" />
         </FormGroup>
       </Col>
-      <Col xs="auto">
+      <Col>
         <FormGroup style="font-size:small" class="text-secondary" label="When">
-          <Input type="text" bind:value={history.detail} style="width: 200px" />
+          <Input type="text" bind:value={history.detail} style="width: 100%; min-width: 150px" />
         </FormGroup>
       </Col>
-      <Col xs="auto">
+      <Col xs="auto" class="align-items-end">
         <Button color="danger" outline on:click={() => removeEntry('history', i)}>
           {#if entries.history.length > 1}
             Remove
@@ -268,8 +284,8 @@
       <Button
         color="primary"
         style="width:fit-content"
-        disabled={processing}
-        on:click={prepareIps}>
+        disabled={processing || disabled}
+        on:click={FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, SOURCE.url, prepareIps)}>
         {#if !processing}
           Update your conditions, medications and history
         {:else}
@@ -282,7 +298,12 @@
         <Spinner color="primary" type="border" size="md"/>
       </Col>
     {/if}
+    {#if disabled}
+      <Col xs="auto" class="d-flex align-items-center px-0">
+        Please wait...
+      </Col>
+    {/if}
   </Row>
 </form>
-
+<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 <span class="text-danger">{fetchError}</span>

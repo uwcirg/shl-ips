@@ -10,7 +10,8 @@
   export let content: ResourceTemplateParams<Observation>; // Define a prop to pass the data to the component
   export let contained: Boolean = false;
 
-  let resource: Observation = content.resource;
+  let resource: Observation;
+  $: if (content) resource = content.resource;
 
   const odhResourceCodes = [
     "74165-2", // Employment status
@@ -27,34 +28,34 @@
   }
   let members: ResolvedMember[] | undefined = [];
 
-$: {
-  if (resource) {
-    if (resource.hasMember) {
-      for (let member of resource.hasMember) {
-        let memberFields: ResolvedMember = {};
-        if (member.reference) {
-          let memberResource;
-          if (resource.contained?.[0]?.resourceType === 'Observation') {
-            // If the member observation is contained in this resource
-            memberResource = resource.contained[0];
-          } else {
-            // If the member observation is a bundle reference
-            memberResource = getEntry(content.entries as BundleEntry[], member.reference) as Observation;
+  $: {
+    if (resource) {
+      if (resource.hasMember) {
+        for (let member of resource.hasMember) {
+          let memberFields: ResolvedMember = {};
+          if (member.reference) {
+            let memberResource;
+            if (resource.contained?.[0]?.resourceType === 'Observation') {
+              // If the member observation is contained in this resource
+              memberResource = resource.contained[0];
+            } else {
+              // If the member observation is a bundle reference
+              memberResource = getEntry(content.entries as BundleEntry[], member.reference) as Observation;
+            }
+            if (memberResource) {
+              memberFields.resource = memberResource;
+            }
           }
-          if (memberResource) {
-            memberFields.resource = memberResource;
+          if (member.display) {
+            memberFields.display = member.display;
           }
-        }
-        if (member.display) {
-          memberFields.display = member.display;
-        }
-        if (Object.keys(memberFields).length > 0) {
-          members.push(memberFields);
+          if (Object.keys(memberFields).length > 0) {
+            members.push(memberFields);
+          }
         }
       }
     }
   }
-}
 </script>
 
 {#if odhResourceCodes.includes(resource.code?.coding?.[0].code ?? "")}

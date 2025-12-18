@@ -1,10 +1,11 @@
 <script lang="ts">
-import { Badge } from '@sveltestrap/sveltestrap';
-import type { Extension } from 'fhir/r4';
-import type { ResourceTemplateParams } from '$lib/utils/types';
+  import { Badge } from '@sveltestrap/sveltestrap';
+  import type { Extension } from 'fhir/r4';
+  import type { ResourceTemplateParams } from '$lib/utils/types';
 
-export let content: ResourceTemplateParams<Extension>;
-let extension: Extension = content.resource;
+  export let content: ResourceTemplateParams<Extension>;
+  let extension: Extension
+  $: if (content) extension = content.resource;
 </script>
 
 {#if extension?.url}

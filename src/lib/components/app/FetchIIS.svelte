@@ -11,13 +11,16 @@
 
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
   import { createEventDispatcher } from 'svelte';
-  import { API_BASE } from '$lib/config';
+  import { API_BASE } from '$lib/config/config';
   import {
     constructPatientResource
   } from '$lib/utils/util';
   import StateInput from '$lib/components/form/StateInput.svelte';
   import GenderInput from '$lib/components/form/GenderInput.svelte';
   import CountryInput from '$lib/components/form/CountryInput.svelte';
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
+
+  export let disabled = false;
 
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
 
@@ -115,7 +118,7 @@
 <form on:submit|preventDefault={() => prepareIps()}>
   <FormGroup>
     <Label>Enter your information to fetch immunizations from WA IIS</Label>
-    <p class="text-secondary"><em>WA Health Summary does not save this information</em></p>
+    <p class="text-secondary"><em>{INSTANCE_CONFIG.title} does not save this information</em></p>
     <Row cols={{ md: 2, sm: 1 }}>
       <Col>
         <Label>Name</Label>
@@ -173,7 +176,7 @@
 
   <Row>
     <Col xs="auto">
-      <Button color="primary" style="width:fit-content" disabled={processing} type="submit">
+      <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
         {#if !processing}
           Fetch Data
         {:else}
@@ -184,6 +187,11 @@
     {#if processing}
       <Col xs="auto" class="d-flex align-items-center px-0">
         <Spinner color="primary" type="border" size="md"/>
+      </Col>
+    {/if}
+    {#if disabled}
+      <Col xs="auto" class="d-flex align-items-center px-0">
+        Please wait...
       </Col>
     {/if}
   </Row>

@@ -6,24 +6,27 @@
 
   export let content: ResourceTemplateParams<Goal>;
 
-  let resource: Goal = content.resource;
-
-  // Extract start and due dates
   let startDate = '??';
-  if (resource.startDate) {
-    startDate = formatDate(resource.startDate);
-  } else if (resource.startCodeableConcept?.text) {
-    startDate = resource.startCodeableConcept.text;
-  }
-
-  // Get first available due date or duration from targets
   let dueDate = '??';
-  if (resource.target && resource.target.length > 0) {
-    const target = resource.target[0];
-    if (target.dueDate) {
-      dueDate = formatDate(target.dueDate);
-    } else if (target.dueDuration) {
-      dueDate = `in ${target.dueDuration.value} ${target.dueDuration.unit}`;
+  let resource: Goal;
+  $: if (content) {
+    resource = content.resource;
+    // Extract start and due dates
+    
+    if (resource.startDate) {
+      startDate = formatDate(resource.startDate);
+    } else if (resource.startCodeableConcept?.text) {
+      startDate = resource.startCodeableConcept.text;
+    }
+
+    // Get first available due date or duration from targets
+    if (resource.target && resource.target.length > 0) {
+      const target = resource.target[0];
+      if (target.dueDate) {
+        dueDate = formatDate(target.dueDate);
+      } else if (target.dueDuration) {
+        dueDate = `in ${target.dueDuration.value} ${target.dueDuration.unit}`;
+      }
     }
   }
 </script>

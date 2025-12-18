@@ -6,7 +6,8 @@
     import { hasChoiceDTField, choiceDTFields } from "$lib/utils/util";
     
     export let content: ResourceTemplateParams<Observation>; // Define a prop to pass the data to the component
-    let resource: Observation = content.resource;
+    let resource: Observation;
+    $: if (content) resource = content.resource;
   </script>
 
   {#if resource.code?.coding?.[0].code}

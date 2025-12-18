@@ -12,6 +12,8 @@
   import { constructPatientResource } from '$lib/utils/util';
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
 
+  export let disabled = false;
+
   let processing = false;
   let fetchError = '';
 
@@ -84,7 +86,7 @@
   </FormGroup>
   <Row>
     <Col xs="auto">
-      <Button color="primary" style="width:fit-content" disabled={processing} type="submit">
+      <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
         {#if !processing}
           Update your care plan information
         {:else}
@@ -95,6 +97,11 @@
     {#if processing}
       <Col xs="auto" class="d-flex align-items-center px-0">
         <Spinner color="primary" type="border" size="md"/>
+      </Col>
+    {/if}
+    {#if disabled}
+      <Col xs="auto" class="d-flex align-items-center px-0">
+        Please wait...
       </Col>
     {/if}
   </Row>

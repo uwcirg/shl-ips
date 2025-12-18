@@ -8,22 +8,35 @@
     Row,
     Spinner } from '@sveltestrap/sveltestrap';
   import { page } from '$app/stores';
-
-  import { CARIN_HOSTS, CARIN_RESOURCES } from '$lib/config';
-  import type { ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from '$lib/utils/types';
+  import { getContext } from 'svelte';
+  import { CARIN_HOSTS, CARIN_RESOURCES } from '$lib/config/config';
+  import type { IAuthService, ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from '$lib/utils/types';
   import { clearURLOfParams, getReferences } from '$lib/utils/util';
   import { authorize, endSession } from '$lib/utils/sofClient.js';
   import { createEventDispatcher, onMount } from 'svelte';
   import type { BundleEntry, Resource } from 'fhir/r4';
-  import AuthService from '$lib/utils/AuthService';
+  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
+
+  export let disabled = false;
+
+  let authService: IAuthService = getContext('authService');
   
   const authDispatch = createEventDispatcher<{'sof-auth-init': SOFAuthEvent; 'sof-auth-fail': SOFAuthEvent}>();
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
+
+  const CATEGORY = "provider-health-record";
+  const METHOD = "provider-health-record-carinbb";
+  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
+
   let processing = false;
   let loadingSample = false;
   let fetchError = "";
   let result: ResourceRetrieveEvent = {
-    resources: undefined
+    resources: undefined,
+    category: CATEGORY,
+    method: METHOD,
+    source: undefined,
+    sourceName: undefined
   };
 
   let sofHostSelection = CARIN_HOSTS[0].id;
@@ -141,7 +154,7 @@
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${await AuthService.Instance.getAccessToken()}`,
+            'Authorization': `Bearer ${await authService.getAccessToken()}`,
           },
           body: JSON.stringify({ code, code_verifier }),
         })
@@ -179,7 +192,13 @@
         resources = resources.flat();
         resources = [patient, ...resources];
         if (resources) {
-          result = { resources: await getResourcesWithReferences(resources, 1, accessToken) };
+          result = {
+            resources: await getResourcesWithReferences(resources, 1, accessToken),
+            category: CATEGORY,
+            method: METHOD,
+            source: sofHost?.url,
+            sourceName: sofHost?.name
+          };
           console.log(result.resources);
           resourceDispatch('update-resources', result);
         }
@@ -197,9 +216,8 @@
   });
 
 </script>
-<form on:submit|preventDefault={() => prepareIps()}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, sofHost?.url, prepareIps)}>
   <FormGroup>
-      <Label>Fetch CARIN Insurance data via SMART authorization</Label>
     {#each CARIN_HOSTS as host}
       <Row class="mx-2">
         <Input type="radio" bind:group={sofHostSelection} value={host.id} label={host.name} />
@@ -212,7 +230,7 @@
 
   <Row>
     <Col xs="auto">
-    <Button color="primary" style="width:fit-content" disabled={processing || loadingSample} type="submit">
+    <Button color="primary" style="width:fit-content" disabled={processing || disabled || loadingSample} type="submit">
       {#if !processing}
         Fetch Data
       {:else}
@@ -220,11 +238,18 @@
       {/if}
     </Button>
     </Col>
-  {#if processing || loadingSample}
-    <Col xs="auto" class="d-flex align-items-center px-0">
-      <Spinner color="primary" type="border" size="md"/>
-    </Col>
-  {/if}
+    {#if processing || loadingSample}
+      <Col xs="auto" class="d-flex align-items-center px-0">
+        <Spinner color="primary" type="border" size="md"/>
+      </Col>
+    {/if}
+    {#if disabled}
+      <Col xs="auto" class="d-flex align-items-center px-0">
+        Please wait...
+      </Col>
+    {/if}
   </Row>
 </form>
+<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
+
 <span class="text-danger">{fetchError}</span>

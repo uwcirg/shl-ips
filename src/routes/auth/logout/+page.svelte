@@ -2,9 +2,11 @@
   import { onMount } from 'svelte';
   import { Alert } from '@sveltestrap/sveltestrap';
   import { goto } from '$app/navigation';
-  import { AuthService } from '$lib/utils/AuthService';
+  import { getContext } from 'svelte';
+  import type { IAuthService } from '$lib/utils/types';
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 
-  let authService = AuthService.Instance;
+  let authService: IAuthService = getContext('authService');
   let errorMsg = "";
 
   onMount(() => {
@@ -13,13 +15,13 @@
       } catch (e) {
           console.error(e);
           errorMsg = "Unable to log out.";
-          goto('/summaries');
+          goto('/');
       }
   });
 </script>
 
 <svelte:head>
-<title>Logout - WA Health Summary</title> 
+<title>Logout - {INSTANCE_CONFIG.title}</title> 
 </svelte:head>
 
 {#if errorMsg}

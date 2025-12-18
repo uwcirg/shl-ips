@@ -11,6 +11,17 @@
   import { createEventDispatcher } from 'svelte';
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
   import type { CodeableConcept, Condition } from 'fhir/r4';
+  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
+  
+  export let disabled = false;
+
+  const CATEGORY = 'patient-story';
+  const METHOD = 'patient-care-needs-form';
+  const SOURCE = {
+    url: window.location.origin,
+    name: 'My Care Needs'
+  };
+  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let processing = false;
   let fetchError = '';
@@ -246,13 +257,17 @@
       resources.push(infoCondition);
     }
     const result = {
-      resources: resources
+      resources: resources,
+      category: CATEGORY,
+      method: METHOD,
+      source: SOURCE.url,
+      sourceName: SOURCE.name
     }
     resourceDispatch('update-resources', result);
   }
 </script>
-<form on:submit|preventDefault={() => prepareIps()}>
-  <p class="text-secondary"><em>Select any identities, functional concerns, or needs you would like your carers to be aware of.</em></p>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, SOURCE.url, prepareIps)}>
+  <!-- <p class="text-secondary"><em>Select any identities, functional concerns, or needs you would like your carers to be aware of.</em></p> -->
   <h5>Functional Identities and Concerns</h5>
   <FormGroup>
     <Label class="text-secondary">I would like my care team to be aware of my concerns around:</Label>
@@ -298,7 +313,7 @@
 
   <Row>
     <Col xs="auto">
-      <Button color="primary" style="width:fit-content" disabled={processing} type="submit">
+      <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
         {#if !processing}
           Update your care needs
         {:else}
@@ -311,5 +326,12 @@
         <Spinner color="primary" type="border" size="md"/>
       </Col>
     {/if}
+    {#if disabled}
+      <Col xs="auto" class="d-flex align-items-center px-0">
+        Please wait...
+      </Col>
+    {/if}
   </Row>
 </form>
+<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
+<span class="text-danger">{fetchError}</span>

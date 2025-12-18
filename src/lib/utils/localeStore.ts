@@ -4,6 +4,7 @@ import type { Language } from "$lib/utils/types";
 let locale = writable('en');
 
 const locales: Record<string, Language> = {
+  en: { lang_en: 'English', lang: 'English', code: 'en' },
   am: { lang_en: 'Amharic', lang: 'አማርኛ', code: 'am' },
   ar: { lang_en: 'Arabic', lang: 'العَرَبِيةُ', code: 'ar' },
   hy: { lang_en: 'Armenian', lang: 'Հայերեն', code: 'hy' },
@@ -14,7 +15,6 @@ const locales: Record<string, Language> = {
   'zh-TW': { lang_en: 'Chinese (Traditional)', lang: '繁體中文', code: 'zh-TW' },
   chk: { lang_en: 'Chuukese', lang: 'Fosun Chuuk', code: 'chk' },
   'fa-AF': { lang_en: 'Dari', lang: 'دری', code: 'fa-AF' },
-  en: { lang_en: 'English', lang: 'English', code: 'en' },
   fa: { lang_en: 'Farsi', lang: 'فارسی', code: 'fa' },
   fr: { lang_en: 'French', lang: 'Français', code: 'fr' },
   fj: { lang_en: 'Fijian', lang: 'Vosa vakaviti', code: 'fj' },

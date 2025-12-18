@@ -15,6 +15,7 @@
       {#each Object.values(locales) as loc}
         <DropdownItem
           style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"
+          disabled={loc.code !== $locale}
           on:click={() => {
             $locale = loc.code;
           }}

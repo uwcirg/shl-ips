@@ -10,7 +10,8 @@
 
   export let content: ResourceTemplateParams<MedicationRequest>; // Define a prop to pass the data to the component
 
-  let resource: MedicationRequest = content.resource;
+  let resource: MedicationRequest;
+  $: if (content) resource = content.resource;
 
   let medication: Medication | undefined;
 

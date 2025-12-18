@@ -15,9 +15,21 @@
   import ReligionCodeInput from '$lib/components/form/ReligionCodeInput.svelte';
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
   import type { Coding, Patient } from 'fhir/r4';
+  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
 
   export let patient: Patient | undefined;
-  let myPatient = JSON.parse(JSON.stringify(patient));
+  export let disabled = false;
+
+  const CATEGORY = 'patient-story';
+  const METHOD = 'patient-identity-form';
+  const SOURCE = {
+    url: window.location.origin,
+    name: 'My Identities'
+  };
+  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
+
+  let myPatient;
+  $: myPatient = JSON.parse(JSON.stringify(patient));
   $: {
     if (myPatient) {
       first = myPatient.name?.[0].given?.[0] ?? '';
@@ -31,9 +43,9 @@
       culture = myPatient.extension?.find((e) => e.url === 'http://healthintersections.com.au/fhir/StructureDefinition/patient-cultural-background')?.valueCodeableConcept?.coding?.[0].code ?? '';
       community = myPatient.extension?.find((e) => e.url === 'http://hl7.org.au/fhir/StructureDefinition/community-affiliation')?.valueCodeableConcept?.coding?.[0].code ?? '';
       let pronounsCoding = myPatient.extension?.find((e) => e.url === 'http://hl7.org/fhir/StructureDefinition/individual-pronouns')?.valueCodeableConcept?.coding?.[0] ?? '';
-      pronouns = Object.entries(pronounOptions).find(([k, v]) => v?.code === pronounsCoding?.code)?.[1] ?? pronounsCoding;
+      pronouns = Object.values(pronounOptions).find((v) => v?.code === pronounsCoding?.code) ?? pronounsCoding;
       let sexCharacteristicsCoding = myPatient.extension?.find((e) => e.url === 'http://hl7.org.au/fhir/StructureDefinition/sex-characteristic-variation')?.valueCodeableConcept?.coding?.[0] ?? '';
-      sexCharacteristics = Object.entries(sexCharacteristicOptions).find(([k, v]) => v?.code === sexCharacteristicsCoding?.code)?.[1] ?? sexCharacteristicsCoding;
+      sexCharacteristics = Object.values(sexCharacteristicOptions).find((v) => v?.code === sexCharacteristicsCoding?.code) ?? sexCharacteristicsCoding;
       let religionCoding = myPatient.extension?.find((e) => e.url === 'http://hl7.org/fhir/StructureDefinition/patient-religion')?.valueCodeableConcept?.coding?.[0] ?? '';
       religion = Object.values(religionOptions).find((p) => p?.code === religionCoding?.code) ?? religionCoding;
       preferredLanguage = myPatient.communication?.find((e) => e.preferred)?.language?.text ?? '';
@@ -164,15 +176,19 @@
     });
     patient.id = "customPatient";
     let result: ResourceRetrieveEvent = {
-      resources: [ patient ]
+      resources: [ patient ],
+      category: CATEGORY,
+      method: METHOD,
+      source: SOURCE.url,
+      sourceName: SOURCE.name
     };
     resourceDispatch('update-resources', result);
   }
   
 </script>
 
-<p class="text-secondary"><em>Add or update the personal information that will be shown in this Health Summary.</em></p>
-<form on:submit|preventDefault={() => prepareIps()}>
+<!-- <p class="text-secondary"><em>Add or update the personal information that will be shown in this Health Summary.</em></p> -->
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, SOURCE.url, prepareIps)}>
   <h5>Patient Details</h5>
   <Row>
     <Col>
@@ -288,7 +304,7 @@
 
   <Row>
     <Col xs="auto">
-      <Button color="primary" style="width:fit-content" disabled={processing} type="submit">
+      <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
         {#if !processing}
           Update your patient information
         {:else}
@@ -301,7 +317,12 @@
         <Spinner color="primary" type="border" size="md"/>
       </Col>
     {/if}
+    {#if disabled}
+      <Col xs="auto" class="d-flex align-items-center px-0">
+        Please wait...
+      </Col>
+    {/if}
   </Row>
 </form>
-
+<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 <span class="text-danger">{fetchError}</span>

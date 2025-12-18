@@ -9,7 +9,8 @@
 
   export let content: ResourceTemplateParams<DeviceUseStatement>; // Define a prop to pass the data to the component
 
-  let resource: DeviceUseStatement = content.resource;
+  let resource: DeviceUseStatement;
+  $: if (content) resource = content.resource;
 
   let device: Device | undefined;
 

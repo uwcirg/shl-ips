@@ -12,6 +12,17 @@
   import { createEventDispatcher } from 'svelte';
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
   import type { CodeableConcept, Condition } from 'fhir/r4';
+  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
+
+  export let disabled = false;
+
+  const CATEGORY = 'patient-story';
+  const METHOD = 'patient-body-concerns-form';
+  const SOURCE = {
+    url: window.location.origin,
+    name: 'My Body'
+  };
+  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let processing = false;
   let fetchError = '';
@@ -400,7 +411,11 @@
   function prepareIps() {
     const resources = bodyPartConcerns.map(prepareConditionResource).filter((entry) => entry !== undefined);
     const result = {
-      resources: resources
+      resources: resources,
+      category: CATEGORY,
+      method: METHOD,
+      source: SOURCE.url,
+      sourceName: SOURCE.name
     };
     resourceDispatch('update-resources', result);
   }
@@ -419,7 +434,6 @@
 </script>
 
 <form on:submit|preventDefault={() => {}}>
-  <p class="text-secondary"><em>Record brief concerns about any specific part of your body.</em></p>
   <h5>Body Concerns</h5>
   {#each bodyPartConcerns as status, i}
     <Row>
@@ -448,7 +462,7 @@
           </Input>
         </FormGroup>
       </Col>
-      <Col xs="auto">
+      <Col>
         <FormGroup style="font-size:small" class="text-secondary" label="What is the concern?">
           <!-- <Input type="select" bind:value={status.status} style="width: 165px">
             {#each statusOptions as option}
@@ -479,10 +493,10 @@
       <Button
         color="primary"
         style="width:fit-content"
-        disabled={processing}
-        on:click={prepareIps}>
+        disabled={processing || disabled}
+        on:click={FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, SOURCE.url, prepareIps)}>
         {#if !processing}
-        Update your body concerns
+          Update your body concerns
         {:else}
           Adding...
         {/if}
@@ -493,7 +507,12 @@
         <Spinner color="primary" type="border" size="md"/>
       </Col>
     {/if}
+    {#if disabled}
+      <Col xs="auto" class="d-flex align-items-center px-0">
+        Please wait...
+      </Col>
+    {/if}
   </Row>
 </form>
-
+<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 <span class="text-danger">{fetchError}</span>

@@ -1,31 +1,10 @@
 // import fetch from 'node-fetch';
-import { json, error } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 import {
-  AUTOCODER_API_KEY,
-  SERVER_API_BASE
+  AUTOCODER_API_KEY
 } from '$lib/server/config';
 
 export const GET = async ({ request, url }: { request: Request; url: URL; }) => {
-
-  // console.log('Checking auth');
-  // const auth = request.headers.get('Authorization');
-  // if (!auth || !auth.startsWith('Bearer ')) {
-  //   console.log('Unauthorized');
-  //   return error(401, { message: "Unauthorized" });
-  // }
-  // const authorized = await fetch(`${SERVER_API_BASE}/authcheck`, {
-  //   method: 'POST',
-  //   headers: {
-  //     'Content-Type': 'application/json',
-  //     Authorization: auth,
-  //   },
-  // });
-  // if (!authorized.ok) {
-  //   console.log('Authorization check failed');
-  //   console.log(authorized.status, authorized.statusText, await authorized.text());
-  //   return error(401, { message: 'Authorization check failed' });
-  // }
-
   let occupation = url.searchParams.get("o");
   let industry = url.searchParams.get("i");
   let api = "https://apistg.cdc.gov/nioautocoder/1.0.0/iocode?n=6";

@@ -19,7 +19,6 @@
 
 </script>
 
-<p>Your medical providers might not record all of the information that you feel is important for your care. Here you can add information that matters to you, which becomes part of your summary, and will be identified as coming from you.</p>
 <TabContent>
   <TabPane class="patient-tab" tabId="patient" style="padding-top:10px" active>
     <span class="patient-tab" slot="tab">About Me</span>
@@ -28,7 +27,7 @@
       on:update-resources={ async ({ detail }) => { passUpdatedResources(detail) } }
     />
   </TabPane>
-  <TabPane class="story-tab" tabId="story" style="padding-top:10px">
+  <TabPane active class="story-tab" tabId="story" style="padding-top:10px">
     <span class="story-tab" slot="tab">My Story</span>
     <PatientStory
       on:update-resources={ async ({ detail }) => { passUpdatedResources(detail) } }

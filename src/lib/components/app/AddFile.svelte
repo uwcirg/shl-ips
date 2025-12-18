@@ -74,7 +74,7 @@
   let patientName = "";
   let patient: Patient | undefined;
 
-  let label = 'Health Summary ' + new Date().toISOString().slice(0, 10);
+  let label = 'Health Summary ' + new Date().toLocaleDateString();
   let expiration: number | null = -1;
   let type = 'password';
   let showPassword = false;
@@ -99,7 +99,7 @@
   let selectedPatientStore = resourceCollection.selectedPatient;
   $: {
     if ($selectedPatientStore) {
-      patient = resourceCollection.getSelectedPatient()?.resource as Patient;
+      patient = resourceCollection.getSelectedPatient();
     }
   }
 
@@ -118,7 +118,7 @@
       } else {
         label = "My";
       }
-      label = label + " Summary Link " + new Date().toISOString().slice(0, 10);
+      label = label + " Summary Link " + new Date().toLocaleDateString();
     }
   }
   $: {
@@ -129,7 +129,7 @@
 
   onMount(async function() {
     if (sessionStorage.getItem('URL')) {
-      let url = sessionStorage.getItem('URL') ?? '/create';
+      let url = sessionStorage.getItem('URL') ?? '/share';
       let currentUrl = window.location.href.split('?')[0];
       sessionStorage.removeItem('URL');
       if (url !== currentUrl) {
@@ -189,9 +189,12 @@
   async function handleNewResources(details: ResourceRetrieveEvent) {
     try {
       resourceResult = details;
+      if (resourceResult.sectionKey) {
+        resourceCollection.addSection(resourceResult.sectionKey, resourceResult.sectionTemplate);
+      }
       if (resourceResult.resources) {
         // Trigger update in ResourceSelector
-        resourceCollection.addResources(resourceResult.resources, resourceResult.sectionKey, resourceResult.sectionTemplate);
+        resourceCollection.addResources(resourceResult.resources, resourceResult.sectionKey);
         showSuccessMessage();
       }
     } catch (e) {
@@ -279,7 +282,6 @@
         }
       }, 500);
     }
-    
   }
 
   function updateStatus(newStatus: string) {
@@ -375,13 +377,17 @@
         on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
       />
     </AccordionItem>
-    <ResourceSelector
-      bind:resourceCollection={resourceCollection}
-      bind:submitting={submitting}
-      on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }
-      on:status-update={ ({ detail }) => { updateStatus(detail) } }
-      on:error={ ({ detail }) => { showError(detail) } }
-    />
+    <AccordionItem active class="edit-data">
+      <h5 slot="header" class="my-2">5. Directly edit your health summary content</h5>
+      <Label>Select which resources to include in your customized IPS</Label>
+      <ResourceSelector
+        bind:resourceCollection={resourceCollection}
+        bind:submitting={submitting}
+        on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }
+        on:status-update={ ({ detail }) => { updateStatus(detail) } }
+        on:error={ ({ detail }) => { showError(detail) } }
+      />
+    </AccordionItem>
   {/if}
 </Accordion>
 {#if resourcesAdded}

@@ -8,31 +8,38 @@
     Row,
     Spinner } from '@sveltestrap/sveltestrap';
 
-  import { SOF_HOSTS } from '$lib/config';
+  import { SOF_HOSTS } from '$lib/config/config';
   import type { ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from '$lib/utils/types';
+  import type { Resource } from 'fhir/r4';
   import { authorize, endSession, getResourcesWithReferences } from '$lib/utils/sofClient.js';
   import { createEventDispatcher, onMount } from 'svelte';
-  import { clearURLOfParams } from '$lib/utils/util';
+  import { clearURLOfParams, getResourcesFromIPS } from '$lib/utils/util';
   import { page } from '$app/stores';
+  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
+
+  export let disabled = false;
 
   // For "quick sample" in demo
-  import { EXAMPLE_IPS, IPS_DEFAULT } from '$lib/config';
-  import type { IPSRetrieveEvent } from '$lib/utils/types';
+  import { EXAMPLE_IPS, IPS_DEFAULT } from '$lib/config/config';
 
   // Demo quick sample loader
   let defaultUrl = EXAMPLE_IPS[IPS_DEFAULT];
-  const ipsDispatch = createEventDispatcher<{'ips-retrieved': IPSRetrieveEvent}>();
-  let ipsResult: IPSRetrieveEvent = {
-    ips: undefined
-  };
   
   const authDispatch = createEventDispatcher<{'sof-auth-init': SOFAuthEvent; 'sof-auth-fail': SOFAuthEvent}>();
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
+
+  const CATEGORY = "provider-health-record";
+  const METHOD = "provider-health-record-sof";
+  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
+
   let processing = false;
   let loadingSample = false;
   let fetchError = "";
   let result: ResourceRetrieveEvent = {
-    resources: undefined
+    resources: undefined,
+    category: CATEGORY,
+    method: METHOD,
+    source: undefined
   };
 
   let sofHostSelection = SOF_HOSTS[0].id;
@@ -50,7 +57,7 @@
       if (sofHost) {
         try {
           sessionStorage.setItem('AUTH_METHOD', 'sof');
-          authorize(sofHost.url, sofHost.clientId);// , sofHost.clientSecret);
+          authorize(sofHost.url, sofHost.clientId, sofHost.scope);
           authDispatch('sof-auth-init', { data: true });
         } catch (e) {
           authDispatch('sof-auth-fail', { data: false });
@@ -64,22 +71,20 @@
 
   onMount(async function() {
     let method = sessionStorage.getItem('AUTH_METHOD');
-    if (method) {
-      if (method != 'sof') {
-        return;
-      }
-      sessionStorage.removeItem('AUTH_METHOD');
-      let key = sessionStorage.getItem('SMART_KEY');
-      if (key) {
-        let token = sessionStorage.getItem(JSON.parse(key));
-        if (token) {
-          let url = JSON.parse(token).serverUrl;
-          let sofHostAuthd = SOF_HOSTS.find(e => e.url == url);
-          if (sofHostAuthd) {
-            sofHost = sofHostAuthd;
-            sofHostSelection = sofHost.id;
-            await fetchData();
-          }
+    if (!method || method != 'sof') {
+      return;
+    }
+    sessionStorage.removeItem('AUTH_METHOD');
+    let key = sessionStorage.getItem('SMART_KEY');
+    if (key) {
+      let token = sessionStorage.getItem(JSON.parse(key));
+      if (token) {
+        let url = JSON.parse(token).serverUrl;
+        let sofHostAuthd = SOF_HOSTS.find(e => e.url == url);
+        if (sofHostAuthd) {
+          sofHost = sofHostAuthd;
+          sofHostSelection = sofHost.id;
+          await fetchData();
         }
       }
     }
@@ -88,14 +93,21 @@
   async function fetchData() {
     processing = true;
     try {
-      let resources = await getResourcesWithReferences(1);
+      let retrievedResources = await getResourcesWithReferences(1);
       const isIps = (e) => e.resourceType === 'Bundle' && e.type === 'document'; 
-      let ipsBundles = resources.filter(e => isIps(e));
-      let nonIpsResources = resources.filter(e => !isIps(e));
+      let ipsBundles = retrievedResources.filter(e => isIps(e));
+      let nonIpsResources = retrievedResources.filter(e => !isIps(e));
+      let allResources: Resource[] = nonIpsResources;
       for (const ips of ipsBundles) {
-        ipsDispatch('ips-retrieved', {ips: ipsBundles[0], source: sofHost?.url});
+        allResources.concat(await getResourcesFromIPS(ips));
       }
-      result.resources = nonIpsResources;
+      result = {
+        resources: allResources,
+        category: CATEGORY,
+        method: METHOD,
+        source: sofHost?.url,
+        sourceName: sofHost?.name
+      };
       resourceDispatch('update-resources', result);
       return;
     } catch (e: any) {
@@ -113,7 +125,6 @@
     loadingSample = true;
     try {
       let content;
-      let hostname;
       const contentResponse = await fetch(defaultUrl!, {
       headers: { accept: 'application/fhir+json' }
       }).then(function(response) {
@@ -125,13 +136,16 @@
         }
       });
       content = await contentResponse.json();
-      hostname = defaultUrl?.hostname;
+      let resources = await getResourcesFromIPS(content);
       loadingSample = false
-      ipsResult = {
-        ips: content,
-        source: hostname
+      result = {
+        resources,
+        category: CATEGORY,
+        method: METHOD,
+        source: defaultUrl,
+        sourceName: 'Quick Sample'
       };
-      ipsDispatch('ips-retrieved', ipsResult);
+      resourceDispatch('update-resources', result);
     } catch (e) {
       loadingSample = false;
       console.log('Failed', e);
@@ -139,9 +153,8 @@
     }
   }
 </script>
-<form on:submit|preventDefault={() => prepareIps()}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, sofHost?.url ?? "Unknown", prepareIps)}>
   <FormGroup>
-      <Label>Fetch US Core data via SMART authorization</Label>
     {#each SOF_HOSTS as host}
       <Row class="mx-2">
         <Input type="radio" bind:group={sofHostSelection} value={host.id} label={host.name} />
@@ -154,7 +167,7 @@
 
   <Row>
     <Col xs="auto">
-    <Button color="primary" style="width:fit-content" disabled={processing || loadingSample} type="submit">
+    <Button color="primary" style="width:fit-content" disabled={processing || disabled || loadingSample} type="submit">
       {#if !processing}
         Fetch Data
       {:else}
@@ -167,9 +180,9 @@
       color="secondary"
       outline
       style="width:fit-content"
-      disabled={processing || loadingSample}
+      disabled={processing || disabled || loadingSample}
       type="button"
-      on:click={() => quickLoad()}>
+      on:click={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, defaultUrl, quickLoad)}>
         {#if !loadingSample}
           Quick Sample
         {:else}
@@ -182,6 +195,12 @@
       <Spinner color="primary" type="border" size="md"/>
     </Col>
   {/if}
+  {#if disabled}
+    <Col xs="auto" class="d-flex align-items-center px-0">
+      Please wait...
+    </Col>
+  {/if}
   </Row>
 </form>
+<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 <span class="text-danger">{fetchError}</span>

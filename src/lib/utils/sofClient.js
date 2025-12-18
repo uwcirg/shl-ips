@@ -3,7 +3,7 @@ import {
     SOF_HOSTS,
     SOF_REDIRECT_URI,
     SOF_PATIENT_RESOURCES,
-    SOF_RESOURCES } from '$lib/config';
+    SOF_RESOURCES } from '$lib/config/config';
 import { getReferences } from '$lib/utils/util';
 
 export { authorize, endSession, getResources, getResourcesWithReferences, activePatient, constructResourceUrl };
@@ -19,7 +19,7 @@ const config = {
 
 let client;
 
-async function authorize(inputFhirUrl, clientId, scope) {
+async function authorize(inputFhirUrl, clientId, scope=undefined) {
     if (scope) {
         config.scope = scope;
     }

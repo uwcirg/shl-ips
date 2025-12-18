@@ -4,35 +4,46 @@
     Styles
   } from '@sveltestrap/sveltestrap';
   import { onMount, onDestroy, setContext } from 'svelte';
-  import {writable } from 'svelte/store';
+  import { writable, type Writable } from 'svelte/store';
   import { AuthService } from '$lib/utils/AuthService';
-  import { SHLClient, type SHLAdminParams } from '$lib/utils/managementClient';
+  import { SHLClient } from '$lib/utils/managementClient';
+  import { FHIRDataService } from '$lib/utils/FHIRDataService';
   import Header from '$lib/components/layout/Header.svelte';
   import Footer from '$lib/components/layout/Footer.svelte';
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
+  import type { IAuthService, SHLAdminParams } from '$lib/utils/types';
 
-  let shlStore = writable<SHLAdminParams[]>([]);
-  setContext('shlStore', shlStore);
-
-  let authService = AuthService.Instance;
+  let authService: IAuthService = new AuthService();
   setContext('authService', authService);
 
-  let shlClient = new SHLClient(authService);
+  let fhirDataService: FHIRDataService = new FHIRDataService(authService);
+  setContext('fhirDataService', fhirDataService);
+
+  let shlClient: SHLClient = new SHLClient(authService);
   setContext('shlClient', shlClient);
 
-  let reset = writable(0);
+  let shlStore: Writable<SHLAdminParams[]> = writable([]);
+  setContext('shlStore', shlStore);
+
+  let reset: Writable<number> = writable(0);
   setContext('reset', reset);
 
   const MODE_KEY = 'demo_mode';
-  let mode = writable('normal');
-  // set demo mode based on local storage state
-  window.localStorage[MODE_KEY] ? mode.set(JSON.parse(window.localStorage[MODE_KEY])) : mode.set('normal');
+  let mode: Writable<string> = writable('normal');
+  if (INSTANCE_CONFIG.advanced && window.localStorage[MODE_KEY]) {
+    // set demo mode based on local storage state
+    mode.set(JSON.parse(window.localStorage[MODE_KEY]));
+  } else {
+    $mode = 'normal';
+    window.localStorage.removeItem(MODE_KEY);
+  }
   setContext('mode', mode);
 
-  let isOpen = writable(false);
+  let isOpen: Writable<boolean> = writable(false);
   setContext('isOpen', isOpen);
 
   $: {
-    if ($mode) window.localStorage[MODE_KEY] = JSON.stringify($mode);
+    if ($mode && INSTANCE_CONFIG.advanced) window.localStorage[MODE_KEY] = JSON.stringify($mode);
   }
 
   let prevPageSize: number | undefined;
@@ -52,37 +63,27 @@
     prevPageSize = width;
   }
 
-  onMount(() => {
+  onMount(async () => {
+    await authService.isAuthenticated();
     // Initial call to set pagination size on page load
     dispatchPageSize()
 
     // Call dispatchPageSize() on window resize
     window.addEventListener('resize', dispatchPageSize);
-
-    authService.getUser().then((user) => {
-      if (user) {
-        let now = Date.now() / 1000;
-        if ((user.expires_at ?? 0) < now) {
-          return user;
-        }
-      }
-      return undefined;
-    }).then(async (user) => {
-      if (!user) {
-        return undefined;
-      }
-      window.dispatchEvent(new CustomEvent('userFound', { 
-        detail: { message: 'Hello from another component!' } 
-      }));
-      $shlStore = await shlClient.getUserShls();
-      return user;
-    });
   });
   onDestroy(() => {
     window.removeEventListener('resize', dispatchPageSize);
   });
 
 </script>
+
+<svelte:head>
+    <title>{INSTANCE_CONFIG.title}</title>
+    <link rel="icon" href={`${INSTANCE_CONFIG.imgPath}/favicon.ico`} type="image/x-icon">
+    <link rel="preload" as="image" href={`${INSTANCE_CONFIG.imgPath}/company-logo.png`} />
+    <link rel="preload" as="image" href={`${INSTANCE_CONFIG.imgPath}/logo.png`} />
+    <link rel="preload" as="image" href={`${INSTANCE_CONFIG.imgPath}/divider.png`} />
+</svelte:head>
 
 <Container class="main" fluid>
   <Styles />
@@ -94,18 +95,22 @@
 </Container>
 
 <style>
-  :global(.main-content) {
+  .main-content {
+    display: flex;
+    flex-direction: column;
     flex-grow: 1;
-  }
-  :global(.main-row) {
-    flex-grow: 1;
+    margin-top: 1.5rem;
+    padding: 0 1rem;
   }
 
   :global(div.container-fluid.main) {
-    min-height: 100%;
+    /* Handle scroll gutter */
+    position: relative;
+
+    height: 100vh;
     margin-right: auto;
     margin-left: auto;
-    max-width: 800px;
+    max-width: 1200px;
     display: flex;
     flex-direction: column;
   }

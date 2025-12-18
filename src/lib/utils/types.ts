@@ -6,9 +6,41 @@ import type {
   DocumentReference,
   Age,
   Duration,
+  Patient,
   Period,
   Range,
 } from "fhir/r4";
+import type { Readable, Writable } from "svelte/store";
+import type { User } from "oidc-client-ts";
+import type { ResourceHelper } from "$lib/utils/ResourceHelper";
+
+export interface SHLAdminParams {
+  id: string;
+  url: string;
+  managementToken: string;
+  key: string;
+  files: SHLFile[];
+  passcode?: string;
+  exp?: number;
+  flag?: string;
+  label?: string;
+  v?: number;
+}
+
+export interface SHLFile {
+  contentType: string;
+  contentHash: string;
+  added?: string;
+  label?: string | null;
+}
+
+export interface MutableSHLAdminParams extends Pick<SHLAdminParams, "passcode" | "exp" | "label"> {} 
+
+export interface ConfigForServer extends MutableSHLAdminParams {
+  patientId?: string;
+  pin?: string;
+  patientIdentifierSystem?: string;
+}
 
 export interface SHLSubmitEvent {
   shcs: SHCFile[];
@@ -19,17 +51,34 @@ export interface SHLSubmitEvent {
   patientName?: string;
 }
 
+export interface ResourceHelperMap extends Record<string, ResourceHelper> {}
+
+export interface CategorizedResourceHelperMap extends Record<string, ResourceHelperMap> {}
 
 export interface ResourceTemplateParams<T> {
   resource: T;
   entries?: BundleEntry[];
 }
 
+export interface IOResponse {
+  Code: string;
+  Title: string;
+  Score: number;
+}
+export interface NIOAutoCoderResponse {
+  Industry: IOResponse[];
+  Occupation: IOResponse[];
+  Scheme: string;
+}
+
 export interface ResourceRetrieveEvent {
   resources: Array<any> | undefined;
   sectionKey?: string;
   sectionTemplate?: CompositionSection;
-  source?: string;
+  category: string;
+  method: string;
+  source: string;
+  sourceName: string;
 }
 export interface SHCRetrieveEvent {
   shc: SHCFile | undefined;
@@ -42,6 +91,7 @@ export interface IPSRetrieveEvent {
 export interface SOFAuthEvent {
   data: any | undefined;
 }
+
 export interface SHCFile {
   verifiableCredential: string[];
 }
@@ -53,6 +103,16 @@ export interface SOFHost {
   clientId:string;
   note:string | undefined;
 }
+
+export interface DataFormConfig {
+  method: string;
+  component: any;
+  tabTitle?: string;
+  title?: string;
+  description?: string;
+  editable?: boolean;
+  advanced?: boolean;
+};
 
 export interface DocumentReferencePOLST extends DocumentReference {
   pdfSignedDate?: string;
@@ -84,7 +144,7 @@ export interface Language {
   code: string;
 }
 
-export interface DemographicFields {
+export interface UserDemographics {
   first?: string;
   last?: string;
   dob?: string;
@@ -116,3 +176,41 @@ export interface DateTimeFields {
   range?: Range;
   string?: string;
 }
+
+export interface FormOption {
+  label: string;
+  value: string;
+  subtitle?: string;
+  info?: string;
+}
+
+export interface IAuthService {
+  user: Writable<User | null>;
+  authenticated: Writable<boolean>;
+  error: Writable<any>;
+
+  getUser(): Promise<User | null>;
+  getAccessToken(): Promise<string | undefined>;
+  getProfile(): Promise<any | undefined>;
+  getRedirectUrl(): string;
+  signinCallback(): Promise<User | undefined>;
+  storeUser(user: User): void;
+  login(): Promise<void>;
+  renewToken(): Promise<User | null>;
+  logout(): Promise<void>;
+  isAuthenticated(): Promise<boolean | undefined>;
+}
+
+export interface IResourceCollection {
+  resourcesByType: Writable<CategorizedResourceHelperMap>;
+  selectedPatient: Writable<string>;
+  patientReference: Readable<string>;
+  patient: Readable<Patient | undefined>;
+}
+
+import { State } from '$lib/utils/StateManager';
+export type Status =
+  | { state: typeof State.IDLE; }
+  | { state: typeof State.LOADING; message?: string }
+  | { state: typeof State.ERROR; message?: string; error?: Error }
+  | { state: typeof State.SYNCED; timestamp: Date };
