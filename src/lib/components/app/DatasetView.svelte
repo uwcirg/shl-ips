@@ -12,7 +12,7 @@
     DropdownToggle,
     Icon,
     Row,
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import { get, type Writable } from 'svelte/store';
   import { METHOD_NAMES } from '$lib/config/config';
   import { ResourceCollection } from '$lib/utils/ResourceCollection';

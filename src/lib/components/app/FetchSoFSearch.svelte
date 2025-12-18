@@ -14,7 +14,7 @@
     ListGroupItem,
     Portal,
     Row,
-    Spinner } from 'sveltestrap';
+    Spinner } from '@sveltestrap/sveltestrap';
   import { EPIC_CLIENT_ID, CERNER_CLIENT_ID, SOF_ENDPOINTS } from '$lib/config/config';
   import type { ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from '$lib/utils/types';
   import type { Resource } from 'fhir/r4';

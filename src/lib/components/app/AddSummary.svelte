@@ -22,7 +22,7 @@
     Offcanvas,
     Row,
     Spinner,
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import { DATA_CATEGORY_NAMES, METHOD_NAMES, METHOD_SYSTEM } from '$lib/config/config';
   import ResourceSelector from '$lib/components/app/ResourceSelector.svelte';
   import {

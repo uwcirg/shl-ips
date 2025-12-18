@@ -12,7 +12,7 @@
     Icon,
     Row,
     Spinner
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import type {
     ResourceRetrieveEvent,
     DataFormConfig,

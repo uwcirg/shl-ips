@@ -12,7 +12,7 @@
     Spinner,
     TabContent,
     TabPane
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import { getContext } from 'svelte';
   import { derived, get, writable, type Writable, type Readable } from 'svelte/store';
   import { METHOD_NAMES } from '$lib/config/config';

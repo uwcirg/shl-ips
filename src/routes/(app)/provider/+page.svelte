@@ -2,7 +2,7 @@
   import {
     Col,
     Row
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import ProviderOverview from '$lib/components/app/ProviderOverview.svelte';
 

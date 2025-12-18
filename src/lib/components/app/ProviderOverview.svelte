@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getContext, onMount } from 'svelte';
-  import { Button, Col, Input, Row, Table } from 'sveltestrap';;
+  import { Button, Col, Input, Row, Table } from '@sveltestrap/sveltestrap';;
   import type { Writable } from 'svelte/store';
   import type { SHLAdminParams } from '$lib/utils/managementClient';
   import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';

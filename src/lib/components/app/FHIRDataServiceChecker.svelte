@@ -8,7 +8,7 @@
     ModalHeader,
     ModalFooter,
     Row
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import { get, writable } from 'svelte/store';
   import { FHIRDataService } from '$lib/utils/FHIRDataService';
   import DatasetView from '$lib/components/app/DatasetView.svelte';

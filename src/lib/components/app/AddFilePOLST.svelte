@@ -17,7 +17,7 @@
     Label,
     Row,
     Spinner
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import CreatePOLST from '$lib/components/app/CreatePOLST.svelte';
   import Demographic from './Demographic.svelte';
   import AddStoredResources from '$lib/components/app/AddStoredResources.svelte';

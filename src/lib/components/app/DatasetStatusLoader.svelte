@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Icon, Spinner } from 'sveltestrap';
+  import { Icon, Spinner } from '@sveltestrap/sveltestrap';
   import { StateManager } from '$lib/utils/StateManager';
 
   export let status: StateManager;

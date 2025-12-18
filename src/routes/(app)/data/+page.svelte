@@ -2,7 +2,7 @@
   import {
     Col,
     Row
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import { getContext, onMount } from 'svelte';
   import AddDataset from '$lib/components/app/AddDataset.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';

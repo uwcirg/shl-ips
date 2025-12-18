@@ -4,7 +4,7 @@
     Col,
     Row,
     Spinner
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import { getContext } from 'svelte';
   import DemographicForm from '$lib/components/form/DemographicForm.svelte';
   import FHIRDataService from '$lib/utils/FHIRDataService';

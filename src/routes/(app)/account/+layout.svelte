@@ -8,7 +8,7 @@
     Nav,
     NavLink,
     NavItem,
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import { goto } from '$app/navigation';
   
   let tabs: Record<string, string> = {

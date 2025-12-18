@@ -11,7 +11,7 @@
     Icon,
     Offcanvas,
     Row,
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import type {
     Resource
   } from "fhir/r4";

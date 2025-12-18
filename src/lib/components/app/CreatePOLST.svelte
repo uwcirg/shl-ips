@@ -9,7 +9,7 @@
     Label,
     Spinner,
     Tooltip
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import { createEventDispatcher, getContext } from 'svelte';
   import { writable, get } from 'svelte/store';
   import DemographicForm from '$lib/components/form/DemographicForm.svelte';

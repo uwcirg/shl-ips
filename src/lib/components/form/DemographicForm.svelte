@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Col, FormGroup, Label, Input, Row } from 'sveltestrap';
+  import { Col, FormGroup, Label, Input, Row } from '@sveltestrap/sveltestrap';
   import { type Writable } from 'svelte/store';
   import GenderInput from '$lib/components/form/GenderInput.svelte';
   import StateInput from '$lib/components/form/StateInput.svelte';

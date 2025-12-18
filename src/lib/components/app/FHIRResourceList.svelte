@@ -18,7 +18,7 @@
     Offcanvas,
     Label,
     Row
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import { get } from 'svelte/store';
   import { PLACEHOLDER_SYSTEM } from '$lib/config/config';
   import { ResourceHelper } from '$lib/utils/ResourceHelper.js';

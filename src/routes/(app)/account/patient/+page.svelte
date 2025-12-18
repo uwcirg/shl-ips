@@ -1,7 +1,7 @@
 <script lang="ts">
   import { getContext } from 'svelte';
   import { goto } from '$app/navigation';
-  import { Button, Card, CardHeader, CardBody, Row, Col } from 'sveltestrap';
+  import { Button, Card, CardHeader, CardBody, Row, Col } from '@sveltestrap/sveltestrap';
   import Patient from '$lib/components/resource-templates/Patient.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import FHIRDataService from '$lib/utils/FHIRDataService';

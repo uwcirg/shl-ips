@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { NavItem, NavLink } from 'sveltestrap';
+  import { NavItem, NavLink } from '@sveltestrap/sveltestrap';
   export let active: boolean;
 </script>
 
