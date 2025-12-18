@@ -46,7 +46,6 @@ export async function uploadResources(resources, token=undefined) {
                     console.error(entry.response.outcome.issue[0].diagnostics);
                 }
             }
-            throw new Error('Error uploading resources', { cause: response });
         }
         return parsedBody;
     });
