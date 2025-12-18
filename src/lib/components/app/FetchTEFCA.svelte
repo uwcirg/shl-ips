@@ -256,7 +256,7 @@
         }
       ));
       const resources = await fetchPatientData(patient.id);
-      hostname = baseUrl;
+      hostname = sources[selectedSource].url;
       processing = false;
       if (resources.length === 0) {
         console.warn(`No resources found for patient ${patient.id} at ${hostname} for ${selectedSource}`);
@@ -278,7 +278,7 @@
   }
 </script>
 
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, hostname, prepareIps)}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, sources[selectedSource].url, prepareIps)}>
   <Label>Fetch US Core data via TEFCA query</Label>
   <FormGroup>
     <Row>
