@@ -26,6 +26,8 @@
   let sources: Record<string, {selected: Boolean; destination: string; url: string}> = {
     MeldOpen: {selected: false, destination: "MeldOpen", url: "https://gw.interop.community/HeliosConnectathonSa/open"},
     JMCHelios: {selected: false, destination: "JMCHelios", url: "https://gw.interop.community/JMCHeliosSTISandbox/open"},
+    OSPHL_USECASE1: {selected: false, destination: "OSPHL_USECASE1", url: "https://gw.interop.community/OSPHLUseCase1/open"},
+    CDC_SEP_HL7_Connectathon: {selected: false, destination: "CDC_SEP_HL7_Connectathon", url: "https://gw.interop.community/CDCSepHL7Connectatho/open"},
     // Patient no longer exists
     // PublicHapi: {selected: false, destination: "PublicHapi", url: "http://hapi.fhir.org/baseR4"},
     OpenEpic: {selected: false, destination: "OpenEpic", url: ""},
@@ -75,10 +77,10 @@
         gender = "female";
         dob = "1998-06-18";
       } else if (selectedSource === 'JMCHelios') {
-        last = "JMC";
-        first = "Chlamydia";
-        gender = "male";
-        dob = "2001-05-07";
+        last = "Quintana";
+        first = "Lena";
+        gender = "female";
+        dob = "1955-05-21";
       } else if (selectedSource === 'OpenEpic') {
         last = "Lopez";
         first = "Camila";
@@ -97,6 +99,16 @@
         dob = "1919-11-03";
         city = "Pune";
         state = "MH";
+      } else if (selectedSource === 'OSPHL_USECASE1') {
+        last = "Quintana";
+        first = "Lena";
+        gender = "female";
+        dob = "1955-05-21";
+      } else if (selectedSource === 'CDC_SEP_HL7_Connectathon') {
+        last = "Shaw";
+        first = "Linda";
+        gender = "female";
+        dob = "1982-07-23";
       }
     }
   }
@@ -126,18 +138,16 @@
       headers['X-POU'] = (selectedSource === 'OpenEpic' ? 'TREAT' : 'PUBHLTH');
     }
     
-    result = await fetch(`${url}/Patient/$match`, {
-      method: 'POST',
-      headers: headers,
-      body: JSON.stringify(patient)
-    }).then(function (response: any) {
-      if (!response.ok) {
-        // reject the promise if we didn't get a 2xx response
-        throw new Error('Unable to fetch patient data', { cause: response });
-      } else {
-        return response;
+    try {
+      result = await fetch(`${url}/Patient/$match`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(patient)
+      });
+      if (!result.ok) {
+        throw new Error('Unable to fetch patient data with $match', { cause: result });
       }
-    }).catch(function (error: any) {
+    } catch (error) {
       console.warn(error);
       let query = buildPatientSearchQuery(
         {
@@ -155,18 +165,15 @@
           country: country,
         }
       );
-      result = fetch(`${url}/Patient${query}`, {
+      result = await fetch(`${url}/Patient${query}`, {
         method: 'GET',
         headers: headers
-      }).then(function (response: any) {
-        if (!response.ok) {
-          // reject the promise if we didn't get a 2xx response
-          throw new Error('Unable to fetch patient data', { cause: response });
-        } else {
-          return response;
-        }
       });
-    });
+      if (!result.ok) {
+        throw new Error('Unable to fetch patient data', { cause: result });
+      }
+    }
+
     let body = await result.json();
     if (body.resourceType == 'Bundle' && (body.total == 0 || body.entry.length === 0)) {
       throw new Error('Unable to find patient');
