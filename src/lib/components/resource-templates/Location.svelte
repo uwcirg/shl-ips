@@ -15,6 +15,7 @@
       <thead>
           <tr><th colspan="3">Contact Information</th></tr>
       </thead>
+      <tbody>
         <tr>
           {#each resource.telecom as telecom}
             <td>{telecom.system ?? ""}</td>
@@ -22,6 +23,7 @@
             <td>{telecom.value ?? ""}</td>
           {/each}
         </tr>
+      </tbody>
   </table>
 {/if}
 {#if resource.address}

@@ -1,7 +1,7 @@
 <script lang="ts">
   import {
     Input,
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   export let value: string;
 
   let genderOptions: Record<string, any> = {

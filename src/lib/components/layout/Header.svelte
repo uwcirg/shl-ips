@@ -15,7 +15,7 @@
     NavbarBrand,
     NavbarToggler,
     Row
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import { onMount, onDestroy, getContext } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';

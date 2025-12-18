@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Row, Col, Image } from 'sveltestrap';
+  import { Row, Col, Image } from '@sveltestrap/sveltestrap';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   export let title = 'International Patient Summary';
   export let style = "vertical-align: middle;font-size: 18px;display: inline-block;padding-left: 17px;font-family: Verdana, sans-serif;color: rgb(34, 72, 156);"

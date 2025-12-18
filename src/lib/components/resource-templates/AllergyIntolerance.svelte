@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Badge } from 'sveltestrap';
+  import { Badge } from '@sveltestrap/sveltestrap';
   import type { AllergyIntolerance } from 'fhir/r4';
   import type { ResourceTemplateParams } from '$lib/utils/types';
   import { hasChoiceDTField, choiceDTFields } from '$lib/utils/util';

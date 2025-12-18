@@ -1,0 +1,9 @@
+.svelte-kit
+.vscode
+.vite
+build
+default.env*
+docker-compose.*
+Dockerfile
+node_modules
+README.md

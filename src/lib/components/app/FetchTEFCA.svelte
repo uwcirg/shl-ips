@@ -7,7 +7,7 @@
     Label,
     Row,
     Spinner
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
 
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
   import { createEventDispatcher } from 'svelte';

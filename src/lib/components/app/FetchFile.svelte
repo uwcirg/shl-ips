@@ -6,7 +6,7 @@
         Input,
         Label,
         Row,
-        Spinner } from 'sveltestrap';
+        Spinner } from '@sveltestrap/sveltestrap';
     import type { ResourceRetrieveEvent, SHCFile } from '$lib/utils/types';
     import { getResourcesFromIPS, isSHCFile } from '$lib/utils/util';
     import { verify } from '$lib/utils/shcDecoder.js';

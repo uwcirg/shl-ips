@@ -2,7 +2,7 @@
   import {
     Container,
     Styles
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import { onMount, onDestroy, setContext } from 'svelte';
   import { writable, type Writable } from 'svelte/store';
   import { AuthService } from '$lib/utils/AuthService';

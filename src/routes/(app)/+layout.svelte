@@ -4,7 +4,7 @@
   import {
     Col,
     Row
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import type { IAuthService } from '$lib/utils/types';
   import { type User } from 'oidc-client-ts';
   import type { SHLAdminParams } from '$lib/utils/types';

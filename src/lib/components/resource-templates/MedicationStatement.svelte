@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Badge } from 'sveltestrap';
+  import { Badge } from '@sveltestrap/sveltestrap';
   import type { BundleEntry, Medication, MedicationStatement } from "fhir/r4";
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
   import Date from '$lib/components/resource-templates/Date.svelte';

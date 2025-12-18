@@ -7,7 +7,7 @@
     Label,
     Row,
     Spinner
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import { createEventDispatcher } from 'svelte';
   import { constructPatientResource } from '$lib/utils/util';
   import type { ResourceRetrieveEvent } from '$lib/utils/types';

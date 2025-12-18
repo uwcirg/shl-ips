@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Icon } from 'sveltestrap';
+  import { Button, Icon } from '@sveltestrap/sveltestrap';
   import type { Medication } from "fhir/r4";
   import type { ResourceTemplateParams } from '$lib/utils/types';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';

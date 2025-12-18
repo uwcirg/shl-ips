@@ -91,16 +91,18 @@
     <tbody>
     {#each members as member}
       <tr>
-        <div class="mx-4">
-          {#if member.resource}
-            <svelte:self
-              content={{ resource: member.resource, entries: content.entries }}
-              contained={hasChoiceDTField("effective", resource)}
-            />
-          {:else if member.display}
-            <strong>{member.display}</strong>
-          {/if}
-        </div>
+        <td>
+          <div class="mx-4">
+            {#if member.resource}
+              <svelte:self
+                content={{ resource: member.resource, entries: content.entries }}
+                contained={hasChoiceDTField("effective", resource)}
+              />
+            {:else if member.display}
+              <strong>{member.display}</strong>
+            {/if}
+          </div>
+        </td>
       </tr>
     {/each}
     </tbody>

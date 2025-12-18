@@ -17,7 +17,7 @@
     Spinner,
     TabContent,
     TabPane
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import FetchUrl from '$lib/components/app/FetchUrl.svelte';
   import FetchFile from '$lib/components/app/FetchFile.svelte';
   import FetchSoF from '$lib/components/app/FetchSoF.svelte';

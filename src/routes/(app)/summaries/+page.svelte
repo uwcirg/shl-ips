@@ -4,7 +4,7 @@
     Col,
     Icon,
     Row
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import HealthLinkOverview from '$lib/components/app/HealthLinkOverview.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 </script>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Accordion, AccordionItem, Button, Card, CardBody, Col, Row } from 'sveltestrap';
+  import { Accordion, AccordionItem, Button, Card, CardBody, Col, Row } from '@sveltestrap/sveltestrap';
   import { getContext } from 'svelte';
   import { get } from 'svelte/store';
   import { goto } from '$app/navigation';

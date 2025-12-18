@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Badge, Button, Icon } from 'sveltestrap';
+    import { Badge, Button, Icon } from '@sveltestrap/sveltestrap';
     import { onMount } from 'svelte';
     import CodeableConceptTemplate from '$lib/components/resource-templates/CodeableConcept.svelte';
     import type { CodeableConcept, Patient } from "fhir/r4";

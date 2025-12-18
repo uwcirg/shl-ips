@@ -8,7 +8,7 @@
     Label,
     Row,
     Spinner
-  } from 'sveltestrap';
+  } from '@sveltestrap/sveltestrap';
   import { createEventDispatcher, getContext } from 'svelte';
   import { get } from 'svelte/store';
   import type { DocumentReferencePOLST, ResourceRetrieveEvent } from '$lib/utils/types';
@@ -74,6 +74,26 @@
         //dob: "1950-11-15",
       })
     },
+    // "AD Vault 2025-07": { // 2025-07 Connectathon
+    //   name: "AD Vault 2025-07",
+    //   selected: false,
+    //   url: "https://qa-rr-fhir2.maxmddirect.com",
+    //   patient: writable({
+    //     last: "Mosley",
+    //     //last: "Smith-Johnson",
+    //     first: "Jenny",
+    //     //first: "Betsy",
+    //     gender: "female",
+    //     dob: "1955-10-03",
+    //     //dob: "1950-11-15",
+    //   })
+    // },
+    // "PACIO Sandbox": { // 2025-07 Connectathon
+    //   name: "PACIO Sandbox",
+    //   selected: false,
+    //   url: "https://gw.interop.community/paciosandbox/open",
+    //   patient: writable({})
+    // }
   };
 
   const CATEGORY = "advance-directives";
@@ -167,7 +187,7 @@
 
   function buildAdvanceDirectiveSearchQuery(patient_id: any) {
     let query = "?";
-    query += patient_id ? `subject=${patient_id}&` : '';
+    query += patient_id ? `_count=1000&subject=${patient_id}&` : '';
     return query.substring(0, query.length - 1);
   }
 
@@ -257,6 +277,31 @@
       // Get the date from when it was signed, and show that in the card for the DocumentReference
       // that it applies to.
       // That date will be in content.attachment.creation (Lisa to add the evening of 2024-07-17).
+      for (let i = resources.length - 1; i >= 0; i--) {
+        const dr = resources[i];
+
+        if (dr.relatesTo?.[0]?.code === 'signs' &&
+          dr.relatesTo[0].target?.reference) {
+
+          const targetId = dr.relatesTo[0].target.reference.slice(18); // “DocumentReference/”
+          const pdfSignDate =
+            dr.content?.[0]?.attachment?.creation
+            ?? '(missing from content.attachment.creation in signature DocumentReference)';
+
+          const resourceSigned = resources.find(r => r.id === targetId);
+          if (resourceSigned) {
+            // ad‑hoc property
+            (resourceSigned as any).pdfSignedDate = pdfSignDate;
+          }
+
+          resources.splice(i, 1);           // ← remove this signature DocumentReference
+        }
+      }
+
+      // Force reactivity (needed for plain let resources = [] in a component)
+      resources = [...resources];
+
+      /**
       resources.forEach((dr: DocumentReferencePOLST) => {
         if (dr.relatesTo && dr.relatesTo[0] && dr.relatesTo[0].code && dr.relatesTo[0].code == 'signs'
           && dr.relatesTo[0].target && dr.relatesTo[0].target.reference) {
@@ -274,19 +319,27 @@
         }
       });
 
+      // If the DR has type w/ coding[].system == "http://loinc.org" and coding[].code == "106233-0",
+      // then it is a digital signature ("Authenticity information") and should be not be displayed.
+      // FIXME may be better to do this when we forEach above.
+      const nonSignatureDR = (dr: DocumentReferencePOLST) => 
+        (!dr.type | !dr.type.coding | 
+        !dr.type.coding.some(coding => coding.system === 'http://loinc.org' && coding.code === '106233-0'));
+      resources = resources.filter(nonSignatureDR);
+**/
       // July '24: unlike the May '24 connectathon, signature DR's now have resource.category defined.
       // The ADI team is planning to add a code for these later, but for the time being they suggest
       // that we identify these by: "description": "JWS of the FHIR Document",
       // FIXME may be better to do this when we iterate for the TODO above.
-      const nonSignatureDR = (dr: DocumentReferencePOLST) => dr.description !== 'JWS of the FHIR Document';
+      //const nonSignatureDR = (dr: DocumentReferencePOLST) => dr.description !== 'JWS of the FHIR Document';
       // Filter out signature resources
-      resources = resources.filter(nonSignatureDR);
+      //resources = resources.filter(nonSignatureDR);
 
       // if one of the DR's `content` elements has attachment.contentType = 'application/pdf', download if possible, put base64 of pdf in DR.content.attachment.data
       const hasPdfContent = (dr: DocumentReferencePOLST) => dr.content && dr.content.some(content => content.attachment && content.attachment.contentType === 'application/pdf' && !content.attachment.data);
 
-      // if one of the DR's
-      const isPolst = (dr: DocumentReferencePOLST) => dr.type && dr.type.coding && dr.type.coding.some(coding => coding.system === 'http://loinc.org' && coding.code === '100821-8');
+      // TODO 2025-07 cthon, 100821-8 may no longer be a valid code for these... note that 93037-0 refers to a PMO (of which POLST is a sub-type) 
+      const isPolst = (dr: DocumentReferencePOLST) => dr.type && dr.type.coding && dr.type.coding.some(coding => coding.system === 'http://loinc.org' && (coding.code === '100821-8' || coding.code === '93037-0'));
 
       for (let dr of resources) {
         // If this DR is a POLST, add the following chain of queries:

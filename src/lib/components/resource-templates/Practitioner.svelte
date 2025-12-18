@@ -43,6 +43,7 @@
           </tr>
           <tr></tr>
       </thead>
+      <tbody>
       {#each resource.address as address}
           <tr>
           <td>{address.use ?? ""}</td>
@@ -63,6 +64,7 @@
           </td>
           </tr>
       {/each}
+      </tbody>
   </table>
 {/if}
   
