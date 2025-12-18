@@ -38,7 +38,9 @@ export async function uploadResources(resources) {
                     let createdPatient = entry.response.location.split('/_history')[0];
                     ipsUrl = `${INTERMEDIATE_FHIR_SERVER_BASE}/${createdPatient}/$summary`;
                 }
-                console.log(entry.response.outcome.issue[0].diagnostics);
+                if ('outcome' in entry.response) {
+                    console.log(entry.response.outcome.issue[0].diagnostics);
+                }
             });
             return ipsUrl;
         });
