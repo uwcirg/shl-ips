@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Badge} from '@sveltestrap/sveltestrap';
+  import { Badge, Col, Row} from '@sveltestrap/sveltestrap';
   import type { CodeableConcept } from "fhir/r4";
 
   export let codeableConcept: CodeableConcept; // Define a prop to pass the data to the component
