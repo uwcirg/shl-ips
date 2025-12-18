@@ -124,6 +124,13 @@ export const SOF_HOSTS = [
   //   clientId: import.meta.env.VITE_EPIC_CLIENT_ID,
   //   note: "cwilson / tokay"
   // },
+  // {
+  //   id: "epic-cthon-2025-09",
+  //   name: "Epic - 2025-09 Connectathon",
+  //   url: "https://connectathon.epic.com/Interconnect-Fhir-OAuth/api/FHIR/R4",
+  //   clientId: import.meta.env.VITE_EPIC_CTHON_2025_09_CLIENT_ID,
+  //   note: "jwjips / epic"
+  // },
   {
     id: "epic",
     name: "Epic Test System",
@@ -235,6 +242,30 @@ export const CARIN_HOSTS = [
   //   clientId: import.meta.env.VITE_INFERNO_CLIENT_ID,
   //   scope: 'openid fhirUser launch/patient patient/*.read',
   //   note: "Credentials provided"
+  // },
+  // {
+  //   id: "onyx",
+  //   name: "ONYX",
+  //   url: "https://api-dmdh-alpha.safhir.io/v1/api/carin-bb/",
+  //   clientId: import.meta.env.VITE_ONYX_CLIENT_ID,
+  //   scope: 'openid fhirUser launch/patient patient/Coverage.read patient/ExplanationOfBenefit.read fhirUser launch/patient patient/Condition.read patient/Device.read patient/DiagnosticReport.read patient/DocumentReference.read patient/Encounter.read patient/Goal.read patient/Immunization.read patient/Location.read patient/Medication.read patient/MedicationRequest.read patient/Observation.read patient/Organization.read patient/Practitioner.read patient/PractitionerRole.read patient/Procedure.read patient/Provenance.read patient/AllergyIntolerance.read patient/CareTeam.read patient/MedicationDispense.read patient/QuestionnaireResponse.read patient/RelatedPerson.read patient/ServiceRequest.read openid offline_access patient/Patient.read patient/CarePlan.read patient/HealthcareService.read patient/Media.read patient/Questionnaire.read patient/Specimen.read patient/InsurancePlan.read',
+  //   note: "test30081@dmd.com / Track@04"
+  // },
+  // {
+  //   id: "deloitte",
+  //   name: "Deloitte’s State Medicaid Agency",
+  //   url: "https://deloitte.connectathons.com/",
+  //   clientId: import.meta.env.VITE_DELOITTE_CLIENT_ID,
+  //   scope: 'openid fhirUser launch/patient patient/*.read',
+  //   note: "norma_sparks / UserPass123!"
+  // },
+  // {
+  //   id: "smilecarinbb",
+  //   name: "Smile CDR",
+  //   url: "https://cdr-qa.p2p.azure.smilecdr.com/payer-fhir/",
+  //   clientId: import.meta.env.VITE_SMILECARINBB_CLIENT_ID,
+  //   scope: 'openid fhirUser launch/patient patient/*.read',
+  //   note: "u_washington / password1!"
   // },
   /////////////////////////////////////////////////////////////////////////////
 ]

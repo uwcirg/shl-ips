@@ -7,6 +7,9 @@ export const ALLOWED = <const> [
 	'cpcds',
 	'humana',
 	'inferno',
+	'onyx',
+	'deloitte',
+	'smilecarinbb',
 	'bluebutton',
 ];
 
