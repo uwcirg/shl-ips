@@ -18,6 +18,7 @@ interface ImportMetaEnv {
 
     // SMART on FHIR client configurations
     readonly VITE_EPIC_HIMSS_CLIENT_ID: string
+    readonly VITE_EPIC_CTHON_2025_09_CLIENT_ID: string
     readonly VITE_ECW_HIMSS_CLIENT_ID: string
     readonly VITE_EPIC_CLIENT_ID: string
     readonly VITE_CERNER_CLIENT_ID: string
@@ -53,6 +54,18 @@ interface ImportMetaEnv {
     readonly VITE_INFERNO_CLIENT_ID: string
     readonly INFERNO_CLIENT_SECRET: string
     readonly INFERNO_TOKEN_ENDPOINT: string
+
+    readonly VITE_ONYX_CLIENT_ID: string
+    readonly ONYX_CLIENT_SECRET: string
+    readonly ONYX_TOKEN_ENDPOINT: string
+
+    readonly VITE_SMILECARINBB_CLIENT_ID: string
+    readonly SMILECARINBB_CLIENT_SECRET: string
+    readonly SMILECARINBB_TOKEN_ENDPOINT: string
+
+    readonly VITE_DELOITTE_CLIENT_ID: string
+    readonly DELOITTE_CLIENT_SECRET: string
+    readonly DELOITTE_TOKEN_ENDPOINT: string
 
     readonly VITE_BLUE_BUTTON_CLIENT_ID: string
     readonly BLUE_BUTTON_CLIENT_SECRET: string

@@ -89,7 +89,8 @@ async function getResources() {
         resources = (await Promise.allSettled(['Patient', 'Immunization'].map((resourceType) => {
             return requestResources(client, resourceType);
         }))).filter(x => x.status == "fulfilled").map(x => x.value);
-    } else if (client.state.serverUrl === "https://ihe-nimbus.epic.com/Interconnect-FHIR/api/FHIR/R4") {
+    } else if ((client.state.serverUrl === "https://ihe-nimbus.epic.com/Interconnect-FHIR/api/FHIR/R4")
+        || (client.state.serverUrl === "https://connectathon.epic.com/Interconnect-Fhir-OAuth/api/FHIR/R4")){
         resources = await client.request(`Patient/${pid}/$summary`).then((result) => {
             let resourcesToPass = [];
             if (Array.isArray(result)) {
