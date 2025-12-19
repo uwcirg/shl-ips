@@ -9,6 +9,8 @@
 
   let authService: FHIRDataService = getContext('authService');
   let user = authService.user;
+  let googleLogin: boolean;
+  $: googleLogin = $user.profile.idp === 'google';
 
 </script>
 
@@ -19,6 +21,8 @@
 
 <h4>Account Information</h4>
 <p> Welcome, {$user.profile.name ?? $user.profile.given_name ?? $user.profile.preferred_username ?? $user.profile.email}</p>
-<p> You are signed in as <strong>{$user.profile.email}</strong> using your {$user.profile.idp === 'google' ? 'Google' : INSTANCE_CONFIG.title} account.</p>
+<p> You are signed in as <strong>{$user.profile.email}</strong> using your {googleLogin ? 'Google' : INSTANCE_CONFIG.title} account.</p>
+{#if !googleLogin}
 <br>
 <p> Click here to reset your password: <a href={`${AUTH_URL}/login-actions/reset-credentials?client_id=${AUTH_CLIENT_ID}`}>Reset Password</a></p>
+{/if}
