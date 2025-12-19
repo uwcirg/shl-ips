@@ -86,7 +86,7 @@ export class FHIRDataService {
     let patient: ResourceHelper = await this.getOrCreateMasterPatient();
     let patientLinks = patient.resource.link;
     if (!(patientLinks?.length > 0)) {
-      return;
+      return [];
     }
     let patientResults = await Promise.allSettled(patientLinks.map(async (link) => {
       let datasetPatientReference = link.other.reference;
