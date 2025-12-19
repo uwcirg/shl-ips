@@ -185,7 +185,7 @@ export const CARIN_HOSTS = [
   //   url: "https://sb.fhir.mhbapp.com/pa/api/v1",
   //   clientId: import.meta.env.VITE_ACENTRA_CLIENT_ID,
   //   scope: "openid launch/patient patient/*.read",
-  //   note: "VTETestUser01 / FHIRdemo2020"
+  //   note: "sbuser001 / Acentra-sb$2024"
   // },
   {
     id: "aetna",
