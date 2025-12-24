@@ -143,8 +143,6 @@ export class AuthService implements IAuthService {
   }
 
   async logout(): Promise<void> {
-    sessionStorage.clear();
-    this.storeUser(null);
     await this.userManager.signoutRedirect();
   }
 }
