@@ -242,7 +242,7 @@
     active={ showAdd || addDataActiveOnLoad }
   >
     <!-- <h5 slot="header" class="my-2">{editable ? "Enter or Edit Stored Data" : "Add New Data"}</h5> -->
-    <h5 slot="header">Add or Update My Data</h5>
+    <h5 slot="header">Add My Data</h5>
     {#if (forms.length > 1 && ($mode === "advanced" || forms.filter(form => !form.advanced).length > 1))}
       <TabContent on:tab={(e) => {
         currentTab = e.detail;
@@ -280,7 +280,7 @@
       class="my-data-accordion"
       active
     >
-      <h5 slot="header">Data Previously Downloaded</h5>
+      <h5 slot="header">Stored Health Data</h5>
       {#if $userResources[category]}
         <Row class="g-4 d-flex justify-content-start">
           {#each Object.entries($userResources[category]).sort((a, b) => {
