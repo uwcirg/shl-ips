@@ -243,7 +243,7 @@
             <span slot="header">
               {#if resourceType === 'Patient'}
                 Patients
-                <Badge positioned class="mx-1" color={patientBadgeColor}>
+                <Badge class="mx-1" color={patientBadgeColor}>
                   {patientCount}
                 </Badge>
               {:else}
@@ -253,7 +253,6 @@
                   {`${resourceType}s`}
                 {/if}
                 <Badge
-                  positioned
                   class="mx-1"
                   color={Object.values($resourcesByTypeStore[resourceType]).filter(
                     (resource) => resource.include

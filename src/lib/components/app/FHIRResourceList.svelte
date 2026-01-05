@@ -294,12 +294,11 @@
             <span slot="header">
               {category}
               {#if category === 'Patients'}
-                <Badge positioned class="mx-1" color={patientBadgeColor}>
+                <Badge class="mx-1" color={patientBadgeColor}>
                   {patientCount}
                 </Badge>
               {:else}
                 <Badge
-                  positioned
                   class="mx-1"
                   color={Object.values($categorizedResourceStore[category]).filter(
                     (resource) => resource.include
