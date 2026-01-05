@@ -1,4 +1,4 @@
-<h2 class="page-title">Your health story, in your hands</h2>
+<h2 class="page-title">Your health information, in your hands</h2>
 <p class="info-paragraph">
   Welcome to WA Health Summary, the Washington State Department of Health's platform for creating and sharing your personal health summaries.
 </p>

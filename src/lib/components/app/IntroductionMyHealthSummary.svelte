@@ -2,7 +2,7 @@
     import { INSTANCE_CONFIG } from "$lib/config/instance_config";
 
 </script>
-<h2 class="page-title">Your health story, in your hands.</h2>
+<h2 class="page-title">Your health information, in your hands.</h2>
 <p class="info-paragraph">
   Welcome to {INSTANCE_CONFIG.title}, the patient-centered platform for securely creating and sharing your personalized health summaries.
 </p>
