@@ -24,6 +24,10 @@
       if ($user) {
         $shlStore = await shlClient.getUserShls();
       }
+      // This redirects the user to the home page
+      else {
+        await authService.login();
+      }
     })();
   }
 
@@ -34,8 +38,9 @@
       if (($user.expires_at ?? 0) < now) {
         await authService.renewToken();
       }
+    // This redirects the user to the sign in page and preserves the callback uri
     } else {
-      await authService.renewToken();
+      await authService.login();
     }
   }
 
