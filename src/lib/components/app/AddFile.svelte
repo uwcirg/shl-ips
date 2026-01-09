@@ -96,9 +96,8 @@
   }
 
   let userUpdatedLabel = false;
-  let selectedPatientStore = resourceCollection.selectedPatient;
   $: {
-    if ($selectedPatientStore) {
+    if (resourceCollection.patient) {
       patient = resourceCollection.getSelectedPatient();
     }
   }
@@ -381,7 +380,7 @@
       <h5 slot="header" class="my-2">5. Directly edit your health summary content</h5>
       <Label>Select which resources to include in your customized IPS</Label>
       <ResourceSelector
-        bind:resourceCollection={resourceCollection}
+        bind:ipsResourceCollection={resourceCollection}
         bind:submitting={submitting}
         on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }
         on:status-update={ ({ detail }) => { updateStatus(detail) } }

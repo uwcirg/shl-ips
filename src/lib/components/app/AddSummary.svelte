@@ -107,9 +107,8 @@
   }
 
   let userUpdatedLabel = false;
-  let selectedPatientStore = resourceCollection.selectedPatient;
   $: {
-    if ($selectedPatientStore) {
+    if (resourceCollection.patient) {
       patient = resourceCollection.getSelectedPatient();
     }
   }
@@ -578,7 +577,7 @@
       </div>
       <Label>Select which resources to include in your customized IPS</Label>
       <ResourceSelector
-        bind:resourceCollection={resourceCollection}
+        bind:ipsResourceCollection={resourceCollection}
         bind:submitting={submitting}
         on:ips-retrieved={ async ({ detail }) => { uploadRetrievedIPS(detail) } }
         on:status-update={ ({ detail }) => { updateStatus(detail) } }
