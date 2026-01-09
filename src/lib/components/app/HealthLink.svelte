@@ -73,7 +73,7 @@
   // Combine header, qr code, and footer images into one image
   async function createQrCodeImage(href: Promise<string>) {
     // create the qr code image
-    const qrCodeURI = await href.then(href => QRCode.toDataURL(href, { errorCorrectionLevel: 'M', margin: 0 }));
+    const qrCodeURI = await href.then(href => QRCode.toDataURL(href, { errorCorrectionLevel: 'H', margin: 0 }));
 
     // load the images
     const uris = [qrCodeURI, `${INSTANCE_CONFIG.imgPath}/qr-banner-top.png`, `${INSTANCE_CONFIG.imgPath}/qr-banner-bottom.png`];
