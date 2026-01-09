@@ -69,10 +69,7 @@
     <AccordionItem>
       <h5 slot="header">How does {INSTANCE_CONFIG.title} work?</h5>
       <p class="info-paragraph">
-        We use the SMART Health Links and International Patient Summary standards to make this
-        feasible, verifiable, and secure. In the U.S., the federal 21st Century Cures Act gives
-        all residents the right to an electronic copy of their health information. WA Health
-        Summary lets you access that information and share it as you see fit.
+        You can access your health data from health care providers, insurance companies, and others, using rights you have as a patient and consumer. For example, in the U.S., the federal 21st Century Cures Act gives you the right to an electronic copy of your health care provider’s patient record, and many state public health agencies make immunization and other data available to state residents. We are working on new sources of information, such as insurance company data, as laws and policies change to give individuals the right to computerized access using data standards. {INSTANCE_CONFIG.title} lets you access your information, gather it in one place, add what you feel is important, and share summaries of your health data as you see fit.
       </p>
     </AccordionItem>
     <AccordionItem>
