@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Accordion, AccordionItem, Button, Col, FormGroup, Input, Row } from '@sveltestrap/sveltestrap';
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import NIOAutoCoderInput from '$lib/components/form/NIOAutoCoderInput.svelte';
   import type { IOResponse, ResourceRetrieveEvent } from '$lib/utils/types';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
@@ -16,7 +16,13 @@
   };
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
-  let canShare = navigator?.canShare?.({ url: 'https://example.com', title: 'Title' }); // True for Chrome
+  let supportsMonthInput = false;
+  onMount(() => {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'month');
+    supportsMonthInput =input.type === 'month';
+    input.remove();
+  });
 
   let employmentStatus: any | undefined;
   let currentJob: any | undefined;
@@ -499,7 +505,7 @@
         <Row class="mb-2">
           <Col xs="auto" class="mt-1">I started this job</Col>
           <Col xs="auto">
-            <Input type={canShare ? 'month' : 'date'} bind:value={startCurrent} />
+            <Input type={supportsMonthInput ? 'month' : 'date'} bind:value={startCurrent} />
           </Col>
         </Row>
       </FormGroup>
@@ -531,11 +537,11 @@
         <Row class="mb-2">
           <Col xs="auto" class="mt-1">I started this job</Col>
           <Col xs="auto">
-            <Input type={canShare ? 'month' : 'date'} bind:value={startPast} />
+            <Input type={supportsMonthInput ? 'month' : 'date'} bind:value={startPast} />
           </Col>
           <Col xs="auto" class="mt-1">and stopped</Col>
           <Col xs="auto">
-            <Input type={canShare ? 'month' : 'date'} bind:value={endPast} />
+            <Input type={supportsMonthInput ? 'month' : 'date'} bind:value={endPast} />
           </Col>
         </Row>
       </FormGroup>
@@ -553,9 +559,9 @@
       <br>
       <FormGroup>
         <Row class="mb-2">
-          <Col xs="auto" class="mt-1">I retired {canShare ? 'in' : 'on'}</Col>
+          <Col xs="auto" class="mt-1">I retired {supportsMonthInput ? 'in' : 'on'}</Col>
           <Col xs="auto">
-            <Input type={canShare ? 'month' : 'date'} bind:value={startRetirement} />
+            <Input type={supportsMonthInput ? 'month' : 'date'} bind:value={startRetirement} />
           </Col>
         </Row>
       </FormGroup>
@@ -575,13 +581,13 @@
         <Row class="mb-2">
           <Col xs="auto" class="mt-1">I started working in a combat zone or other hazardous conditions</Col>
           <Col xs="auto">
-            <Input type={canShare ? 'month' : 'date'} bind:value={startCombat} />
+            <Input type={supportsMonthInput ? 'month' : 'date'} bind:value={startCombat} />
           </Col>
         </Row>
         <Row class="mb-2">
           <Col xs="auto" class="mt-1">and stopped</Col>
           <Col xs="auto">
-            <Input type={canShare ? 'month' : 'date'} bind:value={endCombat} />
+            <Input type={supportsMonthInput ? 'month' : 'date'} bind:value={endCombat} />
           </Col>
         </Row>
       </FormGroup>
