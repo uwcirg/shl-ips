@@ -51,10 +51,12 @@ const allowableResourceTypes = [
 ];
 
 export interface SerializedIPSResourceCollection extends SerializedResourceCollection {
-    extensionSections: Record<string, { section: CompositionSection|false, resources: string[] } >;
+    extensionSections?: Record<string, { section: CompositionSection|false, resources: string[] } >;
+    selectedPatient?: string;
 }
 
 export class IPSResourceCollection extends ResourceCollection {
+    public selectedPatient: Writable<string>;
     public resourcesByType: Readable<CategorizedResourceHelperMap>;
     public extensionSections: Writable<Record<string, { section: CompositionSection|false, resources: string[] } >>;
 
@@ -62,6 +64,7 @@ export class IPSResourceCollection extends ResourceCollection {
     constructor(r: Resource | Resource[] | null);
     constructor(r: Resource | Resource[] | null = null) {
         super(r);
+        this.selectedPatient = writable('');
         this.extensionSections = writable({});
         this.resourcesByType = derived((this as ResourceCollection).resources, ($resources) => {
             let resourcesByType: Record<string, ResourceHelperMap> = {};
@@ -127,6 +130,9 @@ export class IPSResourceCollection extends ResourceCollection {
                 curr[sectionKey].resources.push(rh.tempId);
                 return { ...curr };
             });
+        }
+        if (resource.type === 'Patient') {
+            this.setSelectedPatient(rh.tempId);
         }
     }
 
@@ -194,15 +200,15 @@ export class IPSResourceCollection extends ResourceCollection {
      * @returns The list of selected resources.
      */
     getSelectedIPSResources(): ResourceHelper[] {
-        let rBT = get(this.resourcesByType);
+        let nonPatientResourcesByType = get(this.resourcesByType).filter(type => type !== "Patient");
         let extensionSections = get(this.extensionSections);
         Object.entries(extensionSections).forEach(([sectionKey, sectionTemplate]) => {
             // Exclude extensions from upload if attached to a custom section, but allow custom group titles w/o sections to be uploaded
             // if (sectionTemplate) {
-            //     delete rBT[sectionKey];
+            //     delete nonPatientResourcesByType[sectionKey];
             // }
         });
-        let selectedIPSResources = this.flattenResources(rBT)
+        let selectedIPSResources = this.flattenResources(nonPatientResourcesByType)
             .filter(resource => (resource as ResourceHelper).include ) as ResourceHelper[];
         return selectedIPSResources;
     }
@@ -211,12 +217,23 @@ export class IPSResourceCollection extends ResourceCollection {
         return Object.values(resourcesByType).flatMap(types => Object.values(types))
     }
 
+    setSelectedPatient(patientTempId: string) {
+        if (get(this.resourcesByType)['Patient'].length === 0) {
+            throw Error('No patients exist');
+        }
+        get(this.resourcesByType)['Patient'].forEach((rh:ResourceHelper) => {
+            rh.include = (rh.tempId == patientTempId);
+        });
+        this.selectedPatient.set(patientTempId);
+        super.setPatient(get(this.resourcesByType)['Patient'][0].resource);
+    }
+
     toJson(): string {
-        let extensionSections = get(this.extensionSections);
         let serializedCollection = JSON.parse(super.toJson());
         let output:SerializedIPSResourceCollection = {
             ...serializedCollection,
-            extensionSections: extensionSections
+            extensionSections: get(this.extensionSections),
+            selectedPatient: get(this.selectedPatient),
         };
         return JSON.stringify(output);
     }
@@ -228,11 +245,15 @@ export class IPSResourceCollection extends ResourceCollection {
         if (extensionSections) {
             newCollection.extensionSections.set(extensionSections);
         }
+        if (data.selectedPatient) {
+            newCollection.setSelectedPatient(data.selectedPatient);
+        }
         return newCollection;
     }
 
     clear() {
         this.extensionSections.set({});
+        this.selectedPatient.set('');
         super.clear();
     }
 }
