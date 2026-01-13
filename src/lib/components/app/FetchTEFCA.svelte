@@ -155,10 +155,19 @@
     }
     
     try {
+      const parametersResource = {
+        resourceType: "Parameters",
+        parameter: [
+          {
+            name: "resource",
+            resource: patient
+          }
+        ]
+      };
       result = await fetch(`${url}/Patient/$match`, {
         method: 'POST',
         headers: headers,
-        body: JSON.stringify(patient)
+        body: JSON.stringify(parametersResource)
       });
       if (!result.ok) {
         throw new Error('Unable to fetch patient data with $match', { cause: result });
