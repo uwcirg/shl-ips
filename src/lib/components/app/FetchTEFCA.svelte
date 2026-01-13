@@ -161,6 +161,10 @@
           {
             name: "resource",
             resource: patient
+          },
+          {
+            name: "onlyCertainMatches",
+            valueBoolean: true
           }
         ]
       };
