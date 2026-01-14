@@ -47,7 +47,7 @@
     // Patient no longer exists
     // PublicHapi: {selected: false, destination: "PublicHapi", url: "http://hapi.fhir.org/baseR4"},
     OpenEpic: {selected: false, destination: "OpenEpic", url: ""},
-    "OpenEpic_2026-01_Connectathon": {selected: false, destination: "OpenEpic", url: ""},
+    "OpenEpic_2026-01_Connectathon": {selected: false, destination: "OpenEpic_2026-01_Connectathon", url: ""},
     CernerHelios: {selected: false, destination: "CernerHelios", url: ""}
   }
 
