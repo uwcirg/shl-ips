@@ -162,7 +162,7 @@
       url = sources[selectedSource].url;
     } else if (method === 'destination') {
       headers['X-Request-Id'] = '21143678-7bd5-4caa-bdae-ee35a409d4f2';
-      headers['X-DESTINATION'] = selectedSource;
+      headers['X-DESTINATION'] = (selectedSource === 'OpenEpic_2026-01_Connectathon' ? 'OpenEpic' : selectedSource);
       headers['X-POU'] = (selectedSource === 'OpenEpic' || selectedSource === 'OpenEpic_2026-01_Connectathon' ? 'TREAT' : 'PUBHLTH');
     }
     
@@ -236,7 +236,7 @@
       url = sources[selectedSource].url;
     } else if (method === 'destination') {
       headers['X-Request-Id'] = '21143678-7bd5-4caa-bdae-ee35a409d4f2';
-      headers['X-DESTINATION'] = selectedSource;
+      headers['X-DESTINATION'] = (selectedSource === 'OpenEpic_2026-01_Connectathon' ? 'OpenEpic' : selectedSource);
       headers['X-POU'] = (selectedSource === 'OpenEpic' || selectedSource === 'OpenEpic_2026-01_Connectathon' ? 'TREAT' : 'PUBHLTH');
     }
 
