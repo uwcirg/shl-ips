@@ -362,7 +362,7 @@
         }
       ));
       const resources = await fetchPatientData(patient.id);
-      hostname = sources[selectedSource].url;
+      hostname = method === 'url' ? sources[selectedSource].url : baseUrl;
       processing = false;
       if (resources.length === 0) {
         console.warn(`No resources found for patient ${patient.id} at ${hostname} for ${selectedSource}`);
