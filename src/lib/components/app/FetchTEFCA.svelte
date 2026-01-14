@@ -149,8 +149,52 @@
     }
   }
 
+  function hasNoResults(body: any): boolean {
+    if (!body || body.resourceType !== 'Bundle') {
+      return false;
+    }
+    
+    // Check for total === 0
+    if (body.total === 0) {
+      return true;
+    }
+    
+    // Check for empty entry array
+    if (!body.entry || body.entry.length === 0) {
+      return true;
+    }
+    
+    // Check for OperationOutcome indicating no results
+    for (const entry of body.entry) {
+      if (entry.resource && entry.resource.resourceType === 'OperationOutcome') {
+        const outcome = entry.resource;
+        if (outcome.issue && Array.isArray(outcome.issue)) {
+          for (const issue of outcome.issue) {
+            // Check for code "4101" or text containing "no results"
+            if (issue.details) {
+              const details = issue.details;
+              if (details.coding && Array.isArray(details.coding)) {
+                for (const coding of details.coding) {
+                  if (coding.code === '4101' || (coding.display && coding.display.toLowerCase().includes('no results'))) {
+                    return true;
+                  }
+                }
+              }
+              if (details.text && details.text.toLowerCase().includes('no results')) {
+                return true;
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    return false;
+  }
+
   async function fetchPatient(patient: any) {
     let result;
+    let body;
     
     let url = baseUrl;
     let headers = {
@@ -166,30 +210,8 @@
       headers['X-POU'] = (selectedSource === 'OpenEpic' || selectedSource === 'OpenEpic_2026-01_Connectathon' ? 'TREAT' : 'PUBHLTH');
     }
     
-    try {
-      const parametersResource = {
-        resourceType: "Parameters",
-        parameter: [
-          {
-            name: "resource",
-            resource: patient
-          },
-          {
-            name: "onlyCertainMatches",
-            valueBoolean: true
-          }
-        ]
-      };
-      result = await fetch(`${url}/Patient/$match`, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify(parametersResource)
-      });
-      if (!result.ok) {
-        throw new Error('Unable to fetch patient data with $match', { cause: result });
-      }
-    } catch (error) {
-      console.warn(error);
+    // Helper function to perform fallback search
+    const performFallbackSearch = async () => {
       let query = buildPatientSearchQuery(
         {
           first: first,
@@ -214,9 +236,45 @@
       if (!result.ok) {
         throw new Error('Unable to fetch patient data', { cause: result });
       }
+      return await result.json();
+    };
+    
+    try {
+      const parametersResource = {
+        resourceType: "Parameters",
+        parameter: [
+          {
+            name: "resource",
+            resource: patient
+          },
+          {
+            name: "onlyCertainMatches",
+            valueBoolean: true
+          }
+        ]
+      };
+      result = await fetch(`${url}/Patient/$match`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(parametersResource)
+      });
+      if (!result.ok) {
+        throw new Error('Unable to fetch patient data with $match', { cause: result });
+      }
+      
+      // Parse the response to check for no results
+      body = await result.json();
+      if (hasNoResults(body)) {
+        // Fall back to search query if no results found
+        console.warn('$match returned no results, falling back to search query');
+        body = await performFallbackSearch();
+      }
+    } catch (error) {
+      console.warn(error);
+      // Fall back to search query on error
+      body = await performFallbackSearch();
     }
 
-    let body = await result.json();
     if (body.resourceType == 'Bundle' && (body.total == 0 || body.entry.length === 0)) {
       throw new Error('Unable to find patient');
     }
