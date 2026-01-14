@@ -595,7 +595,7 @@ export function buildPatientSearchQuery(
   query += props.gender ? `gender=${props.gender}&` : '';
   query += props.mrn ? `identifier=${props.mrn}&` : '';
   query += props.phone ? `phone=${props.phone}&` : '';
-  query += props.email ? `email=${props.email}&` : '';
+  query += props.email ? `email=${encodeURIComponent(props.email)}&` : '';
   query += props.address1 || props.address2 ? `address=${(props.address1+' '+props.address2).trim().replaceAll(' ', '+')}&` : '';
   query += props.city ? `address-city=${props.city}&` : '';
   query += props.state ? `address-state=${props.state}&` : '';
