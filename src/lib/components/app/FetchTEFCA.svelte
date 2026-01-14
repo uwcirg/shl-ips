@@ -47,6 +47,7 @@
     // Patient no longer exists
     // PublicHapi: {selected: false, destination: "PublicHapi", url: "http://hapi.fhir.org/baseR4"},
     OpenEpic: {selected: false, destination: "OpenEpic", url: ""},
+    "OpenEpic_2026-01_Connectathon": {selected: false, destination: "OpenEpic_2026-01_Connectathon", url: ""},
     CernerHelios: {selected: false, destination: "CernerHelios", url: ""}
   }
 
@@ -67,6 +68,7 @@
   let zip = '';
   let country = '';
   let phone = '';
+  let email = '';
   let gender:string = '';
 
   let result: ResourceRetrieveEvent = {
@@ -86,6 +88,7 @@
       zip = '';
       country = '';
       phone = '';
+      email = '';
       gender = '';
       if (selectedSource === 'MeldOpen') {
         last = "Blackstone";
@@ -125,6 +128,15 @@
         first = "Linda";
         gender = "female";
         dob = "1982-07-23";
+      } else if (selectedSource === 'OpenEpic_2026-01_Connectathon') {
+        last = "Harper";
+        first = "Elizabeth";
+        gender = "female";
+        dob = "1988-05-15";
+        city = "Atlanta";
+        state = "GA";
+        zip = "38318";
+        email = "beth.harper+epic@example.com";
       }
     }
   }
@@ -151,7 +163,7 @@
     } else if (method === 'destination') {
       headers['X-Request-Id'] = '21143678-7bd5-4caa-bdae-ee35a409d4f2';
       headers['X-DESTINATION'] = selectedSource;
-      headers['X-POU'] = (selectedSource === 'OpenEpic' ? 'TREAT' : 'PUBHLTH');
+      headers['X-POU'] = (selectedSource === 'OpenEpic' || selectedSource === 'OpenEpic_2026-01_Connectathon' ? 'TREAT' : 'PUBHLTH');
     }
     
     try {
@@ -186,6 +198,7 @@
           dob: dob,
           mrn: mrn,
           phone: phone,
+          email: email,
           address1: address1,
           address2: address2,
           city: city,
@@ -224,7 +237,7 @@
     } else if (method === 'destination') {
       headers['X-Request-Id'] = '21143678-7bd5-4caa-bdae-ee35a409d4f2';
       headers['X-DESTINATION'] = selectedSource;
-      headers['X-POU'] = (selectedSource === 'OpenEpic' ? 'TREAT' : 'PUBHLTH');
+      headers['X-POU'] = (selectedSource === 'OpenEpic' || selectedSource === 'OpenEpic_2026-01_Connectathon' ? 'TREAT' : 'PUBHLTH');
     }
 
     let results = await Promise.allSettled(
@@ -281,6 +294,7 @@
           dob: dob,
           mrn: mrn,
           phone: phone,
+          email: email,
           address1: address1,
           address2: address2,
           city: city,
@@ -373,6 +387,9 @@
         <Label>Contact Information</Label>
         <FormGroup style="font-size:small" class="text-secondary" label="Phone">
           <Input type="tel" bind:value={phone} style="width: 165px"/>
+        </FormGroup>
+        <FormGroup style="font-size:small" class="text-secondary" label="Email Address">
+          <Input type="email" bind:value={email} style="width: 165px"/>
         </FormGroup>
         <Label>Address</Label>
         <FormGroup style="font-size:small" class="text-secondary" label="Address Line 1">
