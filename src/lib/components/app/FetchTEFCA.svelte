@@ -38,6 +38,12 @@
       sourceName: undefined,
       source: undefined
   };
+  $: {
+    if (selectedSource || method) {
+      resourceResult.sourceName = sources[selectedSource].destination;
+      resourceResult.source = method === 'url' ? sources[selectedSource].url : baseUrl;
+    }
+  }
 
   let sources: Record<string, {selected: Boolean; destination: string; url: string}> = {
     MeldOpen: {selected: false, destination: "MeldOpen", url: "https://gw.interop.community/HeliosConnectathonSa/open"},
@@ -70,10 +76,6 @@
   let phone = '';
   let email = '';
   let gender:string = '';
-
-  let result: ResourceRetrieveEvent = {
-    resources: undefined
-  };
 
   $: {
     if (selectedSource) {
@@ -367,15 +369,9 @@
       if (resources.length === 0) {
         console.warn(`No resources found for patient ${patient.id} at ${hostname} for ${selectedSource}`);
       }
-      result = {
-        resources: resources,
-        category: CATEGORY,
-        method: METHOD,
-        sourceName: selectedSource,
-        source: hostname
-      };
+      resourceResult.resources = resources;
       console.log(resources);
-      resourceDispatch('update-resources', result);
+      resourceDispatch('update-resources', resourceResult);
     } catch (e) {
       processing = false;
       console.log('Failed', e);
@@ -384,7 +380,7 @@
   }
 </script>
 
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, sources[selectedSource].url, prepareIps)}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, resourceResult.source, prepareIps)}>
   <Label>Fetch US Core data via TEFCA query</Label>
   <FormGroup>
     <Row>
