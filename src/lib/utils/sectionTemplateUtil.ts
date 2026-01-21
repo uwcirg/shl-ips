@@ -26,7 +26,7 @@ let patientStorySectionTemplate: CompositionSection = {
   },
   text: {
     status: "generated",
-    div: "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>${story}</p>\n<p><strong>Patient's Goals</strong></p><ul>${goals}</ul></div>"
+    div: ""
   },
   extension: [
     {
@@ -43,11 +43,19 @@ function createPatientStorySection(resources: Resource[]): { resources: Resource
 
   let story = resources.filter(r => r.resourceType == 'Observation')[0];
   section.extension[0].valueString = story.valueString;
-  section.text.div = section.text.div.replace('${story}', story.valueString);
+  let patientStoryHTML = story ? `<p><strong>Patient Story</strong></p><p>${story}</p>`: "";
 
-  let goals = resources.filter(r => r.resourceType == 'Goal');
-  let goalsHtml =goals.map(goal => `<li>${goal.value}</li>`).join('');
-  section.text.div = section.text.div.replace('${goals}', goalsHtml);
+  let goalResources = resources.filter(r => r.resourceType == 'Goal');
+  let patientGoalsHTML = goalResources.length > 0
+    ? `<p><strong>Patient's Goals</strong></p><ul>${
+      goalResources.map(goal => `<li>${goal.description.text}</li>`).join('')
+    }</ul>`
+    : "";
+
+  section.text.div = `<div xmlns="http://www.w3.org/1999/xhtml">
+    ${patientStoryHTML}
+    ${patientGoalsHTML}
+  </div>`;
 
   resources = resources.filter(r => r.resourceType !== 'Observation');
 
