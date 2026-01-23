@@ -28,6 +28,7 @@
   import type { Writable } from 'svelte/store';
   import type { SHLAdminParams, SHLClient } from '$lib/utils/managementClient';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
+  import { generate } from "text-to-image";
 
   export let shl: SHLAdminParams;
   let shlControlled: SHLAdminParams;
@@ -70,33 +71,63 @@
     }
   });
 
+  async function loadUri(uri: string): Promise<HTMLImageElement> {
+    return await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = (err) => reject(new Error('Failed to load image from data URI.'));
+      img.src = uri;
+    });
+  }
+
   // Combine header, qr code, and footer images into one image
   async function createQrCodeImage(href: Promise<string>) {
     // create the qr code image
-    const qrCodeURI = await href.then(href => QRCode.toDataURL(href, { errorCorrectionLevel: 'H', margin: 0 }));
-
+    const qrCodeURI = await href.then(href => QRCode.toDataURL(href, { errorCorrectionLevel: 'M', margin: 0 }));
+    // create the dynamic text
+    const textColor = '#006CBB'; // #007CBB is the WA logo color
+    const textURIExpires = await generate(
+      "End: " + (shlControlled.exp ? new Date(shlControlled.exp * 1000).toISOString().split('T')[0] : "Never"),
+      {
+        fontSize: 72,
+        margin: 0,
+        textColor: textColor,
+        maxWidth: 560,
+        textAlign: 'center'
+      }
+    );
+    const textURIPasscode = await generate(
+      "Passcode: " + (shlControlled.passcode ? "Yes" : "No"),
+      {
+        fontSize: 72,
+        margin: 0,
+        textColor: textColor,
+        maxWidth: 500,
+        textAlign: 'center'
+      }
+    );
+    
     // load the images
-    const uris = [qrCodeURI, `${INSTANCE_CONFIG.imgPath}/qr-banner-top.png`, `${INSTANCE_CONFIG.imgPath}/qr-banner-bottom.png`];
-    const [qrCode, header, footer] = await Promise.all(
-        uris.map(uri => new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.onerror = (err) => reject(new Error('Failed to load image from data URI.'));
-        img.src = uri;
-      })
-    )) as HTMLImageElement[];
-
+    const uris = [
+      qrCodeURI,
+      `${INSTANCE_CONFIG.imgPath}/qr-banner-top.png`,
+      `${INSTANCE_CONFIG.imgPath}/qr-banner-bottom.png`,
+      `${INSTANCE_CONFIG.imgPath}/logo-qr-code.png`,
+      textURIExpires,
+      textURIPasscode
+    ];
+    const [qrCode, header, footer, logo, textExpires, textPasscode] = await Promise.all(
+        uris.map(uri => loadUri(uri))
+    );
+  
     // scale the images to match the largest image width
-    const targetWidth: number = Math.max(qrCode.width, header.width, footer.width);
+    const targetWidth: number = Math.max(qrCode.width, header.width, footer.width, logo.width, textExpires.width, textPasscode.width);
     const headerHeight: number = (header.height / header.width) * targetWidth;
     const qrCodeImageHeight: number = (qrCode.height / qrCode.width) * targetWidth;
     const footerHeight: number = (footer.height / footer.width) * targetWidth;
-
+  
     // get the canvas and combine the images
-    const canvas = document.getElementById('qrcode') as HTMLCanvasElement;
-    if (!canvas) {
-      throw Error('Could not get qrcode canvas element');
-    }
+    const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     if (!ctx) {
       throw Error('Could not get canvas context');
@@ -111,6 +142,41 @@
     ctx.drawImage(qrCode, marginX, headerHeight + marginY * 2,                     targetWidth, qrCodeImageHeight);
     ctx.drawImage(footer, marginX, headerHeight + qrCodeImageHeight + marginY * 3, targetWidth, footerHeight);
 
+    const centerMarginX = 15;
+    const logoMarginX = 95;
+    const logoMarginY = 15;
+    const centerCanvas = document.createElement('canvas');
+    const centerTargetWidth = targetWidth * 0.34;
+    const logoTargetWidth = centerTargetWidth - logoMarginX * 2;
+    const logoTargetHeight = (logo.height / logo.width) * logoTargetWidth;
+    const textTargetWidth = centerTargetWidth;
+    const textTargetHeight = (textExpires.height / textExpires.width) * textTargetWidth;
+    const textPasscodeWidth = (textPasscode.width / textPasscode.height) * textTargetHeight;
+    const textPasscodeOffset = (textTargetWidth - textPasscodeWidth) / 2;
+    centerCanvas.width = centerTargetWidth + centerMarginX * 2;
+    centerCanvas.height = logoTargetHeight + textTargetHeight * 2 + logoMarginY * 3;
+    const logoCtx = centerCanvas.getContext('2d');
+    if (!logoCtx) {
+      throw new Error('Could not get QR canvas context');
+    }
+    const curveRadius = 30;
+    const lineWidth = 3;
+
+    logoCtx.fillStyle = 'white';
+    logoCtx.beginPath();
+    logoCtx.roundRect(0, 0, centerCanvas.width, centerCanvas.height, curveRadius+4);
+    logoCtx.stroke();
+    logoCtx.fill();
+    logoCtx.drawImage(logo, logoMarginX, logoMarginY, logoTargetWidth, logoTargetHeight);
+    logoCtx.drawImage(textExpires, centerMarginX, logoTargetHeight + logoMarginY * 2, textTargetWidth, textTargetHeight);
+    logoCtx.drawImage(textPasscode, centerMarginX + textPasscodeOffset, logoTargetHeight + textTargetHeight + logoMarginY * 2, textPasscodeWidth, textTargetHeight);
+    logoCtx.strokeStyle = 'black';
+    logoCtx.lineWidth = lineWidth;
+    logoCtx.beginPath();
+    logoCtx.roundRect(lineWidth * 0.5, lineWidth * 0.5, centerCanvas.width - lineWidth, centerCanvas.height - lineWidth, curveRadius);
+    logoCtx.stroke();
+    ctx.drawImage(centerCanvas, marginX + (targetWidth - centerCanvas.width) / 2, headerHeight + marginY * 2 + (qrCodeImageHeight - centerCanvas.height) / 2, centerCanvas.width, centerCanvas.height);
+  
     const fullImageDataUrl = canvas.toDataURL('image/png');
     return fullImageDataUrl;
   }

@@ -628,6 +628,7 @@
           <Input type="radio" bind:group={expiration} value={60 * 60} label="1 hour" />
           <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 7} label="1 week" />
           <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 365} label="1 year" />
+          <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 365 * 5} label="5 years" />
           <Input type="radio" bind:group={expiration} value={-1} label="Never" />
         </FormGroup>
         <Row>
