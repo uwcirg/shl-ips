@@ -1,8 +1,8 @@
 <script lang="ts">
   import { uploadResourcesAndGetReference } from '$lib/utils/resourceUploader.js';
   import { download } from '$lib/utils/util.js';
-  import { createEventDispatcher, getContext } from 'svelte';
-  import { type Writable } from 'svelte/store';
+  import { createEventDispatcher, getContext, onMount } from 'svelte';
+  import { get, type Writable } from 'svelte/store';
   import {
     Accordion,
     AccordionItem,
@@ -47,7 +47,7 @@
   import QuestionnaireResponse from '$lib/components/resource-templates/QuestionnaireResponse.svelte';
 
   export let submitting: boolean;
-  export let resourceCollection: IPSResourceCollection;
+  export let ipsResourceCollection: IPSResourceCollection;
 
   const components: Record<string, any> = {
     'AllergyIntolerance': AllergyIntolerance,
@@ -82,14 +82,20 @@
   let mode: Writable<string> = getContext('mode');
 
   let reference: string;
-  let selectedPatient = resourceCollection.selectedPatient;
+  let selectedPatient = get(ipsResourceCollection.selectedPatient);
 
-  // Proxy for resourceCollection's resourcesByType to allow reactive updates
+  $: {
+    if (selectedPatient) {
+      ipsResourceCollection.setSelectedPatient(selectedPatient);
+    }
+  }
+
+  // Proxy for ipsResourceCollection's resourcesByType to allow reactive updates
   let resourcesByTypeStore: Writable<Record<string, Record<string, ResourceHelper>>>;
-  $: resourcesByTypeStore = resourceCollection.resourcesByType;
+  $: resourcesByTypeStore = ipsResourceCollection.resourcesByType;
 
   let extensionSectionStore: Writable<Record<string, CompositionSection | false>>;
-  $: extensionSectionStore = resourceCollection.extensionSections;
+  $: extensionSectionStore = ipsResourceCollection.extensionSections;
 
   let patientStore: Record<string, ResourceHelper>;
   $: {
@@ -116,6 +122,10 @@
     }
   }
 
+  onMount(() => {
+    selectedPatient = get(ipsResourceCollection.selectedPatient);
+  });
+
   /**
    * Confirms the IPS content, then uploads the selected resources,
    * fetches the IPS, and calls the event dispatcher to pass the IPS to the parent component.
@@ -126,7 +136,7 @@
 
     statusDispatch('status-update', 'Adding data');
     try {
-      let selectedIPSResources = resourceCollection
+      let selectedIPSResources = ipsResourceCollection
         .getSelectedIPSResources()
         .map((rh: ResourceHelper) => {
           return rh.resource;
@@ -155,7 +165,7 @@
 
     // Add injected resources to existing IPS
     if (content) {
-      content = resourceCollection.extendIPS(content);
+      content = ipsResourceCollection.extendIPS(content);
     }
     content.entry.map((entry: BundleEntry) => {
       if (entry.resource && 'extension' in entry.resource && entry.resource.extension) {
@@ -279,7 +289,7 @@
                 <Row class={index > 0 ? "border-top pt-2 mt-2" : ""} style="overflow:hidden">
                   <Col xs="auto" class="d-flex align-items-top pt-4 pe-0">
                     {#if resourceType === 'Patient'}
-                      <Input id={key} type="radio" bind:group={$selectedPatient} value={key} />
+                      <Input id={key} type="radio" bind:group={selectedPatient} value={key} />
                     {:else}
                       <Input
                         id={key}
@@ -289,7 +299,7 @@
                         on:change={(e) => {
                           let rh = { ...$resourcesByTypeStore[resourceType][key] };
                           rh.include = e.target.checked;
-                          resourceCollection.updateResource(rh);
+                          ipsResourceCollection.updateResource(rh);
                         }}
                       />
                     {/if}
@@ -300,7 +310,7 @@
                         this={components[resourceType]}
                         content={{
                           resource: $resourcesByTypeStore[resourceType][key].resource,
-                          entries: resourceCollection.flattenResources($resourcesByTypeStore)
+                          entries: ipsResourceCollection.flattenResources($resourcesByTypeStore)
                         }}
                       />
                       <!-- ResourceType: {resourceType}

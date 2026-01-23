@@ -183,9 +183,6 @@
 
   let mode: Writable<string> = getContext('mode');
 
-  let reference: string;
-  let selectedPatient = resourceCollection.selectedPatient;
-
   // Proxy for resourceCollection's resourcesByType to allow reactive updates
   let categorizedResourceStore: Readable<Record<string, Record<string, ResourceHelper>>> = derived(
     resourceCollection.resources,

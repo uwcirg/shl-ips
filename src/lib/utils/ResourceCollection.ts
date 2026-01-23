@@ -22,23 +22,14 @@ export interface SerializedResourceCollection {
 export class ResourceCollection implements IResourceCollection {
     public id: string = crypto.randomUUID();
     public resources: Writable<ResourceHelperMap> = writable({});
-    public selectedPatient: Writable<string>;
     public patientReference: Readable<string>;
-    public patient: Readable<Patient | undefined>;
+    public patient: Writable<Patient | undefined>;
 
     constructor();
     constructor(r: Resource | Resource[] | null);
     constructor(r: Resource | Resource[] | null = null) {
         this.resources = writable({});
-        this.selectedPatient = writable('');
-        this.patient = derived(this.selectedPatient, ($selectedPatient) => {
-          if ($selectedPatient) {
-              let resources = get(this.resources);
-              if (resources) {
-                return resources[$selectedPatient].resource;
-              }
-          }
-        });
+        this.patient = writable(undefined);
         this.patientReference = derived(this.patient, ($patient) => {
             if ($patient) {
                 return `Patient/${$patient.id}`;
@@ -88,7 +79,7 @@ export class ResourceCollection implements IResourceCollection {
           if (!(rh.tempId in curr)) {
               curr[rh.tempId] = rh;
               if (rh.resource.resourceType === 'Patient' && (!get(this.patient))) {
-                  this.setSelectedPatient(rh.tempId);
+                  this.setPatient(rh.resource);
               }
           }
           return { ...curr };
@@ -115,18 +106,8 @@ export class ResourceCollection implements IResourceCollection {
         });
     }
 
-    setSelectedPatient(patientTempId: string) {
-        let patients = Object.values(get(this.resources)).filter(rh => rh.resource.resourceType === 'Patient');
-        if (patients.length === 0) {
-            throw Error('No patients exist');
-        }
-        this.resources.update((curr:ResourceHelperMap) => {
-            patients.forEach((rh:ResourceHelper) => {
-                rh.include = (rh.tempId == patientTempId);
-            });
-            return { ...curr };
-        })
-        this.selectedPatient.set(patientTempId);
+    setPatient(patient: Patient) {
+        this.patient.set(patient);
         this._updateAllPatientRefs();
     }
 
@@ -202,14 +183,10 @@ export class ResourceCollection implements IResourceCollection {
         if (data.resources) {
             newCollection.resources.set(data.resources);
         }
-        if (data.selectedPatient) {
-            newCollection.setSelectedPatient(data.selectedPatient);
-        }
         return newCollection;
     }
 
     clear() {
         this.resources.set({});
-        this.selectedPatient.set('');
     }
 }
