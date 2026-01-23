@@ -35,7 +35,7 @@
         await authService.renewToken();
       }
     } else {
-      await authService.renewToken();
+      await authService.login();
     }
   }
 
