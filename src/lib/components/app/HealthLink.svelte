@@ -121,7 +121,7 @@
     );
   
     // scale the images to match the largest image width
-    const targetWidth: number = Math.max(qrCode.width, header.width, footer.width, logo.width, textExpires.width, textPasscode.width);
+    const targetWidth: number = Math.max(qrCode.width, header.width, footer.width,  textExpires.width, textPasscode.width);
     const headerHeight: number = (header.height / header.width) * targetWidth;
     const qrCodeImageHeight: number = (qrCode.height / qrCode.width) * targetWidth;
     const footerHeight: number = (footer.height / footer.width) * targetWidth;
@@ -132,8 +132,8 @@
     if (!ctx) {
       throw Error('Could not get canvas context');
     }
-    const marginX = 60;
-    const marginY = 40;
+    const marginX = targetWidth * 0.04894;
+    const marginY = targetWidth * 0.0326;
     canvas.width = targetWidth + marginX * 2;
     canvas.height = headerHeight + qrCodeImageHeight + footerHeight + marginY * 4;
     ctx.fillStyle = 'white';
@@ -142,9 +142,9 @@
     ctx.drawImage(qrCode, marginX, headerHeight + marginY * 2,                     targetWidth, qrCodeImageHeight);
     ctx.drawImage(footer, marginX, headerHeight + qrCodeImageHeight + marginY * 3, targetWidth, footerHeight);
 
-    const centerMarginX = 15;
-    const logoMarginX = 95;
-    const logoMarginY = 15;
+    const centerMarginX = targetWidth * 0.012235;
+    const logoMarginX = targetWidth * 0.0775;
+    const logoMarginY = targetWidth * 0.012235;
     const centerCanvas = document.createElement('canvas');
     const centerTargetWidth = targetWidth * 0.34;
     const logoTargetWidth = centerTargetWidth - logoMarginX * 2;
@@ -159,8 +159,8 @@
     if (!logoCtx) {
       throw new Error('Could not get QR canvas context');
     }
-    const curveRadius = 30;
-    const lineWidth = 3;
+    const curveRadius = targetWidth * 0.02447;
+    const lineWidth = targetWidth * 0.002447;
 
     logoCtx.fillStyle = 'white';
     logoCtx.beginPath();
