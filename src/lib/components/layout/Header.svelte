@@ -139,8 +139,8 @@
     if (!ctx) {
       throw Error('Could not get canvas context');
     }
-    const marginX = 60;
-    const marginY = 40;
+    const marginX = targetHeight * 0.2;
+    const marginY = targetHeight * 0.03;
     canvas.height = targetHeight + marginY * 2;
     canvas.width = dividerWidth + companyLogoImageWidth + siteLogoWidth + marginX * 4;
     ctx.fillStyle = "rgb(248, 249, 250)";
