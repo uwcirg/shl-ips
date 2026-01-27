@@ -1,3 +1,5 @@
+import { CATEGORIES, METHODS} from '$lib/config/tags';
+
 import AddSummary from '$lib/components/app/AddSummary.svelte';
 import Introduction from '$lib/components/app/Introduction.svelte';
 
@@ -43,37 +45,37 @@ export default {
           id: "healthcare-providers",
           title: "Data from Healthcare Providers",
           description: "",
-          category: "provider-health-record",
+          category: CATEGORIES.PROVIDER_HEALTH_RECORD,
           forms: [
             {
-              method: "provider-health-record-sof",
+              method: METHODS.PROVIDER_HEALTH_RECORD_SOF,
               tabTitle: "SMART Data Access",
               description: "Fetch US Core data from a healthcare provider test server via SMART authorization.",
               component: FetchSoF
             },
             {
-              method: "provider-health-record-url",
+              method: METHODS.PROVIDER_HEALTH_RECORD_URL,
               tabTitle: "FHIR URL",
               description: "Fetch health summary data from a FHIR URL.",
               advanced: true,
               component: FetchUrl
             },
             {
-              method: "provider-health-record-carinbb",
+              method: METHODS.PROVIDER_HEALTH_RECORD_CARINBB,
               tabTitle: "CARIN BB",
               description: "Fetch CARIN insurance data from an insurance provider test server via SMART authorization.",
               advanced: true,
               component: FetchCARINBB
             },
             {
-              method: "provider-health-record-tefca",
+              method: METHODS.PROVIDER_HEALTH_RECORD_TEFCA,
               tabTitle: "TEFCA Query",
               description: "Fetch health summary data with a federated TEFCA query.",
               advanced: true,
               component: FetchTEFCA
             },
             {
-              method: "provider-health-record-file",
+              method: METHODS.PROVIDER_HEALTH_RECORD_FILE,
               tabTitle: "File Upload",
               description: "Upload resources from an IPS or SMART Health Card file.",
               advanced: true,
@@ -85,31 +87,31 @@ export default {
           id: "my-story",
           title: "My Health in My Words",
           description: "Your own representation of your health, history, needs and goals.",
-          category: "patient-story",
+          category: CATEGORIES.PATIENT_STORY,
           forms: [
             {
-              method: "patient-story-form",
+              method: METHODS.PATIENT_STORY_FORM,
               tabTitle: "My Story",
               description: "Create a description of your personal patient story and goals for care.",
               component: PatientStory,
               editable: true
             },
             {
-              method: "patient-medical-history-form",
+              method: METHODS.PATIENT_MEDICAL_HISTORY_FORM,
               tabTitle: "My Medical History",
               description: "Add any health conditions, medications, or history of illness that may not be included elsewhere in your health history.",
               component: PatientMedical,
               editable: true
             },
             {
-              method: "patient-care-needs-form",
+              method: METHODS.PATIENT_CARE_NEEDS_FORM,
               tabTitle: "My Care Needs",
               description: "Select any identities, functional concerns, or needs you would like your carers to be aware of.",
               component: PatientNeeds,
               editable: true
             },
             {
-              method: "patient-body-concerns-form",
+              method: METHODS.PATIENT_BODY_CONCERNS_FORM,
               tabTitle: "My Body",
               description: "Record brief concerns about any specific part of your body.",
               component: PatientBody,
@@ -121,15 +123,15 @@ export default {
           id: "advance-directives",
           title: "Advance Directives",
           description: "Create or retrieve your Advance Directive documents from a repository.",
-          category: "advance-directives",
+          category: CATEGORIES.ADVANCE_DIRECTIVES,
           forms: [
             {
-              method: "advance-directives-search",
+              method: METHODS.ADVANCE_DIRECTIVES_SEARCH,
               tabTitle: "Directive Search",
               component: FetchAD
             },
             {
-              method: "advance-directives-create-polst",
+              method: METHODS.ADVANCE_DIRECTIVES_CREATE_POLST,
               tabTitle: "Create POLST",
               component: CreatePOLST
             }
@@ -139,10 +141,10 @@ export default {
           id: "occupation",
           title: "Health-Related Work Info",
           description: "Manage information about the work you do to include in your Health Summary.",
-          category: "occupational-data-for-health",
+          category: CATEGORIES.OCCUPATIONAL_DATA_FOR_HEALTH,
           forms: [
             {
-              method: "occupational-data-for-health-form",
+              method: METHODS.OCCUPATIONAL_DATA_FOR_HEALTH_FORM,
               component: ODHForm,
               editable: true
             }
