@@ -45,7 +45,6 @@
   import Patient from '$lib/components/resource-templates/Patient.svelte';
   import { PLACEHOLDER_SYSTEM } from '$lib/config/config';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
-  import { methodSectionHelper } from '$lib/utils/sectionTemplateUtil';
   import DatasetStatusLoader from '$lib/components/app/DatasetStatusLoader.svelte';
   import DatasetView from '$lib/components/app/DatasetView.svelte';
   import { ResourceCollection } from '$lib/utils/ResourceCollection';
@@ -200,26 +199,17 @@
   async function handleNewResources(details: ResourceRetrieveEvent) {
     try {
       resourceResult = details;
-      if (resourceResult.resources) {
-        let patient = resourceResult.resources.find(r => r.resourceType === 'Patient');
-        let datasetMethod = patient.meta?.tag?.find(t => t.system === METHOD_SYSTEM)?.code;
-        if (datasetMethod) {
-          let { resources, sectionKey, sectionTemplate } = methodSectionHelper(datasetMethod, resourceResult.resources);
-          resourceResult = { ...resourceResult, resources, sectionKey, sectionTemplate };
-        }
-        if (resourceResult.sectionKey) {
-          resourceCollection.addSection(resourceResult.sectionKey, resourceResult.sectionTemplate);
-        }
-        if (!resourcesAdded) {
-          let mpResource = JSON.parse(JSON.stringify($masterPatient.resource)) as Patient;
-          delete mpResource.link; // Otherwise the IPS patient will be included with future $everything calls
-          resourceCollection.addResource(mpResource);
-        }
-        // Trigger update in ResourceSelector
-        let resources = resourceResult.resources.filter(r => !(r && r.resourceType === 'Patient' && r.meta?.tag?.find(t => t.system === PLACEHOLDER_SYSTEM)));
-        resourceCollection.addResources(resources, resourceResult.sectionKey);
-        showSuccessMessage();
+      if (resourceResult.resources === undefined) {
+        return;
       }
+      if (!resourcesAdded) {
+        let mpResource = JSON.parse(JSON.stringify($masterPatient.resource)) as Patient;
+        delete mpResource.link; // Otherwise the IPS patient will be included with future $everything calls
+        resourceCollection.addResource(mpResource);
+      }
+      // Trigger update in ResourceSelector
+      resourceCollection.addResources(resourceResult.resources);
+      showSuccessMessage();
     } catch (e) {
       console.log('Failed', e);
       fetchError = "Error preparing IPS";

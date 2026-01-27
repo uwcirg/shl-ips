@@ -47,7 +47,6 @@
     country: ''
   });
 
-  export let sectionKey: string = "Advance Directives";
   export let description: string = "Search a repository for your advanced directives";
   //Search the WA state POLST repository for your existing advance directives.
 
@@ -123,24 +122,6 @@
   }
   let patientResourceTemplateParams: ResourceTemplateParams<Patient>;
   $: patientResourceTemplateParams = { resource: constructPatientResource($formDemographics) };
-
-  let sectionTemplate = {
-      title: "Advance Directives",
-      code: {
-          coding: [
-          {
-              system: "http://loinc.org",
-              code: "42348-3",
-              display: "Advance Directives"
-          }
-          ]
-      },
-      text: {
-              status: "generated",
-              div: "<div xmlns=\"http://www.w3.org/1999/xhtml\"><h5>Advance Directives</h5><table class=\"hapiPropertyTable\"><thead><tr><th>Scope</th><th>Status</th><th>Action Controlled</th><th>Date</th></tr></thead><tbody></tbody></table></div>"
-            },
-      entry: []
-  };
 
   let summaryUrlValidated: URL | undefined = undefined;
   $: {
@@ -388,8 +369,6 @@
       processing = false;
       let result:ResourceRetrieveEvent = {
         resources: resources,
-        sectionKey: sectionKey,
-        sectionTemplate: sectionTemplate,
         source: hostname,
       }
       resourceDispatch('update-resources', result);

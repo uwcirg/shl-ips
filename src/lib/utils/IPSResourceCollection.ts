@@ -8,10 +8,11 @@
 import { ResourceHelper } from "$lib/utils/ResourceHelper";
 import type { Resource, Bundle, Composition,CompositionSection, FhirResource } from "fhir/r4";
 import { derived, writable, get, type Writable, type Readable } from "svelte/store";
-import type { CategorizedResourceHelperMap } from "$lib/utils/types";
+import type { CategorizedResourceHelperMap, ResourceHelperMap } from "$lib/utils/types";
 import { ResourceCollection, type SerializedResourceCollection } from "$lib/utils/ResourceCollection";
-import type { ResourceHelperMap } from "$lib/utils/types";
-import { IDENTIFIER_SYSTEM } from "$lib/config/config";
+import { METHOD_SYSTEM, PLACEHOLDER_SYSTEM, IDENTIFIER_SYSTEM } from "$lib/config/config";
+import { SectionExtenderRegistry, type SectionUpdates } from "$lib/utils/sectionExtenderUtils";
+import { isIPSBundle } from "$lib/utils/util";
 
 // This is both allowable and reverse order of loading
 const allowableResourceTypes = [
@@ -56,13 +57,15 @@ export interface SerializedIPSResourceCollection extends SerializedResourceColle
 
 export class IPSResourceCollection extends ResourceCollection {
     public resourcesByType: Readable<CategorizedResourceHelperMap>;
-    public extensionSections: Writable<Record<string, { section: CompositionSection|false, resources: string[] } >>;
+    private sectionExtensionResources: Writable<Record<string, Set<string>>>;
+    private sectionExtenderRegistry: SectionExtenderRegistry;
 
     constructor();
     constructor(r: Resource | Resource[] | null);
     constructor(r: Resource | Resource[] | null = null) {
         super(r);
-        this.extensionSections = writable({});
+        this.sectionExtenderRegistry = new SectionExtenderRegistry();
+        this.sectionExtensionResources = writable({});
         this.resourcesByType = derived((this as ResourceCollection).resources, ($resources) => {
             let resourcesByType: Record<string, ResourceHelperMap> = {};
             if ($resources) {
@@ -96,21 +99,7 @@ export class IPSResourceCollection extends ResourceCollection {
         }
     }
 
-    addSection(sectionKey: string, sectionTemplate?: CompositionSection) {
-        this.extensionSections.update((curr) => {
-            let section = {
-                section: sectionTemplate,
-                resources: []
-            };
-            if (curr[sectionKey]) {
-                section.resources = curr[sectionKey].resources;
-            }
-            curr[sectionKey] = section;
-            return curr;
-        });
-    }
-
-    addResource(resource: Resource, sectionKey?: string) {
+    addResource(resource: Resource): ResourceHelper {
         // Remove system identifier from IPS resources
         if (resource.identifier) {
             resource.identifier = resource.identifier.filter(i => i.system !== IDENTIFIER_SYSTEM);
@@ -118,70 +107,79 @@ export class IPSResourceCollection extends ResourceCollection {
                 delete resource.identifier;
             }
         }
-        let rh = super.addResource(resource);
-        if (sectionKey) {
-            if (!get(this.extensionSections)[sectionKey]) {
-                this.addSection(sectionKey);
-            }
-            this.extensionSections.update((curr) => {
-                curr[sectionKey].resources.push(rh.tempId);
-                return { ...curr };
-            });
-        }
+        return super.addResource(resource);
     }
 
-    addResources(resources:Resource[], sectionKey?: string) {
+    addResources(resources:Resource[]) {
+        const datasetPatient = resources.find(r => r.resourceType === 'Patient' && r.meta?.tag?.find(t => t.system === METHOD_SYSTEM));
         resources = resources.filter(r => {
             if (!this._validateResource(r)) {
                 console.warn("Invalid IPS resource: " + JSON.stringify(r));
                 return false;
             }
+            if (r.resourceType === 'Patient' && r.meta?.tag?.find(t => t.system === PLACEHOLDER_SYSTEM)) {
+                return false;
+            }
             return true;
         });
-        resources.forEach(r => this.addResource(r, sectionKey));
+        const datasetMethod = datasetPatient?.meta?.tag?.find(t => t.system === METHOD_SYSTEM)?.code;
+        let sectionExtenderForMethod = this.sectionExtenderRegistry.register(datasetMethod);
+        let extendedSectionTitle = sectionExtenderForMethod?.getSectionTitle();
+        resources.forEach(r => {
+            const rh = this.addResource(r);
+            if (datasetPatient && datasetMethod && sectionExtenderForMethod && extendedSectionTitle) {
+                // Add resource ids to extended section list
+                this.sectionExtensionResources.update((curr) => {
+                    curr[extendedSectionTitle] = curr[extendedSectionTitle] ?? new Set<string>();
+                    curr[extendedSectionTitle].add(rh.tempId);
+                    return { ...curr };
+                });
+            }
+        });
     }
 
     extendIPS(ips: Bundle) {
-        if (ips.entry === undefined || !ips.entry[0] || ips.entry[0].resource?.resourceType !== "Composition") {
-            throw Error("IPS does not contain a Composition resource");
+        // Validate bundle is IPS
+        if (!isIPSBundle(ips)) {
+            throw new Error("Bundle is not an IPS bundle");
         }
-        
-        let composition = ips.entry[0].resource as Composition;
-        const extensionSections = get(this.extensionSections);
-        Object.keys(extensionSections).forEach((key) => {
-            let sectionToUse = extensionSections[key].section;
-            if (!sectionToUse) {
-                return;
-            }
-            let addingNewSection = true;
-            if (composition?.section) {
-                composition.section.forEach(section => {
-                    if (section?.code?.coding?.[0].code === sectionToUse?.code?.coding?.[0]?.code) {
-                        sectionToUse = section;
-                        addingNewSection = false;
-                    }
+        const composition = ips.entry?.find(entry => entry.resource?.resourceType === "Composition").resource as Composition;
+
+        // get the extenders from the registry (they're deduplicated by the registry)
+        const extenders = this.sectionExtenderRegistry.getRegisteredExtenders();
+        // for each of them, call the extend function using the appropriate resource list
+        const updates: { update: SectionUpdates, selector: Function }[] = [];
+        for (const extender of extenders) {
+            const sectionTitle = extender.getSectionTitle();
+            const resourceIdsForExtension = Array.from(get(this.sectionExtensionResources)[sectionTitle]);
+            const resourcesForExtension = resourceIdsForExtension
+                .map(resourceTempId => get((this as ResourceCollection).resources)[resourceTempId])
+                .filter(rh => rh.include)
+                .map(rh => rh.resource);
+            const existingSection = composition.section.find(s => extender.sectionSelector(s));
+            const update = extender.extend(resourcesForExtension, existingSection);
+            if (update) {
+                updates.push({
+                    update: update,
+                    selector: extender.sectionSelector
                 });
             }
-            sectionToUse.entry = sectionToUse.entry ?? [];
-            let sectionResources = get(this.extensionSections)[key].resources
-                .map(resourceTempId => get((this as ResourceCollection).resources)[resourceTempId])
-                .filter(rh => rh.include);
-            sectionResources.forEach((rh:ResourceHelper) => {
-                let entry = {
-                    resource: rh.resource as FhirResource,
-                    fullUrl: `urn:uuid:${rh.resource.id}`
+        }
+
+        for (const update of updates) {
+            if (update.update.section) {
+                // replace or add updated section
+                const index = composition.section.findIndex(update.selector);
+                if (index !== -1) {
+                    composition.section.splice(index, 1);
                 }
-                let entryReference = {
-                    reference: `${entry.fullUrl}`
-                }
-                ips.entry?.push(entry);
-                sectionToUse.entry?.push(entryReference);
-            });
-            if (addingNewSection && sectionToUse.entry.length > 0) {
-                composition.section?.push(sectionToUse);
+                composition.section.push(update.update.section);
             }
-        });
-        
+            if (update.update.entries) {
+                // add updated entries
+                ips.entry?.push(...update.update.entries);
+            }
+        }
         return ips;
     }
 
@@ -195,13 +193,6 @@ export class IPSResourceCollection extends ResourceCollection {
      */
     getSelectedIPSResources(): ResourceHelper[] {
         let rBT = get(this.resourcesByType);
-        let extensionSections = get(this.extensionSections);
-        Object.entries(extensionSections).forEach(([sectionKey, sectionTemplate]) => {
-            // Exclude extensions from upload if attached to a custom section, but allow custom group titles w/o sections to be uploaded
-            // if (sectionTemplate) {
-            //     delete rBT[sectionKey];
-            // }
-        });
         let selectedIPSResources = this.flattenResources(rBT)
             .filter(resource => (resource as ResourceHelper).include ) as ResourceHelper[];
         return selectedIPSResources;
@@ -211,28 +202,9 @@ export class IPSResourceCollection extends ResourceCollection {
         return Object.values(resourcesByType).flatMap(types => Object.values(types))
     }
 
-    toJson(): string {
-        let extensionSections = get(this.extensionSections);
-        let serializedCollection = JSON.parse(super.toJson());
-        let output:SerializedIPSResourceCollection = {
-            ...serializedCollection,
-            extensionSections: extensionSections
-        };
-        return JSON.stringify(output);
-    }
-
-    static fromJson(json:string) {
-        let data:SerializedIPSResourceCollection = JSON.parse(json);
-        let { extensionSections, ...serializedCollection} = data;
-        let newCollection = super.fromJSON(serializedCollection);
-        if (extensionSections) {
-            newCollection.extensionSections.set(extensionSections);
-        }
-        return newCollection;
-    }
-
     clear() {
-        this.extensionSections.set({});
+        this.sectionExtensionResources.set({});
+        this.sectionExtenderRegistry = new SectionExtenderRegistry();
         super.clear();
     }
 }

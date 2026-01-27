@@ -22,7 +22,6 @@
   import { writable, type Writable } from 'svelte/store';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 
-  export let sectionKey: string = "Advance Directives";
   export let disabled = false;
 
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
@@ -83,24 +82,6 @@
     zip: '',
     country: ''
   });
-
-  let sectionTemplate = {
-      title: "Advance Directives",
-      code: {
-          coding: [
-          {
-              system: "http://loinc.org",
-              code: "42348-3",
-              display: "Advance Directives"
-          }
-          ]
-      },
-      text: {
-              status: "generated",
-              div: "<div xmlns=\"http://www.w3.org/1999/xhtml\"><h5>Advance Directives</h5><table class=\"hapiPropertyTable\"><thead><tr><th>Scope</th><th>Status</th><th>Action Controlled</th><th>Date</th></tr></thead><tbody></tbody></table></div>"
-            },
-      entry: []
-  };
 
   $: {
     if (selectedSource) {
@@ -354,8 +335,6 @@
       processing = false;
       let result:ResourceRetrieveEvent = {
         resources: resources,
-        sectionKey: sectionKey,
-        sectionTemplate: sectionTemplate,
         source: hostname,
       }
       resourceDispatch('update-resources', result);
