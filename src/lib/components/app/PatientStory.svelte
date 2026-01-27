@@ -13,11 +13,12 @@
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
   import type { Goal, Observation, Resource, CompositionSection } from 'fhir/r4';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
+  import { METHODS, CATEGORIES } from '$lib/config/tags';
 
   export let disabled = false;
 
-  const CATEGORY = 'patient-story';
-  const METHOD = 'patient-story-form';
+  const CATEGORY = CATEGORIES.PATIENT_STORY;
+  const METHOD = METHODS.PATIENT_STORY_FORM;
   const SOURCE = {
     url: window.location.origin,
     name: 'My Story'

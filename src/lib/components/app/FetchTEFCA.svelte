@@ -22,13 +22,14 @@
   import GenderInput from '$lib/components/form/GenderInput.svelte';
   import CountryInput from '$lib/components/form/CountryInput.svelte';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
+  import { METHODS, CATEGORIES } from '$lib/config/tags';
 
   export let disabled = false;
 
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
 
-  const CATEGORY = "provider-health-record";
-  const METHOD = "provider-health-record-tefca";
+  const CATEGORY = CATEGORIES.PROVIDER_HEALTH_RECORD;
+  const METHOD = METHODS.PROVIDER_HEALTH_RECORD_TEFCA;
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let resourceResult: ResourceRetrieveEvent = {

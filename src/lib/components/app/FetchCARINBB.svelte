@@ -16,6 +16,7 @@
   import { createEventDispatcher, onMount } from 'svelte';
   import type { BundleEntry, Resource } from 'fhir/r4';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
+  import { METHODS, CATEGORIES } from '$lib/config/tags';
 
   export let disabled = false;
 
@@ -24,8 +25,8 @@
   const authDispatch = createEventDispatcher<{'sof-auth-init': SOFAuthEvent; 'sof-auth-fail': SOFAuthEvent}>();
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
-  const CATEGORY = "provider-health-record";
-  const METHOD = "provider-health-record-carinbb";
+  const CATEGORY = CATEGORIES.PROVIDER_HEALTH_RECORD;
+  const METHOD = METHODS.PROVIDER_HEALTH_RECORD_CARINBB;
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let processing = false;

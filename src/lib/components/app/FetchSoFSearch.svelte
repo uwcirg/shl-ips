@@ -23,14 +23,15 @@
   import { clearURLOfParams, getResourcesFromIPS } from '$lib/utils/util';
   import { page } from '$app/stores';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
+  import { METHODS, CATEGORIES } from '$lib/config/tags';
 
   export let disabled = false;
   
   const authDispatch = createEventDispatcher<{'sof-auth-init': SOFAuthEvent; 'sof-auth-fail': SOFAuthEvent}>();
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
-  const CATEGORY = "provider-health-record";
-  const METHOD = "provider-health-record-sof-search";
+  const CATEGORY = CATEGORIES.PROVIDER_HEALTH_RECORD;
+  const METHOD = METHODS.PROVIDER_HEALTH_RECORD_SOF_SEARCH;
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let processing = false;

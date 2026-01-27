@@ -18,13 +18,14 @@
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
   import FHIRDataService from '$lib/utils/FHIRDataService';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
+  import { METHODS, CATEGORIES } from '$lib/config/tags';
 
   export let disabled = false;
   
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
-  const CATEGORY = "advance-directives";
-  const METHOD = "advance-directives-create-polst";
+  const CATEGORY = CATEGORIES.ADVANCE_DIRECTIVES;
+  const METHOD = METHODS.ADVANCE_DIRECTIVES_CREATE_POLST;
   const SOURCE = {
     url: window.location.origin,
     name: 'Custom POLST'

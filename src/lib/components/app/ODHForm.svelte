@@ -4,12 +4,13 @@
   import NIOAutoCoderInput from '$lib/components/form/NIOAutoCoderInput.svelte';
   import type { IOResponse, ResourceRetrieveEvent } from '$lib/utils/types';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
+  import { METHODS, CATEGORIES } from '$lib/config/tags';
 
   export let sectionKey: string = 'Occupational Data';
 
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
-  const CATEGORY = 'occupational-data-for-health';
-  const METHOD = 'occupational-data-for-health-form';
+  const CATEGORY = CATEGORIES.OCCUPATIONAL_DATA_FOR_HEALTH;
+  const METHOD = METHODS.OCCUPATIONAL_DATA_FOR_HEALTH_FORM;
   const SOURCE = {
     url: window.location.origin,
     name: 'My Work Info'

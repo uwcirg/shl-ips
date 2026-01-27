@@ -1,5 +1,6 @@
 // import {PUBLIC_BASE_URL} from '$env/static/public';
 import PUBLIC_PROVIDER_ENDPOINTS from '$lib/config/public-provider-endpoints.json';
+import { CATEGORIES, METHODS } from '$lib/config/tags';
 
 export const DEMO_WARNING = import.meta.env.VITE_DEMO_WARNING;
 
@@ -11,62 +12,63 @@ export const CATEGORY_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSyst
 export const METHOD_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-method';
 export const PLACEHOLDER_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-placeholder';
 export const SOURCE_NAME_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-source-name';
+
 export const DATA_CATEGORY_NAMES = {
-  "occupational-data-for-health": {
+  [CATEGORIES.OCCUPATIONAL_DATA_FOR_HEALTH]: {
     name: "Health-Related Work Info",
   },
-  "patient-story": {
+  [CATEGORIES.PATIENT_STORY]: {
     name: "Patient Story"
   },
-  "advance-directives": {
+  [CATEGORIES.ADVANCE_DIRECTIVES]: {
     name: "Advance Directives",
   },
-  "provider-health-record": {
+  [CATEGORIES.PROVIDER_HEALTH_RECORD]: {
     name: "Provider Health Records",
   }
 }
 
 export const METHOD_NAMES = {
-  "advance-directives-create-polst": {
+  [METHODS.ADVANCE_DIRECTIVES_CREATE_POLST]: {
     name: "Patient-authored",
   },
-  "advance-directives-search": {
+  [METHODS.ADVANCE_DIRECTIVES_SEARCH]: {
     name: "Repository",
   },
-  "provider-health-record-sof": {
+  [METHODS.PROVIDER_HEALTH_RECORD_SOF]: {
     name: "Sandbox EHR",
   },
-  "provider-health-record-sof-search": {
+  [METHODS.PROVIDER_HEALTH_RECORD_SOF_SEARCH]: {
     name: "Provider EHR",
   },
-  "provider-health-record-url": {
+  [METHODS.PROVIDER_HEALTH_RECORD_URL]: {
     name: "URL",
   },
-  "provider-health-record-carinbb": {
+  [METHODS.PROVIDER_HEALTH_RECORD_CARINBB]: {
     name: "Sandbox Insurance",
   },
-  "provider-health-record-tefca": {
+  [METHODS.PROVIDER_HEALTH_RECORD_TEFCA]: {
     name: "TEFCA Query",
   },
-  "provider-health-record-file": {
+  [METHODS.PROVIDER_HEALTH_RECORD_FILE]: {
     name: "File Upload",
   },
-  "occupational-data-for-health-form": {
+  [METHODS.OCCUPATIONAL_DATA_FOR_HEALTH_FORM]: {
     name: "Patient-authored",
   },
-  "patient-body-concerns-form": {
+  [METHODS.PATIENT_BODY_CONCERNS_FORM]: {
     name: "Patient-authored",
   },
-  "patient-identity-form": {
+  [METHODS.PATIENT_IDENTITY_FORM]: {
     name: "Patient-authored",
   },
-  "patient-medical-history-form": {
+  [METHODS.PATIENT_MEDICAL_HISTORY_FORM]: {
     name: "Patient-authored",
   },
-  "patient-care-needs-form": {
+  [METHODS.PATIENT_CARE_NEEDS_FORM]: {
     name: "Patient-authored",
   },
-  "patient-story-form": {
+  [METHODS.PATIENT_STORY_FORM]: {
     name: "Patient-authored",
   },
 }
