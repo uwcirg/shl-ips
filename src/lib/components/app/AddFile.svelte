@@ -189,12 +189,9 @@
   async function handleNewResources(details: ResourceRetrieveEvent) {
     try {
       resourceResult = details;
-      if (resourceResult.sectionKey) {
-        resourceCollection.addSection(resourceResult.sectionKey, resourceResult.sectionTemplate);
-      }
       if (resourceResult.resources) {
         // Trigger update in ResourceSelector
-        resourceCollection.addResources(resourceResult.resources, resourceResult.sectionKey);
+        resourceCollection.addResources(resourceResult.resources);
         showSuccessMessage();
       }
     } catch (e) {

@@ -34,30 +34,6 @@
   
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
-  let sectionTemplate: CompositionSection = {
-    title: "Patient Story",
-    code: {
-      coding: [
-        {
-          system: "http://loinc.org",
-          code: "81338-6",
-          display: "Patient Story"
-        }
-      ]
-    },
-    text: {
-      status: "generated",
-      div: "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>${story}</p>\n<p><strong>Patient's Goals</strong></p><ul>${goals}</ul></div>"
-    },
-    extension: [
-      {
-        url: "http://healthintersections.com.au/fhir/StructureDefinition/patient-story",
-        valueString: ""
-      }
-    ],
-    entry: []
-  };
-
   let observationResourceTemplate: Observation = {
     resourceType: "Observation",
     status: "final",
@@ -141,19 +117,8 @@
     if (resources.length == 0) {
       return;
     }
-    const section = JSON.parse(JSON.stringify(sectionTemplate));
-    let patientStoryHTML = story ? `<p><strong>Patient Story</strong></p><p>${story}</p>`: "";
-    let patientGoalsHTML = goalResources.length > 0
-      ? `<p><strong>Patient's Goals</strong></p><ul>${
-        goalResources.map(goal => `<li>${goal.description.text}</li>`).join('')
-      }</ul>`
-      : "";
-    section.text.div = `<div xmlns="http://www.w3.org/1999/xhtml">
-      ${patientStoryHTML}
-      ${patientGoalsHTML}
-    </div>`;
-    section.extension[0].valueString = story;
     processing = false;
+
     let result:ResourceRetrieveEvent = {
       resources: resources,
       category: CATEGORY,

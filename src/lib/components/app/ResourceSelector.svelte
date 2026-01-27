@@ -88,9 +88,6 @@
   let resourcesByTypeStore: Writable<Record<string, Record<string, ResourceHelper>>>;
   $: resourcesByTypeStore = resourceCollection.resourcesByType;
 
-  let extensionSectionStore: Writable<Record<string, CompositionSection | false>>;
-  $: extensionSectionStore = resourceCollection.extensionSections;
-
   let patientStore: Record<string, ResourceHelper>;
   $: {
     if ($resourcesByTypeStore) {
@@ -247,11 +244,7 @@
                   {patientCount}
                 </Badge>
               {:else}
-                {#if resourceType in $extensionSectionStore}
-                  {resourceType}
-                {:else}
-                  {`${resourceType}s`}
-                {/if}
+                {`${resourceType}s`}
                 <Badge
                   class="mx-1"
                   color={Object.values($resourcesByTypeStore[resourceType]).filter(
