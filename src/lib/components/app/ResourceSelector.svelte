@@ -287,7 +287,7 @@
                       />
                     {/if}
                   </Col>
-                  <Col class="resource-content justify-content-center align-items-center">
+                  <Col class="overflow-auto resource-content justify-content-center align-items-center">
                     {#if resourceType in components}
                       <svelte:component
                         this={components[resourceType]}

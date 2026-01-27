@@ -325,7 +325,7 @@
               return value;
             }) as value, index}
                 <Row class={index > 0 ? "border-top pt-2 mt-2" : ""} style="overflow: hidden">
-                  <Col class="justify-content-center align-items-center">
+                  <Col class="overflow-auto justify-content-center align-items-center">
                     {#if value.resource.resourceType in resourceConfig}
                       <svelte:component
                         this={resourceConfig[value.resource.resourceType].component}

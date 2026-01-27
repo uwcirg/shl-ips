@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { formatDate } from '$lib/utils/util';
     import { Badge, Button, Icon } from '@sveltestrap/sveltestrap';
     import { onMount } from 'svelte';
     import CodeableConceptTemplate from '$lib/components/resource-templates/CodeableConcept.svelte';
@@ -69,7 +70,7 @@
 {/if}
 
 {#if resource.birthDate}
-    Birth Date: {resource.birthDate}<br>
+    Birth Date: {formatDate(resource.birthDate)}<br>
 {/if}
 {#if resource.gender}
     Gender: {resource.gender ?? ""}<br>

@@ -250,7 +250,7 @@
             {#each sectionContent.section.extension as extension}
               <Card style="width: 100%; max-width: 100%" class="mb-2">
                 <CardBody>
-                  <Row style="overflow:hidden" class="d-flex justify-content-end align-content-center">
+                  <Row class="overflow-auto d-flex justify-content-end align-content-center">
                     <Col class="flex-grow-1" style="overflow:hidden">
                       <svelte:component
                         this={SectionExtension}
@@ -266,7 +266,7 @@
               {#each sectionContent.entries as resource, index}
                 <CardBody class={index > 0 ? "border-top" : ""}>
                   <Row style="overflow:hidden" class="d-flex justify-content-end align-content-center">
-                    <Col class="justify-content-center align-items-center">
+                    <Col class="overflow-auto justify-content-center align-items-center">
                       {#if mode === "app" && resource.resourceType in components}
                         <svelte:component
                           this={components[resource.resourceType]}
