@@ -18,6 +18,7 @@
   import type { SHCRetrieveEvent, IAuthService, IPSRetrieveEvent, ResourceRetrieveEvent } from '$lib/utils/types';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { getResourcesFromIPS, isIPSBundle } from '$lib/utils/util';
+  import { METHODS, CATEGORIES } from '$lib/config/tags';
 
   export let disabled = false;
 
@@ -27,8 +28,8 @@
   const ipsDispatch = createEventDispatcher<{'ips-retrieved': IPSRetrieveEvent}>();
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
-  const CATEGORY = "provider-health-record";
-  const METHOD = "provider-health-record-url";
+  const CATEGORY = CATEGORIES.PROVIDER_HEALTH_RECORD;
+  const METHOD = METHODS.PROVIDER_HEALTH_RECORD_URL;
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let summaryUrls = EXAMPLE_IPS;

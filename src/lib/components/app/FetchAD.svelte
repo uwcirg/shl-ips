@@ -23,6 +23,7 @@
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import FHIRDataService from '$lib/utils/FHIRDataService';
+  import { METHODS, CATEGORIES } from '$lib/config/tags';
 
   export let disabled = false;
 
@@ -95,8 +96,8 @@
     // }
   };
 
-  const CATEGORY = "advance-directives";
-  const METHOD = "advance-directives-search";
+  const CATEGORY = CATEGORIES.ADVANCE_DIRECTIVES;
+  const METHOD = METHODS.ADVANCE_DIRECTIVES_SEARCH;
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let selectedSource = "Current User";

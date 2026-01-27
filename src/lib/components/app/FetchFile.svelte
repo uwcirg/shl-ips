@@ -13,13 +13,14 @@
     import { createEventDispatcher } from 'svelte';
     import type { Composition } from 'fhir/r4';
     import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
+    import { METHODS, CATEGORIES } from '$lib/config/tags';
 
     export let disabled = false;
     
     const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
-    const CATEGORY = "provider-health-record";
-    const METHOD = "provider-health-record-file";
+    const CATEGORY = CATEGORIES.PROVIDER_HEALTH_RECORD;
+    const METHOD = METHODS.PROVIDER_HEALTH_RECORD_FILE;
     let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
     let resourceResult: ResourceRetrieveEvent = {
