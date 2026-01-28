@@ -87,19 +87,6 @@
     let tab = document.querySelector(`span.${activeTab}-tab`)?.parentElement;
     tab?.click();
 
-    const accordions = document.querySelectorAll('div.section-accordion');
-    if (accordions) {
-      for (const accordion of Array.from(accordions)) {
-        const button = accordion?.querySelector('button.accordion-button');
-        if (button) {
-          button.addEventListener('click', () => {
-            setTimeout(() => {
-              button.scrollIntoView(true)
-            }, 400);
-          });
-        }
-      }
-    }
     setTimeout(() => {
       const accordions = document.querySelectorAll('div.section-accordion');
       if (accordions) {
