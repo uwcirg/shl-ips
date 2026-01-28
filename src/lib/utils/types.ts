@@ -185,9 +185,9 @@ export interface FormOption {
 }
 
 export interface IAuthService {
-  user: Writable<User | null>;
-  authenticated: Writable<boolean>;
-  error: Writable<any>;
+  user: Readable<User | null>;
+  authenticated: Readable<boolean>;
+  error: Readable<any>;
 
   getUser(): Promise<User | null>;
   getAccessToken(): Promise<string | undefined>;

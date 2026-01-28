@@ -24,7 +24,7 @@ export class AuthService implements IAuthService {
   private _error: Writable<any> = writable(null);
   public readonly error: Readable<any> = derived(this._error, ($error) => $error);
 
-  private constructor() {
+  constructor() {
     const settings = {
       authority: AUTH_URL,
       client_id: AUTH_CLIENT_ID,
