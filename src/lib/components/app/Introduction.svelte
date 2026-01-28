@@ -8,7 +8,6 @@
 
 <style>
   .page-title {
-    color: rgb(34, 72, 156);
     margin-bottom: 1rem;
   }
 </style>

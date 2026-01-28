@@ -1,0 +1,17 @@
+// Default variable overrides:
+// See node_modules/bootstrap/scss/_variables.scss for full list of available variables
+
+@use "bootstrap/scss/bootstrap" with (
+  // theme colors
+  $primary: #1d77c0,
+  $info: #149691,
+  $success: #ACC35B,
+);
+
+// End default variable overrides
+
+
+// Custom styles:
+@use "./_common_styles.scss";
+
+// End custom styles

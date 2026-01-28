@@ -84,7 +84,7 @@
       </Row>
       <Row>
         <Col class="pe-0">
-          <Badge color="secondary">
+          <Badge color="info">
             {METHOD_NAMES[method]?.name || "Unknown"}
           </Badge>
         </Col>

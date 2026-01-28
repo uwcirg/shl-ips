@@ -1,7 +1,6 @@
 <script lang="ts">
   import {
-    Container,
-    Styles
+    Container
   } from '@sveltestrap/sveltestrap';
   import { onMount, onDestroy, setContext } from 'svelte';
   import { writable, type Writable } from 'svelte/store';
@@ -86,7 +85,6 @@
 </svelte:head>
 
 <Container class="main" fluid>
-  <Styles />
   <Header />
   <div class="main-content">
     <slot />
