@@ -12,6 +12,10 @@ const configs: Record<string, any> = {
   "WAHealthSummaryPOLSTProvider": WAHealthSummaryPOLSTProvider
 };
 
-await import(`$lib/scss/_styles_${INSTANCE_ID}.scss`);
+if (INSTANCE_ID === "MyHealthSummary") {
+  await import(`$lib/scss/_styles_MyHealthSummary.scss`);
+} else {
+  await import(`$lib/scss/_styles_WAHealthSummary.scss`);
+}
 
 export const INSTANCE_CONFIG = configs[INSTANCE_ID];
