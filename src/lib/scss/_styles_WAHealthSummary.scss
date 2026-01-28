@@ -5,7 +5,6 @@
   // theme colors
   $primary: #1d77c0,
   $info: #149691,
-  $success: #ACC35B,
 );
 
 // End default variable overrides
@@ -14,4 +13,8 @@
 // Custom styles:
 @use "./_common_styles.scss";
 
+.page-title {
+  color: rgb(34, 72, 156);
+  margin-bottom: 1rem;
+}
 // End custom styles
