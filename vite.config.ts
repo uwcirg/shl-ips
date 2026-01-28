@@ -19,6 +19,11 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       sourcemap: process.env.DEBUG ?? false
+    },
+    resolve: {
+      alias: {
+        '$theme': `/src/lib/scss/_styles_${process.env.VITE_INSTANCE_ID ?? 'WAHealthSummary'}.scss`
+      }
     }
   }
 });

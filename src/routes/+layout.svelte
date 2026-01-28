@@ -9,14 +9,8 @@
   import { FHIRDataService } from '$lib/utils/FHIRDataService';
   import Header from '$lib/components/layout/Header.svelte';
   import Footer from '$lib/components/layout/Footer.svelte';
-  import { INSTANCE_CONFIG, INSTANCE_ID } from '$lib/config/instance_config';
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import type { IAuthService, SHLAdminParams } from '$lib/utils/types';
-
-  if (INSTANCE_ID === "MyHealthSummary") {
-    import('$lib/scss/_styles_MyHealthSummary.scss');
-  } else {
-    import('$lib/scss/_styles_WAHealthSummary.scss');
-  }
 
   let authService: IAuthService = new AuthService();
   setContext('authService', authService);
@@ -72,7 +66,6 @@
     await authService.isAuthenticated();
     // Initial call to set pagination size on page load
     dispatchPageSize()
-
     // Call dispatchPageSize() on window resize
     window.addEventListener('resize', dispatchPageSize);
   });
