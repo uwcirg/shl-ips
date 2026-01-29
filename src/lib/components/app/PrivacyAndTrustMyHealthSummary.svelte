@@ -2,7 +2,7 @@
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 </script>
 <p class="info-paragraph">
-  ${INSTANCE_CONFIG.title} requires users to create an account, as an important way of protecting your privacy. Like any computer account, it is important that you keep the account login information to yourself, and that you create a good, hard to guess, password and keep it confidential.
+  {INSTANCE_CONFIG.title} requires users to create an account, as an important way of protecting your privacy. Like any computer account, it is important that you keep the account login information to yourself, and that you create a good, hard to guess, password and keep it confidential.
 </p>
 <p class="info-paragraph">
   Can you create an account with a fake email and fake information? Yes.
