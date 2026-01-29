@@ -24,6 +24,14 @@ export default defineConfig(({ mode }) => {
       alias: {
         '$theme': `/src/lib/scss/_styles_${process.env.VITE_INSTANCE_ID ?? 'WAHealthSummary'}.scss`
       }
+    },
+    css: {
+      preprocessorOptions: {
+        scss: {
+          api: 'modern-compiler', // or "modern"
+          silenceDeprecations: ['color-functions', 'global-builtin', 'import', 'if-function', 'legacy-js-api']
+        }
+      }
     }
   }
 });

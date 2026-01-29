@@ -516,12 +516,14 @@
                 {#each Object.entries($userResources[category]).sort((a, b) => new Date((get(b[1].patient))?.meta?.lastUpdated) - new Date((get(a[1].patient))?.meta?.lastUpdated)) as [source, dataset]}
                   {@const status = dataset.status}
                   {@const collection = dataset.collection}
-                  {@const { method, sourceName, placeholder } = collection.getTags()}
-                  {@const patient = get(collection.patient)}
                   <Col xs="12" sm="6" lg="4" style="">
                     <DatasetView {dataset} {masterPatient}>
                       <DropdownMenu slot="menu">
-                        <DropdownItem on:click={() => showDataset(collection)}><div class="d-flex justify-content-between w-100">View <Icon name="chevron-right"/></div></DropdownItem>
+                        <DropdownItem on:click={() => showDataset(collection)}>
+                          <div class="d-flex justify-content-between w-100">
+                            View <Icon name="chevron-right"/>
+                          </div>
+                        </DropdownItem>
                       </DropdownMenu>
                       <Button
                         slot="footer"
