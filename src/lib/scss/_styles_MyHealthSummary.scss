@@ -13,11 +13,6 @@
 // Custom styles:
 @use "./_common_styles.scss";
 
-.btn-info {
-  --bs-btn-color: #fff;
-  --bs-btn-hover-color: #fff;
-}
-
 .page-title {
   color: var(--bs-primary);//rgb(34, 72, 156);
   margin-bottom: 1rem;
