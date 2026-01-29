@@ -11,7 +11,7 @@
   But, the system will be much less valuable if you can’t use it to support your health. You can create multiple summaries of your data, and you can limit what data are contained in each of them, if you need different summaries for different purposes. 
 </p>
 <p class="info-paragraph">
-  If you are interested in exploring the system using test data, you may wish to look here: https://myhealthsummary.demo.cirg.uw.edu/
+  If you are interested in exploring the system using test data, you may wish to look here: <a href="https://myhealthsummary.demo.cirg.uw.edu" target="_blank">https://myhealthsummary.demo.cirg.uw.edu</a>
 </p>
 <p class="info-paragraph">
   Does using a fake email cause  any other problems for me? Maybe. We may periodically clean out seemingly unused accounts and we may first send you an email to remind you how to keep your account (if you use a fake email, you will not get that notification).

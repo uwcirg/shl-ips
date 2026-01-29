@@ -17,5 +17,5 @@
   What about my health data? In this demo system, the terms of use say that you can not use the system for real health data. We can’t control what you enter into the parts of the system that allow you to enter health data, but we do not guarantee that this demonstration system will be available, or that the data will be preserved through system upgrades or fixes.
 </p>
 <p class="info-paragraph">
-  If you are interested in using a system that will allow you to gather, enter and share your own health data, you may wish to look here: https://myhealthsummary.cirg.uw.edu/
+  If you are interested in using a system that will allow you to gather, enter and share your own health data, you may wish to look here: <a href="https://myhealthsummary.cirg.uw.edu" target="_blank">https://myhealthsummary.cirg.uw.edu</a>
 </p>
