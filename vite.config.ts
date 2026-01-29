@@ -22,7 +22,8 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        '$theme': `/src/lib/scss/_styles_${process.env.VITE_INSTANCE_ID ?? 'WAHealthSummary'}.scss`
+        '$theme': `/src/lib/scss/_styles_${process.env.VITE_INSTANCE_ID ?? 'WAHealthSummary'}.scss`,
+        '$config': `/src/lib/config/config_${process.env.VITE_INSTANCE_ID ?? 'WAHealthSummary'}.ts`
       }
     },
     css: {
