@@ -2,6 +2,7 @@ import { CATEGORIES, METHODS} from '$lib/config/tags';
 
 import AddSummary from '$lib/components/app/AddSummary.svelte';
 import IntroductionMyHealthSummary from '$lib/components/app/IntroductionMyHealthSummary.svelte';
+import PrivacyAndTrustMyHealthSummary from '$lib/components/app/PrivacyAndTrustMyHealthSummary.svelte'
 
 import Demographic from '$lib/components/app/Demographic.svelte'
 import FetchSoFSearch from '$lib/components/app/FetchSoFSearch.svelte'
@@ -23,7 +24,8 @@ export default {
   advanced: false,
   pages: {
     home: {
-      introComponent: IntroductionMyHealthSummary
+      introComponent: IntroductionMyHealthSummary,
+      privacyComponent: PrivacyAndTrustMyHealthSummary
     },
     data: {
       sections: [
