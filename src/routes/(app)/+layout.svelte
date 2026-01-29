@@ -28,6 +28,7 @@
   }
 
   async function checkUser() {
+    await authService.isAuthenticated();
     user = authService.user;
     if ($user) {
       let now = Date.now() / 1000;
