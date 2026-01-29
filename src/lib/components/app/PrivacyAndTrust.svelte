@@ -2,7 +2,7 @@
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 </script>
 <p class="info-paragraph">
-  We want to demonstrate privacy, as well as the functions of ${INSTANCE_CONFIG.title}, but do not use this system for real health data. Accounts are an important way of protecting your privacy.
+  We want to demonstrate privacy, as well as the functions of {INSTANCE_CONFIG.title}, but do not use this system for real health data. Accounts are an important way of protecting your privacy.
 </p>
 <p class="info-paragraph">
   Can you create an account with a fake email and fake information? Yes.
