@@ -162,9 +162,9 @@
       <div slot="header" class="d-flex justify-content-start align-items-center">
         <div class="me-3">
           {#if section.category === undefined || ($loading ? undefined : Boolean($userResources?.[section.category])) === true}
-            <Icon name="check-circle-fill" style="color: var(--bs-success)"/>
+            <Icon name="check-circle-fill" class="text-success"/>
           {:else if ($loading ? undefined : Boolean($userResources?.[section.category])) === false}
-            <Icon name="circle" style="color: var(--bs-secondary"/>
+            <Icon name="circle" class="text-secondary"/>
           {:else if ($loading ? undefined : Boolean($userResources?.[section.category])) === undefined}
             <Spinner color="secondary" size="sm"/>
           {/if}

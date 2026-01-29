@@ -16,7 +16,7 @@
   </slot>
 {:else if $status?.state === StateManager.State.ERROR}
   <slot name="error">
-    <Icon name="exclamation-triangle" color="danger" size={size}/>
+    <Icon name="exclamation-triangle" class="text-danger" size={size}/>
   </slot>
 {:else}
   <slot name="content">

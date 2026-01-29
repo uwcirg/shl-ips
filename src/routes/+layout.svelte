@@ -1,7 +1,6 @@
 <script lang="ts">
   import {
-    Container,
-    Styles
+    Container
   } from '@sveltestrap/sveltestrap';
   import { onMount, onDestroy, setContext } from 'svelte';
   import { writable, type Writable } from 'svelte/store';
@@ -67,7 +66,6 @@
     await authService.isAuthenticated();
     // Initial call to set pagination size on page load
     dispatchPageSize()
-
     // Call dispatchPageSize() on window resize
     window.addEventListener('resize', dispatchPageSize);
   });
@@ -86,7 +84,6 @@
 </svelte:head>
 
 <Container class="main" fluid>
-  <Styles />
   <Header />
   <div class="main-content">
     <slot />

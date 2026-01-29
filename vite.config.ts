@@ -19,6 +19,20 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       sourcemap: process.env.DEBUG ?? false
+    },
+    resolve: {
+      alias: {
+        '$theme': `/src/lib/scss/_styles_${process.env.VITE_INSTANCE_ID ?? 'WAHealthSummary'}.scss`,
+        '$config': `/src/lib/config/config_${process.env.VITE_INSTANCE_ID ?? 'WAHealthSummary'}.ts`
+      }
+    },
+    css: {
+      preprocessorOptions: {
+        scss: {
+          api: 'modern-compiler', // or "modern"
+          silenceDeprecations: ['color-functions', 'global-builtin', 'import', 'if-function', 'legacy-js-api']
+        }
+      }
     }
   }
 });

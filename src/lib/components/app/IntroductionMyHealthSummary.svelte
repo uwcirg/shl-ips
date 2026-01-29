@@ -9,10 +9,3 @@
 <p class="info-paragraph">
   {INSTANCE_CONFIG.title} lets people obtain and personally control the sharing of their health information with any health care provider, family member or other individuals of their choosing, using a simple web link or QR code.
 </p>
-
-<style>
-  .page-title {
-    color: rgb(34, 72, 156);
-    margin-bottom: 1rem;
-  }
-</style>
