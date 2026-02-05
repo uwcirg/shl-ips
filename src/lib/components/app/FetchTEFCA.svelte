@@ -39,6 +39,12 @@
       sourceName: undefined,
       source: undefined
   };
+  $: {
+    if (selectedSource || method) {
+      resourceResult.sourceName = sources[selectedSource].destination;
+      resourceResult.source = method === 'url' ? sources[selectedSource].url : baseUrl;
+    }
+  }
 
   let sources: Record<string, {selected: Boolean; destination: string; url: string}> = {
     MeldOpen: {selected: false, destination: "MeldOpen", url: "https://gw.interop.community/HeliosConnectathonSa/open"},
@@ -48,6 +54,7 @@
     // Patient no longer exists
     // PublicHapi: {selected: false, destination: "PublicHapi", url: "http://hapi.fhir.org/baseR4"},
     OpenEpic: {selected: false, destination: "OpenEpic", url: ""},
+    "OpenEpic_2026-01_Connectathon": {selected: false, destination: "OpenEpic_2026-01_Connectathon", url: ""},
     CernerHelios: {selected: false, destination: "CernerHelios", url: ""}
   }
 
@@ -68,11 +75,8 @@
   let zip = '';
   let country = '';
   let phone = '';
+  let email = '';
   let gender:string = '';
-
-  let result: ResourceRetrieveEvent = {
-    resources: undefined
-  };
 
   $: {
     if (selectedSource) {
@@ -87,6 +91,7 @@
       zip = '';
       country = '';
       phone = '';
+      email = '';
       gender = '';
       if (selectedSource === 'MeldOpen') {
         last = "Blackstone";
@@ -126,6 +131,15 @@
         first = "Linda";
         gender = "female";
         dob = "1982-07-23";
+      } else if (selectedSource === 'OpenEpic_2026-01_Connectathon') {
+        last = "Harper";
+        first = "Elizabeth";
+        gender = "female";
+        dob = "1998-05-15";
+        city = "Atlanta";
+        state = "GA";
+        zip = "38318";
+        email = "beth.harper+epic@example.com";
       }
     }
   }
@@ -138,8 +152,52 @@
     }
   }
 
+  function hasNoResults(body: any): boolean {
+    if (!body || body.resourceType !== 'Bundle') {
+      return false;
+    }
+    
+    // Check for total === 0
+    if (body.total === 0) {
+      return true;
+    }
+    
+    // Check for empty entry array
+    if (!body.entry || body.entry.length === 0) {
+      return true;
+    }
+    
+    // Check for OperationOutcome indicating no results
+    for (const entry of body.entry) {
+      if (entry.resource && entry.resource.resourceType === 'OperationOutcome') {
+        const outcome = entry.resource;
+        if (outcome.issue && Array.isArray(outcome.issue)) {
+          for (const issue of outcome.issue) {
+            // Check for code "4101" or text containing "no results"
+            if (issue.details) {
+              const details = issue.details;
+              if (details.coding && Array.isArray(details.coding)) {
+                for (const coding of details.coding) {
+                  if (coding.code === '4101' || (coding.display && coding.display.toLowerCase().includes('no results'))) {
+                    return true;
+                  }
+                }
+              }
+              if (details.text && details.text.toLowerCase().includes('no results')) {
+                return true;
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    return false;
+  }
+
   async function fetchPatient(patient: any) {
     let result;
+    let body;
     
     let url = baseUrl;
     let headers = {
@@ -151,21 +209,12 @@
       url = sources[selectedSource].url;
     } else if (method === 'destination') {
       headers['X-Request-Id'] = '21143678-7bd5-4caa-bdae-ee35a409d4f2';
-      headers['X-DESTINATION'] = selectedSource;
-      headers['X-POU'] = (selectedSource === 'OpenEpic' ? 'TREAT' : 'PUBHLTH');
+      headers['X-DESTINATION'] = (selectedSource === 'OpenEpic_2026-01_Connectathon' ? 'OpenEpic' : selectedSource);
+      headers['X-POU'] = (selectedSource === 'OpenEpic' || selectedSource === 'OpenEpic_2026-01_Connectathon' ? 'TREAT' : 'PUBHLTH');
     }
     
-    try {
-      result = await fetch(`${url}/Patient/$match`, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify(patient)
-      });
-      if (!result.ok) {
-        throw new Error('Unable to fetch patient data with $match', { cause: result });
-      }
-    } catch (error) {
-      console.warn(error);
+    // Helper function to perform fallback search
+    const performFallbackSearch = async () => {
       let query = buildPatientSearchQuery(
         {
           first: first,
@@ -174,6 +223,7 @@
           dob: dob,
           mrn: mrn,
           phone: phone,
+          email: email,
           address1: address1,
           address2: address2,
           city: city,
@@ -189,9 +239,45 @@
       if (!result.ok) {
         throw new Error('Unable to fetch patient data', { cause: result });
       }
+      return await result.json();
+    };
+    
+    try {
+      const parametersResource = {
+        resourceType: "Parameters",
+        parameter: [
+          {
+            name: "resource",
+            resource: patient
+          },
+          {
+            name: "onlyCertainMatches",
+            valueBoolean: true
+          }
+        ]
+      };
+      result = await fetch(`${url}/Patient/$match`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(parametersResource)
+      });
+      if (!result.ok) {
+        throw new Error('Unable to fetch patient data with $match', { cause: result });
+      }
+      
+      // Parse the response to check for no results
+      body = await result.json();
+      if (hasNoResults(body)) {
+        // Fall back to search query if no results found
+        console.warn('$match returned no results, falling back to search query');
+        body = await performFallbackSearch();
+      }
+    } catch (error) {
+      console.warn(error);
+      // Fall back to search query on error
+      body = await performFallbackSearch();
     }
 
-    let body = await result.json();
     if (body.resourceType == 'Bundle' && (body.total == 0 || body.entry.length === 0)) {
       throw new Error('Unable to find patient');
     }
@@ -211,8 +297,8 @@
       url = sources[selectedSource].url;
     } else if (method === 'destination') {
       headers['X-Request-Id'] = '21143678-7bd5-4caa-bdae-ee35a409d4f2';
-      headers['X-DESTINATION'] = selectedSource;
-      headers['X-POU'] = (selectedSource === 'OpenEpic' ? 'TREAT' : 'PUBHLTH');
+      headers['X-DESTINATION'] = (selectedSource === 'OpenEpic_2026-01_Connectathon' ? 'OpenEpic' : selectedSource);
+      headers['X-POU'] = (selectedSource === 'OpenEpic' || selectedSource === 'OpenEpic_2026-01_Connectathon' ? 'TREAT' : 'PUBHLTH');
     }
 
     let results = await Promise.allSettled(
@@ -269,6 +355,7 @@
           dob: dob,
           mrn: mrn,
           phone: phone,
+          email: email,
           address1: address1,
           address2: address2,
           city: city,
@@ -278,20 +365,14 @@
         }
       ));
       const resources = await fetchPatientData(patient.id);
-      hostname = sources[selectedSource].url;
+      hostname = method === 'url' ? sources[selectedSource].url : baseUrl;
       processing = false;
       if (resources.length === 0) {
         console.warn(`No resources found for patient ${patient.id} at ${hostname} for ${selectedSource}`);
       }
-      result = {
-        resources: resources,
-        category: CATEGORY,
-        method: METHOD,
-        sourceName: selectedSource,
-        source: hostname
-      };
+      resourceResult.resources = resources;
       console.log(resources);
-      resourceDispatch('update-resources', result);
+      resourceDispatch('update-resources', resourceResult);
     } catch (e) {
       processing = false;
       console.log('Failed', e);
@@ -300,7 +381,7 @@
   }
 </script>
 
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, sources[selectedSource].url, prepareIps)}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, resourceResult.source, prepareIps)}>
   <Label>Fetch US Core data via TEFCA query</Label>
   <FormGroup>
     <Row>
@@ -361,6 +442,9 @@
         <Label>Contact Information</Label>
         <FormGroup style="font-size:small" class="text-secondary" label="Phone">
           <Input type="tel" bind:value={phone} style="width: 165px"/>
+        </FormGroup>
+        <FormGroup style="font-size:small" class="text-secondary" label="Email Address">
+          <Input type="email" bind:value={email} style="width: 165px"/>
         </FormGroup>
         <Label>Address</Label>
         <FormGroup style="font-size:small" class="text-secondary" label="Address Line 1">
