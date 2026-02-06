@@ -83,10 +83,6 @@
       </p>
 
       <p class="info-paragraph">
-        Now, using SMART Health Links, {INSTANCE_CONFIG.title} enables personally-controlled access to, and sharing of, health data by WA State residents to meet needs such as travel, emergency records access, school enrollment, etc.
-      </p>
-
-      <p class="info-paragraph">
         Now, using SMART Health Links (SHLs), {INSTANCE_CONFIG.title} lets WA State residents access, augment, and electively share their own health data using the International Patient Summary (IPS) standard. They might choose to do so to verify immunizations, to summarize traveler health information, to have a medical summary in the event they require urgent or emergency care, or for routine sharing of their full history with others.
       </p>
     </AccordionItem>
