@@ -2,6 +2,7 @@ import { CATEGORIES, METHODS} from '$lib/config/tags';
 
 import AddSummary from '$lib/components/app/AddSummary.svelte';
 import Introduction from '$lib/components/app/Introduction.svelte';
+import PrivacyAndTrust from '$lib/components/app/PrivacyAndTrust.svelte';
 
 import Demographic from '$lib/components/app/Demographic.svelte';
 import FetchSoF from '$lib/components/app/FetchSoF.svelte';
@@ -29,7 +30,9 @@ export default {
   advanced: true,
   pages: {
     home: {
-      introComponent: Introduction
+      introComponent: Introduction,
+      privacyComponent: PrivacyAndTrust
+      
     },
     data: {
       sections: [
