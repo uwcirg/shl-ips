@@ -9,7 +9,11 @@
     Styles
   } from 'sveltestrap';
   import { goto } from '$app/navigation';
+  import { onMount } from 'svelte';
   import { AuthService } from '$lib/utils/AuthService';
+
+  onMount(() => goto('https://myhealthsummary.demo.cirg.uw.edu'));
+
   async function login() {
     if (await AuthService.Instance.isAuthenticated()) {
       goto('/summaries');

@@ -19,6 +19,7 @@
   let currentUser: Promise<User | undefined>;
   
   onMount(async () => {
+    goto('https://myhealthsummary.demo.cirg.uw.edu');
     currentUser = authService.getUser().then((user) => {
       if (!user) {
         return authService.login().then(() => {

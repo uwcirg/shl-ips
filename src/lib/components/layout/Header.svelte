@@ -128,6 +128,11 @@
     });
   }
 
+  function login() {
+    goto('https://myhealthsummary.demo.cirg.uw.edu');
+    authService.login();
+  }
+
   function handleUpdate(event: any) {
     $isOpen = event.detail.isOpen;
   }
@@ -204,13 +209,13 @@
               </Dropdown>
             {:else}
               <NavItem>
-                <NavLink on:click={() => authService.login()}><Icon name="person-circle"/> Sign In</NavLink>
+                <NavLink on:click={() => login()}><Icon name="person-circle"/> Sign In</NavLink>
               </NavItem>
             {/if}
           {/await}
         {:else}
         <NavItem>
-          <NavLink on:click={() => authService.login()}><Icon name="person-circle"/> Sign In</NavLink>
+          <NavLink on:click={() => login()}><Icon name="person-circle"/> Sign In</NavLink>
         </NavItem>
       {/if}
       </Nav>
