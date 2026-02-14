@@ -17,6 +17,7 @@
 
   export let mode: "Occupation" | "Industry";
   export let value: IOResponse;
+  export let id: string = "";
 
   let authService: IAuthService = getContext('authService');
 
@@ -35,11 +36,21 @@
   };
 
   let isOpen = false;
+  // let selectAll = true;
+  // $: if (isOpen) {
+  //   selectAll = false;
+  // }
   $: icon = 'search';
   let processing = false;
 
   let codingOptionTitle: string = "";
-  value = defaults[mode][0];
+  $: if (value && codingOptionTitle === "") {
+    if (value.Title === defaults[mode][0].Title) {
+      codingOptionTitle = "";
+    } else {
+      codingOptionTitle = value.Title;
+    }
+  }
   let codingOptions: NIOAutoCoderResponse | undefined = defaults;
 
   onMount(() => {
@@ -47,6 +58,7 @@
     window.addEventListener('resize', updateMenuPosition);
     window.addEventListener('scroll', updateMenuPosition, true);
     document.addEventListener('click', handleOutsideClick);
+    value = value ?? defaults[mode][0];
   });
   onDestroy(() => {
     window.removeEventListener('resize', updateMenuPosition);
@@ -141,9 +153,11 @@
     <DropdownToggle
       tag="div"
       class="d-inline-block"
-      style="width:100%">
+      style="width:100%"
+    >
       <div style="position:relative" bind:this={toggleRef}>
         <Input
+          id={id}
           title="Search for an {mode.toLowerCase()}"
           type="text"
           placeholder={`Search ${mode.toLowerCase()}...`}
@@ -154,7 +168,14 @@
             if (event.target.value.length > 2 || event.target.value.length === 0) {
               fetchCode(event.target.value);
             }
-          }} />
+          }}
+          on:focus={() => {
+            document.getElementById(id)?.select();
+            if (value) {
+              fetchCode(value.Title);
+            }
+          }}
+        />
         {#if processing}
           <Spinner type="border" size="sm" color="secondary"
             style="position: absolute;
@@ -199,5 +220,5 @@
       </DropdownMenu>
     </Portal>
   </Dropdown>
-  <Label class="mb-0 mx-1">{`Using "${value.Title}"`}</Label>
+  <Label class="mb-0 mx-1">{`Using "${value?.Title ?? defaults[mode][0].Title}"`}</Label>
 </FormGroup>
