@@ -17,6 +17,7 @@
 
   export let mode: "Occupation" | "Industry";
   export let value: IOResponse;
+  export let id: string = "";
 
   let authService: IAuthService = getContext('authService');
 
@@ -38,11 +39,21 @@
   };
 
   let isOpen = false;
+  // let selectAll = true;
+  // $: if (isOpen) {
+  //   selectAll = false;
+  // }
   $: icon = 'search';
   let processing = false;
 
   let codingOptionTitle: string = "";
-  value = defaults[mode][0];
+  $: if (value && codingOptionTitle === "") {
+    if (value.Title === defaults[mode][0].Title) {
+      codingOptionTitle = "";
+    } else {
+      codingOptionTitle = value.Title;
+    }
+  }
   let codingOptions: NIOAutoCoderResponse | undefined = defaults;
 
   onMount(() => {
@@ -50,6 +61,7 @@
     window.addEventListener('resize', updateMenuPosition);
     window.addEventListener('scroll', updateMenuPosition, true);
     document.addEventListener('click', handleOutsideClick);
+    value = value ?? defaults[mode][0];
   });
   onDestroy(() => {
     window.removeEventListener('resize', updateMenuPosition);
@@ -156,9 +168,11 @@
     <DropdownToggle
       tag="div"
       class="d-inline-block"
-      style="width:100%">
+      style="width:100%"
+    >
       <div style="position:relative" bind:this={toggleRef}>
         <Input
+          id={id}
           title="Search for an {mode.toLowerCase()}"
           type="text"
           placeholder={`Search ${mode.toLowerCase()}...`}
