@@ -103,7 +103,7 @@
   let ocMethod: Writable<string> = writable('');
   let ocSource: Writable<string> = writable('');
   let ocDataset: Readable<any> = derived(
-    [userResources, ocCategory, ocSource], 
+    [userResources, ocCategory, ocMethod, ocSource], 
     ([$userResources, $ocCategory, $ocMethod, $ocSource]) => {
       if (!$userResources || !$ocCategory || !$ocMethod || !$ocSource) {
         return;
@@ -229,8 +229,8 @@
         color="danger"
         on:click={() => {
           isOpen = false;
-          let {category, sourceName} = $ocDataset.collection.getTags();
-          deleteDataset(category, sourceName);
+          let {category, method, source} = $ocDataset.collection.getTags();
+          deleteDataset(category, method, source);
         }}
       >
         <Icon name="trash" /> Delete
