@@ -166,7 +166,7 @@
   }
 </script>
 
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, summaryUrlValidated?.hostname, prepareIps)}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, summaryUrlValidated?.hostname, prepareIps)}>
   <FormGroup>
     <Dropdown {isOpen} toggle={() => {isOpen = !isOpen; updateMenuPosition();}}>
       <DropdownToggle tag="div" class="d-inline-block" style="width:100%">

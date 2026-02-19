@@ -283,7 +283,7 @@ export class FHIRDataService {
     if (!categoryContent) return [];
     const methodContent = Object.values(categoryContent);
     const datasetsWithStatus = methodContent.map(methodSource => Object.values(methodSource)).flat();
-    const sortedDatasetsWithStatus = datasetsWithStatus.sort((a, b) => new Date((get(b.dataset.patient))?.meta?.lastUpdated) - new Date((get(a.dataset.patient))?.meta?.lastUpdated));
+    const sortedDatasetsWithStatus = datasetsWithStatus.sort((a, b) => new Date((get(b.collection.patient))?.meta?.lastUpdated) - new Date((get(a.collection.patient))?.meta?.lastUpdated));
     return sortedDatasetsWithStatus as Array<{ status: StateManager, collection: ResourceCollection}>;
   }
 
