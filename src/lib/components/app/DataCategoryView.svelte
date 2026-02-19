@@ -100,20 +100,22 @@
   let name = '';
   let date = '';
   let ocCategory: Writable<string> = writable('');
+  let ocMethod: Writable<string> = writable('');
   let ocSource: Writable<string> = writable('');
   let ocDataset: Readable<any> = derived(
     [userResources, ocCategory, ocSource], 
-    ([$userResources, $ocCategory, $ocSource]) => {
-      if (!$userResources || !$ocCategory || !$ocSource) {
+    ([$userResources, $ocCategory, $ocMethod, $ocSource]) => {
+      if (!$userResources || !$ocCategory || !$ocMethod || !$ocSource) {
         return;
       }
-      let dataset = $userResources?.[$ocCategory]?.[$ocSource];
+      let dataset = $userResources?.[$ocCategory]?.[$ocMethod]?.[$ocSource];
       return dataset;
     }
   );
   function setContent(viewName: string, viewCollection: ResourceCollection) {
-    let { category, source } = viewCollection.getTags();
+    let { category, method, source } = viewCollection.getTags();
     ocCategory.set(category);
+    ocMethod.set(method);
     ocSource.set(source);
     name = viewName;
     date = new Date((get(viewCollection.patient)).meta.lastUpdated).toLocaleString(undefined, {
