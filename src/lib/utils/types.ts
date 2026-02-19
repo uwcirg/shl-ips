@@ -73,8 +73,6 @@ export interface NIOAutoCoderResponse {
 
 export interface ResourceRetrieveEvent {
   resources: Array<any> | undefined;
-  sectionKey?: string;
-  sectionTemplate?: CompositionSection;
   category: string;
   method: string;
   source: string;

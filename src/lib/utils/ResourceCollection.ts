@@ -102,7 +102,6 @@ export class ResourceCollection implements IResourceCollection {
      * @param resources The list of resources to add.
      */
 
-    // May want to add signature accepting a sectionKey function to handle more complex cases
     addResources(resources:Resource[]): ResourceHelper[]{
         let result = resources.map(r => this.addResource(r));
         return result;

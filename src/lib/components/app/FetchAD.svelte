@@ -396,8 +396,6 @@
       processing = false;
       let result:ResourceRetrieveEvent = {
         resources: resources,
-        sectionKey: sectionKey,
-        sectionTemplate: sectionTemplate,
         category: CATEGORY,
         method: METHOD,
         source: sources[selectedSource].url,

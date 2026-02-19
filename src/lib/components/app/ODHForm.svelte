@@ -6,8 +6,6 @@
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
 
-  export let sectionKey: string = 'Occupational Data';
-
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
   const CATEGORY = CATEGORIES.OCCUPATIONAL_DATA_FOR_HEALTH;
   const METHOD = METHODS.OCCUPATIONAL_DATA_FOR_HEALTH_FORM;
@@ -459,7 +457,6 @@
       ].filter((r) => r !== undefined);
       let result: ResourceRetrieveEvent = {
         resources: odhSectionResources.map((r) => r.resource),
-        sectionKey: sectionKey,
         category: CATEGORY,
         method: METHOD,
         source: SOURCE.url,

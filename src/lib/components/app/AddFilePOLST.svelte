@@ -203,7 +203,7 @@
       resourceResult = details;
       if (resourceResult.resources) {
         // Trigger update in ResourceSelector
-        resourceCollection.addResources(resourceResult.resources, resourceResult.sectionKey, resourceResult.sectionTemplate);
+        resourceCollection.addResources(resourceResult.resources);
         showSuccessMessage();
         if (document.querySelector(`div.edit-data > div.accordion-collapse.show`)?.length === 0) {
           (document.querySelector(`div.edit-data button`) as HTMLButtonElement)?.click();

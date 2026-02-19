@@ -55,21 +55,6 @@
         resource: undefined
     };
 
-    let sectionKey = "Advance Directives";
-
-    let sectionTemplate = {
-      title: "Advance Directives",
-      code: {
-        coding: [
-            {
-                system: "http://loinc.org",
-                code: "42348-3",
-                display: "Advance Directives"
-            }
-            ]
-        },
-        entry: []
-    };
     let resourceTemplate = {
         resourceType: "DocumentReference",
         status: "current",
@@ -129,9 +114,7 @@
             let resources = Object.values(fileData);
             processing = false;
             resourceResult = {
-                resources: resources,
-                sectionKey: sectionKey,
-                sectionTemplate: sectionTemplate
+                resources: resources
             }
             resourceDispatch('update-resources', resourceResult);
         } catch (e) {

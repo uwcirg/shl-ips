@@ -40,25 +40,6 @@
 
   let patientData: Resource[];
 
-  let sectionKey: string = "Advance Directives";
-  let sectionTemplate = {
-    title: "Advance Directives",
-    code: {
-        coding: [
-        {
-            system: "http://loinc.org",
-            code: "42348-3",
-            display: "Advance Directives"
-        }
-        ]
-    },
-    text: {
-            status: "generated",
-            div: "<div xmlns=\"http://www.w3.org/1999/xhtml\"><h5>Advance Directives</h5><table class=\"hapiPropertyTable\"><thead><tr><th>Scope</th><th>Status</th><th>Action Controlled</th><th>Date</th></tr></thead><tbody></tbody></table></div>"
-          },
-    entry: []
-  };
-
   onMount(async () => {
     let userId = get(authService.userId);
     let patient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient?identifier=https://keycloak.cirg.uw.edu%7C${userId}`, {cache: "no-store"})
@@ -127,8 +108,6 @@
     processing = false;
     let result:ResourceRetrieveEvent = {
       resources: patientData,
-      sectionKey: sectionKey,
-      sectionTemplate: sectionTemplate
     }
     resourceDispatch('update-resources', result);
   }
