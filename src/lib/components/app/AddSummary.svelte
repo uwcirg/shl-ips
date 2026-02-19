@@ -504,53 +504,50 @@
         </CardBody>
       </Card>
       {/if}
-      {#each Object.entries($userResources) as [category, datasetsBySource]}
+      {#each Object.keys($userResources) as [category]}
         <br>
         <Card>
           <CardHeader>
             <h6 class="mt-1">{categoryNameFor(category)}</h6>
           </CardHeader>
           <CardBody>
-            {#if $userResources[category]}
-              <Row class="g-4 d-flex justify-content-start">
-                {#each Object.entries($userResources[category]).sort((a, b) => new Date((get(b[1].patient))?.meta?.lastUpdated) - new Date((get(a[1].patient))?.meta?.lastUpdated)) as [source, dataset]}
-                  {@const status = dataset.status}
-                  {@const collection = dataset.collection}
-                  <Col xs="12" sm="6" lg="4" style="">
-                    <DatasetView {dataset} {masterPatient}>
-                      <DropdownMenu slot="menu">
-                        <DropdownItem on:click={() => showDataset(collection)}>
-                          <div class="d-flex justify-content-between w-100">
-                            View <Icon name="chevron-right"/>
-                          </div>
-                        </DropdownItem>
-                      </DropdownMenu>
-                      <Button
-                        slot="footer"
-                        class="d-flex w-100 justify-content-between align-items-center"
-                        color="success"
-                        outline
-                        disabled={$datasets[collection.id] || loadingMap[keyFor(collection)]}
-                        on:click={(event) => { addDataset(collection); }}
-                      >
-                        <div class="d-flex align-items-center" style="min-width: 37px">
-                          <DatasetStatusLoader status={status} bind:isLoading={loadingMap[keyFor(collection)]}>
-                            <Badge color="primary">{collection.getResourceCount()}</Badge>
-                          </DatasetStatusLoader>
+            <Row class="g-4 d-flex justify-content-start">
+              {#each fhirDataService.getDatasetsForCategory(category) as dataset}
+                {@const { status, collection } = dataset}
+                <Col xs="12" sm="6" lg="4" style="">
+                  <DatasetView {dataset} {masterPatient}>
+                    <DropdownMenu slot="menu">
+                      <DropdownItem on:click={() => showDataset(collection)}>
+                        <div class="d-flex justify-content-between w-100">
+                          View <Icon name="chevron-right"/>
                         </div>
-                        {#if !$datasets[collection.id]}
-                          <div>Add</div>
-                          <Icon name="plus-circle"/>
-                        {:else}
-                          <span class="text-secondary">Added</span>
-                          <Icon name="check-circle-fill" color="success"/>
-                        {/if}
-                      </Button>
-                    </DatasetView>
-                  </Col>
-                {/each}
-              </Row>
-            {/if}
+                      </DropdownItem>
+                    </DropdownMenu>
+                    <Button
+                      slot="footer"
+                      class="d-flex w-100 justify-content-between align-items-center"
+                      color="success"
+                      outline
+                      disabled={$datasets[collection.id] || loadingMap[keyFor(collection)]}
+                      on:click={(event) => { addDataset(collection); }}
+                    >
+                      <div class="d-flex align-items-center" style="min-width: 37px">
+                        <DatasetStatusLoader status={status} bind:isLoading={loadingMap[keyFor(collection)]}>
+                          <Badge color="primary">{collection.getResourceCount()}</Badge>
+                        </DatasetStatusLoader>
+                      </div>
+                      {#if !$datasets[collection.id]}
+                        <div>Add</div>
+                        <Icon name="plus-circle"/>
+                      {:else}
+                        <span class="text-secondary">Added</span>
+                        <Icon name="check-circle-fill" color="success"/>
+                      {/if}
+                    </Button>
+                  </DatasetView>
+                </Col>
+              {/each}
+            </Row>
           </CardBody>
         </Card>
       {/each}

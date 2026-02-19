@@ -277,6 +277,16 @@ export class FHIRDataService {
     return datasetsInCategoryWithSource !== undefined;
   }
 
+  getDatasetsForCategory(category: string): Array<{ status: StateManager, collection: ResourceCollection}> {
+    const userResources = get(this.userResources);
+    const categoryContent = userResources?.[category];
+    if (!categoryContent) return [];
+    const methodContent = Object.values(categoryContent);
+    const datasetsWithStatus = methodContent.map(methodSource => Object.values(methodSource)).flat();
+    const sortedDatasetsWithStatus = datasetsWithStatus.sort((a, b) => new Date((get(b.dataset.patient))?.meta?.lastUpdated) - new Date((get(a.dataset.patient))?.meta?.lastUpdated));
+    return sortedDatasetsWithStatus as Array<{ status: StateManager, collection: ResourceCollection}>;
+  }
+
   addDatasetToUserResources(collection: ResourceCollection): void {
     let patient = get(collection.patient);
     if (!patient) {
