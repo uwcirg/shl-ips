@@ -31,8 +31,8 @@ import { StateManager } from "$lib/utils/StateManager";
 export class FHIRDataService {
   auth: IAuthService;
 
-  // Category -> Source -> { status: StateManager, collection: ResourceCollection }
-  userResources: Writable<Record<string, Record<string, { status: StateManager, collection: ResourceCollection}>>>;
+  // {[Category] -> [Method] -> [Source] -> { status: StateManager, collection: ResourceCollection }}
+  userResources: Writable<Record<string, Record<string, Record<string, { status: StateManager, collection: ResourceCollection}>>>>;
 
   masterPatient: Writable<ResourceHelper>;
   demographics: Writable<UserDemographics>;
@@ -76,8 +76,8 @@ export class FHIRDataService {
     
     // Finish loading datasets
     resourceCollections.forEach((collection) => {
-      const { category, source } = collection.getTags();
-      this.syncDataset(category, source);
+      const { category, method, source } = collection.getTags();
+      this.syncDataset(category, method, source);
     });
     
   }
@@ -105,10 +105,10 @@ export class FHIRDataService {
     return patientOnlyDatasets;
   }
 
-  private async syncDataset(category: string, source: string): Promise<void> {
-    let dataset = get(this.userResources)?.[category]?.[source];
+  private async syncDataset(category: string, method: string, source: string): Promise<void> {
+    let dataset = get(this.userResources)?.[category]?.[method]?.[source];
     if (!dataset) {
-      console.warn("Category " + category + "/source " + source + " not found");
+      console.warn("Category " + category + "/method " + method + "/source " + source + " not found");
       return;
     }
     let { status, collection } = dataset;
@@ -117,7 +117,7 @@ export class FHIRDataService {
     let newDataset = await this.fetchDatasetFromPatientReference(`Patient/${datasetPatientId}`);
     this.addDatasetToUserResources(newDataset);
     // Update status reference
-    status = get(this.userResources)?.[category]?.[source].status;
+    status = get(this.userResources)?.[category]?.[method]?.[source].status;
     status.set({ state: StateManager.State.IDLE });
   }
 
@@ -272,9 +272,19 @@ export class FHIRDataService {
     return patient;
   }
 
-  datasetExists(category: string, source: string): boolean {
-    let datasetsInCategoryWithSource = get(this.userResources)?.[category]?.[source];
+  datasetExists(category: string, method: string, source: string): boolean {
+    let datasetsInCategoryWithSource = get(this.userResources)?.[category]?.[method]?.[source];
     return datasetsInCategoryWithSource !== undefined;
+  }
+
+  getDatasetsForCategory(category: string): Array<{ status: StateManager, collection: ResourceCollection}> {
+    const userResources = get(this.userResources);
+    const categoryContent = userResources?.[category];
+    if (!categoryContent) return [];
+    const methodContent = Object.values(categoryContent);
+    const datasetsWithStatus = methodContent.map(methodSource => Object.values(methodSource)).flat();
+    const sortedDatasetsWithStatus = datasetsWithStatus.sort((a, b) => new Date((get(b.collection.patient))?.meta?.lastUpdated) - new Date((get(a.collection.patient))?.meta?.lastUpdated));
+    return sortedDatasetsWithStatus as Array<{ status: StateManager, collection: ResourceCollection}>;
   }
 
   addDatasetToUserResources(collection: ResourceCollection): void {
@@ -282,9 +292,12 @@ export class FHIRDataService {
     if (!patient) {
       throw new Error('No patient resource found in resource collection');
     }
-    const { category, source } = collection.getTags();
+    const { category, method, source } = collection.getTags();
     if (!category) {
       throw new Error('Category must be passed when creating a new dataset, or contained in the dataset patient resource\s meta.tag attribute.');
+    }
+    if (!method) {
+      throw new Error('Method must be passed when creating a new dataset, or contained in the dataset patient resource\'s meta.tag attribute.');
     }
     if (!source) {
       throw new Error('Source must be passed when creating a new dataset, or contained in the dataset patient resource\'s meta.source attribute.');
@@ -294,32 +307,39 @@ export class FHIRDataService {
       const categoryMapCopy = {
         ...categoryMap
       };
-      if (!category || !source) {
+      if (!category || !method || !source) {
         return categoryMapCopy;
       }
-      // Safe when adding new categories and sources
+      // Safe when adding new categories, methods and sources
       categoryMapCopy[category] = {
         ...categoryMapCopy[category],
-        [source]: {
-          status: new StateManager(),
-          collection,
+        [method]: {
+          ...categoryMapCopy[category]?.[method],
+          [source]: {
+            status: new StateManager(),
+            collection,
+          }
         }
       };
       return categoryMapCopy;
     });
   }
 
-  removeDatasetFromUserResources(category: string, source: string): void {
+  removeDatasetFromUserResources(category: string, method: string, source: string): void {
     this.userResources.update((categoryMap) => {
       const categoryMapCopy = { ...categoryMap };
-      if (!category || !source) {
+      if (!category || !method || !source) {
         return categoryMapCopy;
       }
-      if (categoryMapCopy[category]?.[source]) {
-        delete categoryMapCopy[category][source];
+      if (categoryMapCopy[category]?.[method]?.[source]) {
+        delete categoryMapCopy[category][method][source];
+        if (categoryMapCopy[category][method] && Object.keys(categoryMapCopy[category][method]).length === 0) {
+          delete categoryMapCopy[category][method];
+        }
         if (categoryMapCopy[category] && Object.keys(categoryMapCopy[category]).length === 0) {
           delete categoryMapCopy[category];
         }
+        
         return categoryMapCopy;
       }
     });
@@ -333,8 +353,8 @@ export class FHIRDataService {
     return patientReference;
   }
 
-  async deleteDatasetFromServer(category: string, source: string): Promise<void> {
-    let dataset: ResourceCollection = get(this.userResources)?.[category]?.[source];
+  async deleteDatasetFromServer(category: string, method: string, source: string): Promise<void> {
+    let dataset: ResourceCollection = get(this.userResources)?.[category]?.[method]?.[source];
     if (!dataset) {
       return;
     }
@@ -373,20 +393,20 @@ export class FHIRDataService {
     }
   }
 
-  deleteDataset(category: string, source: string) {
-    this.deleteDatasetFromServer(category, source);
-    this.removeDatasetFromUserResources(category, source);
+  deleteDataset(category: string, method: string, source: string) {
+    this.deleteDatasetFromServer(category, method, source);
+    this.removeDatasetFromUserResources(category, method, source);
   }
 
   async addOrReplaceDataset(dataset: ResourceRetrieveEvent) {
-    if (get(this.userResources)?.[dataset.category]?.[dataset.source]) {
-      this.deleteDatasetFromServer(dataset.category, dataset.source);
+    if (get(this.userResources)?.[dataset.category]?.[dataset.method]?.[dataset.source]) {
+      this.deleteDatasetFromServer(dataset.category, dataset.method, dataset.source);
     }
     let resourcesWithUpdatedPatient = this.updateDatasetPatient(dataset);
     let patient = resourcesWithUpdatedPatient.find((resource) => resource.resourceType === "Patient");
     let seedCollection = new ResourceCollection(patient);
     this.addDatasetToUserResources(seedCollection);
-    let status = get(this.userResources)?.[dataset.category]?.[dataset.source].status;
+    let status = get(this.userResources)?.[dataset.category]?.[dataset.method]?.[dataset.source].status;
     status.set({ state: StateManager.State.LOADING });
 
     let patientReference = await this.createDatasetOnServer(resourcesWithUpdatedPatient);

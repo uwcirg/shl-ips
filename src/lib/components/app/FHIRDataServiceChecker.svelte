@@ -15,22 +15,25 @@
   import { getContext } from 'svelte';
   
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
+  let userResources = fhirDataService.userResources;
   let callbackFn: Function = () => {};
 
   let open = false;
   const toggle = () => (open = !open);
 
   let category: string;
+  let method: string;
   let source: string;
 
   let dataset = writable({});
 
-  export async function checkFHIRDataServiceBeforeFetch(categoryCode: string, sourceUrl: string, fetchCallback: Function) {
+  export async function checkFHIRDataServiceBeforeFetch(categoryCode: string, methodCode: string, sourceUrl: string, fetchCallback: Function) {
     category = categoryCode;
+    method = methodCode;
     source = sourceUrl;
     callbackFn = fetchCallback;
-    if (fhirDataService.datasetExists(category, source)) {
-      $dataset = get(fhirDataService.userResources)[category][source];
+    if (fhirDataService.datasetExists(category, method, source)) {
+      $dataset = $userResources[category][method][source];
       toggle();
     } else {
       return await callbackFn();

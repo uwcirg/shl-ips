@@ -43,6 +43,11 @@
   let masterPatient = fhirDataService.masterPatient;
   
   let mode: Writable<string> = getContext('mode');
+
+  let datasets;
+  $: datasets = $userResources?.[category]
+    ? fhirDataService.getDatasetsForCategory(category)
+    : [];
   
   let methodList: string[];
   let addDataActiveOnLoad = showAdd || !($userResources?.[category]);
@@ -87,8 +92,8 @@
     }
   }
 
-  function deleteDataset(category: string, source: string) {
-    fhirDataService.deleteDataset(category, source);
+  function deleteDataset(category: string, method: string, source: string) {
+    fhirDataService.deleteDataset(category, method, source);
   }
 
   let isOpen = false;
@@ -283,20 +288,16 @@
       <h5 slot="header">Data Previously Downloaded</h5>
       {#if $userResources[category]}
         <Row class="g-4 d-flex justify-content-start">
-          {#each Object.entries($userResources[category]).sort((a, b) => {
-            let aDate = new Date(get(a[1].collection.patient)?.meta?.lastUpdated);
-            let bDate = new Date(get(b[1].collection.patient)?.meta?.lastUpdated);
-            return bDate - aDate;
-          }) as [source, dataset]}
-            {@const status = dataset.status}
-            {@const collection = dataset.collection}
+          {#each datasets as dataset}
+            {@const {method, source} = dataset.collection.getTags()}
+            {@const {status, collection} = dataset}
             <Col xs="12" sm="6" lg="4" style="">
               <DatasetView {dataset} {masterPatient}>
                 <DropdownMenu slot="menu">
                   <DropdownItem on:click={() => showDataset(collection)}><div class="d-flex justify-content-between w-100">View <Icon name="chevron-right"/></div></DropdownItem>
                   <DropdownItem class="text-primary"on:click={() => goToCollectionMethod(collection)}><Icon name="arrow-repeat"/> Update</DropdownItem>
                   <DropdownItem divider />
-                  <DropdownItem class="text-danger" on:click={() => deleteDataset(category, source)}><Icon name="trash"/> Delete</DropdownItem>
+                  <DropdownItem class="text-danger" on:click={() => deleteDataset(category, method, source)}><Icon name="trash"/> Delete</DropdownItem>
                 </DropdownMenu>
                 <Button slot="footer" class="d-flex justify-content-between align-items-center" color="secondary" outline on:click={() => showDataset(collection)}>
                   <div class="d-flex align-items-center" style="min-width: 37px">

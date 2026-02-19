@@ -164,7 +164,7 @@
 
 </script>
 
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, sofHost?.endpoint, prepareIps)}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, sofHost?.endpoint, prepareIps)}>
   <FormGroup>
     <div style="width: 100%" class="d-inline-block mb-1">
       <div style="position:relative">
