@@ -504,7 +504,7 @@
         </CardBody>
       </Card>
       {/if}
-      {#each Object.keys($userResources) as [category]}
+      {#each Object.keys($userResources) as category}
         <br>
         <Card>
           <CardHeader>
