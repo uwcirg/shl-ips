@@ -43,6 +43,11 @@
   let masterPatient = fhirDataService.masterPatient;
   
   let mode: Writable<string> = getContext('mode');
+
+  let datasets;
+  $: datasets = $userResources?.[category]
+    ? fhirDataService.getDatasetsForCategory(category)
+    : [];
   
   let methodList: string[];
   let addDataActiveOnLoad = showAdd || !($userResources?.[category]);
@@ -283,7 +288,7 @@
       <h5 slot="header">Data Previously Downloaded</h5>
       {#if $userResources[category]}
         <Row class="g-4 d-flex justify-content-start">
-          {#each fhirDataService.getDatasetsForCategory(category) as dataset}
+          {#each datasets as dataset}
             {@const {method, source} = dataset.collection.getTags()}
             {@const {status, collection} = dataset}
             <Col xs="12" sm="6" lg="4" style="">
