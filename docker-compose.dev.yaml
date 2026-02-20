@@ -5,6 +5,15 @@ services:
     
     environment:
       NODE_ENV: development
+
+    develop:
+      watch:
+        - action: rebuild
+          path:
+            - .env
+            - package.json
+            - svelte.config.js
+            - vite.config.js
     
     volumes:
       - ./:/opt/app
