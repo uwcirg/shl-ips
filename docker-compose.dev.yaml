@@ -1,6 +1,10 @@
 services:
   shlips:
-    command: npm run dev
+    build:
+      dockerfile: Dockerfile.dev
+    
+    environment:
+      NODE_ENV: development
+    
     volumes:
-      - ./src:/opt/app/src
-      - ./static:/opt/app/static
+      - ./:/opt/app

@@ -1,0 +1,11 @@
+FROM node:24
+
+WORKDIR /opt/app
+
+# Only install dependencies
+COPY package*.json ./
+RUN npm clean-install
+
+EXPOSE 3000
+
+CMD ["npm", "run", "dev"]
