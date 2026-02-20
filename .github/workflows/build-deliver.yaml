@@ -15,19 +15,38 @@ jobs:
       - name: Set environment variable for version from git output
         run: echo "VITE_APP_VERSION_STRING=$(git describe --always --tags).$(date +'%Y%m%d.%H%M%S')" >> $GITHUB_ENV
 
-      - name: Publish to GitHub Container Registry
-        # TODO: pin to hash
-        uses: elgohr/Publish-Docker-Github-Action@main
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          name: ${{ github.repository }}
           registry: ghcr.io
-
-          # GitHub actor
           username: ${{ github.actor }}
-
-          # GitHub access token
           password: ${{ secrets.GITHUB_TOKEN }}
 
-          # create docker image tags to match git tags
-          tag_names: true
-          buildargs: VITE_APP_VERSION_STRING
+      # =========================
+      # Build Production Image
+      # =========================
+      - name: Build & Push Production Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+            ${{ github.ref_name == 'main' && format('ghcr.io/{0}:latest', github.repository) || '' }}
+          build-args: |
+            VITE_APP_VERSION_STRING=${{ env.VITE_APP_VERSION_STRING }}
+
+      # =========================
+      # Build Development Image
+      # =========================
+      - name: Build & Push Development Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.dev
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ github.ref_name }}-dev
+          build-args: |
+            VITE_APP_VERSION_STRING=${{ env.VITE_APP_VERSION_STRING }}

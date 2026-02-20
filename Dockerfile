@@ -1,17 +1,32 @@
-FROM node:24 AS build-deps
-
-ARG VITE_APP_VERSION_STRING
-ENV VITE_APP_VERSION_STRING=$VITE_APP_VERSION_STRING
-ENV NODE_ENV=production
+FROM node:24 AS deps
 
 WORKDIR /opt/app
 
 COPY package*.json .
 RUN npm clean-install
 
+FROM node:24 AS builder
+
+WORKDIR /opt/app
+
+COPY --from=deps /opt/app/node_modules ./node_modules
 COPY . .
 
+ARG VITE_APP_VERSION_STRING
+ENV VITE_APP_VERSION_STRING=$VITE_APP_VERSION_STRING
+
 RUN npm run build
+
+FROM node:24-slim AS runner
+
+WORKDIR /opt/app
+
+ENV NODE_ENV=production
+
+COPY --from=builder /opt/app/package*.json ./
+COPY --from=builder /opt/app/node_modules ./node_modules
+COPY --from=builder /opt/app/dist ./dist
+COPY --from=builder /opt/app/static ./static
 
 EXPOSE 3000
 
