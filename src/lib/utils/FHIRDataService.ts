@@ -5,7 +5,7 @@
  * @property {UserDemographics} demographics - The user's demographic form information
  * @property {Writable<boolean>} patientFound - Whether or not the master patient was fetched from the FHIR server
  * 
- * @function loadUserData - Load in the user's FHIR data
+ * @function loadUserData - Load in the user's SHL and FHIR data
  * @function syncDemographicsToPatient - Sync the user's demographics form data to the FHIR server
  * @function demographicsMatchPatient - Determine if the demographics form data matches the current patient
  * @function saveDemographicsAsPatient - Create or update a patient resource on the FHIR server based on the demographic store
@@ -64,35 +64,12 @@ export class FHIRDataService {
     return get(this.masterPatient);
   }
 
-  getAllResourceCollections(): ResourceCollection[] {
-    let resources = get(this.userResources);
-    const collections = function* () {
-      for (const category in resources) {
-        for (const source in resources[category]) {
-          yield resources[category][source].collection;
-        }
-      }
-    }
-    return Array.from(collections());
-  }
-
   async loadUserData(): Promise<void> {
-    let resourceCollections = this.getAllResourceCollections();
-    if (resourceCollections.length === 0) {
-      this.loading.set(true);
-      // Load bare minimum for datasets to be operated on
-      let resourceCollections = await this.seedUserResources();
-      if (!resourceCollections) {
-        throw new Error('Unable to retrieve user data');
-      }
-      resourceCollections.map((collection) => this.addDatasetToUserResources(collection));
-      this.loading.set(false);
-      
-      // Finish loading datasets
-      resourceCollections.forEach((collection) => {
-        const { category, source } = collection.getTags();
-        this.syncDataset(category, source);
-      });
+    this.loading.set(true);
+    // Load bare minimum for datasets to be operated on
+    let resourceCollections = await this.seedUserResources();
+    if (!resourceCollections) {
+      throw new Error('Unable to retrieve user data');
     }
     resourceCollections.map((collection) => this.addDatasetToUserResources(collection));
     this.loading.set(false);

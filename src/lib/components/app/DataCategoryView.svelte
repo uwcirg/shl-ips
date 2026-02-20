@@ -58,24 +58,10 @@
       accordionClass = "add-" + methodList[0];
     }
   }
-  let formData: Writable<Record<string, any | null>> = writable({});
-  $: if (forms && $userResources?.[category]) {
-    forms.forEach(form => {
-      let collectionsForFormMethod = fhirDataService.getAllResourceCollections().filter(collection => collection.getTags().method === form.method);
-      let collection = form.editable && collectionsForFormMethod.length === 1 ? collectionsForFormMethod[0] : null;
-      setFormData(form.method, collection);
-    });
-  }
-
   $: {
     if (activeTab) {
       document.querySelector(`span.${activeTab}-tab`)?.parentElement?.click();
     }
-  }
-
-  function setFormData(method: string, data: ResourceCollection | null) {
-    $formData[method] = data;
-    $formData = $formData;
   }
 
   function showDataset(collection: ResourceCollection) {
@@ -231,7 +217,7 @@
         size="sm"
         outline
         color="secondary"
-        on:click={() => { isOpen = false; updateDataset($ocDataset) }}
+        on:click={() => { isOpen = false; goToCollectionMethod($ocDataset) }}
       >
         <Icon name="arrow-repeat" /> Update
       </Button>
@@ -275,14 +261,7 @@
           {#if formConfig.title}<h5 class="my-2">{formConfig.title}</h5>{/if}
           {#if formConfig.description}<p class="text-secondary"><em>{@html formConfig.description}</em></p>{/if}
           {#if formConfig.component}
-            <svelte:component
-              this={formConfig.component}
-              disabled={$loading}
-              formData={$formData[formConfig.method]}
-              on:update-resources
-              on:sof-auth-init
-              on:sof-auth-fail 
-            />
+            <svelte:component this={formConfig.component} disabled={$loading} on:update-resources on:sof-auth-init on:sof-auth-fail />
           {/if}
         </TabPane>
         {/if}
@@ -292,14 +271,7 @@
       {#if forms[0].title}<h5 class="my-2">{forms[0].title}</h5>{/if}
       {#if forms[0].description}<p class="text-secondary"><em>{@html forms[0].description}</em></p>{/if}
       {#if forms[0].component}
-        <svelte:component
-          this={forms[0].component}
-          disabled={$loading}
-          formData={$formData[forms[0].method]}
-          on:update-resources
-          on:sof-auth-init
-          on:sof-auth-fail
-        />
+        <svelte:component this={forms[0].component} disabled={$loading} on:update-resources on:sof-auth-init on:sof-auth-fail />
       {/if}
     {/if}
     {#if $mode === "advanced" && forms.some(form => form.advanced)}
@@ -325,7 +297,7 @@
               <DatasetView {dataset} {masterPatient}>
                 <DropdownMenu slot="menu">
                   <DropdownItem on:click={() => showDataset(collection)}><div class="d-flex justify-content-between w-100">View <Icon name="chevron-right"/></div></DropdownItem>
-                  <DropdownItem class="text-primary"on:click={() => updateDataset(collection)}><Icon name="arrow-repeat"/> Update</DropdownItem>
+                  <DropdownItem class="text-primary"on:click={() => goToCollectionMethod(collection)}><Icon name="arrow-repeat"/> Update</DropdownItem>
                   <DropdownItem divider />
                   <DropdownItem class="text-danger" on:click={() => deleteDataset(category, method, source)}><Icon name="trash"/> Delete</DropdownItem>
                 </DropdownMenu>
