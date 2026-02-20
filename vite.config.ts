@@ -15,7 +15,8 @@ export default defineConfig(({ mode }) => {
       host: true,
       allowedHosts: [process.env.SERVER_NAME ?? 'localhost'],
       port: process.env.DEV_SERVER_PORT ? process.env.DEV_SERVER_PORT : 3000,
-      strictPort: true
+      strictPort: true,
+      usePolling: true
     },
     build: {
       sourcemap: process.env.DEBUG ?? false
