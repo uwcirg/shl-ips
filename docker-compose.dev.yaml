@@ -9,11 +9,13 @@ services:
     develop:
       watch:
         - action: rebuild
-          path:
-            - .env
-            - package.json
-            - svelte.config.js
-            - vite.config.js
+          path: .env
+        - action: rebuild
+          path: package.json
+        - action: rebuild
+          path: svelte.config.js
+        - action: rebuild
+          path: vite.config.js
     
     volumes:
       - ./:/opt/app
