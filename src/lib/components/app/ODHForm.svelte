@@ -5,12 +5,8 @@
   import type { IOResponse, ResourceRetrieveEvent } from '$lib/utils/types';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
-  import type { ResourceCollection } from '$lib/utils/types';
 
   export let sectionKey: string = 'Occupational Data';
-  export let formData: ResourceCollection | undefined;
-  let resources;
-  $: resources = formData?.resources;
 
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
   const CATEGORY = CATEGORIES.OCCUPATIONAL_DATA_FOR_HEALTH;
@@ -23,7 +19,10 @@
 
   let supportsMonthInput = false;
   onMount(() => {
-    initializeFieldsForFormData();
+    const input = document.createElement('input');
+    input.setAttribute('type', 'month');
+    supportsMonthInput =input.type === 'month';
+    input.remove();
   });
 
   let employmentStatus: any | undefined;
@@ -54,71 +53,6 @@
   let startRetirement: string;
   let startCombat: string;
   let endCombat: string;
-
-  $: if ($resources) {
-    initializeFieldsForFormData();
-  }
-
-  function initializeFieldsForFormData() {
-    if (!$resources) { return; }
-
-    const resources = Object.values($resources);
-    if (resources?.length) {
-      let jobHistoryResources = resources?.filter(r => r.resource.code?.coding?.find(c => c.code === '11341-5' && c.system === 'http://loinc.org')).map(r => r.resource);
-      let currentJobResources = jobHistoryResources.filter(r => r.extension.find(e => e.url === 'http://hl7.org/fhir/us/odh/StructureDefinition/odh-isCurrentJob-extension' && e.valueBoolean));
-      let currentJobResource = currentJobResources.pop();
-      if (currentJobResource) {
-        currentJob = { resource: currentJobResource, fullUrl: `urn:uuid:${currentJobResource.id}` };
-        working = true;
-        jobCurrent = {
-          Code: currentJobResource.valueCodeableConcept.coding[0].code,
-          Title: currentJobResource.valueCodeableConcept.coding[0].display
-        };
-        industryCurrent = {
-          Code: currentJobResource.component[0].valueCodeableConcept.coding[0].code,
-          Title: currentJobResource.component[0].valueCodeableConcept.coding[0].display
-        };
-        startCurrent = currentJobResource.effectivePeriod.start;
-      }
-      
-      let pastJobResources = jobHistoryResources.filter(r => r.extension.find(e => e.url === 'http://hl7.org/fhir/us/odh/StructureDefinition/odh-isCurrentJob-extension' && !e.valueBoolean));
-      pastJobResources = [...currentJobResources, ...pastJobResources];
-      let pastJobResource = pastJobResources.pop();
-      if (pastJobResource) {
-        pastJob = { resource: pastJobResource, fullUrl: `urn:uuid:${pastJobResource.id}` }; // TODO: Handle multiple past job resources
-        workingPast = true;
-        jobPast = {
-          Code: pastJobResource.valueCodeableConcept.coding[0].code,
-          Title: pastJobResource.valueCodeableConcept.coding[0].display
-        };
-        industryPast = {
-          Code: pastJobResource.component[0].valueCodeableConcept.coding[0].code,
-          Title: pastJobResource.component[0].valueCodeableConcept.coding[0].display
-        };
-        startPast = pastJobResource.effectivePeriod.start;
-        endPast = pastJobResource.effectivePeriod.end;
-      }
-      
-      let employmentStatusResources = resources?.filter(r => r.resource.code?.coding?.find(c => c.code === '74165-2' && c.system === 'http://loinc.org')).map(r => r.resource);
-      let employmentStatusResource = employmentStatusResources.pop();
-      if (employmentStatusResource) {
-        employmentStatus = { resource: employmentStatusResource, fullUrl: `urn:uuid:${employmentStatusResource.id}` };
-        status = employmentStatusResource.valueCodeableConcept.coding[0].display;
-      }
-      
-      let retirementDateResources = resources?.filter(r => r.resource.code?.coding?.find(c => c.code === '87510-4' && c.system === 'http://loinc.org')).map(r => r.resource);
-      let retirementDateResource = retirementDateResources.pop();
-      if (retirementDateResource) {
-        retirementDate = { resource: retirementDateResource, fullUrl: `urn:uuid:${retirementDateResource.id}` };
-      }
-      
-      let combatPeriodResources = resources?.filter(r => r.resource.code?.coding?.find(c => c.code === '87511-2' && c.system === 'http://loinc.org')).map(r => r.resource);
-      let combatPeriodResource = combatPeriodResources.pop();
-      if (combatPeriodResource) {
-        combatPeriod = { resource: combatPeriodResource, fullUrl: `urn:uuid:${combatPeriodResource.id}` };
-      }
-    }
-  }
 
   // Present job resource template
   let currentJobTemplate = {
@@ -560,13 +494,13 @@
         <Row class="mb-2">
           <Col xs="auto" class="mt-1">I work as a(n)</Col>
           <Col style="flex-grow: 1" xs="auto">
-            <NIOAutoCoderInput bind:value={jobCurrent} mode="Occupation" id="current-occupation" />
+            <NIOAutoCoderInput bind:value={jobCurrent} mode="Occupation" />
           </Col>
         </Row>
         <Row class="mb-2">
           <Col xs="auto" class="mt-1">My company's primary business activity is</Col>
           <Col style="flex-grow: 1" xs="auto">
-            <NIOAutoCoderInput bind:value={industryCurrent} mode="Industry" id="current-industry"/>
+            <NIOAutoCoderInput bind:value={industryCurrent} mode="Industry" />
           </Col>
         </Row>
         <Row class="mb-2">
@@ -592,13 +526,13 @@
         <Row class="mb-2">
           <Col xs="auto" class="mt-1">I used to work as a(n)</Col>
           <Col style="flex-grow: 1" xs="auto">
-            <NIOAutoCoderInput bind:value={jobPast} mode="Occupation" id="past-occupation"/>
+            <NIOAutoCoderInput bind:value={jobPast} mode="Occupation" />
           </Col>
         </Row>
         <Row class="mb-2">
           <Col xs="auto" class="mt-1">My company's primary business activity was</Col>
           <Col style="flex-grow: 1" xs="auto">
-            <NIOAutoCoderInput bind:value={industryPast} mode="Industry" id="past-industry"/>
+            <NIOAutoCoderInput bind:value={industryPast} mode="Industry" />
           </Col>
         </Row>
         <Row class="mb-2">
