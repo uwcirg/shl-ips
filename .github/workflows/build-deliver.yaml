@@ -54,5 +54,6 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ github.repository }}:${{ env.SAFE_REF }}-dev
+            ${{ env.SAFE_REF == 'main' && format('ghcr.io/{0}:latest-dev', github.repository) || '' }}
           build-args: |
             VITE_APP_VERSION_STRING=${{ env.VITE_APP_VERSION_STRING }}
