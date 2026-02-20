@@ -13,7 +13,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set environment variable for version from git output
-        run: echo "VITE_APP_VERSION_STRING=$(git describe --always --tags).$(date +'%Y%m%d.%H%M%S')" >> $GITHUB_ENV
+        run: echo "VITE_APP_VERSION_STRING=$(git show -s --date=format:'%y.%m.%d.%H%M' --format=%cd)-g-$(git show -s --format=%h)-$(date +'%y%m%d-%H%M')" >> $GITHUB_ENV
 
       - name: Publish to GitHub Container Registry
         # TODO: pin to hash
