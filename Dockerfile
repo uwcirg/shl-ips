@@ -9,17 +9,20 @@ FROM node:24 AS builder
 
 WORKDIR /opt/app
 
-COPY --from=deps /opt/app/node_modules ./node_modules
-COPY . .
-
 ARG VITE_APP_VERSION_STRING
 ENV VITE_APP_VERSION_STRING=$VITE_APP_VERSION_STRING
+
+COPY --from=deps /opt/app/node_modules ./node_modules
+COPY . .
 
 RUN npm run build
 
 FROM node:24-slim AS runner
 
 WORKDIR /opt/app
+
+ARG VITE_APP_VERSION_STRING
+ENV VITE_APP_VERSION_STRING=$VITE_APP_VERSION_STRING
 
 ENV NODE_ENV=production
 
