@@ -26,10 +26,7 @@ ENV VITE_APP_VERSION_STRING=$VITE_APP_VERSION_STRING
 
 ENV NODE_ENV=production
 
-COPY --from=builder /opt/app/package*.json ./
-COPY --from=builder /opt/app/node_modules ./node_modules
-COPY --from=builder /opt/app/build ./build
-COPY --from=builder /opt/app/static ./static
+COPY --from=builder /opt/app .
 
 EXPOSE 3000
 
