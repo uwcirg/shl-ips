@@ -26,7 +26,14 @@ ENV VITE_APP_VERSION_STRING=$VITE_APP_VERSION_STRING
 
 ENV NODE_ENV=production
 
-COPY --from=builder /opt/app .
+COPY --from=builder /opt/app/node_modules ./node_modules
+COPY --from=builder /opt/app/src ./src
+COPY --from=builder /opt/app/static ./static
+COPY --from=builder /opt/app/package.json ./package.json
+COPY --from=builder /opt/app/package-lock.json ./package-lock.json
+COPY --from=builder /opt/app/svelte.config.js ./svelte.config.js
+COPY --from=builder /opt/app/tsconfig.json ./tsconfig.json
+COPY --from=builder /opt/app/vite.config.ts ./vite.config.ts
 
 EXPOSE 3000
 
