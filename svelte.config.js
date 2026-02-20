@@ -9,7 +9,7 @@ export default {
   kit: {
     adapter: adapter({
       // default options are shown.
-      out: 'dist',
+      out: 'build',
       precompress: false,
       envPrefix: ''
     }),

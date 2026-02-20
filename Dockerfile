@@ -28,7 +28,7 @@ ENV NODE_ENV=production
 
 COPY --from=builder /opt/app/package*.json ./
 COPY --from=builder /opt/app/node_modules ./node_modules
-COPY --from=builder /opt/app/dist ./dist
+COPY --from=builder /opt/app/build ./build
 COPY --from=builder /opt/app/static ./static
 
 EXPOSE 3000
