@@ -9,15 +9,12 @@
     Spinner
   } from '@sveltestrap/sveltestrap';
   import { createEventDispatcher } from 'svelte';
-  import type { IResourceCollection, ResourceRetrieveEvent } from '$lib/utils/types';
+  import type { ResourceRetrieveEvent } from '$lib/utils/types';
   import type { CodeableConcept, Condition, MedicationStatement } from 'fhir/r4';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
 
   export let disabled = false;
-  export let formData: IResourceCollection | undefined;
-  let resources;
-  $: resources = formData?.resources;
 
   const CATEGORY = CATEGORIES.PATIENT_STORY;
   const METHOD = METHODS.PATIENT_MEDICAL_HISTORY_FORM;

@@ -5,10 +5,10 @@
   import type { IOResponse, ResourceRetrieveEvent } from '$lib/utils/types';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
-  import type { IResourceCollection } from '$lib/utils/types';
+  import type { ResourceCollection } from '$lib/utils/types';
 
   export let sectionKey: string = 'Occupational Data';
-  export let formData: IResourceCollection | undefined;
+  export let formData: ResourceCollection | undefined;
   let resources;
   $: resources = formData?.resources;
 

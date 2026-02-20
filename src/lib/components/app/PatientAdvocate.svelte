@@ -10,12 +10,9 @@
   } from '@sveltestrap/sveltestrap';
   import { createEventDispatcher } from 'svelte';
   import { constructPatientResource } from '$lib/utils/util';
-  import type { IResourceCollection, ResourceRetrieveEvent } from '$lib/utils/types';
+  import type { ResourceRetrieveEvent } from '$lib/utils/types';
 
   export let disabled = false;
-  export let formData: IResourceCollection | undefined;
-  let resources;
-  $: resources = formData?.resources;
 
   let processing = false;
   let fetchError = '';

@@ -10,15 +10,12 @@
     Spinner
   } from '@sveltestrap/sveltestrap';
   import { createEventDispatcher } from 'svelte';
-  import type { IResourceCollection, ResourceRetrieveEvent } from '$lib/utils/types';
+  import type { ResourceRetrieveEvent } from '$lib/utils/types';
   import type { CodeableConcept, Condition } from 'fhir/r4';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
 
   export let disabled = false;
-  export let formData: IResourceCollection | undefined;
-  let resources;
-  $: resources = formData?.resources;
 
   const CATEGORY = CATEGORIES.PATIENT_STORY;
   const METHOD = METHODS.PATIENT_BODY_CONCERNS_FORM;
@@ -208,11 +205,11 @@
         display: "Jaw"
       }
     },
-    "Esophagus": {
+    "Oesophagus": {
       "": {
         system: "https://www.snomed.info/sct",
         code: "32849002",
-        display: "Esophagus"
+        display: "Oesophagus"
       }
     },
     "Large Colon": {
@@ -357,7 +354,7 @@
       "Both": {
         system: "https://www.snomed.info/sct",
         code: "181431007",
-        display: "Both Testicles"
+        display: "Both Testis"
       },
       "Left": {
         system: "https://www.snomed.info/sct",
@@ -402,32 +399,6 @@
       text: ""
     }
   };
-
-  $: if ($resources) {
-    initializeFieldsForFormData();
-  }
-  
-  function initializeFieldsForFormData() {
-    if (!$resources) { return; }
-  
-    const resources = Object.values($resources);
-    if (resources?.length) {
-      let conditionResources = resources?.filter(r => r.resource.resourceType === "Condition").map(r => r.resource);
-      if (conditionResources) {
-        let bodyPartEntries = Object.entries(bodyPartOptions);
-        for (const [bodyPart, sides] of bodyPartEntries) {
-          let availableCodings = Object.entries(sides);
-          for (const [side, coding] of availableCodings) {
-            for (const condition of conditionResources) {
-              if (condition.bodySite.coding[0].code === coding.code) {
-                bodyPartConcerns.push({bodyPart, side, concern: condition.code?.text ?? ''});
-              }
-            }
-          }
-        }
-      }
-    }
-  }
 
   function prepareConditionResource(entry: BodyConcernEntry) {
     if (entry.bodyPart === '' && entry.concern === '') return;
