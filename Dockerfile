@@ -17,7 +17,7 @@ COPY . .
 
 RUN npm run build
 
-FROM node:24-slim AS runner
+FROM gcr.io/distroless/nodejs24 AS runner
 
 WORKDIR /opt/app
 
