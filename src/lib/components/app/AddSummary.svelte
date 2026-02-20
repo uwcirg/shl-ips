@@ -494,8 +494,7 @@
             <Col class="resource-content justify-content-center align-items-center">
               <p class="text-secondary">
                 <em>
-                  This is the patient information that you have added to {INSTANCE_CONFIG.title}.
-                  For your summary, you may choose to replace it with the patient data from another source if available (step 2).
+                  This is the patient information that you have added to {INSTANCE_CONFIG.title}. Click "Edit" to make changes before creating your summary.
                 </em>
               </p>
               <Patient content={ {resource: $masterPatient.resource} } />
