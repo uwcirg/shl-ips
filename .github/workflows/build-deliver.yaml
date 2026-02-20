@@ -15,6 +15,12 @@ jobs:
       - name: Set environment variable for version from git output
         run: echo "VITE_APP_VERSION_STRING=$(git describe --always --tags).$(date +'%Y%m%d.%H%M%S')" >> $GITHUB_ENV
 
+      # 🔹 Sanitize branch/tag name for Docker tag usage
+      - name: Sanitize ref name
+        run: |
+          SAFE_REF=$(echo "${GITHUB_REF_NAME}" | sed -E 's/[^A-Za-z0-9_.-]+/-/g')
+          echo "SAFE_REF=$SAFE_REF" >> $GITHUB_ENV
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -32,8 +38,8 @@ jobs:
           file: Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:${{ github.ref_name }}
-            ${{ github.ref_name == 'main' && format('ghcr.io/{0}:latest', github.repository) || '' }}
+            ghcr.io/${{ github.repository }}:${{ env.SAFE_REF }}
+            ${{ env.SAFE_REF == 'main' && format('ghcr.io/{0}:latest', github.repository) || '' }}
           build-args: |
             VITE_APP_VERSION_STRING=${{ env.VITE_APP_VERSION_STRING }}
 
@@ -47,6 +53,6 @@ jobs:
           file: Dockerfile.dev
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:${{ github.ref_name }}-dev
+            ghcr.io/${{ github.repository }}:${{ env.SAFE_REF }}-dev
           build-args: |
             VITE_APP_VERSION_STRING=${{ env.VITE_APP_VERSION_STRING }}
