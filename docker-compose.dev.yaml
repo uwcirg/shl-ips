@@ -8,3 +8,10 @@ services:
     
     volumes:
       - ./:/opt/app
+      # Override specific directories with image layer contents
+      - node_modules:/opt/app/node_modules
+      - svelte-kit:/opt/app/.svelte-kit
+
+volumes:
+  node_modules:
+  svelte-kit:
