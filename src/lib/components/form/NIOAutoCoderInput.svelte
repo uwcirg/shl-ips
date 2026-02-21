@@ -16,7 +16,8 @@
   import { onDestroy, onMount } from 'svelte';
 
   export let mode: "Occupation" | "Industry";
-  export let value: IOResponse;
+  export let value: IOResponse | undefined;
+  export let id: string = "";
 
   let authService: IAuthService = getContext('authService');
 
@@ -41,8 +42,22 @@
   $: icon = 'search';
   let processing = false;
 
-  let codingOptionTitle: string = "";
-  value = defaults[mode][0];
+  let inputValue = "";
+  let codingOptionTitle: string;
+  $: codingOptionTitle = inputValue;
+
+  $: if (value === undefined) {
+    fetchError = "";
+    inputValue = "";
+  }
+
+  $: if (value && codingOptionTitle === "") {
+    if (value.Title === defaults[mode][0].Title) {
+      codingOptionTitle = "";
+    } else {
+      codingOptionTitle = value.Title;
+    }
+  }
   let codingOptions: NIOAutoCoderResponse | undefined = defaults;
 
   onMount(() => {
@@ -50,6 +65,8 @@
     window.addEventListener('resize', updateMenuPosition);
     window.addEventListener('scroll', updateMenuPosition, true);
     document.addEventListener('click', handleOutsideClick);
+    inputValue = value?.Title ?? "";
+    value = value ?? defaults[mode][0];
   });
   onDestroy(() => {
     window.removeEventListener('resize', updateMenuPosition);
@@ -101,7 +118,7 @@
     let api = `/api/nio-autocoder`;
     let url = `${api}?${mode === "Occupation" ? "o" : "i"}=${input}&c=0`;
 
-    return authService.getAccessToken().then((token: string) => fetch(url, {
+    return authService.getAccessToken().then((token) => fetch(url, {
       signal,
       method: "GET",
       headers: {
@@ -123,7 +140,7 @@
       if (!content) {
         return defaults;
       }
-      content[mode] = content[mode].filter((v: NIOAutoCoderResponse) => v.Code !== "000000" && v.Code !== "00-0000");
+      content[mode] = content[mode].filter((v) => v.Code !== "000000" && v.Code !== "00-0000");
       content[mode].push(defaults[mode][0]);
       codingOptions = content;
       updateMenuPosition();
@@ -136,9 +153,8 @@
       } else {
         processing = false;
         manual = true;
-        console.error(e);
         codingOptions = defaults;
-        fetchError = 'Coding service unavailable. Enter ' + mode.toLowerCase() + ' manually.';
+        fetchError = 'Coding service unavailable. Please enter ' + mode.toLowerCase() + ' manually.';
         setValue({
           Code: "00-0000",
           Title: codingOptionTitle ?? "Not Coded – Occupation",
@@ -156,21 +172,27 @@
     <DropdownToggle
       tag="div"
       class="d-inline-block"
-      style="width:100%">
+      style="width:100%"
+    >
       <div style="position:relative" bind:this={toggleRef}>
         <Input
+          id={id}
           title="Search for an {mode.toLowerCase()}"
           type="text"
           placeholder={`Search ${mode.toLowerCase()}...`}
           style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"
-          bind:value={codingOptionTitle}
-          on:input={(event) => {
+          bind:value={inputValue}
+          on:input={() => {
             isOpen = !manual && true;
-            if (event.target.value.length > 2 || event.target.value.length === 0) {
-              fetchCode(event.target.value);
-            }
-            if (!isOpen && event.target.value.length === 0) {
+            fetchCode(inputValue);
+            if (!isOpen && inputValue.length === 0) {
               setValue(defaults[mode][0]);
+            }
+          }}
+          on:focus={() => {
+            document.getElementById(id)?.select();
+            if (inputValue) {
+              fetchCode(inputValue);
             }
           }} />
         {#if processing}
@@ -220,5 +242,5 @@
   {#if fetchError}
     <span class="mb-0 mx-1 text-danger">{fetchError}</span><br>
   {/if}
-  <Label class="mb-0 mx-1">{`Using "${value.Title}"`}</Label>
+  <Label class="mb-0 mx-1">{`Using "${value?.Title ?? defaults[mode][0].Title}"`}</Label>
 </FormGroup>

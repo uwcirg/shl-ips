@@ -10,12 +10,15 @@
     Spinner
   } from '@sveltestrap/sveltestrap';
   import { createEventDispatcher } from 'svelte';
-  import type { ResourceRetrieveEvent } from '$lib/utils/types';
+  import type { IResourceCollection, ResourceRetrieveEvent } from '$lib/utils/types';
   import type { Goal, Observation, Resource, CompositionSection } from 'fhir/r4';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
 
   export let disabled = false;
+  export let formData: IResourceCollection | undefined;
+  let resources;
+  $: resources = formData?.resources;
 
   const CATEGORY = CATEGORIES.PATIENT_STORY;
   const METHOD = METHODS.PATIENT_STORY_FORM;
