@@ -1,6 +1,28 @@
 services:
   shlips:
-    command: npm run dev
+    build:
+      dockerfile: Dockerfile.dev
+    
+    environment:
+      NODE_ENV: development
+
+    develop:
+      watch:
+        - action: rebuild
+          path: .env
+        - action: rebuild
+          path: package.json
+        - action: rebuild
+          path: svelte.config.js
+        - action: rebuild
+          path: vite.config.js
+    
     volumes:
-      - ./src:/opt/app/src
-      - ./static:/opt/app/static
+      - ./:/opt/app
+      # Override specific directories with image layer contents
+      - node_modules:/opt/app/node_modules
+      - svelte-kit:/opt/app/.svelte-kit
+
+volumes:
+  node_modules:
+  svelte-kit:

@@ -662,7 +662,7 @@
   </AccordionItem>
 </Accordion>
 <br>
-<Button color="primary" on:click={FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, SOURCE.url, updateOdhSection)} disabled={buttonDisabled}>
+<Button color="primary" on:click={FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, SOURCE.url, updateOdhSection)} disabled={buttonDisabled}>
   {buttonText}
 </Button>
 <FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>

@@ -21,6 +21,9 @@
 
   let authService: IAuthService = getContext('authService');
 
+  let fetchError: string = '';
+  let manual = false;
+
   let defaults: NIOAutoCoderResponse = {
     Industry: [{
       Code: "000000",
@@ -108,7 +111,7 @@
     const { signal } = controller;
 
     let api = `/api/nio-autocoder`;
-    let url = `${api}?${mode === "Occupation" ? "o" : "i"}=${input}`;
+    let url = `${api}?${mode === "Occupation" ? "o" : "i"}=${input}&c=0`;
 
     return authService.getAccessToken().then((token: string) => fetch(url, {
       signal,
@@ -116,11 +119,12 @@
       headers: {
         "Authorization": `Bearer ${token}`
       }
-    })).then((response) => {
+    })).then(async (response) => {
       if (response.ok) {
         return response.text();
       } else {
-        Promise.reject(response);
+        const body = response.text();
+        throw new Error(response.status + " " + await body);
       }
     }).then((text) => {
       if (!text || text === "") {
@@ -128,28 +132,39 @@
       }
       return JSON.parse(text);
     }).then((content) => {
-      if (content === null) {
+      if (!content) {
         return defaults;
       }
       content[mode] = content[mode].filter((v: NIOAutoCoderResponse) => v.Code !== "000000" && v.Code !== "00-0000");
       content[mode].push(defaults[mode][0]);
       codingOptions = content;
       updateMenuPosition();
+      manual = false;
       processing = false;
       return content;
     }).catch((e) => {
       if (e.name === "AbortError") {
         return Promise.resolve(defaults);
       } else {
-        processing = false
-        return e;
+        processing = false;
+        manual = true;
+        console.error(e);
+        codingOptions = defaults;
+        fetchError = 'Coding service unavailable. Enter ' + mode.toLowerCase() + ' manually.';
+        setValue({
+          Code: "00-0000",
+          Title: codingOptionTitle ?? "Not Coded – Occupation",
+          Score: 1
+        });
+        isOpen = false;
+        return Promise.resolve(codingOptions);
       }
     })
   }
 </script>
 
 <FormGroup style="font-size:small; margin-bottom: 0 !important" class="text-secondary">
-  <Dropdown {isOpen} toggle={() => (isOpen = true)}>
+  <Dropdown {isOpen} toggle={() => (isOpen = !manual && true)}>
     <DropdownToggle
       tag="div"
       class="d-inline-block"
@@ -164,18 +179,14 @@
           style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"
           bind:value={codingOptionTitle}
           on:input={(event) => {
-            isOpen = true;
+            isOpen = !manual && true;
             if (event.target.value.length > 2 || event.target.value.length === 0) {
               fetchCode(event.target.value);
             }
-          }}
-          on:focus={() => {
-            document.getElementById(id)?.select();
-            if (value) {
-              fetchCode(value.Title);
+            if (!isOpen && event.target.value.length === 0) {
+              setValue(defaults[mode][0]);
             }
-          }}
-        />
+          }} />
         {#if processing}
           <Spinner type="border" size="sm" color="secondary"
             style="position: absolute;
@@ -220,5 +231,8 @@
       </DropdownMenu>
     </Portal>
   </Dropdown>
-  <Label class="mb-0 mx-1">{`Using "${value?.Title ?? defaults[mode][0].Title}"`}</Label>
+  {#if fetchError}
+    <span class="mb-0 mx-1 text-danger">{fetchError}</span><br>
+  {/if}
+  <Label class="mb-0 mx-1">{`Using "${value.Title}"`}</Label>
 </FormGroup>

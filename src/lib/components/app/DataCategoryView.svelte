@@ -43,6 +43,11 @@
   let masterPatient = fhirDataService.masterPatient;
   
   let mode: Writable<string> = getContext('mode');
+
+  let datasets;
+  $: datasets = $userResources?.[category]
+    ? fhirDataService.getDatasetsForCategory(category)
+    : [];
   
   let methodList: string[];
   let addDataActiveOnLoad = showAdd || !($userResources?.[category]);
@@ -101,33 +106,30 @@
     }
   }
 
-  function updateDataset(collection: ResourceCollection) {
-    setFormData(collection.getTags().method, collection);
-    goToCollectionMethod(collection);
-  }
-
-  function deleteDataset(category: string, source: string) {
-    fhirDataService.deleteDataset(category, source);
+  function deleteDataset(category: string, method: string, source: string) {
+    fhirDataService.deleteDataset(category, method, source);
   }
 
   let isOpen = false;
   let name = '';
   let date = '';
   let ocCategory: Writable<string> = writable('');
+  let ocMethod: Writable<string> = writable('');
   let ocSource: Writable<string> = writable('');
   let ocDataset: Readable<any> = derived(
-    [userResources, ocCategory, ocSource], 
-    ([$userResources, $ocCategory, $ocSource]) => {
-      if (!$userResources || !$ocCategory || !$ocSource) {
+    [userResources, ocCategory, ocMethod, ocSource], 
+    ([$userResources, $ocCategory, $ocMethod, $ocSource]) => {
+      if (!$userResources || !$ocCategory || !$ocMethod || !$ocSource) {
         return;
       }
-      let dataset = $userResources?.[$ocCategory]?.[$ocSource];
+      let dataset = $userResources?.[$ocCategory]?.[$ocMethod]?.[$ocSource];
       return dataset;
     }
   );
   function setContent(viewName: string, viewCollection: ResourceCollection) {
-    let { category, source } = viewCollection.getTags();
+    let { category, method, source } = viewCollection.getTags();
     ocCategory.set(category);
+    ocMethod.set(method);
     ocSource.set(source);
     name = viewName;
     date = new Date((get(viewCollection.patient)).meta.lastUpdated).toLocaleString(undefined, {
@@ -241,8 +243,8 @@
         color="danger"
         on:click={() => {
           isOpen = false;
-          let {category, sourceName} = $ocDataset.collection.getTags();
-          deleteDataset(category, sourceName);
+          let {category, method, source} = $ocDataset.collection.getTags();
+          deleteDataset(category, method, source);
         }}
       >
         <Icon name="trash" /> Delete
@@ -316,20 +318,16 @@
       <h5 slot="header">Data Previously Downloaded</h5>
       {#if $userResources[category]}
         <Row class="g-4 d-flex justify-content-start">
-          {#each Object.entries($userResources[category]).sort((a, b) => {
-            let aDate = new Date(get(a[1].collection.patient)?.meta?.lastUpdated);
-            let bDate = new Date(get(b[1].collection.patient)?.meta?.lastUpdated);
-            return bDate - aDate;
-          }) as [source, dataset]}
-            {@const status = dataset.status}
-            {@const collection = dataset.collection}
+          {#each datasets as dataset}
+            {@const {method, source} = dataset.collection.getTags()}
+            {@const {status, collection} = dataset}
             <Col xs="12" sm="6" lg="4" style="">
               <DatasetView {dataset} {masterPatient}>
                 <DropdownMenu slot="menu">
                   <DropdownItem on:click={() => showDataset(collection)}><div class="d-flex justify-content-between w-100">View <Icon name="chevron-right"/></div></DropdownItem>
                   <DropdownItem class="text-primary"on:click={() => updateDataset(collection)}><Icon name="arrow-repeat"/> Update</DropdownItem>
                   <DropdownItem divider />
-                  <DropdownItem class="text-danger" on:click={() => deleteDataset(category, source)}><Icon name="trash"/> Delete</DropdownItem>
+                  <DropdownItem class="text-danger" on:click={() => deleteDataset(category, method, source)}><Icon name="trash"/> Delete</DropdownItem>
                 </DropdownMenu>
                 <Button slot="footer" class="d-flex justify-content-between align-items-center" color="secondary" outline on:click={() => showDataset(collection)}>
                   <div class="d-flex align-items-center" style="min-width: 37px">
