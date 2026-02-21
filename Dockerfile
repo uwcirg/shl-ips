@@ -38,4 +38,4 @@ COPY --from=builder /opt/app/vite.config.ts ./vite.config.ts
 
 EXPOSE 3000
 
-CMD npm run build-runtime && npm run start
+CMD npm run build && npm run start
