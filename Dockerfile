@@ -17,7 +17,7 @@ COPY . .
 
 RUN npm run build
 
-FROM gcr.io/distroless/nodejs24 AS runner
+FROM node:24-slim AS runner
 
 WORKDIR /opt/app
 
@@ -26,6 +26,7 @@ ENV VITE_APP_VERSION_STRING=$VITE_APP_VERSION_STRING
 
 ENV NODE_ENV=production
 
+COPY --from=builder /opt/app/.svelte-kit ./.svelte-kit
 COPY --from=builder /opt/app/node_modules ./node_modules
 COPY --from=builder /opt/app/src ./src
 COPY --from=builder /opt/app/static ./static
