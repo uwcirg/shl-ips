@@ -16,7 +16,7 @@
   import { onDestroy, onMount } from 'svelte';
 
   export let mode: "Occupation" | "Industry";
-  export let value: IOResponse;
+  export let value: IOResponse | undefined;
   export let id: string = "";
 
   let authService: IAuthService = getContext('authService');
@@ -46,6 +46,11 @@
   let codingOptionTitle: string;
   $: codingOptionTitle = inputValue;
 
+  $: if (value === undefined) {
+    fetchError = "";
+    inputValue = "";
+  }
+
   $: if (value && codingOptionTitle === "") {
     if (value.Title === defaults[mode][0].Title) {
       codingOptionTitle = "";
@@ -60,6 +65,7 @@
     window.addEventListener('resize', updateMenuPosition);
     window.addEventListener('scroll', updateMenuPosition, true);
     document.addEventListener('click', handleOutsideClick);
+    inputValue = value?.Title ?? "";
     value = value ?? defaults[mode][0];
   });
   onDestroy(() => {
