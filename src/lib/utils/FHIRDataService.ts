@@ -68,8 +68,10 @@ export class FHIRDataService {
     let resources = get(this.userResources);
     const collections = function* () {
       for (const category in resources) {
-        for (const source in resources[category]) {
-          yield resources[category][source].collection;
+        for(const method in resources[category]) {
+          for (const source in resources[category][method]) {
+            yield resources[category][method][source].collection;
+          }
         }
       }
     }
@@ -90,8 +92,8 @@ export class FHIRDataService {
       
       // Finish loading datasets
       resourceCollections.forEach((collection) => {
-        const { category, source } = collection.getTags();
-        this.syncDataset(category, source);
+        const { category, method, source } = collection.getTags();
+        this.syncDataset(category, method, source);
       });
     }
     resourceCollections.map((collection) => this.addDatasetToUserResources(collection));
