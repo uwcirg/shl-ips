@@ -90,7 +90,7 @@
     );
   }
 
-  function goToCollectionMethod(collection: ResourceCollection) {
+  function updateDataset(collection: ResourceCollection) {
     let { method } = collection.getTags();
     // TODO: autofill source/data in form
     const accordionButton = document.querySelector(`div.${accordionClass} > h2 > button.accordion-button`);
