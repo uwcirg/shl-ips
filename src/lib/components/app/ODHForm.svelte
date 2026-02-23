@@ -46,22 +46,22 @@
     isRetired: false,
     wasInCombat: false,
     currentWork: {
-      jobCurrent: undefined as IOResponse | undefined,
-      industryCurrent: undefined as IOResponse | undefined,
-      startCurrent: ""
+      occupation: undefined as IOResponse | undefined,
+      industry: undefined as IOResponse | undefined,
+      start: ""
     },
     pastWork: {
-      jobPast: undefined as IOResponse | undefined,
-      industryPast: undefined as IOResponse | undefined,
-      startPast: "",
-      endPast: "",
+      occupation: undefined as IOResponse | undefined,
+      industry: undefined as IOResponse | undefined,
+      start: "",
+      end: "",
     },
     retirementDate: {
-      startRetirement: ""
+      start: ""
     },
     combatPeriod: {
-      startCombat: "",
-      endCombat: ""
+      start: "",
+      end: ""
     }
   }
 
@@ -116,17 +116,17 @@
     values.currentWork = [];
     for (const resource of currentJobResources) {
       const jobValues = {
-        jobCurrent: {
-          Code: resource.valueCodeableConcept.coding[0].code,
-          Title: resource.valueCodeableConcept.coding[0].display,
+        occupation: {
+          Code: resource.valueCodeableConcept.coding[0]?.code,
+          Title: resource.valueCodeableConcept.coding[0]?.display,
           Score: 1
         },
-        industryCurrent: {
-          Code: resource.component[0].valueCodeableConcept.coding[0].code,
-          Title: resource.component[0].valueCodeableConcept.coding[0].display,
+        industry: {
+          Code: resource.component[0].valueCodeableConcept.coding[0]?.code,
+          Title: resource.component[0].valueCodeableConcept.coding[0]?.display,
           Score: 1
         },
-        startCurrent: resource.effectivePeriod?.start,
+        start: resource.effectivePeriod?.start ?? "",
       };
       values.currentWork.push(jobValues);
     }
@@ -139,18 +139,18 @@
     values.pastWork = [];
     for (const resource of pastJobResources) {
       const jobValues = {
-        jobPast: {
-          Code: resource.valueCodeableConcept.coding[0].code,
-          Title: resource.valueCodeableConcept.coding[0].display,
+        occupation: {
+          Code: resource.valueCodeableConcept.coding[0]?.code,
+          Title: resource.valueCodeableConcept.coding[0]?.display,
           Score: 1
         },
-        industryPast: {
-          Code: resource.component[0].valueCodeableConcept.coding[0].code,
-          Title: resource.component[0].valueCodeableConcept.coding[0].display,
+        industry: {
+          Code: resource.component[0].valueCodeableConcept.coding[0]?.code,
+          Title: resource.component[0].valueCodeableConcept.coding[0]?.display,
           Score: 1
         },
-        startPast: resource.effectivePeriod.start,
-        endPast: resource.effectivePeriod.end,
+        start: resource.effectivePeriod?.start ?? "",
+        end: resource.effectivePeriod?.end ?? "",
       };
       values.pastWork.push(jobValues);
     }
@@ -159,7 +159,7 @@
   function initializeEmploymentStatusFields(rhs: ResourceHelper[]) {
     const employmentStatusResource = getEmploymentStatusResource(rhs);
     if (employmentStatusResource) {
-      values.status = employmentStatusResource.valueCodeableConcept.coding[0].display ?? 'Employed';
+      values.status = employmentStatusResource.valueCodeableConcept.coding[0]?.display ?? 'Employed';
     }
   }
 
@@ -168,7 +168,7 @@
     values.retirementDates = [];
     for (const resource of retirementDateResources) {
       const retirementDate = {
-        startRetirement: resource.valueDateTime ?? ""
+        start: resource.valueDateTime ?? ""
       };
       values.retirementDates.push(retirementDate);
     }
@@ -179,8 +179,8 @@
     values.combatPeriods = [];
     for (const resource of combatPeriodResources) {
       const combatPeriod = {
-        startCombat: resource.valuePeriod.start ?? "",
-        endCombat: resource.valuePeriod.env ?? "",
+        start: resource.valuePeriod?.start ?? "",
+        end: resource.valuePeriod?.end ?? "",
       };
       values.combatPeriods.push(combatPeriod)
     }
@@ -197,12 +197,6 @@
     initializeEmploymentStatusFields(resources);
     initializeRetirementDateFields(resources);
     initializeCombatPeriodFields(resources);
-  }
-
-  function resetEmploymentStatus() {
-    values.isWorking = defaults.isWorking;
-
-
   }
 
   function copyOf(a: any) {
@@ -251,10 +245,6 @@
   function deleteCombatPeriod(index: number) {
     values.combatPeriods.splice(index, 1);
     values=values;
-  }
-  
-  function clearWorkInfo() {
-    initializeDefaultFields();
   }
   
   function resetWorkInfo() {
@@ -495,27 +485,45 @@
     }
   }
 
+  function sortObjectKeys(obj: any): any {
+    return Object.keys(obj).sort().reduce((result: any, key: any) => {
+      result[key] = obj[key];
+      return result;
+    }, {});
+  }
+
+  function deduplicateObjectList(arr: any[]): any[] {
+    const seen = new Set();
+    return arr.filter((item: any) => {
+      const strItem = JSON.stringify(sortObjectKeys(item));
+      const duplicate = seen.has(strItem);
+      seen.add(strItem);
+      return !duplicate;
+    });
+  }
+
   function generateCurrentJobResources(): Observation[] {
     const currentJobResources: Observation[] = [];
-    for (const [i, jobValue] of values.currentWork.entries()) {
+    const uniqueJobs = deduplicateObjectList(values.currentWork);
+    for (const [i, jobValue] of uniqueJobs.entries()) {
       const currentJobResource = JSON.parse(JSON.stringify(currentJobTemplate));
       currentJobResource.id = `odh-current-job-${i}`;
-      if (jobValue.startCurrent) {
-        let period: any = { start: jobValue.startCurrent };
+      if (jobValue.start) {
+        let period: any = { start: jobValue.start };
         currentJobResource.effectivePeriod = period;
       }
-      if (jobValue.jobCurrent) {
+      if (jobValue.occupation) {
         currentJobResource.valueCodeableConcept.coding = [{
           system: 'https://terminology.hl7.org/2.0.0/CodeSystem-PHOccupationCDCCensus2010.html',
-          code: jobValue.jobCurrent.Code,
-          display: jobValue.jobCurrent.Title
+          code: jobValue.occupation.Code,
+          display: jobValue.occupation.Title
         }];
       }
-      if (jobValue.industryCurrent) {
+      if (jobValue.industry) {
         currentJobResource.component[0].valueCodeableConcept.coding = [{
           system: 'https://terminology.hl7.org/2.0.0/CodeSystem-PHIndustryCDCCensus2010.html',
-          code: jobValue.industryCurrent.Code,
-          display: jobValue.industryCurrent.Title
+          code: jobValue.industry.Code,
+          display: jobValue.industry.Title
         }];
       }
       currentJobResources.push(currentJobResource);
@@ -525,31 +533,32 @@
 
   function generatePastJobResources(): Observation[] {
     const pastJobResources: Observation[] = [];
-    for (const [i, jobValue] of values.pastWork.entries()) {
+    const uniqueJobs = deduplicateObjectList(values.pastWork);
+    for (const [i, jobValue] of uniqueJobs.entries()) {
       const pastJobResource = JSON.parse(JSON.stringify(pastJobTemplate));
       pastJobResource.id = `odh-past-job-${i}`;
-      if (jobValue.startPast || jobValue.endPast) {
+      if (jobValue.start || jobValue.end) {
         let period: any = {};
-        if (jobValue.startPast) {
-          period.start = jobValue.startPast;
+        if (jobValue.start) {
+          period.start = jobValue.start;
         }
-        if (jobValue.endPast) {
-          period.end = jobValue.endPast;
+        if (jobValue.end) {
+          period.end = jobValue.end;
         }
         pastJobResource.effectivePeriod = period;
       }
-      if (jobValue.jobPast) {
+      if (jobValue.occupation) {
         pastJobResource.valueCodeableConcept.coding = [{
           system: 'https://terminology.hl7.org/2.0.0/CodeSystem-PHOccupationCDCCensus2010.html',
-          code: jobValue.jobPast.Code,
-          display: jobValue.jobPast.Title
+          code: jobValue.occupation.Code,
+          display: jobValue.occupation.Title
         }];
       }
-      if (jobValue.industryPast) {
+      if (jobValue.industry) {
         pastJobResource.component[0].valueCodeableConcept.coding = [{
           system: 'https://terminology.hl7.org/2.0.0/CodeSystem-PHIndustryCDCCensus2010.html',
-          code: jobValue.industryPast.Code,
-          display: jobValue.industryPast.Title
+          code: jobValue.industry.Code,
+          display: jobValue.industry.Title
         }];
       }
       pastJobResources.push(pastJobResource);
@@ -559,11 +568,13 @@
 
   function generateRetirementDateResources(): Observation[] {
     const retirementDateResources: Observation[] = [];
-    for (const [i, retirementDate] of values.retirementDates.entries()) {
+    const uniqueRetirementDates = deduplicateObjectList(values.retirementDates);
+    const validRetirementDates = uniqueRetirementDates.filter((retirementDate: any) => retirementDate.start);
+    for (const [i, retirementDate] of validRetirementDates.entries()) {
       const retirementDateResource = JSON.parse(JSON.stringify(retirementDateTemplate));
       retirementDateResource.id = `odh-retirement-date-${i}`;
-      if (retirementDate.startRetirement) {
-        retirementDateResource.valueDateTime = retirementDate.startRetirement;
+      if (retirementDate.start) {
+        retirementDateResource.valueDateTime = retirementDate.start;
       }
       retirementDateResources.push(retirementDateResource);
     }
@@ -572,16 +583,18 @@
 
   function generateCombatPeriodResources(): Observation[] {
     const combatPeriodResources: Observation[] = [];
-    for (const [i, combatPeriod] of values.combatPeriods.entries()) {
+    const uniqueCombatPeriods = deduplicateObjectList(values.combatPeriods);
+    const validCombatPeriods = uniqueCombatPeriods.filter((combatPeriod: any) => combatPeriod.start || combatPeriod.end);
+    for (const [i, combatPeriod] of validCombatPeriods.entries()) {
       const combatPeriodResource = JSON.parse(JSON.stringify(combatPeriodTemplate));
       combatPeriodResource.id = `odh-combat-period-${i}`;
-      if (combatPeriod.startCombat || combatPeriod.endCombat) {
+      if (combatPeriod.start || combatPeriod.end) {
         let period: any = {};
-        if (combatPeriod.startCombat) {
-          period.start = combatPeriod.startCombat;
+        if (combatPeriod.start) {
+          period.start = combatPeriod.start;
         }
-        if (combatPeriod.endCombat) {
-          period.end = combatPeriod.endCombat;
+        if (combatPeriod.end) {
+          period.end = combatPeriod.end;
         }
         combatPeriodResource.valuePeriod = period;
       }
@@ -597,8 +610,8 @@
     employmentStatusResource.valueCodeableConcept.coding[0].display = values.status;
     let minDate: string | null = null;
     for (const jobValue of values.currentWork) {
-      if (minDate === null || minDate > jobValue.startCurrent) {
-        minDate = jobValue.startCurrent;
+      if (minDate === null || minDate > jobValue.start) {
+        minDate = jobValue.start;
       }
     }
     if (minDate) {
@@ -670,19 +683,19 @@
           <Row class="mb-2">
             <Col xs="auto" class="mt-1">I work as a(n)</Col>
             <Col style="flex-grow: 1" xs="auto">
-              <NIOAutoCoderInput bind:value={jobValue.jobCurrent} mode="Occupation" id={`current-occupation-${index}`} />
+              <NIOAutoCoderInput bind:value={jobValue.occupation} mode="Occupation" id={`current-occupation-${index}`} />
             </Col>
           </Row>
           <Row class="mb-2">
             <Col xs="auto" class="mt-1">My company's primary business activity is</Col>
             <Col style="flex-grow: 1" xs="auto">
-              <NIOAutoCoderInput bind:value={jobValue.industryCurrent} mode="Industry" id={`current-industry-${index}`}/>
+              <NIOAutoCoderInput bind:value={jobValue.industry} mode="Industry" id={`current-industry-${index}`}/>
             </Col>
           </Row>
           <Row class="mb-4 pb-4 border-bottom">
             <Col xs="auto" class="mt-1">I started this job</Col>
             <Col xs="auto">
-              <Input type={supportsMonthInput ? 'month' : 'date'} bind:value={jobValue.startCurrent} />
+              <Input type={supportsMonthInput ? 'month' : 'date'} bind:value={jobValue.start} />
             </Col>
             <Col xs="auto" class="d-flex flex-grow-1 justify-content-end">
               <Button outline color="danger" on:click={() => deleteCurrentJob(index)}>Delete</Button>
@@ -703,23 +716,23 @@
         <Row class="mb-2">
           <Col xs="auto" class="mt-1">I used to work as a(n)</Col>
           <Col style="flex-grow: 1" xs="auto">
-            <NIOAutoCoderInput bind:value={jobValue.jobPast} mode="Occupation" id={`past-occupation-${index}`}/>
+            <NIOAutoCoderInput bind:value={jobValue.occupation} mode="Occupation" id={`past-occupation-${index}`}/>
           </Col>
         </Row>
         <Row class="mb-2">
           <Col xs="auto" class="mt-1">My company's primary business activity was</Col>
           <Col style="flex-grow: 1" xs="auto">
-            <NIOAutoCoderInput bind:value={jobValue.industryPast} mode="Industry" id={`past-industry-${index}`}/>
+            <NIOAutoCoderInput bind:value={jobValue.industry} mode="Industry" id={`past-industry-${index}`}/>
           </Col>
         </Row>
         <Row class="mb-4 pb-4 border-bottom">
           <Col xs="auto" class="mt-1">I started this job</Col>
           <Col xs="auto">
-            <Input type={supportsMonthInput ? 'month' : 'date'} bind:value={jobValue.startPast} />
+            <Input type={supportsMonthInput ? 'month' : 'date'} bind:value={jobValue.start} />
           </Col>
           <Col xs="auto" class="mt-1">and stopped</Col>
           <Col xs="auto">
-            <Input type={supportsMonthInput ? 'month' : 'date'} bind:value={jobValue.endPast} />
+            <Input type={supportsMonthInput ? 'month' : 'date'} bind:value={jobValue.end} />
           </Col>
           <Col xs="auto" class="d-flex flex-grow-1 justify-content-end">
             <Button outline color="danger" on:click={() => deletePastJob(index)}>Delete</Button>
@@ -739,7 +752,7 @@
         <Row class="mb-4 pb-4 border-bottom">
           <Col xs="auto" class="mt-1">I retired {supportsMonthInput ? 'in' : 'on'}</Col>
           <Col xs="auto">
-            <Input type={supportsMonthInput ? 'month' : 'date'} bind:value={retirementDate.startRetirement} />
+            <Input type={supportsMonthInput ? 'month' : 'date'} bind:value={retirementDate.start} />
           </Col>
           <Col xs="auto" class="d-flex flex-grow-1 justify-content-end">
             <Button outline color="danger" on:click={() => deleteRetirementDate(index)}>Delete</Button>
@@ -759,13 +772,13 @@
         <Row class="mb-2">
           <Col xs="auto" class="mt-1">I started working in a combat zone or other hazardous conditions</Col>
           <Col xs="auto">
-            <Input type={supportsMonthInput ? 'month' : 'date'} bind:value={combatPeriod.startCombat} />
+            <Input type={supportsMonthInput ? 'month' : 'date'} bind:value={combatPeriod.start} />
           </Col>
         </Row>
         <Row class="mb-4 pb-4 border-bottom">
           <Col xs="auto" class="mt-1">and stopped</Col>
           <Col xs="auto">
-            <Input type={supportsMonthInput ? 'month' : 'date'} bind:value={combatPeriod.endCombat} />
+            <Input type={supportsMonthInput ? 'month' : 'date'} bind:value={combatPeriod.end} />
           </Col>
           <Col xs="auto" class="d-flex flex-grow-1 justify-content-end">
             <Button outline color="danger" on:click={() => deleteCombatPeriod(index)}>Delete</Button>
