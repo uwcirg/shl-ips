@@ -257,6 +257,13 @@
     initializeDefaultFields();
   }
   
+  function resetWorkInfo() {
+    if ($resources && Object.keys($resources).length > 0) {
+      initializeFieldsForFormData();
+    } else {
+      initializeDefaultFields();
+    }
+  }
 
   // Present job resource template
   let currentJobTemplate = {
@@ -604,7 +611,7 @@
     return [employmentStatusResource];
   }
 
-  let buttonText = 'Update work info';
+  let buttonText = 'Save work info';
   let buttonDisabled = false;
   function updateOdhSection() {
     let prevButtonText = buttonText;
@@ -781,8 +788,8 @@
     </Button>
   </Col>
   <Col class="d-flex justify-content-end align-items-start">
-    <Button color="danger" outline on:click={() => clearWorkInfo()}>
-      Clear work info
+    <Button color="danger" outline on:click={() => resetWorkInfo()}>
+      Reset work info
     </Button>
   </Col>
 </Row>
