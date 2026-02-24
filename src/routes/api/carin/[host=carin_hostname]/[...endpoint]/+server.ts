@@ -1,5 +1,5 @@
 // import fetch from 'node-fetch';
-import { json, error } from '@sveltejs/kit';
+import { json, text, error } from '@sveltejs/kit';
 import {
   CARIN_HOSTS,
   REDIRECT_URI
@@ -38,7 +38,14 @@ export const POST = async ({ params, request }: { params: { host: string }; requ
   });
   if (response.ok) {
     let data = await response.text();
-    return json(JSON.parse(data));
+    console.log("Data:", data);
+    try {
+      let jsonData = JSON.parse(data);
+      console.log("JSON Data:", jsonData);
+      return json(jsonData);
+    } catch (e) {
+      return text(data);
+    }
   } else {
     return response;
     // throw error(500, { message: "Token exchange failed" });
