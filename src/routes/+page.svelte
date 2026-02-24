@@ -28,7 +28,7 @@
 
 <svelte:component this={INSTANCE_CONFIG.pages?.home?.introComponent} />
 
-<Row class="mt-3 mb-4 d-flex justify-content-center">
+<Row class="mt-3 mb-5 d-flex justify-content-center">
   <Row class="d-flex justify-content-center gy-3">
     {#if $authenticated}
       <Col class="d-flex align-items-center px-2">
@@ -65,15 +65,15 @@
   </Row>
 </Row>
 
-<Row class="mt-4 mb-4 justify-content-around">
+<Row class="g-4 justify-content-around">
   <Col style="max-width: fit-content">
-    <img src={`${INSTANCE_CONFIG.imgPath}/uw-logo.png`} alt="UW CIRG Logo" style="width: fit-content; max-height: 60px;">
+    <img src={`${INSTANCE_CONFIG.imgPath}/uw-logo.png`} alt="UW CIRG Logo" style="width: auto; max-height: 60px;">
   </Col>
   <Col style="max-width: fit-content">
-    <img src={`${INSTANCE_CONFIG.imgPath}/company-logo.png`} alt="WA DOH Logo" style="width: fit-content; max-height: 60px;">
+    <img src={`${INSTANCE_CONFIG.imgPath}/company-logo.png`} alt="WA DOH Logo" style="width: auto; max-height: 60px;">
   </Col>
   <Col style="max-width: fit-content">
-    <img src={`${INSTANCE_CONFIG.imgPath}/hca-logo.svg`} alt="HCA Logo" style="width: fit-content; width: 270px;">
+    <img src={`${INSTANCE_CONFIG.imgPath}/hca-logo.svg`} alt="HCA Logo" style="width: auto; width: 270px;">
   </Col>
 </Row>
 
