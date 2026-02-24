@@ -3,6 +3,7 @@ import type { ParamMatcher } from '@sveltejs/kit';
 export const ALLOWED = <const> [
 	'acentra',
 	'aetna',
+	'bluebutton',
 	'carefirst',
 	'cpcds',
 	'humana',
@@ -10,7 +11,7 @@ export const ALLOWED = <const> [
 	'onyx',
 	'deloitte',
 	'smilecarinbb',
-	'bluebutton',
+	'united',
 ];
 
 export const match = ((param: string): param is typeof ALLOWED[number] => {

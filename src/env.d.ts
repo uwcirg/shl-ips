@@ -40,22 +40,34 @@ interface ImportMetaEnv {
     readonly VITE_AETNA_CLIENT_ID: string
     readonly AETNA_CLIENT_SECRET: string
     readonly AETNA_TOKEN_ENDPOINT: string
+
+    readonly VITE_BLUE_BUTTON_CLIENT_ID: string
+    readonly BLUE_BUTTON_CLIENT_SECRET: string
+    readonly BLUE_BUTTON_TOKEN_ENDPOINT: string
     
     readonly VITE_CAREFIRST_CLIENT_ID: string
     readonly CAREFIRST_CLIENT_SECRET: string
     readonly CAREFIRST_TOKEN_ENDPOINT: string
+
+    readonly VITE_CPCDS_CLIENT_ID: string
+    readonly CPCDS_CLIENT_SECRET: string
+    readonly CPCDS_TOKEN_ENDPOINT: string
+
+    readonly VITE_DELOITTE_CLIENT_ID: string
+    readonly DELOITTE_CLIENT_SECRET: string
+    readonly DELOITTE_TOKEN_ENDPOINT: string
     
     readonly VITE_HUMANA_CLIENT_ID: string
     readonly HUMANA_CLIENT_SECRET: string
     readonly HUMANA_TOKEN_ENDPOINT: string
     
-    readonly VITE_CPCDS_CLIENT_ID: string
-    readonly CPCDS_CLIENT_SECRET: string
-    readonly CPCDS_TOKEN_ENDPOINT: string
-    
     readonly VITE_INFERNO_CLIENT_ID: string
     readonly INFERNO_CLIENT_SECRET: string
     readonly INFERNO_TOKEN_ENDPOINT: string
+
+    readonly VITE_MOLINA_CLIENT_ID: string
+    readonly MOLINA_CLIENT_SECRET: string
+    readonly MOLINA_TOKEN_ENDPOINT: string
 
     readonly VITE_ONYX_CLIENT_ID: string
     readonly ONYX_CLIENT_SECRET: string
@@ -65,13 +77,9 @@ interface ImportMetaEnv {
     readonly SMILECARINBB_CLIENT_SECRET: string
     readonly SMILECARINBB_TOKEN_ENDPOINT: string
 
-    readonly VITE_DELOITTE_CLIENT_ID: string
-    readonly DELOITTE_CLIENT_SECRET: string
-    readonly DELOITTE_TOKEN_ENDPOINT: string
-
-    readonly VITE_BLUE_BUTTON_CLIENT_ID: string
-    readonly BLUE_BUTTON_CLIENT_SECRET: string
-    readonly BLUE_BUTTON_TOKEN_ENDPOINT: string
+    readonly VITE_UNITED_CLIENT_ID: string
+    readonly UNITED_CLIENT_SECRET: string
+    readonly UNITED_TOKEN_ENDPOINT: string
 }
   
 interface ImportMeta {

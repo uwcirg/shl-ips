@@ -450,7 +450,7 @@ export function getDemographicsFromPatient(patient: Patient): UserDemographics {
 }
 
 export function constructPatientResource (
-  props: UserDemographics & { customIdentifiers: Identifier[], customExtensions: Extension[] } = {},
+  props: UserDemographics & { id?: string, customIdentifiers?: Identifier[], customExtensions?: Extension[] } = {},
   patient: Patient = { resourceType: 'Patient', active: true }
 ): Patient {
   if (props.id) {

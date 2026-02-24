@@ -161,7 +161,7 @@ export const CERNER_CLIENT_ID = import.meta.env.VITE_CERNER_CLIENT_ID;
 export const SOF_ENDPOINTS = PUBLIC_PROVIDER_ENDPOINTS;
 
 export const CARIN_RESOURCES = [
-  'Patient',
+  // 'Patient',
   'Coverage',
   'Practitioner',
   'Organization',
@@ -180,97 +180,140 @@ export const CARIN_RESOURCES = [
   'List',
 ];
 
-export const CARIN_HOSTS = [
-  // {
-  //   id: "acentra",
-  //   name: "Acentra",
-  //   url: "https://sb.fhir.mhbapp.com/pa/api/v1",
-  //   clientId: import.meta.env.VITE_ACENTRA_CLIENT_ID,
-  //   scope: "openid launch/patient patient/*.read",
-  //   note: "sbuser001 / Acentra-sb$2024"
-  // },
-  {
+export const CARIN_HOSTS: { id: string; name: string; url: string; clientId: string; scope?: string; note: string; section?: string; }[] = [];
+if (import.meta.env.VITE_ACENTRA_CLIENT_ID) {
+  CARIN_HOSTS.push({
+    id: "acentra",
+    name: "Acentra HCA Test System",
+    url: "https://sb.fhir.mhbapp.com/pa/api/v1",
+    clientId: import.meta.env.VITE_ACENTRA_CLIENT_ID,
+    scope: "openid launch/patient patient/*.read",
+    note: "sbuser001 / Acentra-sb$2024",
+    section: "applehealth"
+  });
+}
+if (import.meta.env.VITE_UNITED_CLIENT_ID) {
+  CARIN_HOSTS.push({
+    id: "united",
+    name: "UnitedHealthcare Test System",
+    url: "https://flex.optum.com/fhir/sandbox/R4",
+    clientId: import.meta.env.VITE_UNITED_CLIENT_ID,
+    scope: "openid launch/patient patient/List.read patient/MedicationKnowledge.read patient/Patient.read patient/Coverage.read patient/Condition.read patient/Immunization.read patient/MedicationDispense.read patient/MedicationRequest.read patient/Observation.read patient/Procedure.read patient/Encounter.read patient/ExplanationOfBenefit.read patient/AllergyIntolerance.read patient/CarePlan.read patient/CareTeam.read patient/Device.read patient/DiagnosticReport.read patient/DocumentReference.read patient/Goal.read",
+    note: "wahsdemo@gmail.com / demo1WAHS",
+    section: "applehealth"
+  });
+}
+if (import.meta.env.VITE_MOLINA_CLIENT_ID) {
+  CARIN_HOSTS.push({
+    id: "molina",
+    name: "Molina Test System",
+    url: "https://api.interop.molinahealthcare.com/sandbox/patientaccess",
+    clientId: import.meta.env.VITE_MOLINA_CLIENT_ID,
+    // scope: "openid launch/patient patient/List.read patient/MedicationKnowledge.read patient/Patient.read patient/Coverage.read patient/Condition.read patient/Immunization.read patient/MedicationDispense.read patient/MedicationRequest.read patient/Observation.read patient/Procedure.read patient/Encounter.read patient/ExplanationOfBenefit.read patient/AllergyIntolerance.read patient/CarePlan.read patient/CareTeam.read patient/Device.read patient/DiagnosticReport.read patient/DocumentReference.read patient/Goal.read",
+    scope: "openid launch/patient",
+    note: "",
+    section: "applehealth"
+  });
+}
+if (import.meta.env.VITE_AETNA_CLIENT_ID) {
+  CARIN_HOSTS.push({
     id: "aetna",
-    name: "AETNA Insurance Sandbox",
+    name: "Aetna Test System",
     url: "https://vteapif1.aetna.com/fhirdemo/v2/patientaccess",
     clientId: import.meta.env.VITE_AETNA_CLIENT_ID,
     scope: "openid launch/patient patient/Patient.read patient/Coverage.read patient/ExplanationOfBenefit.read",
     note: "VTETestUser01 / FHIRdemo2020"
-  },
-  // {
-  //   id: "humana",
-  //   name: "Humana",
-  //   url: "https://sandbox-fhir.humana.com/api",
-  //   clientId: import.meta.env.VITE_HUMANA_CLIENT_ID,
-  //   // scope: "openid launch/patient patient/Patient.read patient/Coverage.read patient/ExplanationOfBenefit.read",
-  //   scope: "openid launch/patient patient/Patient.read patient/Coverage.read patient/ExplanationOfBenefit.read patient/Procedure.read patient/MedicationRequest.read patient/Immunization.read patient/CareTeam.read patient/Condition.read patient/CarePlan.read patient/Observation.read patient/AllergyIntolerance.read patient/Goal.read patient/DocumentReference.read patient/List.read",
-  //   note: "HUser00007 / PW00007!"
-  // },
-  {
+  });
+}
+if (import.meta.env.VITE_HUMANA_CLIENT_ID) {
+  CARIN_HOSTS.push({
+    id: "humana",
+    name: "Humana Test System",
+    url: "https://sandbox-fhir.humana.com/api",
+    clientId: import.meta.env.VITE_HUMANA_CLIENT_ID,
+    // scope: "openid launch/patient patient/Patient.read patient/Coverage.read patient/ExplanationOfBenefit.read",
+    scope: "openid launch/patient patient/Patient.read patient/Coverage.read patient/ExplanationOfBenefit.read patient/Procedure.read patient/MedicationRequest.read patient/Immunization.read patient/CareTeam.read patient/Condition.read patient/CarePlan.read patient/Observation.read patient/AllergyIntolerance.read patient/Goal.read patient/DocumentReference.read patient/List.read",
+    note: "HUser00007 / PW00007!"
+  });
+}
+if (import.meta.env.VITE_BLUE_BUTTON_CLIENT_ID) {
+  CARIN_HOSTS.push({
     id: "bluebutton",
-    name: "Blue Button 2.0 Sandbox",
+    name: "Blue Button 2.0 Test System",
     url: "https://sandbox.bluebutton.cms.gov/v3/fhir",
     // url: "https://sandbox.bluebutton.cms.gov/v2/fhir",
     clientId: import.meta.env.VITE_BLUE_BUTTON_CLIENT_ID,
     scope: "openid launch/patient patient/Patient.read patient/Coverage.read patient/ExplanationOfBenefit.read",
     note: "BBUser09001 / PW09001!"
-  },
-  // {
-  //   id: "carefirst",
-  //   name: "CareFirst",
-  //   url: "https://chpdc-api-sita.carefirst.com/v1/fhir/patientaccess",
-  //   // url: "https://chpmd-api-sita.carefirst.com/v1/fhir/patientaccess",
-  //   // url: "https://dsnp-api-sita.carefirst.com/v1/fhir/patientaccess",
-  //   // url: "https://mapd-api-sita.carefirst.com/v1/fhir/patientaccess",
-  //   // url: "https://mhbe-api-sita.carefirst.com/v1/fhir/patientaccess",
-  //   // url: "https://egwp-api-sita.carefirst.com/v1/fhir/patientaccess",
-  //   clientId: import.meta.env.VITE_CAREFIRST_CLIENT_ID,
-  //   note: "Credentials provided"
-  // },
-  // Connectathon Testing Servers
-  //////////////////////////////////////////////////////////////////////////////
-  // {
-  //   id: "cpcds",
-  //   name: "CPCDS Demo",
-  //   url: "https://cpcds-server.lantanagroup.com/fhir",
-  //   clientId: import.meta.env.VITE_CPCDS_CLIENT_ID,
-  //   scope: "openid fhirUser launch/patient patient/*.read",
-  //   note: "Patient1 / password"
-  // },
-  // {
-  //   id: "inferno",
-  //   name: "Inferno Test Suite",
-  //   url: "https://inferno.healthit.gov/suites/custom/c4bb_v200_client/fhir",
-  //   clientId: import.meta.env.VITE_INFERNO_CLIENT_ID,
-  //   scope: 'openid fhirUser launch/patient patient/*.read',
-  //   note: "Credentials provided"
-  // },
-  // {
-  //   id: "onyx",
-  //   name: "ONYX",
-  //   url: "https://api-dmdh-alpha.safhir.io/v1/api/carin-bb/",
-  //   clientId: import.meta.env.VITE_ONYX_CLIENT_ID,
-  //   scope: 'openid fhirUser launch/patient patient/Coverage.read patient/ExplanationOfBenefit.read fhirUser launch/patient patient/Condition.read patient/Device.read patient/DiagnosticReport.read patient/DocumentReference.read patient/Encounter.read patient/Goal.read patient/Immunization.read patient/Location.read patient/Medication.read patient/MedicationRequest.read patient/Observation.read patient/Organization.read patient/Practitioner.read patient/PractitionerRole.read patient/Procedure.read patient/Provenance.read patient/AllergyIntolerance.read patient/CareTeam.read patient/MedicationDispense.read patient/QuestionnaireResponse.read patient/RelatedPerson.read patient/ServiceRequest.read openid offline_access patient/Patient.read patient/CarePlan.read patient/HealthcareService.read patient/Media.read patient/Questionnaire.read patient/Specimen.read patient/InsurancePlan.read',
-  //   note: "test30081@dmd.com / Track@04"
-  // },
-  // {
-  //   id: "deloitte",
-  //   name: "Deloitte’s State Medicaid Agency",
-  //   url: "https://deloitte.connectathons.com/",
-  //   clientId: import.meta.env.VITE_DELOITTE_CLIENT_ID,
-  //   scope: 'openid fhirUser launch/patient patient/*.read',
-  //   note: "norma_sparks / UserPass123!"
-  // },
-  // {
-  //   id: "smilecarinbb",
-  //   name: "Smile CDR",
-  //   url: "https://cdr-qa.p2p.azure.smilecdr.com/payer-fhir/",
-  //   clientId: import.meta.env.VITE_SMILECARINBB_CLIENT_ID,
-  //   scope: 'openid fhirUser launch/patient patient/*.read',
-  //   note: "u_washington / password1!"
-  // },
-  /////////////////////////////////////////////////////////////////////////////
-]
+  });
+}
+if (import.meta.env.VITE_CAREFIRST_CLIENT_ID) {
+  CARIN_HOSTS.push({
+    id: "carefirst",
+    name: "CareFirst Test System",
+    url: "https://chpdc-api-sita.carefirst.com/v1/fhir/patientaccess",
+    // url: "https://chpmd-api-sita.carefirst.com/v1/fhir/patientaccess",
+    // url: "https://dsnp-api-sita.carefirst.com/v1/fhir/patientaccess",
+    // url: "https://mapd-api-sita.carefirst.com/v1/fhir/patientaccess",
+    // url: "https://mhbe-api-sita.carefirst.com/v1/fhir/patientaccess",
+    // url: "https://egwp-api-sita.carefirst.com/v1/fhir/patientaccess",
+    clientId: import.meta.env.VITE_CAREFIRST_CLIENT_ID,
+    note: "Credentials provided"
+  });
+}
+
+// Connectathon Testing Servers //////////////////////////////////////////////////////////////////////////////
+if (import.meta.env.VITE_CPCDS_CLIENT_ID) {
+  CARIN_HOSTS.push({
+    id: "cpcds",
+    name: "CPCDS Test System",
+    url: "https://cpcds-server.lantanagroup.com/fhir",
+    clientId: import.meta.env.VITE_CPCDS_CLIENT_ID,
+    scope: "openid fhirUser launch/patient patient/*.read",
+    note: "Patient1 / password"
+  });
+}
+if (import.meta.env.VITE_INFERNO_CLIENT_ID) {
+  CARIN_HOSTS.push({
+    id: "inferno",
+    name: "Inferno Test Suite",
+    url: "https://inferno.healthit.gov/suites/custom/c4bb_v200_client/fhir",
+    clientId: import.meta.env.VITE_INFERNO_CLIENT_ID,
+    scope: 'openid fhirUser launch/patient patient/*.read',
+    note: "Credentials provided"
+  });
+}
+if (import.meta.env.VITE_ONYX_CLIENT_ID) {
+  CARIN_HOSTS.push({
+    id: "onyx",
+    name: "ONYX",
+    url: "https://api-dmdh-alpha.safhir.io/v1/api/carin-bb/",
+    clientId: import.meta.env.VITE_ONYX_CLIENT_ID,
+    scope: 'openid fhirUser launch/patient patient/Coverage.read patient/ExplanationOfBenefit.read fhirUser launch/patient patient/Condition.read patient/Device.read patient/DiagnosticReport.read patient/DocumentReference.read patient/Encounter.read patient/Goal.read patient/Immunization.read patient/Location.read patient/Medication.read patient/MedicationRequest.read patient/Observation.read patient/Organization.read patient/Practitioner.read patient/PractitionerRole.read patient/Procedure.read patient/Provenance.read patient/AllergyIntolerance.read patient/CareTeam.read patient/MedicationDispense.read patient/QuestionnaireResponse.read patient/RelatedPerson.read patient/ServiceRequest.read openid offline_access patient/Patient.read patient/CarePlan.read patient/HealthcareService.read patient/Media.read patient/Questionnaire.read patient/Specimen.read patient/InsurancePlan.read',
+    note: "test30081@dmd.com / Track@04"
+  });
+}
+if (import.meta.env.VITE_DELOITTE_CLIENT_ID) {
+  CARIN_HOSTS.push({
+    id: "deloitte",
+    name: "Deloitte’s State Medicaid Agency",
+    url: "https://deloitte.connectathons.com/",
+    clientId: import.meta.env.VITE_DELOITTE_CLIENT_ID,
+    scope: 'openid fhirUser launch/patient patient/*.read',
+    note: "norma_sparks / UserPass123!"
+  });
+}
+if (import.meta.env.VITE_SMILECARINBB_CLIENT_ID) {
+  CARIN_HOSTS.push({
+    id: "smilecarinbb",
+    name: "Smile CDR",
+    url: "https://cdr-qa.p2p.azure.smilecdr.com/payer-fhir/",
+    clientId: import.meta.env.VITE_SMILECARINBB_CLIENT_ID,
+    scope: 'openid fhirUser launch/patient patient/*.read',
+    note: "u_washington / password1!"
+  });
+}
+// End Connectathon Testing Servers ///////////////////////////////////////////////////////////////////////////
 
 export const BEARER_AUTHORIZATION = {
   'EpicHIMSS': import.meta.env.VITE_EPIC_CLIENT_ID

@@ -97,11 +97,12 @@ export interface SHCFile {
 }
 
 export interface SOFHost {
-  id:string;
-  name:string;
-  url:string;
-  clientId:string;
-  note:string | undefined;
+  id: string;
+  name: string;
+  url: string;
+  clientId: string;
+  note: string | undefined;
+  scope?: string | undefined;
 }
 
 export interface DataFormConfig {

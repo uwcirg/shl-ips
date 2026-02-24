@@ -33,7 +33,7 @@
   let loadingSample = false;
   let fetchError = "";
 
-  let sofHostSelection = CARIN_HOSTS[0].id;
+  let sofHostSelection = CARIN_HOSTS.filter(e => e.section !== 'applehealth')[0].id;
   let sofHost:SOFHost | undefined = CARIN_HOSTS.find(e => e.id == sofHostSelection);
   
   $: {
@@ -63,7 +63,7 @@
             const resourceScope = patientResourceScope.join(" ");
             scope = `openid fhirUser launch/patient ${resourceScope}`;
           }
-          authorize(sofHost.url, sofHost.clientId, scope);
+          authorize(sofHost.url, sofHost.clientId, {scope, pkceMode: "disabled"});
           authDispatch('sof-auth-init', { data: true });
         } catch (e) {
           authDispatch('sof-auth-fail', { data: false });
@@ -145,15 +145,24 @@
 
         // Send the code to the server for token exchange
         let tokenResult = await fetch(`/api/carin/${sofHostSelection}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${await authService.getAccessToken()}`,
-          },
-          body: JSON.stringify({ code, code_verifier }),
-        })
-          .then(response => response.text())
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${await authService.getAccessToken()}`,
+            },
+            body: JSON.stringify({ code, code_verifier }),
+          })
+          .then(response => {
+            if (!response.ok) {
+              throw Error('Token exchange failed');
+            }
+            return response.text();
+          })
           .then(response => JSON.parse(response));
+        
+        if (!tokenResult) {
+          throw Error('Token exchange failed');
+        }
         const accessToken = tokenResult.access_token;
         const patientId = tokenResult.patient;
         console.log('Access Token:', accessToken);
@@ -171,16 +180,16 @@
           return fetch(`${url}/${resourceType}?patient=${patientId}`, {
             headers: { Authorization: `Bearer ${accessToken}` },
           })
-            .then(response => response.json())
-            .then(data => {
-              console.log(`${resourceType} Data:`, data);
-              if (data.resourceType === 'Bundle') {
-                return data.entry.map((e: BundleEntry) => e.resource);
-              } else if (CARIN_RESOURCES.includes(data.resourceType)) {
-                return [data];
-              }
-              throw Error (`Unexpected resource type ${data.resourceType}`);
-            });
+          .then(response => response.json())
+          .then(data => {
+            console.log(`${resourceType} Data:`, data);
+            if (data.resourceType === 'Bundle') {
+              return data.entry.map((e: BundleEntry) => e.resource).filter((r: Resource) => r.resourceType === resourceType);
+            } else if (CARIN_RESOURCES.includes(data.resourceType)) {
+              return [data];
+            }
+            throw Error (`Unexpected resource type ${data.resourceType}`);
+          });
         }))).filter(x => x.status == "fulfilled").map(x => x.value);
 
         resources = resources.flat();
@@ -208,9 +217,20 @@
   });
 
 </script>
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, sofHost?.url, prepareIps)}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, sofHost?.url ?? "", prepareIps)}>
   <FormGroup>
-    {#each CARIN_HOSTS as host}
+    <h6>WA State Apple Health Providers</h6>
+    {#each CARIN_HOSTS.filter(e => e.section === 'applehealth') as host}
+      <Row class="mx-2">
+        <Input type="radio" disabled bind:group={sofHostSelection} value={host.id} label={host.name} />
+        {#if host.note}
+          <p class="text-secondary" style="margin-left:25px">{@html host.note}</p>
+        {/if}
+      </Row>
+    {/each}
+    <br>
+    <Row class="border-top w-100 p-2"><h6>Other Provider Test Systems</h6></Row>
+    {#each CARIN_HOSTS.filter(e => !e.section || e.section === 'other') as host}
       <Row class="mx-2">
         <Input type="radio" bind:group={sofHostSelection} value={host.id} label={host.name} />
         {#if host.note}
