@@ -202,7 +202,8 @@ export interface IAuthService {
 }
 
 export interface IResourceCollection {
-  resourcesByType: Writable<CategorizedResourceHelperMap>;
+  id: string;
+  resources: Writable<ResourceHelperMap>;
   selectedPatient: Writable<string>;
   patientReference: Readable<string>;
   patient: Readable<Patient | undefined>;
