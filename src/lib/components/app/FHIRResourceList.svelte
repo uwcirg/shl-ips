@@ -29,10 +29,12 @@
   import AdvanceDirective from '$lib/components/resource-templates/AdvanceDirective.svelte';
   import AllergyIntolerance from '$lib/components/resource-templates/AllergyIntolerance.svelte';
   import Condition from '$lib/components/resource-templates/Condition.svelte';
+  import Coverage from '$lib/components/resource-templates/Coverage.svelte';
   import Device from '$lib/components/resource-templates/Device.svelte';
   import DeviceUseStatement from '$lib/components/resource-templates/DeviceUseStatement.svelte';
   import DiagnosticReport from '$lib/components/resource-templates/DiagnosticReport.svelte';
   import Encounter from '$lib/components/resource-templates/Encounter.svelte';
+  import ExplanationOfBenefit from '$lib/components/resource-templates/ExplanationOfBenefit.svelte';
   import Goal from '$lib/components/resource-templates/Goal.svelte';
   import Immunization from '$lib/components/resource-templates/Immunization.svelte';
   import Location from '$lib/components/resource-templates/Location.svelte';
@@ -71,8 +73,8 @@
   function resourceSort(a: Resource, b: Resource, order: 'asc' | 'desc' = 'desc') {
     let orderFactor = order === 'asc' ? 1 : -1;
     
-    let aVal: {date: number, precision: number} | null = getResourceSortDate(a, resourceConfig[a.resourceType].sortFields);
-    let bVal: {date: number, precision: number} | null = getResourceSortDate(b, resourceConfig[b.resourceType].sortFields);
+    let aVal: {date: number, precision: number} | null = getResourceSortDate(a, resourceConfig[a.resourceType]?.sortFields ?? []);
+    let bVal: {date: number, precision: number} | null = getResourceSortDate(b, resourceConfig[b.resourceType]?.sortFields ?? []);
     if (aVal && !bVal) return 1 * orderFactor;
     if (bVal && !aVal) return -1 * orderFactor;
     if (!aVal && !bVal) return lastUpdatedSort(a, b) * orderFactor;
@@ -97,6 +99,11 @@
       component: AdvanceDirective,
       sortFields: ['dateTime']
     },
+    'Coverage': {
+      category: 'Coverages',
+      component: Coverage,
+      sortFields: ['period']
+    },
     'Device': {
       category: 'Devices',
       component: Device,
@@ -120,6 +127,11 @@
       category: 'Encounters',
       component: Encounter,
       sortFields: ['period']
+    },
+    'ExplanationOfBenefit': {
+      category: 'Explanations of Benefits',
+      component: ExplanationOfBenefit,
+      sortFields: ['created', 'billablePeriod']
     },
     'Goal': {
       category: 'Goals',
@@ -197,7 +209,9 @@
             continue;
           }
           let type = resourceConfig[rh.resource.resourceType]?.category;
-          if (!type) { continue }
+          if (!type) {
+            type = rh.resource.resourceType;
+          }
           if (!(type in resourcesByType)) {
             resourcesByType[type] = {};
           }
@@ -326,7 +340,7 @@
             }) as value, index}
                 <Row class={index > 0 ? "border-top pt-2 mt-2" : ""} style="overflow: hidden">
                   <Col class="overflow-auto justify-content-center align-items-center">
-                    {#if value.resource.resourceType in resourceConfig}
+                    {#if value.resource.resourceType in resourceConfig && resourceConfig[value.resource.resourceType].component}
                       <svelte:component
                         this={resourceConfig[value.resource.resourceType].component}
                         content={{
