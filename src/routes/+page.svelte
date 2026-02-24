@@ -64,7 +64,20 @@
     {/if}
   </Row>
 </Row>
-<Row>
+
+<Row class="mt-4 mb-4 justify-content-around">
+  <Col style="max-width: fit-content">
+    <img src={`${INSTANCE_CONFIG.imgPath}/uw-logo.png`} alt="UW CIRG Logo" style="width: fit-content; max-height: 60px;">
+  </Col>
+  <Col style="max-width: fit-content">
+    <img src={`${INSTANCE_CONFIG.imgPath}/company-logo.png`} alt="WA DOH Logo" style="width: fit-content; max-height: 60px;">
+  </Col>
+  <Col style="max-width: fit-content">
+    <img src={`${INSTANCE_CONFIG.imgPath}/hca-logo.svg`} alt="HCA Logo" style="width: fit-content; width: 270px;">
+  </Col>
+</Row>
+
+<Row class="mt-5">
   <Accordion>
     <AccordionItem>
       <h5 slot="header">Privacy and Trust</h5>
