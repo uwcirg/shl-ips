@@ -112,11 +112,11 @@ export async function retrieve(configIncoming: SHLinkConnectRequest | {state: st
     const shcFiles = (manifestResponseContent as SHLManifestFile).files
       .filter((f) => f.contentType === 'application/smart-health-card')
       .map(async (f) =>  {
-        if (f.embedded !== undefined) {
-          return f.embedded
-        } else {
+        // if (f.embedded !== undefined) {
+        //   return f.embedded
+        // } else {
           return fetch(f.location).then((f) => f.text())
-        }
+        // }
       });
 
     const shcFilesDecrypted = shcFiles.map(async (f) => {
@@ -130,11 +130,11 @@ export async function retrieve(configIncoming: SHLinkConnectRequest | {state: st
     const jsonFiles = (manifestResponseContent as SHLManifestFile).files
       .filter((f) => f.contentType === 'application/fhir+json')
       .map(async (f) =>  {
-        if (f.embedded !== undefined) {
-          return f.embedded
-        } else {
+        // if (f.embedded !== undefined) {
+        //   return f.embedded
+        // } else {
           return fetch(f.location).then((f) => f.text())
-        }
+        // }
       });
 
     const jsonFilesDecrypted = jsonFiles.map(async (f) => {
