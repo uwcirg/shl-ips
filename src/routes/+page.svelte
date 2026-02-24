@@ -28,8 +28,8 @@
 
 <svelte:component this={INSTANCE_CONFIG.pages?.home?.introComponent} />
 
-<Row class="mt-4 mb-5 d-flex justify-content-center">
-  <Row class="d-flex justify-content-center">
+<Row class="mt-3 mb-4 d-flex justify-content-center">
+  <Row class="d-flex justify-content-center gy-3">
     {#if $authenticated}
       <Col class="d-flex align-items-center px-2">
         <Card color="light" class="flex-fill">
