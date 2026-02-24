@@ -7,6 +7,7 @@
   export let period = false;
 
   function buildDateString() {
+    if (!fields) return "";
     let unk = formatDate(undefined) ?? "??"; // get format function's default string if available
     let date = unk;
     let prefix = "";
