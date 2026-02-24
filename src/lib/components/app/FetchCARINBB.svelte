@@ -10,6 +10,7 @@
   import { page } from '$app/stores';
   import { getContext } from 'svelte';
   import { CARIN_HOSTS, CARIN_RESOURCES } from '$lib/config/config';
+  import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import type { IAuthService, ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from '$lib/utils/types';
   import { clearURLOfParams, getReferences } from '$lib/utils/util';
   import { authorize, endSession } from '$lib/utils/sofClient.js';
@@ -228,7 +229,7 @@
         {/if}
       </Row>
     {/each}
-    <br>
+    <Row class="w-100 p-2 justify-content-end"><img src={`${INSTANCE_CONFIG.imgPath}/hca-logo.svg`} alt="HCA Logo" style="width: fit-content; height: 40px;" /></Row>
     <Row class="border-top w-100 p-2"><h6>Other Provider Test Systems</h6></Row>
     {#each CARIN_HOSTS.filter(e => !e.section || e.section === 'other') as host}
       <Row class="mx-2">
