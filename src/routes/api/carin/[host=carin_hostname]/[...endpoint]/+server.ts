@@ -14,7 +14,7 @@ export const POST = async ({ params, request }: { params: { host: string }; requ
   let clientSecret = CARIN_HOSTS[restPath].clientSecret;
   let tokenEndpoint = CARIN_HOSTS[restPath].tokenEndpoint;
 
-  console.log({clientId, clientSecret, tokenEndpoint, REDIRECT_URI});
+  // console.log({clientId, clientSecret, tokenEndpoint, REDIRECT_URI});
 
   if (!(clientId && clientSecret && tokenEndpoint && REDIRECT_URI)) {
     throw error(500, { message: "Server configuration error" });
@@ -38,10 +38,8 @@ export const POST = async ({ params, request }: { params: { host: string }; requ
   });
   if (response.ok) {
     let data = await response.text();
-    console.log("Data:", data);
     try {
       let jsonData = JSON.parse(data);
-      console.log("JSON Data:", jsonData);
       return json(jsonData);
     } catch (e) {
       return text(data);

@@ -32,13 +32,6 @@
   let processing = false;
   let loadingSample = false;
   let fetchError = "";
-  let result: ResourceRetrieveEvent = {
-    resources: undefined,
-    category: CATEGORY,
-    method: METHOD,
-    source: undefined,
-    sourceName: undefined
-  };
 
   let sofHostSelection = CARIN_HOSTS[0].id;
   let sofHost:SOFHost | undefined = CARIN_HOSTS.find(e => e.id == sofHostSelection);
@@ -193,7 +186,7 @@
         resources = resources.flat();
         resources = [patient, ...resources];
         if (resources) {
-          result = {
+          let result = {
             resources: await getResourcesWithReferences(resources, 1, accessToken),
             category: CATEGORY,
             method: METHOD,
@@ -203,8 +196,6 @@
           console.log(result.resources);
           resourceDispatch('update-resources', result);
         }
-
-        console.log(result);
       } catch (e) {
         console.log('Failed', e);
         fetchError = "Error fetching Insurance data";
