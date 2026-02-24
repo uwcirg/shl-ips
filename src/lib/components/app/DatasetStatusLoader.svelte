@@ -3,7 +3,7 @@
   import { StateManager } from '$lib/utils/StateManager';
 
   export let status: StateManager;
-  export let isLoading: boolean;
+  export let isLoading: boolean = false;
   export let size="sm";
   export let color="secondary";
 

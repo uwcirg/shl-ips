@@ -25,7 +25,7 @@
   let method: string;
   let source: string;
 
-  let dataset = writable({});
+  let dataset = writable({} as { status: any, collection: any });
 
   export async function checkFHIRDataServiceBeforeFetch(categoryCode: string, methodCode: string, sourceUrl: string, fetchCallback: Function) {
     category = categoryCode;
@@ -42,9 +42,11 @@
 </script>
 
 <Modal isOpen={open} backdrop="static" {toggle}>
-  <ModalHeader {toggle}>Overwrite existing data from this source?</ModalHeader>
+  <ModalHeader {toggle}>Update existing information?</ModalHeader>
   <ModalBody>
-    This will overwrite the data you have already added from this source. Press "Cancel" if you would like to keep or review your data before continuing.
+    The existing information from this source will be replaced.
+    <br />
+    Press "Cancel" if you would like to keep or review your data before continuing.
     <Row class="mt-3">
       <Col>
         <DatasetView dataset={$dataset} masterPatient={fhirDataService.masterPatient} />
@@ -52,7 +54,13 @@
     </Row>
   </ModalBody>
   <ModalFooter>
-    <Button color="danger" on:click={toggle}>Cancel</Button>
-    <Button color="success"  on:click={() => {toggle(); callbackFn();} }><Icon name="check" /> Yes, overwrite data</Button>
+  <Row class="w-100">
+    <Col class="d-flex flex-grow-1">
+      <Button color="secondary" outline on:click={toggle}>Cancel</Button>
+    </Col>
+    <Col class="d-flex flex-grow-1 justify-content-end">
+      <Button color="success"  on:click={() => {toggle(); callbackFn();} }><Icon name="check" /> Yes, update data</Button>
+    </Col>
+  </Row>
   </ModalFooter>
 </Modal>

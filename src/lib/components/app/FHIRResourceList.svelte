@@ -51,6 +51,7 @@
 
   export let resourceCollection: ResourceCollection;
   export let scroll: boolean = true;
+  export let submitting: boolean = false;
 
   function lastUpdatedSort(a, b) {
     let aDate = a?.meta?.lastUpdated;
