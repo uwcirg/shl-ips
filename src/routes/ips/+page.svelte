@@ -110,7 +110,7 @@
         });
       let message = await retrieveResult.text();
       message = JSON.parse(message)?.message;
-      if (!retrieveResult.ok && retrieveResult.status === 401 && message === "Passcode required") {
+      if (!retrieveResult.ok && (retrieveResult.status === 401 && message === "Passcode required" || retrieveResult.status === 400)) {
         // Failed the password requirement
         const needPasscode = shlClient.flag({ shl: shl ?? "" })?.includes('P');
         if (needPasscode) {

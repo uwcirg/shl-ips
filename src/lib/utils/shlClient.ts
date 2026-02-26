@@ -127,13 +127,13 @@ export async function retrieve(configIncoming: SHLinkConnectRequest | {state: st
 
     const shcs = (await Promise.all(shcFilesDecrypted)).flatMap((f) => JSON.parse(f)['verifiableCredential'] as string);
 
-    const jsonFiles = (manifestResponseContent as SHLManifestFile).files
-      .filter((f) => f.contentType === 'application/fhir+json')
+    const jsonFiles = await (manifestResponseContent as SHLManifestFile).files
+      .filter((f) => f.contentType === 'application/fhir+json' || f.content_type === 'application/fhir+json')
       .map(async (f) =>  {
         // if (f.embedded !== undefined) {
         //   return f.embedded
         // } else {
-          return fetch(f.location).then((f) => f.text())
+          return await fetch(f.location.replace("http://127.0.0.1:19080", "https://interop-gateway.odl.io")).then((f) => f.text())
         // }
       });
 
