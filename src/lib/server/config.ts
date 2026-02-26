@@ -73,5 +73,12 @@ export const URL_BEARER_HOSTS: Record<string, any> = {
   },
   epic: {
     token: process.env.EPIC_BEARER_TOKEN
+  },
+  epicihe: {
+    credentials: {
+      tokenEndpoint: process.env.EPIC_IHE_TOKEN_ENDPOINT,
+      clientId: process.env.EPIC_IHE_CLIENT_ID,
+      clientSecret: process.env.EPIC_IHE_CLIENT_SECRET
+    }
   }
 }

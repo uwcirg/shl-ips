@@ -364,6 +364,7 @@ export const EXAMPLE_IPS = {
   'Anonymous': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/10999/$summary',
   'Desiree': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/Pat1-System2/$summary',
   // 2025-01 Connectathon PACIO track:
-  'Jenny Mosley': 'https://hapi.fhir.org/baseR4/Patient/patientJM1/$summary'
+  'Jenny Mosley': 'https://hapi.fhir.org/baseR4/Patient/patientJM1/$summary',
+  'Epic IHE 2026': 'https://pancanadianio.ca:10101/Interconnect-connectathon-ca/api/FHIR/R4/Patient/e6EjlmN1AGE9X.2NGyMV-GQ3/$summary?_format=json',
 };
 export const IPS_DEFAULT = 'Maria SEATTLE Gravitate';
