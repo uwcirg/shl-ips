@@ -49,6 +49,7 @@ export interface SHLSubmitEvent {
   passcode?: string;
   exp?: number;
   patientName?: string;
+  contentType?: string;
 }
 
 export interface ResourceHelperMap extends Record<string, ResourceHelper> {}
