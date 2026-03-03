@@ -109,14 +109,14 @@ export async function retrieve(configIncoming: SHLinkConnectRequest | {state: st
     };
   } else {
     const decryptionKey = Buffer.from(parsedShl.key, 'base64');
-    const shcFiles = (manifestResponseContent as SHLManifestFile).files
+    const shcFiles = await (manifestResponseContent as SHLManifestFile).files
       .filter((f) => f.contentType === 'application/smart-health-card')
       .map(async (f) =>  {
-        // if (f.embedded !== undefined) {
-        //   return f.embedded
-        // } else {
-          return fetch(f.location).then((f) => f.text())
-        // }
+        if (f.embedded !== undefined) {
+          return f.embedded
+        } else {
+          return await fetch(f.location).then((f) => f.text())
+        }
       });
 
     const shcFilesDecrypted = shcFiles.map(async (f) => {
@@ -128,13 +128,13 @@ export async function retrieve(configIncoming: SHLinkConnectRequest | {state: st
     const shcs = (await Promise.all(shcFilesDecrypted)).flatMap((f) => JSON.parse(f)['verifiableCredential'] as string);
 
     const jsonFiles = await (manifestResponseContent as SHLManifestFile).files
-      .filter((f) => f.contentType === 'application/fhir+json' || f.content_type === 'application/fhir+json')
+      .filter((f) => f.contentType === 'application/fhir+json')
       .map(async (f) =>  {
-        // if (f.embedded !== undefined) {
-        //   return f.embedded
-        // } else {
-          return await fetch(f.location.replace("http://127.0.0.1:19080", "https://interop-gateway.odl.io")).then((f) => f.text())
-        // }
+        if (f.embedded !== undefined) {
+          return f.embedded
+        } else {
+          return await fetch(f.location).then((f) => f.text())
+        }
       });
 
     const jsonFilesDecrypted = jsonFiles.map(async (f) => {
