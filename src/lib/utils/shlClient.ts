@@ -109,13 +109,13 @@ export async function retrieve(configIncoming: SHLinkConnectRequest | {state: st
     };
   } else {
     const decryptionKey = Buffer.from(parsedShl.key, 'base64');
-    const shcFiles = (manifestResponseContent as SHLManifestFile).files
+    const shcFiles = await (manifestResponseContent as SHLManifestFile).files
       .filter((f) => f.contentType === 'application/smart-health-card')
       .map(async (f) =>  {
         if (f.embedded !== undefined) {
           return f.embedded
         } else {
-          return fetch(f.location).then((f) => f.text())
+          return await fetch(f.location).then((f) => f.text())
         }
       });
 
@@ -127,13 +127,13 @@ export async function retrieve(configIncoming: SHLinkConnectRequest | {state: st
 
     const shcs = (await Promise.all(shcFilesDecrypted)).flatMap((f) => JSON.parse(f)['verifiableCredential'] as string);
 
-    const jsonFiles = (manifestResponseContent as SHLManifestFile).files
+    const jsonFiles = await (manifestResponseContent as SHLManifestFile).files
       .filter((f) => f.contentType === 'application/fhir+json')
       .map(async (f) =>  {
         if (f.embedded !== undefined) {
           return f.embedded
         } else {
-          return fetch(f.location).then((f) => f.text())
+          return await fetch(f.location).then((f) => f.text())
         }
       });
 

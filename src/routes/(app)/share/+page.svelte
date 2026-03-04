@@ -26,9 +26,9 @@
     }
   }
 
-  async function addFiles(shl:SHLAdminParams, fileList:SHCFile[]) {
+  async function addFiles(shl:SHLAdminParams, fileList:SHCFile[], patientName?: string, contentType?: string): Promise<SHLAdminParams> {
     for (let i=0; i < fileList.length; i++) {
-      shl = await shlClient.addFile(shl, fileList[i], patientName);
+      shl = await shlClient.addFile(shl, fileList[i], patientName, contentType);
     }
     return shl;
   }
@@ -39,7 +39,7 @@
     $shlStore = await shlClient.getUserShls();
     let fullShlCreated = $shlStore.filter((s) => s.id === shlCreated.id)[0];
     shlStatus = "Adding IPS";
-    shlCreated = await addFiles(fullShlCreated, details.shcs);
+    shlCreated = await addFiles(fullShlCreated, details.shcs, details.patientName, details.contentType);
     return shlCreated;
   }
 
@@ -59,7 +59,7 @@
   on:shl-submitted={async ({ detail }) => {
     patientName = detail.patientName ?? "";
     if (shl) {
-      shl = await addFiles(shl, detail.shcs);
+      shl = await addFiles(shl, detail.shcs, patientName, detail.contentType);
       $shlStore = await shlClient.getUserShls();
       goto(`/view/${shl.id}`);
     } else {

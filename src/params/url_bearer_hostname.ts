@@ -3,6 +3,7 @@ import type { ParamMatcher } from '@sveltejs/kit';
 export const ALLOWED = <const> [
 	'meditech',
 	'epic',
+	'epicihe',
 ];
 
 export const match = ((param: string): param is typeof ALLOWED[number] => {
