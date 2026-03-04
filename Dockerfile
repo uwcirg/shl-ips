@@ -5,19 +5,7 @@ WORKDIR /opt/app
 COPY package*.json .
 RUN npm clean-install
 
-FROM node:24 AS builder
-
-WORKDIR /opt/app
-
-ARG VITE_APP_VERSION_STRING
-ENV VITE_APP_VERSION_STRING=$VITE_APP_VERSION_STRING
-
-COPY --from=deps /opt/app/node_modules ./node_modules
-COPY . .
-
-RUN npm run build
-
-FROM node:24-slim AS runner
+FROM node:24-slim AS prod
 
 WORKDIR /opt/app
 
@@ -26,16 +14,29 @@ ENV VITE_APP_VERSION_STRING=$VITE_APP_VERSION_STRING
 
 ENV NODE_ENV=production
 
-COPY --from=builder /opt/app/.svelte-kit ./.svelte-kit
-COPY --from=builder /opt/app/node_modules ./node_modules
-COPY --from=builder /opt/app/src ./src
-COPY --from=builder /opt/app/static ./static
-COPY --from=builder /opt/app/package.json ./package.json
-COPY --from=builder /opt/app/package-lock.json ./package-lock.json
-COPY --from=builder /opt/app/svelte.config.js ./svelte.config.js
-COPY --from=builder /opt/app/tsconfig.json ./tsconfig.json
-COPY --from=builder /opt/app/vite.config.ts ./vite.config.ts
+COPY --from=deps /opt/app/node_modules ./node_modules
+
+COPY . .
+
+RUN npm run build
 
 EXPOSE 3000
 
+SHELL ["/bin/sh", "-c"]
 CMD npm run build && npm run start
+
+FROM node:24 AS dev
+
+WORKDIR /opt/app
+
+ARG VITE_APP_VERSION_STRING
+ENV VITE_APP_VERSION_STRING=$VITE_APP_VERSION_STRING
+
+ENV NODE_ENV=development
+
+COPY --from=deps /opt/app/node_modules ./node_modules
+COPY --from=deps package*.json ./
+
+EXPOSE 3000
+
+CMD ["npm", "run", "dev"]

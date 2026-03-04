@@ -5,6 +5,7 @@ interface ImportMetaEnv {
     readonly VITE_INSTANCE_ID: string
     readonly DEV_SERVER_PORT: number
     readonly VITE_API_BASE: string
+    readonly VITE_SYSTEM_URL: string
     readonly VITE_VIEWER_BASE: string
     readonly VITE_SHOW_VIEWER_DEMO: boolean
     readonly VITE_INTERMEDIATE_FHIR_SERVER_BASE: string
