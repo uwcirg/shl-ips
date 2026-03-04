@@ -19,13 +19,22 @@ const config = {
 
 let client;
 
-async function authorize(inputFhirUrl, clientId, scope=undefined) {
-    if (scope) {
-        config.scope = scope;
+async function authorize(inputFhirUrl, clientId, options={scope: "", pkceMode: ""}) {
+    if (!inputFhirUrl) {
+        throw Error('No FHIR server URL provided');
+    }
+    if (!clientId) {
+        throw Error('No client ID provided');
+    }
+    if (options.scope) {
+        config.scope = options.scope;
+    }
+    if (options.pkceMode) {
+        config.pkceMode = options.pkceMode;
     }
     config.iss = inputFhirUrl;
-    config.clientId = clientId ?? "no clientId configured";
-    config.pkceMode = "ifSupported";
+    config.clientId = clientId;
+    config.pkceMode = config.pkceMode ?? "ifSupported";
     return FHIR.oauth2.authorize(config);
 };
 

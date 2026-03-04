@@ -28,8 +28,8 @@
 
 <svelte:component this={INSTANCE_CONFIG.pages?.home?.introComponent} />
 
-<Row class="mt-4 mb-5 d-flex justify-content-center">
-  <Row class="d-flex justify-content-center">
+<Row class="mt-3 mb-5 d-flex justify-content-center">
+  <Row class="d-flex justify-content-center gy-3">
     {#if $authenticated}
       <Col class="d-flex align-items-center px-2">
         <Card color="light" class="flex-fill">
@@ -64,7 +64,20 @@
     {/if}
   </Row>
 </Row>
-<Row>
+
+<Row class="g-4 justify-content-around">
+  <Col style="max-width: fit-content">
+    <img src={`${INSTANCE_CONFIG.imgPath}/uw-logo.png`} alt="UW CIRG Logo" style="width: auto; max-height: 60px;">
+  </Col>
+  <Col style="max-width: fit-content">
+    <img src={`${INSTANCE_CONFIG.imgPath}/company-logo.png`} alt="WA DOH Logo" style="width: auto; max-height: 60px;">
+  </Col>
+  <Col style="max-width: fit-content">
+    <img src={`${INSTANCE_CONFIG.imgPath}/hca-logo.svg`} alt="HCA Logo" style="width: auto; width: 270px;">
+  </Col>
+</Row>
+
+<Row class="mt-5">
   <Accordion>
     <AccordionItem>
       <h5 slot="header">Privacy and Trust</h5>

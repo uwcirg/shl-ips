@@ -119,10 +119,11 @@
 
   // Combine header, qr code, and footer images into one image
   async function createHeaderImage() {
-    // create the qr code image
 
     // load the images
+    // const [companyLogo, divider, siteLogo] = await imagePreload as HTMLImageElement[];
     const [companyLogo, divider, siteLogo] = await imagePreload as HTMLImageElement[];
+    return siteLogo.src;
 
     // scale the images to match the largest image width
     const targetHeight: number = Math.max(companyLogo.height, divider.height, siteLogo.height);
@@ -168,7 +169,7 @@
       {:then headerImageUrl}
       <!-- <NavbarBrand class="flex-shrink-1"> <img id="nav-image" style="height: 60px;"/> </NavbarBrand> -->
       <NavbarBrand class="flex-shrink-1">
-        <img id="nav-image" alt="Washington State Department of Health Logo" src={headerImageUrl}/>
+        <img id="nav-image" alt="Washington State Department of Health Logo" style="height: 50px; vertical-align: left" src={headerImageUrl}/>
       </NavbarBrand>
       {/await}
       <div class="flex-grow-1 d-flex align-items-center justify-content-end">

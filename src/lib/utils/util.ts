@@ -1,7 +1,7 @@
 import * as jose from 'jose';
 import * as pako from 'pako';
 import issuerKeys from '$lib/utils/issuer.private.jwks.json';
-import type { Bundle, BundleEntry, Extension, Identifier, Patient, Resource } from 'fhir/r4';
+import type { Bundle, BundleEntry, Composition, Extension, Identifier, Patient, Resource } from 'fhir/r4';
 import type { UserDemographics, DateTimeFields, SHCFile } from '$lib/utils/types';
 
 export const base64url = jose.base64url;
@@ -347,9 +347,9 @@ export function isIPSBundle(bundle: Bundle): boolean {
   );
 }
 
-export function getResourcesFromIPS(ips: Bundle): Resource[] | null {
+export function getResourcesFromIPS(ips: Bundle): Resource[] | undefined {
   let entries = ips.entry;
-  if (!entries) return null;
+  if (!entries) return;
   let resources = [] as Resource[];
   entries.forEach((entry: BundleEntry) => {
       if (!entry.resource) return;
@@ -450,7 +450,7 @@ export function getDemographicsFromPatient(patient: Patient): UserDemographics {
 }
 
 export function constructPatientResource (
-  props: UserDemographics & { customIdentifiers: Identifier[], customExtensions: Extension[] } = {},
+  props: UserDemographics & { id?: string, customIdentifiers?: Identifier[], customExtensions?: Extension[] } = {},
   patient: Patient = { resourceType: 'Patient', active: true }
 ): Patient {
   if (props.id) {

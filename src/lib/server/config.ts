@@ -15,6 +15,11 @@ export const CARIN_HOSTS: Record<string, any> = {
     clientId: process.env.VITE_ACENTRA_CLIENT_ID,
     clientSecret: process.env.ACENTRA_CLIENT_SECRET,
   },
+  bluebutton: {
+    tokenEndpoint: process.env.BLUE_BUTTON_TOKEN_ENDPOINT,
+    clientId: process.env.VITE_BLUE_BUTTON_CLIENT_ID,
+    clientSecret: process.env.BLUE_BUTTON_CLIENT_SECRET,
+  },
   carefirst: {
     tokenEndpoint: process.env.CAREFIRST_TOKEN_ENDPOINT,
     clientId: process.env.VITE_CAREFIRST_CLIENT_ID,
@@ -24,6 +29,11 @@ export const CARIN_HOSTS: Record<string, any> = {
     tokenEndpoint: process.env.CPCDS_TOKEN_ENDPOINT,
     clientId: process.env.VITE_CPCDS_CLIENT_ID,
     clientSecret: process.env.CPCDS_CLIENT_SECRET,
+  },
+  deloitte: {
+    tokenEndpoint: process.env.DELOITTE_TOKEN_ENDPOINT,
+    clientId: process.env.VITE_DELOITTE_CLIENT_ID,
+    clientSecret: process.env.DELOITTE_CLIENT_SECRET,
   },
   humana: {
     tokenEndpoint: process.env.HUMANA_TOKEN_ENDPOINT,
@@ -35,6 +45,11 @@ export const CARIN_HOSTS: Record<string, any> = {
     clientId: process.env.VITE_INFERNO_CLIENT_ID,
     clientSecret: process.env.INFERNO_CLIENT_SECRET,
   },
+  molina: {
+    tokenEndpoint: process.env.MOLINA_TOKEN_ENDPOINT,
+    clientId: process.env.VITE_MOLINA_CLIENT_ID,
+    clientSecret: process.env.MOLINA_CLIENT_SECRET,
+  },
   onyx: {
     tokenEndpoint: process.env.ONYX_TOKEN_ENDPOINT,
     clientId: process.env.VITE_ONYX_CLIENT_ID,
@@ -45,16 +60,11 @@ export const CARIN_HOSTS: Record<string, any> = {
     clientId: process.env.VITE_SMILECARINBB_CLIENT_ID,
     clientSecret: process.env.SMILECARINBB_CLIENT_SECRET,
   },
-  deloitte: {
-    tokenEndpoint: process.env.DELOITTE_TOKEN_ENDPOINT,
-    clientId: process.env.VITE_DELOITTE_CLIENT_ID,
-    clientSecret: process.env.DELOITTE_CLIENT_SECRET,
+  united: {
+    tokenEndpoint: process.env.UNITED_TOKEN_ENDPOINT,
+    clientId: process.env.VITE_UNITED_CLIENT_ID,
+    clientSecret: process.env.UNITED_CLIENT_SECRET,
   },
-  bluebutton: {
-    tokenEndpoint: process.env.BLUE_BUTTON_TOKEN_ENDPOINT,
-    clientId: process.env.VITE_BLUE_BUTTON_CLIENT_ID,
-    clientSecret: process.env.BLUE_BUTTON_CLIENT_SECRET,
-  }
 }
 
 export const URL_BEARER_HOSTS: Record<string, any> = {
@@ -63,5 +73,12 @@ export const URL_BEARER_HOSTS: Record<string, any> = {
   },
   epic: {
     token: process.env.EPIC_BEARER_TOKEN
+  },
+  epicihe: {
+    credentials: {
+      tokenEndpoint: process.env.EPIC_IHE_TOKEN_ENDPOINT,
+      clientId: process.env.EPIC_IHE_CLIENT_ID,
+      clientSecret: process.env.EPIC_IHE_CLIENT_SECRET
+    }
   }
 }

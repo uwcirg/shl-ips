@@ -115,19 +115,20 @@
     values.isWorking = true;
     values.currentWork = [];
     for (const resource of currentJobResources) {
-      const jobValues = {
-        occupation: {
-          Code: resource.valueCodeableConcept.coding[0]?.code,
-          Title: resource.valueCodeableConcept.coding[0]?.display,
+      const jobValues = copyOf(defaults.currentWork);
+      jobValues.occupation = resource.valueCodeableConcept?.coding[0]?.code ? 
+        {
+          Code: resource.valueCodeableConcept.coding[0].code,
+          Title: resource.valueCodeableConcept?.coding[0]?.display ?? "Unknown Occupation",
           Score: 1
-        },
-        industry: {
-          Code: resource.component[0].valueCodeableConcept.coding[0]?.code,
-          Title: resource.component[0].valueCodeableConcept.coding[0]?.display,
+        } : undefined;
+      jobValues.industry = resource.component[0].valueCodeableConcept?.coding[0]?.code ? 
+        {
+          Code: resource.component[0].valueCodeableConcept.coding[0].code,
+          Title: resource.component[0].valueCodeableConcept?.coding[0]?.display ?? "Unknown Industry",
           Score: 1
-        },
-        start: resource.effectivePeriod?.start ?? "",
-      };
+        } : undefined;
+      jobValues.start = resource.effectivePeriod?.start ?? "",
       values.currentWork.push(jobValues);
     }
   }
@@ -138,20 +139,21 @@
     values.wasWorkingPast = true;
     values.pastWork = [];
     for (const resource of pastJobResources) {
-      const jobValues = {
-        occupation: {
-          Code: resource.valueCodeableConcept.coding[0]?.code,
-          Title: resource.valueCodeableConcept.coding[0]?.display,
+      const jobValues = copyOf(defaults.currentWork);
+      jobValues.occupation = resource.valueCodeableConcept?.coding[0]?.code ? 
+        {
+          Code: resource.valueCodeableConcept.coding[0].code,
+          Title: resource.valueCodeableConcept?.coding[0]?.display ?? "Unknown Occupation",
           Score: 1
-        },
-        industry: {
-          Code: resource.component[0].valueCodeableConcept.coding[0]?.code,
-          Title: resource.component[0].valueCodeableConcept.coding[0]?.display,
+        } : undefined;
+      jobValues.industry = resource.component[0].valueCodeableConcept?.coding[0]?.code ? 
+        {
+          Code: resource.component[0].valueCodeableConcept.coding[0].code,
+          Title: resource.component[0].valueCodeableConcept?.coding[0]?.display ?? "Unknown Industry",
           Score: 1
-        },
-        start: resource.effectivePeriod?.start ?? "",
-        end: resource.effectivePeriod?.end ?? "",
-      };
+        } : undefined;
+      jobValues.start = resource.effectivePeriod?.start ?? "",
+      jobValues.end = resource.effectivePeriod?.end ?? "",
       values.pastWork.push(jobValues);
     }
   }
@@ -159,7 +161,7 @@
   function initializeEmploymentStatusFields(rhs: ResourceHelper[]) {
     const employmentStatusResource = getEmploymentStatusResource(rhs);
     if (employmentStatusResource) {
-      values.status = employmentStatusResource.valueCodeableConcept.coding[0]?.display ?? 'Employed';
+      values.status = employmentStatusResource.valueCodeableConcept?.coding[0]?.display ?? 'Employed';
     }
   }
 
@@ -504,6 +506,7 @@
 
   function generateCurrentJobResources(): Observation[] {
     const currentJobResources: Observation[] = [];
+    if (!values.isWorking) { return currentJobResources; } // Don't add current job data if not working
     const uniqueJobs = deduplicateObjectList(values.currentWork);
     for (const [i, jobValue] of uniqueJobs.entries()) {
       const currentJobResource = JSON.parse(JSON.stringify(currentJobTemplate));

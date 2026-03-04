@@ -65,7 +65,7 @@ export default {
             },
             {
               method: METHODS.PROVIDER_HEALTH_RECORD_CARINBB,
-              tabTitle: "CARIN BB",
+              tabTitle: "Insurance Access",
               description: "Fetch CARIN insurance data from an insurance provider test server via SMART authorization.",
               advanced: true,
               component: FetchCARINBB

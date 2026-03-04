@@ -1,5 +1,5 @@
 // import fetch from 'node-fetch';
-import { json, error } from '@sveltejs/kit';
+import { json, text, error } from '@sveltejs/kit';
 import {
   CARIN_HOSTS,
   REDIRECT_URI
@@ -14,33 +14,62 @@ export const POST = async ({ params, request }: { params: { host: string }; requ
   let clientSecret = CARIN_HOSTS[restPath].clientSecret;
   let tokenEndpoint = CARIN_HOSTS[restPath].tokenEndpoint;
 
-  console.log({clientId, clientSecret, tokenEndpoint, REDIRECT_URI});
+  // console.log({clientId, clientSecret, tokenEndpoint, REDIRECT_URI});
 
   if (!(clientId && clientSecret && tokenEndpoint && REDIRECT_URI)) {
     throw error(500, { message: "Server configuration error" });
   }
 
   const basicAuthToken = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-  console.log(basicAuthToken);
-
-  const response = await fetch(tokenEndpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: `Basic ${basicAuthToken}`,
-    },
-    body: new URLSearchParams({
-      grant_type: 'authorization_code',
-      code,
-      code_verifier,
-      redirect_uri: REDIRECT_URI,
-    }),
-  });
-  if (response.ok) {
-    let data = await response.text();
-    return json(JSON.parse(data));
+  // console.log(basicAuthToken);
+  let response: Response | undefined;
+  if (restPath === 'united') {
+    response = await fetch(tokenEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          code,
+          redirect_uri: REDIRECT_URI,
+          client_id: clientId,
+          client_secret: clientSecret,
+        }),
+      });
   } else {
+    response = await fetch(tokenEndpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: `Basic ${basicAuthToken}`,
+      },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code,
+        code_verifier,
+        redirect_uri: REDIRECT_URI,
+      }),
+    });
+  }
+
+  if (!response) {
+    throw error(500, { message: "Error executing token exchange request" });
+  }
+  
+  if (response && response.ok) {
+    let data = await response.text();
+    console.log("Data:", data);
+    try {
+      let jsonData = JSON.parse(data);
+      console.log("JSON Data:", jsonData);
+      return json(jsonData);
+    } catch (e) {
+      return text(data);
+    }
+  } else {
+    console.log("Token exchange failed");
+    console.log(response.status, response.statusText);
     return response;
-    // throw error(500, { message: "Token exchange failed" });
   }
 };

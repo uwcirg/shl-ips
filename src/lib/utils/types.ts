@@ -49,6 +49,7 @@ export interface SHLSubmitEvent {
   passcode?: string;
   exp?: number;
   patientName?: string;
+  contentType?: string;
 }
 
 export interface ResourceHelperMap extends Record<string, ResourceHelper> {}
@@ -97,11 +98,12 @@ export interface SHCFile {
 }
 
 export interface SOFHost {
-  id:string;
-  name:string;
-  url:string;
-  clientId:string;
-  note:string | undefined;
+  id: string;
+  name: string;
+  url: string;
+  clientId: string;
+  note: string | undefined;
+  scope?: string | undefined;
 }
 
 export interface DataFormConfig {
