@@ -49,6 +49,7 @@ export interface SHLSubmitEvent {
   passcode?: string;
   exp?: number;
   patientName?: string;
+  contentType?: string;
 }
 
 export interface ResourceHelperMap extends Record<string, ResourceHelper> {}
@@ -203,7 +204,8 @@ export interface IAuthService {
 }
 
 export interface IResourceCollection {
-  resourcesByType: Writable<CategorizedResourceHelperMap>;
+  id: string;
+  resources: Writable<ResourceHelperMap>;
   selectedPatient: Writable<string>;
   patientReference: Readable<string>;
   patient: Readable<Patient | undefined>;

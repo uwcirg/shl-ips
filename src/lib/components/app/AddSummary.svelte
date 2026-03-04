@@ -88,6 +88,7 @@
   let type = 'password';
   let showPassword = false;
   let passcode = "";
+  let smartHealthCard = true;
 
   let resourceCollection: IPSResourceCollection = new IPSResourceCollection();
   let resourcesByTypeStore;
@@ -238,7 +239,11 @@
       submitting = true;
       ipsResult = details;
       if (ipsResult.ips) {
-        shcsToAdd.unshift(await packageSHC(ipsResult.ips));
+        if (smartHealthCard) {
+          shcsToAdd.unshift(await packageSHC(ipsResult.ips));
+        } else {
+          shcsToAdd.unshift(await ipsResult.ips);
+        }
         submitSHL();
       }
     } catch (e) {
@@ -272,7 +277,8 @@
       label,
       passcode: passcode ?? undefined,
       exp: expiration && expiration > 0 ? new Date().getTime() / 1000 + expiration : undefined,
-      patientName: patientName
+      patientName: patientName,
+      contentType: smartHealthCard ? "application/smart-health-card" : "application/fhir+json" 
     });
   }
 
@@ -317,9 +323,10 @@
   let datasets: Writable<Record<string, ResourceCollection>> = writable({});
   function addDataset(collection: ResourceCollection) {
     $datasets[collection.id] = collection;
-    let { category, source, sourceName } = collection.getTags();
+    let { category, method, source, sourceName } = collection.getTags();
     handleNewResources({
       resources: collection.getFHIRResources(),
+      method,
       source,
       sourceName,
       category
@@ -620,6 +627,12 @@
           <Input type="radio" bind:group={expiration} value={60 * 60 * 24 * 365 * 5} label="5 years" />
           <Input type="radio" bind:group={expiration} value={-1} label="Never" />
         </FormGroup>
+        {#if $mode === 'advanced'}
+        <FormGroup>
+          <Label>Encode as verifiable SMART Health Card</Label>
+          <Input type="checkbox" bind:checked={smartHealthCard} />
+        </FormGroup>
+        {/if}
         <Row>
           <Col xs="auto">
           <Button color="primary" style="width:fit-content" disabled={submitting} type="submit">

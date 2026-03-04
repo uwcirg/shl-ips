@@ -113,10 +113,14 @@
       let url;
       if (summaryUrlValidated?.toString().includes('meditech')) {
         url = "/api/url_bearer/meditech?url=" + encodeURIComponent(summaryUrlValidated.toString());
-        headers["Authorization"] = `Bearer ${await authService.getAccessToken()}`
+        headers["Authorization"] = `Bearer ${await authService.getAccessToken()}`;
       } else if (summaryUrlValidated?.toString().includes('Interconnect-Fhir-Oauth')) {
         url = "/api/url_bearer/epic?url=" + encodeURIComponent(summaryUrlValidated.toString());
-        headers["Authorization"] = `Bearer ${await authService.getAccessToken()}`
+        headers["Authorization"] = `Bearer ${await authService.getAccessToken()}`;
+      } else if (summaryUrlValidated?.toString().includes('Interconnect-connectathon-ca/api/FHIR/R4')) {
+        // Dynamic bearer token
+        url = "/api/url_bearer/epicihe?url=" + encodeURIComponent(summaryUrlValidated.toString());
+        headers["Authorization"] = `Bearer ${await authService.getAccessToken()}`;
       } else if (summaryUrlValidated?.toString().includes('openfhir')) {
         headers['epic-client-id'] = `${BEARER_AUTHORIZATION['EpicHIMSS']}`;
       } else {
@@ -133,7 +137,8 @@
           return response;
         }
       });
-      content = await contentResponse.json();
+      let contentRaw = await contentResponse.text();
+      content = JSON.parse(contentRaw);
       hostname = summaryUrlValidated?.hostname;
       processing = false
       
@@ -153,8 +158,8 @@
         resources: getResourcesFromIPS(content),
         category: CATEGORY,
         method: METHOD,
-        source: hostname,
-        sourceName: getSourceName(summaryUrlValidated)
+        source: hostname ?? summaryUrlValidated?.toString() ?? "",
+        sourceName: getSourceName(summaryUrlValidated) ?? ""
       };
       // ipsDispatch('ips-retrieved', ipsResult);
       resourceDispatch('update-resources', result);
@@ -166,7 +171,7 @@
   }
 </script>
 
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, summaryUrlValidated?.hostname, prepareIps)}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, summaryUrlValidated?.hostname ?? summaryUrlValidated?.toString() ?? "", prepareIps)}>
   <FormGroup>
     <Dropdown {isOpen} toggle={() => {isOpen = !isOpen; updateMenuPosition();}}>
       <DropdownToggle tag="div" class="d-inline-block" style="width:100%">

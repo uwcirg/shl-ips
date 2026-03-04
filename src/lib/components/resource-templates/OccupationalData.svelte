@@ -33,7 +33,7 @@
             Job History
             {resource.extension?.find(function (e) {
                 return e.url === "http://hl7.org/fhir/us/odh/StructureDefinition/odh-isCurrentJob-extension" && e.valueBoolean;
-            }) ? " (Current)" : ""}
+            }) ? " (Current)" : "(Past)"}
         </strong><br>
         {#if hasChoiceDTField("effective", resource)}
             <Date period fields={choiceDTFields("effective", resource)} /><br>
