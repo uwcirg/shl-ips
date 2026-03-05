@@ -32,6 +32,7 @@ jobs:
         include:
           - target: prod-dynamic
             tag_suffix: ''
+            instance_id: 'WAHealthSummary'
           - target: prod
             tag_suffix: '-mhs'
             instance_id: 'MyHealthSummary'
