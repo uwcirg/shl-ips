@@ -4,22 +4,47 @@
 name: Build & Deliver
 on: [push]
 jobs:
-  build:
+  setup:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.value }}
+      safe_ref: ${{ steps.ref.outputs.value }}
+    steps:
+    - name: Checkout git commit
+      uses: actions/checkout@main
+      with:
+        fetch-depth: 0
+    - name: Set version string
+      id: version
+      run: echo "value=$(git show -s --date=format:'%y.%m.%d.%H%M' --format=%cd)-g-$(git show -s --format=%h)-$(date +'%y%m%d-%H%M')" >> $GITHUB_OUTPUT
+    
+    - name: Sanitize ref name
+      id: ref
+      run: |
+        SAFE_REF=$(echo "${GITHUB_REF_NAME}" | sed -E 's/[^A-Za-z0-9_.-]+/-/g')
+        echo "value=$SAFE_REF" >> $GITHUB_OUTPUT
+      
+  build:
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - target: prod-dynamic
+            tag_suffix: ''
+          - target: prod
+            tag_suffix: '-mhs'
+            instance_id: 'MyHealthSummary'
+          - target: prod
+            tag_suffix: '-wahs'
+            instance_id: 'WAHealthSummary'
+          - target: dev
+            tag_suffix: '-dev'
     steps:
       - name: Checkout git commit
         uses: actions/checkout@main
         with:
           fetch-depth: 0
-
-      - name: Set environment variable for version from git output
-        run: echo "VITE_APP_VERSION_STRING=$(git show -s --date=format:'%y.%m.%d.%H%M' --format=%cd)-g-$(git show -s --format=%h)-$(date +'%y%m%d-%H%M')" >> $GITHUB_ENV
-
-      # 🔹 Sanitize branch/tag name for Docker tag usage
-      - name: Sanitize ref name
-        run: |
-          SAFE_REF=$(echo "${GITHUB_REF_NAME}" | sed -E 's/[^A-Za-z0-9_.-]+/-/g')
-          echo "SAFE_REF=$SAFE_REF" >> $GITHUB_ENV
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -28,34 +53,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # =========================
-      # Build Production Image
-      # =========================
-      - name: Build & Push Production Image
+      - name: Build & Push ${{ matrix.target }}${{ matrix.tag_suffix }}
         uses: docker/build-push-action@v5
         with:
           context: .
           file: Dockerfile
-          target: prod
+          target: ${{ matrix.target }}
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:${{ env.SAFE_REF }}
-            ${{ env.SAFE_REF == 'main' && format('ghcr.io/{0}:latest', github.repository) || '' }}
+            ghcr.io/${{ github.repository }}:${{ needs.setup.outputs.safe_ref }}${{ matrix.tag_suffix }}
+            ${{ needs.setup.outputs.safe_ref == 'main' && format('ghcr.io/{0}:latest{1}', github.repository, matrix.tag_suffix) || '' }}
           build-args: |
-            VITE_APP_VERSION_STRING=${{ env.VITE_APP_VERSION_STRING }}
-
-      # =========================
-      # Build Development Image
-      # =========================
-      - name: Build & Push Development Image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: Dockerfile
-          target: dev
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository }}:${{ env.SAFE_REF }}-dev
-            ${{ env.SAFE_REF == 'main' && format('ghcr.io/{0}:latest-dev', github.repository) || '' }}
-          build-args: |
-            VITE_APP_VERSION_STRING=${{ env.VITE_APP_VERSION_STRING }}
+            VITE_APP_VERSION_STRING=${{ needs.setup.outputs.version }}
+            VITE_INSTANCE_ID=${{ matrix.instance_id }}
