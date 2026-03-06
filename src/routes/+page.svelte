@@ -65,19 +65,11 @@
   </Row>
 </Row>
 
-<Row class="g-4 justify-content-around">
-  <Col style="max-width: fit-content">
-    <img src={`${INSTANCE_CONFIG.imgPath}/uw-logo.png`} alt="UW CIRG Logo" style="width: auto; max-height: 60px;">
-  </Col>
-  <Col style="max-width: fit-content">
-    <img src={`${INSTANCE_CONFIG.imgPath}/company-logo.png`} alt="WA DOH Logo" style="width: auto; max-height: 60px;">
-  </Col>
-  <Col style="max-width: fit-content">
-    <img src={`${INSTANCE_CONFIG.imgPath}/hca-logo.svg`} alt="HCA Logo" style="width: auto; width: 270px;">
-  </Col>
-</Row>
+{#if INSTANCE_CONFIG.pages?.home?.logoComponent}
+  <svelte:component this={INSTANCE_CONFIG.pages?.home?.logoComponent} />
+{/if}
 
-<Row class="mt-5">
+<Row class="mt-4">
   <Accordion>
     <AccordionItem>
       <h5 slot="header">Privacy and Trust</h5>

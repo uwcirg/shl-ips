@@ -2,11 +2,11 @@ import { CATEGORIES, METHODS} from '$lib/config/tags';
 
 import AddSummary from '$lib/components/app/AddSummary.svelte';
 import Introduction from '$lib/components/app/Introduction.svelte';
+import LogoRowWAHealthSummary from '$lib/components/app/LogoRowWAHealthSummary.svelte';
 import PrivacyAndTrust from '$lib/components/app/PrivacyAndTrust.svelte';
 
 import Demographic from '$lib/components/app/Demographic.svelte';
 import FetchSoF from '$lib/components/app/FetchSoF.svelte';
-import FetchSoFSearch from '$lib/components/app/FetchSoFSearch.svelte';
 import FetchUrl from '$lib/components/app/FetchUrl.svelte';
 import FetchFile from '$lib/components/app/FetchFile.svelte';
 import FetchCARINBB from '$lib/components/app/FetchCARINBB.svelte';
@@ -32,6 +32,7 @@ export default {
   pages: {
     home: {
       introComponent: Introduction,
+      logoComponent: LogoRowWAHealthSummary,
       privacyComponent: PrivacyAndTrust
       
     },
