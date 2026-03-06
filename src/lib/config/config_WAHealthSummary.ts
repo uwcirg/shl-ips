@@ -23,6 +23,7 @@ export default {
   title: "WA Health Summary",
   imgPath: "/img/wa-health-summary",
   header: {
+    logo: "logo.png",
     logo_width: "200",
     title: "HL7 Standards-Based Patient Summary",
   },
