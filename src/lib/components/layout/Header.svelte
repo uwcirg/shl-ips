@@ -119,11 +119,12 @@
 
   // Combine header, qr code, and footer images into one image
   async function createHeaderImage() {
+    if (INSTANCE_CONFIG.header.logo) {
+      return `${INSTANCE_CONFIG.imgPath}/${INSTANCE_CONFIG.header.logo}`;
+    }
 
     // load the images
-    // const [companyLogo, divider, siteLogo] = await imagePreload as HTMLImageElement[];
     const [companyLogo, divider, siteLogo] = await imagePreload as HTMLImageElement[];
-    return siteLogo.src;
 
     // scale the images to match the largest image width
     const targetHeight: number = Math.max(companyLogo.height, divider.height, siteLogo.height);
@@ -168,7 +169,7 @@
       <!-- <NavbarBrand class="flex-shrink-1"> <img id="nav-image" src={`${INSTANCE_CONFIG.imgPath}/company-logo.png`} alt="Site Logo" style="width: fit-content; height: 60px;" /> </NavbarBrand> -->
       {:then headerImageUrl}
       <!-- <NavbarBrand class="flex-shrink-1"> <img id="nav-image" style="height: 60px;"/> </NavbarBrand> -->
-      <NavbarBrand class="flex-shrink-1">
+      <NavbarBrand class="flex-shrink-1 ms-3">
         <img id="nav-image" alt="Washington State Department of Health Logo" style="height: 50px; vertical-align: left" src={headerImageUrl}/>
       </NavbarBrand>
       {/await}
@@ -271,9 +272,10 @@
 <style>
   :global(#nav-image) {
     height: auto;
-    width: 100%;
     max-width: 440px;
     min-width: 220px;
+    height: 50px;
+    vertical-align: left;
     object-fit: contain;
     -webkit-transition: all 0.06s linear;
     -moz-transition: all 0.06s linear;
