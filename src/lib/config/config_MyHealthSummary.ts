@@ -17,7 +17,6 @@ export default {
   title: "My Health Summary",
   imgPath: "/img/my-health-summary",
   header: {
-    logo: "logo-banner.png",
     logo_width: "200",
     title: "HL7 Standards-Based Patient Summary",
   },
