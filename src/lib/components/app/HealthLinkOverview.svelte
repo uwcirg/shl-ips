@@ -3,6 +3,7 @@
   import { Button, Col, Icon, Row } from '@sveltestrap/sveltestrap';
   import type { Writable } from 'svelte/store';
   import type { SHLAdminParams, SHLClient } from '$lib/utils/managementClient';
+  import { VIEWER_BASE } from '$lib/config/config';
 
   let shlClient: SHLClient = getContext('shlClient');
 
@@ -26,8 +27,13 @@
       <Col>
         {shl.label || `My Summary ${i + 1}`}
       </Col>
+      {#if shl.shlink}
       <Col class="d-flex flex-grow-1">
-        <Button color="primary" style="width:100%" href={'/view/' + shl.id}>View/Manage</Button>
+        <Button color="primary" style="width:100%" href={ VIEWER_BASE + shl.shlink} target="_blank">View Summary <Icon name="box-arrow-up-right"></Icon></Button>
+      </Col>
+      {/if}
+      <Col class="d-flex flex-grow-1">
+        <Button color="primary" style="width:100%" href={'/view/' + shl.id}>Manage and Share <Icon name="gear-wide-connected"></Icon></Button>
       </Col>
       <Col class="d-flex" style="max-width:fit-content">
         <Button color="danger" on:click={async function () {
