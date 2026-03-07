@@ -97,6 +97,9 @@
   function setValue(v: IOResponse) {
     value = v;
     codingOptionTitle = v.Title;
+    if (!manual) {
+      inputValue = v.Title;
+    }
   }
 
   let controller: AbortController | undefined = undefined;
