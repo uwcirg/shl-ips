@@ -124,7 +124,7 @@
     }
 
     // load the images
-    const [companyLogo, divider, siteLogo] = imagePreload as HTMLImageElement[];
+    const [companyLogo, divider, siteLogo] = await imagePreload as HTMLImageElement[];
 
     // scale the images to match the largest image width
     const targetHeight: number = Math.max(companyLogo.height, divider.height, siteLogo.height);
