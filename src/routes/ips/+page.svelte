@@ -273,7 +273,7 @@
       <span class="decision-support-tab" slot="tab">Decision Support</span>
       <Row>
         <Col>
-          <p>Get recommendations and health record analysis based your summary content.</p>
+          <p>Get recommendations and health record analysis based the health summary content.</p>
           {#if shlContents.length > 1}
             <Label>Select a summary to use for decision support:</Label>
             <select bind:value={decisionSupportContent}>
