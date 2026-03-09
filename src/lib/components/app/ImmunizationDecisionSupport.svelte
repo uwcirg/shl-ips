@@ -6,6 +6,8 @@
   export let patient: Patient | undefined = undefined;
   export let immunizations: Immunization[] = [];
 
+  let fetchError = "";
+
   const immdsUrl = "https://florence.immregistries.org/step/fhir/$immds-forecast";
   
   let recommendation: ImmunizationRecommendation | undefined = undefined;
@@ -15,15 +17,31 @@
 
   async function getRecommendations() {
     if (patient && immunizations?.length > 0) {
+      if (!patient.gender || !patient.birthDate) {
+        fetchError = "Patient gender and birth date are required to retrieve recommendations";
+        return;
+      }
       const body = JSON.stringify(createParameters(patient, immunizations));
       console.log(body);
       let result = await fetch(immdsUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/fhir+json' },
         body
-      }).then(response => response.text())
+      })
+      .then(response => {
+        if (!response.ok) {
+          fetchError = response.statusText;
+          throw new Error(fetchError);
+        } else {
+          return response;
+        }
+      })
+      .then(response => response.text())
       .then(response => JSON.parse(response))
-      .then(response => response.parameter.find((param: any) => param.name === 'recommendation').resource);
+      .then(response => response.parameter.find((param: any) => param.name === 'recommendation')?.resource);
+      if (!result) {
+        fetchError = "No recommendations found";
+      }
       recommendation = result;
       console.log(result);
     }
@@ -80,6 +98,9 @@
               >
                 See my recommendations <Icon name="caret-right-fill" />
               </Button>
+              {#if fetchError}
+                <p class="text-danger">{fetchError}</p>
+              {/if}
             {/if}
             </Col>
           </Row>
