@@ -53,6 +53,15 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=${{ needs.setup.outputs.safe_ref }}${{ matrix.tag_suffix }}
+            type=raw,value=latest${{ matrix.tag_suffix }},enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Build & Push ${{ matrix.target }}${{ matrix.tag_suffix }}
         uses: docker/build-push-action@v5
@@ -61,9 +70,7 @@ jobs:
           file: Dockerfile
           target: ${{ matrix.target }}
           push: true
-          tags: |
-            ghcr.io/${{ github.repository }}:${{ needs.setup.outputs.safe_ref }}${{ matrix.tag_suffix }}
-            ${{ needs.setup.outputs.safe_ref == 'main' && format('ghcr.io/{0}:latest{1}', github.repository, matrix.tag_suffix) || '' }}
+          tags: ${{ steps.meta.outputs.tags }}
           build-args: |
             VITE_APP_VERSION_STRING=${{ needs.setup.outputs.version }}
             VITE_INSTANCE_ID=${{ matrix.instance_id }}
