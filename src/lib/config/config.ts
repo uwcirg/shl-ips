@@ -4,8 +4,10 @@ import { CATEGORIES, METHODS } from '$lib/config/tags';
 
 const env = (key: string, fallback: any) => {
   if (typeof window === 'undefined') {
+    console.log("no window, using fallback:", key, fallback);
     return fallback;
   }
+  console.log("window value:", key, window.__env?.[key], 'fallback:', fallback);
   return window.__env?.[key] ?? fallback;
 }
 
