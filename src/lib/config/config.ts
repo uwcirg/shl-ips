@@ -2,11 +2,18 @@
 import PUBLIC_PROVIDER_ENDPOINTS from '$lib/config/public-provider-endpoints.json';
 import { CATEGORIES, METHODS } from '$lib/config/tags';
 
-export const DEMO_WARNING = import.meta.env.VITE_DEMO_WARNING;
+const env = (key: string, fallback: any = import.meta.env[key]) => {
+  if (typeof window === 'undefined') {
+    return fallback;
+  }
+  return window.__env?.[key] ?? fallback;
+}
 
-export const API_BASE = import.meta.env.VITE_API_BASE;
+export const DEMO_WARNING = env('VITE_DEMO_WARNING');
 
-export const INTERMEDIATE_FHIR_SERVER_BASE = import.meta.env.VITE_INTERMEDIATE_FHIR_SERVER_BASE;
+export const API_BASE = env('VITE_API_BASE');
+
+export const INTERMEDIATE_FHIR_SERVER_BASE = env('VITE_INTERMEDIATE_FHIR_SERVER_BASE');
 export const IDENTIFIER_SYSTEM = 'http://keycloak.cirg.uw.edu';
 export const CATEGORY_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-category';
 export const METHOD_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-method';
@@ -73,13 +80,13 @@ export const METHOD_NAMES = {
   },
 }
 
-export const VERSION_STRING = import.meta.env.VITE_APP_VERSION_STRING;
+export const VERSION_STRING = env('VITE_APP_VERSION_STRING');
 
-export const AUTH_URL = import.meta.env.VITE_AUTH_URL;
-export const AUTH_CLIENT_ID = import.meta.env.VITE_AUTH_CLIENT_ID;
-export const AUTH_REDIRECT_URI = import.meta.env.VITE_AUTH_REDIRECT_URI;
-export const AUTH_SILENT_REDIRECT_URI = import.meta.env.VITE_AUTH_SILENT_REDIRECT_URI;
-export const AUTH_POST_LOGOUT_URI = import.meta.env.VITE_AUTH_POST_LOGOUT_URI;
+export const AUTH_URL = env('VITE_AUTH_URL');
+export const AUTH_CLIENT_ID = env('VITE_AUTH_CLIENT_ID');
+export const AUTH_REDIRECT_URI = env('VITE_AUTH_REDIRECT_URI');
+export const AUTH_SILENT_REDIRECT_URI = env('VITE_AUTH_SILENT_REDIRECT_URI');
+export const AUTH_POST_LOGOUT_URI = env('VITE_AUTH_POST_LOGOUT_URI');
 
 export const SOF_PATIENT_RESOURCES = [
   'Patient',
@@ -109,42 +116,42 @@ export const SOF_HOSTS = [
   //   id: "epic-himss",
   //   name: "Epic - HIMSS Demo",
   //   url: "https://ihe.epic.com/Interconnect-FHIR/api/FHIR/R4",
-  //   clientId: import.meta.env.VITE_EPIC_HIMSS_CLIENT_ID,
+  //   clientId: env('VITE_EPIC_HIMSS_CLIENT_ID'),
   //   note: "zwei / epic"
   // },
   // {
   //   id: "ecw-himss",
   //   name: "eClinicalWorks - HIMSS Demo",
   //   url: "https://fhirstagingsrv.eclinicalweb.com/fhir/r4/JCBJCD",
-  //   clientId: import.meta.env.VITE_ECW_HIMSS_CLIENT_ID,
+  //   clientId: env('VITE_ECW_HIMSS_CLIENT_ID'),
   //   note: "zhangwei / Cures@2022"
   // },
   // {
   //   id: "epic-himss",
   //   name: "Epic - HIMSS 2025",
   //   url: "https://ihe-nimbus.epic.com/Interconnect-FHIR/api/FHIR/R4",
-  //   clientId: import.meta.env.VITE_EPIC_CLIENT_ID,
+  //   clientId: env('VITE_EPIC_CLIENT_ID'),
   //   note: "cwilson / tokay"
   // },
   // {
   //   id: "epic-cthon-2025-09",
   //   name: "Epic - 2025-09 Connectathon",
   //   url: "https://connectathon.epic.com/Interconnect-Fhir-OAuth/api/FHIR/R4",
-  //   clientId: import.meta.env.VITE_EPIC_CTHON_2025_09_CLIENT_ID,
+  //   clientId: env('VITE_EPIC_CTHON_2025_09_CLIENT_ID'),
   //   note: "jwjips / epic"
   // },
   {
     id: "epic",
     name: "Epic Test System",
     url: "https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4",
-    clientId: import.meta.env.VITE_EPIC_CLIENT_ID,
+    clientId: env('VITE_EPIC_CLIENT_ID'),
     note: "fhircamila / epicepic1 <br> <a style='color: grey; font-size: small' href='https://fhir.epic.com/Documentation?docId=testpatients' target='_blank' rel='noreferrer'>More credentials <span style='vertical-align: text-bottom; font-size: x-small' class='bi-chevron-double-right' /></a>"
   },
   { 
     id: "cerner",
     name: "Oracle Cerner Test System",
     url: "https://fhir-myrecord.cerner.com/r4/ec2458f2-1e24-41c8-b71b-0e701af7583d",
-    clientId: import.meta.env.VITE_CERNER_CLIENT_ID,
+    clientId: env('VITE_CERNER_CLIENT_ID'),
     note: "fredricksmart / Cerner01 <br> <a style='color: grey; font-size: small' href='https://docs.google.com/document/u/1/d/e/2PACX-1vQwyX3px4qi5t1O6_El6022zYt4ymKAWCrcgxcX5NvYGUJAkJ4WFwOnLoikow6rEccpFZzDWBdcBqsQ/pub' target='_blank' rel='noreferrer'>More credentials <span style='vertical-align: text-bottom; font-size: x-small' class='bi-chevron-double-right' /></a>",
     scope: ['openid', 'fhirUser', 'launch/patient', ...SOF_PATIENT_RESOURCES.map(resourceType => `patient/${resourceType}.read`)].join(" ")
   },
@@ -156,8 +163,8 @@ export const SOF_HOSTS = [
     note: "Credentials provided"
   },
 ];
-export const EPIC_CLIENT_ID = import.meta.env.VITE_EPIC_CLIENT_ID;
-export const CERNER_CLIENT_ID = import.meta.env.VITE_CERNER_CLIENT_ID;
+export const EPIC_CLIENT_ID = env('VITE_EPIC_CLIENT_ID');
+export const CERNER_CLIENT_ID = env('VITE_CERNER_CLIENT_ID');
 export const SOF_ENDPOINTS = PUBLIC_PROVIDER_ENDPOINTS;
 
 export const CARIN_RESOURCES = [
@@ -181,73 +188,73 @@ export const CARIN_RESOURCES = [
 ];
 
 export const CARIN_HOSTS: { id: string; name: string; url: string; clientId: string; scope?: string; note: string; section?: string; }[] = [];
-if (import.meta.env.VITE_ACENTRA_CLIENT_ID) {
+if (env('VITE_ACENTRA_CLIENT_ID')) {
   CARIN_HOSTS.push({
     id: "acentra",
     name: "Acentra HCA Test System",
     url: "https://sb.fhir.mhbapp.com/pa/api/v1",
-    clientId: import.meta.env.VITE_ACENTRA_CLIENT_ID,
+    clientId: env('VITE_ACENTRA_CLIENT_ID'),
     scope: "openid launch/patient patient/*.read",
     note: "sbuser001 / Acentra-sb$2024",
     section: "applehealth"
   });
 }
-if (import.meta.env.VITE_UNITED_CLIENT_ID) {
+if (env('VITE_UNITED_CLIENT_ID')) {
   CARIN_HOSTS.push({
     id: "united",
     name: "UnitedHealthcare Test System",
     url: "https://flex.optum.com/fhir/sandbox/R4",
-    clientId: import.meta.env.VITE_UNITED_CLIENT_ID,
+    clientId: env('VITE_UNITED_CLIENT_ID'),
     scope: "openid launch/patient patient/List.read patient/MedicationKnowledge.read patient/Patient.read patient/Coverage.read patient/Condition.read patient/Immunization.read patient/MedicationDispense.read patient/MedicationRequest.read patient/Observation.read patient/Procedure.read patient/Encounter.read patient/ExplanationOfBenefit.read patient/AllergyIntolerance.read patient/CarePlan.read patient/CareTeam.read patient/Device.read patient/DiagnosticReport.read patient/DocumentReference.read patient/Goal.read",
     note: "wahsdemo@gmail.com / demo1WAHS",
     section: "applehealth"
   });
 }
-if (import.meta.env.VITE_MOLINA_CLIENT_ID) {
+if (env('VITE_MOLINA_CLIENT_ID')) {
   CARIN_HOSTS.push({
     id: "molina",
     name: "Molina Test System",
     url: "https://api.interop.molinahealthcare.com/sandbox/patientaccess",
-    clientId: import.meta.env.VITE_MOLINA_CLIENT_ID,
+    clientId: env('VITE_MOLINA_CLIENT_ID'),
     // scope: "openid launch/patient patient/List.read patient/MedicationKnowledge.read patient/Patient.read patient/Coverage.read patient/Condition.read patient/Immunization.read patient/MedicationDispense.read patient/MedicationRequest.read patient/Observation.read patient/Procedure.read patient/Encounter.read patient/ExplanationOfBenefit.read patient/AllergyIntolerance.read patient/CarePlan.read patient/CareTeam.read patient/Device.read patient/DiagnosticReport.read patient/DocumentReference.read patient/Goal.read",
     scope: "openid launch/patient",
     note: "",
     section: "applehealth"
   });
 }
-if (import.meta.env.VITE_AETNA_CLIENT_ID) {
+if (env('VITE_AETNA_CLIENT_ID')) {
   CARIN_HOSTS.push({
     id: "aetna",
     name: "Aetna Test System",
     url: "https://vteapif1.aetna.com/fhirdemo/v2/patientaccess",
-    clientId: import.meta.env.VITE_AETNA_CLIENT_ID,
+    clientId: env('VITE_AETNA_CLIENT_ID'),
     scope: "openid launch/patient patient/Patient.read patient/Coverage.read patient/ExplanationOfBenefit.read",
     note: "VTETestUser01 / FHIRdemo2020"
   });
 }
-if (import.meta.env.VITE_HUMANA_CLIENT_ID) {
+if (env('VITE_HUMANA_CLIENT_ID')) {
   CARIN_HOSTS.push({
     id: "humana",
     name: "Humana Test System",
     url: "https://sandbox-fhir.humana.com/api",
-    clientId: import.meta.env.VITE_HUMANA_CLIENT_ID,
+    clientId: env('VITE_HUMANA_CLIENT_ID'),
     // scope: "openid launch/patient patient/Patient.read patient/Coverage.read patient/ExplanationOfBenefit.read",
     scope: "openid launch/patient patient/Patient.read patient/Coverage.read patient/ExplanationOfBenefit.read patient/Procedure.read patient/MedicationRequest.read patient/Immunization.read patient/CareTeam.read patient/Condition.read patient/CarePlan.read patient/Observation.read patient/AllergyIntolerance.read patient/Goal.read patient/DocumentReference.read patient/List.read",
     note: "HUser00007 / PW00007!"
   });
 }
-if (import.meta.env.VITE_BLUE_BUTTON_CLIENT_ID) {
+if (env('VITE_BLUE_BUTTON_CLIENT_ID')) {
   CARIN_HOSTS.push({
     id: "bluebutton",
     name: "Blue Button 2.0 Test System",
     url: "https://sandbox.bluebutton.cms.gov/v3/fhir",
     // url: "https://sandbox.bluebutton.cms.gov/v2/fhir",
-    clientId: import.meta.env.VITE_BLUE_BUTTON_CLIENT_ID,
+    clientId: env('VITE_BLUE_BUTTON_CLIENT_ID'),
     scope: "openid launch/patient patient/Patient.read patient/Coverage.read patient/ExplanationOfBenefit.read",
     note: "BBUser09001 / PW09001!"
   });
 }
-if (import.meta.env.VITE_CAREFIRST_CLIENT_ID) {
+if (env('VITE_CAREFIRST_CLIENT_ID')) {
   CARIN_HOSTS.push({
     id: "carefirst",
     name: "CareFirst Test System",
@@ -257,58 +264,58 @@ if (import.meta.env.VITE_CAREFIRST_CLIENT_ID) {
     // url: "https://mapd-api-sita.carefirst.com/v1/fhir/patientaccess",
     // url: "https://mhbe-api-sita.carefirst.com/v1/fhir/patientaccess",
     // url: "https://egwp-api-sita.carefirst.com/v1/fhir/patientaccess",
-    clientId: import.meta.env.VITE_CAREFIRST_CLIENT_ID,
+    clientId: env('VITE_CAREFIRST_CLIENT_ID'),
     note: "Credentials provided"
   });
 }
 
 // Connectathon Testing Servers //////////////////////////////////////////////////////////////////////////////
-if (import.meta.env.VITE_CPCDS_CLIENT_ID) {
+if (env('VITE_CPCDS_CLIENT_ID')) {
   CARIN_HOSTS.push({
     id: "cpcds",
     name: "CPCDS Test System",
     url: "https://cpcds-server.lantanagroup.com/fhir",
-    clientId: import.meta.env.VITE_CPCDS_CLIENT_ID,
+    clientId: env('VITE_CPCDS_CLIENT_ID'),
     scope: "openid fhirUser launch/patient patient/*.read",
     note: "Patient1 / password"
   });
 }
-if (import.meta.env.VITE_INFERNO_CLIENT_ID) {
+if (env('VITE_INFERNO_CLIENT_ID')) {
   CARIN_HOSTS.push({
     id: "inferno",
     name: "Inferno Test Suite",
     url: "https://inferno.healthit.gov/suites/custom/c4bb_v200_client/fhir",
-    clientId: import.meta.env.VITE_INFERNO_CLIENT_ID,
+    clientId: env('VITE_INFERNO_CLIENT_ID'),
     scope: 'openid fhirUser launch/patient patient/*.read',
     note: "Credentials provided"
   });
 }
-if (import.meta.env.VITE_ONYX_CLIENT_ID) {
+if (env('VITE_ONYX_CLIENT_ID')) {
   CARIN_HOSTS.push({
     id: "onyx",
     name: "ONYX",
     url: "https://api-dmdh-alpha.safhir.io/v1/api/carin-bb/",
-    clientId: import.meta.env.VITE_ONYX_CLIENT_ID,
+    clientId: env('VITE_ONYX_CLIENT_ID'),
     scope: 'openid fhirUser launch/patient patient/Coverage.read patient/ExplanationOfBenefit.read fhirUser launch/patient patient/Condition.read patient/Device.read patient/DiagnosticReport.read patient/DocumentReference.read patient/Encounter.read patient/Goal.read patient/Immunization.read patient/Location.read patient/Medication.read patient/MedicationRequest.read patient/Observation.read patient/Organization.read patient/Practitioner.read patient/PractitionerRole.read patient/Procedure.read patient/Provenance.read patient/AllergyIntolerance.read patient/CareTeam.read patient/MedicationDispense.read patient/QuestionnaireResponse.read patient/RelatedPerson.read patient/ServiceRequest.read openid offline_access patient/Patient.read patient/CarePlan.read patient/HealthcareService.read patient/Media.read patient/Questionnaire.read patient/Specimen.read patient/InsurancePlan.read',
     note: "test30081@dmd.com / Track@04"
   });
 }
-if (import.meta.env.VITE_DELOITTE_CLIENT_ID) {
+if (env('VITE_DELOITTE_CLIENT_ID')) {
   CARIN_HOSTS.push({
     id: "deloitte",
     name: "Deloitte’s State Medicaid Agency",
     url: "https://deloitte.connectathons.com/",
-    clientId: import.meta.env.VITE_DELOITTE_CLIENT_ID,
+    clientId: env('VITE_DELOITTE_CLIENT_ID'),
     scope: 'openid fhirUser launch/patient patient/*.read',
     note: "norma_sparks / UserPass123!"
   });
 }
-if (import.meta.env.VITE_SMILECARINBB_CLIENT_ID) {
+if (env('VITE_SMILECARINBB_CLIENT_ID')) {
   CARIN_HOSTS.push({
     id: "smilecarinbb",
     name: "Smile CDR",
     url: "https://cdr-qa.p2p.azure.smilecdr.com/payer-fhir/",
-    clientId: import.meta.env.VITE_SMILECARINBB_CLIENT_ID,
+    clientId: env('VITE_SMILECARINBB_CLIENT_ID'),
     scope: 'openid fhirUser launch/patient patient/*.read',
     note: "u_washington / password1!"
   });
@@ -316,7 +323,7 @@ if (import.meta.env.VITE_SMILECARINBB_CLIENT_ID) {
 // End Connectathon Testing Servers ///////////////////////////////////////////////////////////////////////////
 
 export const BEARER_AUTHORIZATION = {
-  'EpicHIMSS': import.meta.env.VITE_EPIC_CLIENT_ID
+  'EpicHIMSS': env('VITE_EPIC_CLIENT_ID')
 }
 export const SOF_REDIRECT_URI = '/data';
 export const SOF_RESOURCES = [
@@ -341,11 +348,9 @@ export const SOF_RESOURCES = [
   // 'QuestionnaireResponse',
 ];
 
-export const VIEWER_BASE = typeof window !== 'undefined' ? new URL(
-  (import.meta.env.VITE_VIEWER_BASE ? import.meta.env.VITE_VIEWER_BASE : `/ips`)+'#',
-  window.location.href
-).toString() : undefined;
-export const SHOW_VIEWER_DEMO = import.meta.env.VITE_SHOW_VIEWER_DEMO;
+const SYSTEM_URL = env('VITE_SYSTEM_URL') || (typeof window !== 'undefined' ? new URL(window.location.href).toString() : undefined);
+export const VIEWER_BASE = env('VITE_VIEWER_BASE') || ((SYSTEM_URL ?? "") + '/ips#');
+export const SHOW_VIEWER_DEMO = env('VITE_SHOW_VIEWER_DEMO');
 
 export const PATIENT_IPS = {
   'Dave deBronkart': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/16501/$summary',

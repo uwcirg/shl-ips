@@ -1,11 +1,9 @@
 services:
   shlips:
-    build:
-      dockerfile: Dockerfile.dev
-    
     environment:
       NODE_ENV: development
-
+    build:
+      target: dev
     develop:
       watch:
         - action: rebuild
