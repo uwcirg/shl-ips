@@ -8,6 +8,7 @@
     DropdownMenu,
     DropdownToggle,
     Icon,
+    Label,
     TabContent,
     TabPane,
     Row,
@@ -18,6 +19,7 @@
   
   import IPSContent from '$lib/components/viewer/IPSContent.svelte';
   import Demo from '$lib/components/viewer/Demo.svelte';
+  import ImmunizationDecisionSupport from '$lib/components/app/ImmunizationDecisionSupport.svelte';
   
   import { SHOW_VIEWER_DEMO } from "$lib/config/config";
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
@@ -217,6 +219,7 @@
     return tabName;
   }
   
+  let decisionSupportContent = shlContents[0];
 </script>
 
 <Row class="d-flex justify-content-start mx-0 pb-4">
@@ -266,6 +269,25 @@
         <IPSContent bundle={contents} mode={$displayMode} />
       </TabPane>
     {/each}
+    <TabPane class="decision-support-tab" tabId="decision-support" style="padding-top:10px">
+      <span class="decision-support-tab" slot="tab">Decision Support</span>
+      <Row>
+        <Col>
+          <p>Get recommendations and health record analysis based the health summary content.</p>
+          {#if shlContents.length > 1}
+            <Label>Select a summary to use for decision support:</Label>
+            <select bind:value={decisionSupportContent}>
+              {#each shlContents as content}
+                <option value={content}>{getTabLabel(content)}</option>
+              {/each}
+            </select>
+          {/if}
+        </Col>
+      </Row>
+      <ImmunizationDecisionSupport
+        patient={shlContents[0].entry.find(entry => entry.resource.resourceType === "Patient").resource}
+        immunizations={shlContents[0].entry.filter(entry => entry.resource.resourceType === "Immunization").map(entry => entry.resource)} />
+    </TabPane>
     {#if SHOW_VIEWER_DEMO}
       <TabPane tabId="demo" active={shlContents.length === 0} style="padding-top:10px">
         <span class="demo-tab" slot="tab">IPS Sandbox</span>
