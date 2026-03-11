@@ -59,15 +59,14 @@ ENV VITE_INSTANCE_ID=$VITE_INSTANCE_ID
 
 ENV NODE_ENV=production
 
-COPY --from=build /opt/app/.svelte-kit ./.svelte-kit
-COPY --from=build /opt/app/node_modules ./node_modules
-COPY --from=build /opt/app/src ./src
-COPY --from=build /opt/app/static ./static
-COPY --from=build /opt/app/package.json ./package.json
-COPY --from=build /opt/app/package-lock.json ./package-lock.json
-COPY --from=build /opt/app/svelte.config.js ./svelte.config.js
-COPY --from=build /opt/app/tsconfig.json ./tsconfig.json
-COPY --from=build /opt/app/vite.config.ts ./vite.config.ts
+COPY --from=deps /opt/app/node_modules ./node_modules
+COPY --from=deps /opt/app/src ./src
+COPY --from=deps /opt/app/static ./static
+COPY --from=deps /opt/app/package.json ./package.json
+COPY --from=deps /opt/app/package-lock.json ./package-lock.json
+COPY --from=deps /opt/app/svelte.config.js ./svelte.config.js
+COPY --from=deps /opt/app/tsconfig.json ./tsconfig.json
+COPY --from=deps /opt/app/vite.config.ts ./vite.config.ts
 
 EXPOSE 3000
 
