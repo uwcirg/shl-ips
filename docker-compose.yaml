@@ -3,6 +3,7 @@ services:
   shlips:
     build:
       context: .
+      target: prod-dynamic
       args:
         VITE_APP_VERSION_STRING: ${VITE_APP_VERSION_STRING:-local}
     env_file:
