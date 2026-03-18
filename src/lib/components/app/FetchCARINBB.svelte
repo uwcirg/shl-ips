@@ -34,7 +34,7 @@
   let loadingSample = false;
   let fetchError = "";
 
-  let sofHostSelection = CARIN_HOSTS.filter(e => e.section !== 'applehealth')[0].id;
+  let sofHostSelection = CARIN_HOSTS[0].id;
   let sofHost:SOFHost | undefined = CARIN_HOSTS.find(e => e.id == sofHostSelection);
   
   $: {
@@ -223,7 +223,7 @@
     <h6>WA State Apple Health Providers</h6>
     {#each CARIN_HOSTS.filter(e => e.section === 'applehealth') as host}
       <Row class="mx-2">
-        <Input type="radio" disabled bind:group={sofHostSelection} value={host.id} label={host.name} />
+        <Input type="radio" disabled={host.disabled ?? false} bind:group={sofHostSelection} value={host.id} label={host.name} />
         {#if host.note}
           <p class="text-secondary" style="margin-left:25px">{@html host.note}</p>
         {/if}

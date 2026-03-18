@@ -187,11 +187,11 @@ export const CARIN_RESOURCES = [
   'List',
 ];
 
-export const CARIN_HOSTS: { id: string; name: string; url: string; clientId: string; scope?: string; note: string; section?: string; }[] = [];
+export const CARIN_HOSTS: { id: string; name: string; url: string; clientId: string; scope?: string; note: string; section?: string; disabled?: boolean}[] = [];
 if (env('VITE_ACENTRA_CLIENT_ID')) {
   CARIN_HOSTS.push({
     id: "acentra",
-    name: "Acentra HCA Test System",
+    name: "HCA Test System (Acentra)",
     url: "https://sb.fhir.mhbapp.com/pa/api/v1",
     clientId: env('VITE_ACENTRA_CLIENT_ID'),
     scope: "openid launch/patient patient/*.read",
@@ -207,7 +207,8 @@ if (env('VITE_UNITED_CLIENT_ID')) {
     clientId: env('VITE_UNITED_CLIENT_ID'),
     scope: "openid launch/patient patient/List.read patient/MedicationKnowledge.read patient/Patient.read patient/Coverage.read patient/Condition.read patient/Immunization.read patient/MedicationDispense.read patient/MedicationRequest.read patient/Observation.read patient/Procedure.read patient/Encounter.read patient/ExplanationOfBenefit.read patient/AllergyIntolerance.read patient/CarePlan.read patient/CareTeam.read patient/Device.read patient/DiagnosticReport.read patient/DocumentReference.read patient/Goal.read",
     note: "wahsdemo@gmail.com / demo1WAHS",
-    section: "applehealth"
+    section: "applehealth",
+    disabled: true
   });
 }
 if (env('VITE_MOLINA_CLIENT_ID')) {
@@ -219,7 +220,8 @@ if (env('VITE_MOLINA_CLIENT_ID')) {
     // scope: "openid launch/patient patient/List.read patient/MedicationKnowledge.read patient/Patient.read patient/Coverage.read patient/Condition.read patient/Immunization.read patient/MedicationDispense.read patient/MedicationRequest.read patient/Observation.read patient/Procedure.read patient/Encounter.read patient/ExplanationOfBenefit.read patient/AllergyIntolerance.read patient/CarePlan.read patient/CareTeam.read patient/Device.read patient/DiagnosticReport.read patient/DocumentReference.read patient/Goal.read",
     scope: "openid launch/patient",
     note: "",
-    section: "applehealth"
+    section: "applehealth",
+    disabled: true
   });
 }
 if (env('VITE_AETNA_CLIENT_ID')) {
