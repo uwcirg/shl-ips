@@ -172,7 +172,6 @@
         <h5 class="my-2">{section.title}</h5>
       </div>
       <DataCategoryView
-        title={section.title}
         description={section.description}
         category = {section.category}
         forms={section.forms}

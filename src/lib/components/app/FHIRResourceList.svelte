@@ -62,7 +62,7 @@
     return (new Date(aDate) as any) - (new Date(bDate) as any);
   };
 
-  function getResourceSortDate(resource: Resource, fieldsOrPrefixes: string[] = []): {date: number, precision: number} | null {
+  function getResourceSortDate(resource: Resource, fieldsOrPrefixes: string[] = []): {date: Date, precision: number} | null {
     const birthdate = get(resourceCollection.patient)?.birthDate;
     for (const field of fieldsOrPrefixes) {
       const val = getFHIRDateAndPrecision(resource, field, birthdate);
@@ -74,8 +74,8 @@
   function resourceSort(a: Resource, b: Resource, order: 'asc' | 'desc' = 'desc') {
     let orderFactor = order === 'asc' ? 1 : -1;
     
-    let aVal: {date: number, precision: number} | null = getResourceSortDate(a, resourceConfig[a.resourceType]?.sortFields ?? []);
-    let bVal: {date: number, precision: number} | null = getResourceSortDate(b, resourceConfig[b.resourceType]?.sortFields ?? []);
+    let aVal: {date: Date, precision: number} | null = getResourceSortDate(a, resourceConfig[a.resourceType]?.sortFields ?? []);
+    let bVal: {date: Date, precision: number} | null = getResourceSortDate(b, resourceConfig[b.resourceType]?.sortFields ?? []);
     if (aVal && !bVal) return 1 * orderFactor;
     if (bVal && !aVal) return -1 * orderFactor;
     if (!aVal && !bVal) return lastUpdatedSort(a, b) * orderFactor;

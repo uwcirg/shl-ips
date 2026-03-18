@@ -23,7 +23,7 @@
   import LanguageMenu from '$lib/components/layout/LanguageMenu.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import { DEMO_WARNING, VERSION_STRING } from '$lib/config/config';
-  import type { IAuthService, SHLAdminParams } from '$lib/utils/types';
+  import type { IAuthService } from '$lib/utils/types';
   import FHIRDataService from '$lib/utils/FHIRDataService';
   import { imagePreload } from '$lib/utils/preloadImages';
 
@@ -32,8 +32,6 @@
   let user = authService.user;
 
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
-
-  let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
   
   let isOpen: Writable<boolean> = getContext('isOpen');
 
