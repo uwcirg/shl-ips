@@ -170,7 +170,7 @@
       {:then headerImageUrl}
       <!-- <NavbarBrand class="flex-shrink-1"> <img id="nav-image" style="height: 60px;"/> </NavbarBrand> -->
       <NavbarBrand class="flex-shrink-1 ms-3">
-        <img id="nav-image" alt="Washington State Department of Health Logo" style="height: 50px; vertical-align: left" src={headerImageUrl}/>
+        <img id="nav-image" alt="Washington State Department of Health Logo" style="height: 60px; vertical-align: left" src={headerImageUrl}/>
       </NavbarBrand>
       {/await}
       <div class="flex-grow-1 d-flex align-items-center justify-content-end">
