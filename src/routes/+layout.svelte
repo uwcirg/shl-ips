@@ -79,7 +79,7 @@
     <title>{INSTANCE_CONFIG.title}</title>
     <link rel="icon" href={`${INSTANCE_CONFIG.imgPath}/favicon.ico`} type="image/x-icon">
     <link rel="preload" as="image" href={`${INSTANCE_CONFIG.imgPath}/company-logo.png`} />
-    <link rel="preload" as="image" href={`${INSTANCE_CONFIG.imgPath}/logo.png`} />
+    <link rel="preload" as="image" href={`${INSTANCE_CONFIG.imgPath}/logo-60h.png`} />
     <link rel="preload" as="image" href={`${INSTANCE_CONFIG.imgPath}/divider.png`} />
 </svelte:head>
 
@@ -92,24 +92,24 @@
 </Container>
 
 <style>
+  :global(div.container-fluid.main) {
+    /* Handle scroll gutter */
+    position: relative;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    scrollbar-gutter: stable;
+  }
   .main-content {
+    max-width: 1200px;
+    width: 100%;
+    margin-right: auto;
+    margin-left: auto;
     display: flex;
     flex-direction: column;
     flex-grow: 1;
     margin-top: 1.5rem;
     padding: 0 1rem;
-  }
-
-  :global(div.container-fluid.main) {
-    /* Handle scroll gutter */
-    position: relative;
-
-    height: 100vh;
-    margin-right: auto;
-    margin-left: auto;
-    max-width: 1200px;
-    display: flex;
-    flex-direction: column;
   }
   :global(html, body) {
     height: 100%;
