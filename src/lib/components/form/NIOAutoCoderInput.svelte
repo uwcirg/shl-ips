@@ -217,7 +217,7 @@
       </div>
     </DropdownToggle>
     <Portal>
-      <DropdownMenu style={`max-height: 250px; overflow:scroll ${menuStyle}`}>
+      <DropdownMenu style={`${menuStyle}`}>
         {#if codingOptions}
           {#if codingOptions[mode].length === 0}
             Empty

@@ -708,7 +708,7 @@
       {/each}
       <Row>
         <Col>
-          <Button color="secondary" outline on:click={() => addCurrentJob()}><Icon name="plus"/> Add current employment</Button>
+          <Button color="secondary" outline on:click={() => addCurrentJob()}><Icon name="plus"/> Add { values.currentWork.length > 0 ? "another" : "a"} current job</Button>
         </Col>
       </Row>
     {/if}
@@ -745,7 +745,7 @@
     {/each}
     <Row>
       <Col>
-        <Button color="secondary" outline on:click={() => addPastJob()}><Icon name="plus"/> Add past employment</Button>
+        <Button color="secondary" outline on:click={() => addPastJob()}><Icon name="plus"/> Add { values.pastWork.length > 0 ? "another" : "a"} past job</Button>
       </Col>
     </Row>
   </AccordionItem>
@@ -765,7 +765,7 @@
     {/each}
     <Row>
       <Col>
-        <Button color="secondary" outline on:click={() => addRetirementDate()}><Icon name="plus"/> Add retirement date</Button>
+        <Button color="secondary" outline on:click={() => addRetirementDate()}><Icon name="plus"/> Add { values.retirementDates.length > 0 ? "another" : "a"} retirement date</Button>
       </Col>
     </Row>
   </AccordionItem>
@@ -791,7 +791,9 @@
     {/each}
     <Row>
       <Col>
-        <Button color="secondary" outline on:click={() => addCombatPeriod()}><Icon name="plus"/> Add combat period</Button>
+        <Button color="secondary" outline on:click={() => addCombatPeriod()}>
+          <Icon name="plus"/> Add { values.combatPeriods.length > 0 ? "another" : "a"} combat period
+        </Button>
       </Col>
     </Row>
   </AccordionItem>
@@ -805,7 +807,7 @@
   </Col>
   <Col class="d-flex justify-content-end align-items-start">
     <Button color="danger" outline on:click={() => resetWorkInfo()}>
-      Reset work info
+      Clear changes
     </Button>
   </Col>
 </Row>

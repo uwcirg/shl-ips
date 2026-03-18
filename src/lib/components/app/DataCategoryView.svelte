@@ -61,10 +61,17 @@
   let formData: Writable<Record<string, any | null>> = writable({});
   $: if (forms && $userResources?.[category]) {
     forms.forEach(form => {
-      let collectionsForFormMethod = fhirDataService.getAllResourceCollections().filter(collection => collection.getTags().method === form.method);
-      let collection = form.editable && collectionsForFormMethod.length === 1 ? collectionsForFormMethod[0] : null;
-      setFormData(form.method, collection);
+      updateFormDataIfApplicable(form.method);
     });
+  }
+  
+  function updateFormDataIfApplicable(method: string) {
+    let formForMethod = forms.find(form => form.method === method);
+    if (!formForMethod || !formForMethod.editable) {
+      return;
+    }
+    let collectionsForMethod = fhirDataService.getAllResourceCollections().filter(collection => collection.getTags().method === method);
+    setFormData(method, collectionsForMethod.length === 1 ? collectionsForMethod[0] : null);
   }
 
   $: {
@@ -108,6 +115,7 @@
 
   function deleteDataset(category: string, method: string, source: string) {
     fhirDataService.deleteDataset(category, method, source);
+    updateFormDataIfApplicable(method);
   }
 
   let isOpen = false;
