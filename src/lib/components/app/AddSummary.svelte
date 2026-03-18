@@ -628,8 +628,7 @@
         </FormGroup>
         {#if $mode === 'advanced'}
         <FormGroup>
-          <Label>Encode as verifiable SMART Health Card</Label>
-          <Input type="checkbox" bind:checked={smartHealthCard} />
+          <Input name="smartHealthCard" type="checkbox" bind:checked={smartHealthCard} label="Encode as verifiable SMART Health Card"/>
         </FormGroup>
         {/if}
         <Row>
