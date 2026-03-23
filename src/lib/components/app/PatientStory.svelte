@@ -182,7 +182,7 @@
   {/each}
   <Row class="mb-4">
     <Col>
-      <Button color="secondary" outline style="width:fit-content" on:click={addGoal}><Icon name="plus"></Icon>Add Goal</Button>
+      <Button color="secondary" outline style="width:fit-content" on:click={addGoal}><Icon name="plus"></Icon>Add another goal</Button>
     </Col>
   </Row>
 

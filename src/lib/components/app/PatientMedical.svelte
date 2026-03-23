@@ -219,7 +219,7 @@
   {/each}
   <Row class="mb-4">
     <Col>
-      <Button color="secondary" outline style="width:fit-content" on:click={() => addEntry('problems')}><Icon name="plus"></Icon>Add Health Issue</Button>
+      <Button color="secondary" outline style="width:fit-content" on:click={() => addEntry('problems')}><Icon name="plus"></Icon>Add another issue</Button>
     </Col>
   </Row>
   <h5>Medications I'm Taking Currently</h5>
@@ -248,7 +248,7 @@
   {/each}
   <Row class="mb-4">
     <Col>
-      <Button color="secondary" outline style="width:fit-content" on:click={() => addEntry('medications')}><Icon name="plus"></Icon>Add Medication</Button>
+      <Button color="secondary" outline style="width:fit-content" on:click={() => addEntry('medications')}><Icon name="plus"></Icon>Add another medication</Button>
     </Col>
   </Row>
 
@@ -278,7 +278,7 @@
   {/each}
   <Row class="mb-4">
     <Col>
-      <Button color="secondary" outline style="width:fit-content" on:click={() => addEntry('history')}><Icon name="plus"></Icon>Add Past Event/Illness</Button>
+      <Button color="secondary" outline style="width:fit-content" on:click={() => addEntry('history')}><Icon name="plus"></Icon>Add another event/illness</Button>
     </Col>
   </Row>
 

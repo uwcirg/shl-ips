@@ -515,7 +515,7 @@
   {/each}
   <Row class="mb-4">
     <Col>
-      <Button color="secondary" outline style="width:fit-content" on:click={addStatus}><Icon name="plus"></Icon>Add Another Issue</Button>
+      <Button color="secondary" outline style="width:fit-content" on:click={addStatus}><Icon name="plus"></Icon>Add another concern</Button>
     </Col>
   </Row>
   <Row>

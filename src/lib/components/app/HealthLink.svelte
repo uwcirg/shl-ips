@@ -432,7 +432,7 @@
           </CardBody>
         </Card>
       {/each}
-      <Button class="mb-3" color="primary" on:click={addFile}><Icon name="file-earmark-plus" /> Add {shl.files.length == 0 ? "a" : "another"} Summary</Button>
+      <Button class="mb-3" color="primary" on:click={addFile}><Icon name="file-earmark-plus" /> Add {shl.files.length == 0 ? "a" : "another"} summary</Button>
     </FormGroup>
   </Col>
   {/if}
