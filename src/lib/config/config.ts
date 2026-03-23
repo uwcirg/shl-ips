@@ -206,9 +206,9 @@ if (env('VITE_UNITED_CLIENT_ID')) {
     url: "https://flex.optum.com/fhir/sandbox/R4",
     clientId: env('VITE_UNITED_CLIENT_ID'),
     scope: "openid launch/patient patient/List.read patient/MedicationKnowledge.read patient/Patient.read patient/Coverage.read patient/Condition.read patient/Immunization.read patient/MedicationDispense.read patient/MedicationRequest.read patient/Observation.read patient/Procedure.read patient/Encounter.read patient/ExplanationOfBenefit.read patient/AllergyIntolerance.read patient/CarePlan.read patient/CareTeam.read patient/Device.read patient/DiagnosticReport.read patient/DocumentReference.read patient/Goal.read",
-    note: "wahsdemo@gmail.com / demo1WAHS",
-    section: "applehealth",
-    disabled: true
+    note: "Create a One Healthcare ID to test",
+    // note: "wahsdemo@gmail.com / demo1WAHS",
+    section: "applehealth"
   });
 }
 if (env('VITE_MOLINA_CLIENT_ID')) {
