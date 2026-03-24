@@ -132,7 +132,7 @@
       }).then(function(response) {
         if (!response.ok) {
           // make the promise be rejected if we didn't get a 2xx response
-          throw new Error("Unable to fetch IPS", {cause: response});
+          throw new Error("Unable to import IPS", {cause: response});
         } else {
           return response;
         }
@@ -215,9 +215,9 @@
     <Col xs="auto">
       <Button color="primary" style="width:fit-content" disabled={processing || disabled || !summaryUrlValidated} type="submit">
         {#if !processing}
-          Fetch Data
+          Import Data
         {:else}
-          Fetching...
+          Importing...
         {/if}
       </Button>
     </Col>

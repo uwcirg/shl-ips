@@ -50,7 +50,7 @@ export default {
             {
               method: METHODS.PROVIDER_HEALTH_RECORD_SOF_SEARCH,
               tabTitle: "Provider Search",
-              description: "Fetch US Core data from your healthcare provider via SMART authorization.",
+              description: "Import US Core health data from your healthcare provider via SMART authorization.",
               component: FetchSoFSearch
             }
           ]

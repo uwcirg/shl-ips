@@ -3,7 +3,7 @@ import { error, json, text } from '@sveltejs/kit';
 import { URL_BEARER_HOSTS } from '$lib/server/config';
 
 export const GET = async ({ params, url, request }: { params: { host: string }; url: URL; request: Request; }) => {
-  console.log('Fetching data');
+  console.log('Importing data');
   const hostName = params.host;
   console.log(hostName);
   console.log(JSON.stringify(URL_BEARER_HOSTS));

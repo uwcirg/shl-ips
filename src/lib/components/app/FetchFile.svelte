@@ -97,7 +97,7 @@
     }
 </script>
 
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, source, retrieveIps)}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, source ?? "", retrieveIps)}>
     <FormGroup>
         <Label>Upload a FHIR Bundle (<code>.json</code> or signed <code>.smart-health-card</code>)</Label>
         <Input type="file" name="file" bind:files={uploadFiles} />
@@ -107,9 +107,9 @@
         <Col xs="auto">
         <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
             {#if !processing}
-            Fetch Data
+            Import Data
             {:else}
-            Fetching...
+            Importing...
             {/if}
         </Button>
         </Col>

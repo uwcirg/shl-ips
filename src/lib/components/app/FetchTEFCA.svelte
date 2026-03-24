@@ -237,7 +237,7 @@
         headers: headers
       });
       if (!result.ok) {
-        throw new Error('Unable to fetch patient data', { cause: result });
+        throw new Error('Unable to import patient data', { cause: result });
       }
       return await result.json();
     };
@@ -262,7 +262,7 @@
         body: JSON.stringify(parametersResource)
       });
       if (!result.ok) {
-        throw new Error('Unable to fetch patient data with $match', { cause: result });
+        throw new Error('Unable to import patient data with $match', { cause: result });
       }
       
       // Parse the response to check for no results
@@ -315,7 +315,7 @@
             function(response: any) {
               if (!response.ok) {
                 // make the promise be rejected if we didn't get a 2xx response
-                throw new Error('Unable to fetch patient data', { cause: response });
+                throw new Error('Unable to import patient data', { cause: response });
               }
               return response;
             }
@@ -382,7 +382,6 @@
 </script>
 
 <form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, resourceResult.source, prepareIps)}>
-  <Label>Fetch US Core data via TEFCA query</Label>
   <FormGroup>
     <Row>
       <Col>
@@ -417,8 +416,8 @@
   </FormGroup>
   {#if selectedSource}
   <FormGroup>
-    <Label>Enter your information to locate your data</Label>
-    <p class="text-secondary"><em>{INSTANCE_CONFIG.title} does not save this information</em></p>
+    <Label>Enter your information to locate your data.</Label>
+    <p class="text-secondary"><em>* {INSTANCE_CONFIG.title} does not save the information entered here.</em></p>
     <Row cols={{ md: 2, sm: 1 }}>
       <Col>
         <Label>Name</Label>
@@ -481,9 +480,9 @@
     <Col xs="auto">
       <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
         {#if !processing}
-          Fetch Data
+          Import Data
         {:else}
-          Fetching...
+          Importing...
         {/if}
       </Button>
     </Col>
