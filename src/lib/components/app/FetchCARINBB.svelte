@@ -208,7 +208,7 @@
         }
       } catch (e) {
         console.log('Failed', e);
-        fetchError = "Error fetching Insurance data";
+        fetchError = "Error importing insurance data";
       } finally {
         processing = false;
         window.history.replaceState(null, "", clearURLOfParams($page.url));
@@ -245,9 +245,9 @@
     <Col xs="auto">
     <Button color="primary" style="width:fit-content" disabled={processing || disabled || loadingSample} type="submit">
       {#if !processing}
-        Fetch Data
+        Import Data
       {:else}
-        Fetching...
+        Importing...
       {/if}
     </Button>
     </Col>

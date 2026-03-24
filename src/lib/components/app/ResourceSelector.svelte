@@ -143,7 +143,7 @@
     }).then(function (response) {
       if (!response.ok) {
         // reject the promise if we didn't get a 2xx response
-        throw new Error('Unable to fetch IPS', { cause: response });
+        throw new Error('Unable to create IPS', { cause: response });
       } else {
         return response;
       }

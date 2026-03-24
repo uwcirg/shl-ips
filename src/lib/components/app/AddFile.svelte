@@ -301,9 +301,9 @@
   >
     <h5 slot="header" class="my-2">{addDataHeader}</h5>
     {#if !resourcesAdded}
-      <p>Select your provider below, then press "Fetch Data" to begin building your Health Summary.</p>
+      <p>Select your provider below, then press "Import Data" to begin building your Health Summary.</p>
     {:else}
-      <p>Select another provider below, then press "Fetch Data" to add more data to your Health Summary.</p>
+      <p>Select another provider below, then press "Import Data" to add more data to your Health Summary.</p>
     {/if}
     <TabContent on:tab={(e) => {
       currentTab = e.detail;
