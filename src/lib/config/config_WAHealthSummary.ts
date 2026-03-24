@@ -18,6 +18,7 @@ import PatientBody from '$lib/components/app/PatientBody.svelte';
 import FetchAD from '$lib/components/app/FetchAD.svelte';
 import CreatePOLST from '$lib/components/app/CreatePOLST.svelte';
 import ODHForm from '$lib/components/app/ODHForm.svelte';
+import AboutMeTitle from '$lib/components/app/AboutMeTitle.svelte';
 
 export default {
   title: "WA Health Summary",
@@ -39,16 +40,8 @@ export default {
     data: {
       sections: [
         {
-          id: "about-me",
-          title: "About Me",
-          description: "Add or update information about yourself. Some fields may already be filled with information from your account login.<br>The information here can be added to your Shareable Health Summary, but this form will not change information that you download from healthcare providers or other sources.",
-          forms: [
-            { method: "patient", component: Demographic, editable: true }
-          ]
-        },
-        {
           id: "healthcare-providers",
-          title: "Data from Healthcare Providers",
+          title: "Import from Healthcare Providers",
           description: "",
           category: CATEGORIES.PROVIDER_HEALTH_RECORD,
           forms: [
@@ -90,7 +83,7 @@ export default {
         },
         {
           id: "my-story",
-          title: "My Health in My Words",
+          title: "Personal Health Notes",
           description: "Your own representation of your health, history, needs and goals.",
           category: CATEGORIES.PATIENT_STORY,
           forms: [
@@ -126,7 +119,7 @@ export default {
         },
         {
           id: "advance-directives",
-          title: "Advance Directives",
+          title: "Add Care Planning Documents",
           description: "Create or retrieve your Advance Directive documents from a repository.",
           category: CATEGORIES.ADVANCE_DIRECTIVES,
           forms: [
@@ -153,6 +146,14 @@ export default {
               component: ODHForm,
               editable: true
             }
+          ]
+        },
+        {
+          id: "about-me",
+          title: AboutMeTitle,
+          description: "Add or update information about yourself. Some fields may already be filled with information from your account login.<br>The information here can be added to your Shareable Health Summary, but this form will not change information that you download from healthcare providers or other sources.",
+          forms: [
+            { method: "patient", component: Demographic, editable: true }
           ]
         }
       ]

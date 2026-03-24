@@ -2,16 +2,17 @@ import { CATEGORIES, METHODS} from '$lib/config/tags';
 
 import AddSummary from '$lib/components/app/AddSummary.svelte';
 import IntroductionMyHealthSummary from '$lib/components/app/IntroductionMyHealthSummary.svelte';
-import PrivacyAndTrustMyHealthSummary from '$lib/components/app/PrivacyAndTrustMyHealthSummary.svelte'
+import PrivacyAndTrustMyHealthSummary from '$lib/components/app/PrivacyAndTrustMyHealthSummary.svelte';
 
-import Demographic from '$lib/components/app/Demographic.svelte'
-import FetchSoFSearch from '$lib/components/app/FetchSoFSearch.svelte'
-import PatientStory from '$lib/components/app/PatientStory.svelte'
-import PatientMedical from '$lib/components/app/PatientMedical.svelte'
-import PatientNeeds from '$lib/components/app/PatientNeeds.svelte'
-import PatientBody from '$lib/components/app/PatientBody.svelte'
-import CreatePOLST from '$lib/components/app/CreatePOLST.svelte'
-import ODHForm from '$lib/components/app/ODHForm.svelte'
+import Demographic from '$lib/components/app/Demographic.svelte';
+import FetchSoFSearch from '$lib/components/app/FetchSoFSearch.svelte';
+import PatientStory from '$lib/components/app/PatientStory.svelte';
+import PatientMedical from '$lib/components/app/PatientMedical.svelte';
+import PatientNeeds from '$lib/components/app/PatientNeeds.svelte';
+import PatientBody from '$lib/components/app/PatientBody.svelte';
+import CreatePOLST from '$lib/components/app/CreatePOLST.svelte';
+import ODHForm from '$lib/components/app/ODHForm.svelte';
+import AboutMeTitle from '$lib/components/app/AboutMeTitle.svelte';
 
 export default {
   title: "My Health Summary",
@@ -31,7 +32,7 @@ export default {
       sections: [
         {
           id: "about-me",
-          title: "About Me",
+          title: AboutMeTitle,
           description: "Add or update information about yourself. Some fields may already be filled with information from your account login.<br>The information here can be added to your Shareable Health Summary, but this form will not change information that you download from healthcare providers or other sources.",
           forms: [
             {
