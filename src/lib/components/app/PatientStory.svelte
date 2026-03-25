@@ -9,9 +9,9 @@
     Row,
     Spinner
   } from '@sveltestrap/sveltestrap';
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher } from 'svelte';
   import type { IResourceCollection, ResourceRetrieveEvent } from '$lib/utils/types';
-  import type { Goal, Observation, Resource, CompositionSection } from 'fhir/r4';
+  import type { Goal, Observation, Resource } from 'fhir/r4';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
   import { ResourceHelper } from '$lib/utils/ResourceHelper';
@@ -23,6 +23,8 @@
   $: resources = formData?.resources;
   $: if ($resources) {
     initializeFieldsForFormData();
+  } else {
+    initializeDefaultFields();
   }
 
   const CATEGORY = CATEGORIES.PATIENT_STORY;
@@ -32,19 +34,10 @@
     name: 'My Story'
   };
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
+  const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
   let processing = false;
   let fetchError = '';
-  
-  const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
-
-  onMount(() => {
-    if (formData) {
-      initializeFieldsForFormData();
-    } else {
-      initializeDefaultFields();
-    }
-  });
 
   let defaults = {
     story: '',
@@ -135,6 +128,8 @@
     }
     if (goals.length > 0) {
       values.goals = goals;
+    } else {
+      values.goals = [copyOf(defaults.goal)];
     }
   }
 
@@ -259,9 +254,9 @@
         disabled={processing || disabled}
         on:click={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, SOURCE.url, prepareIps)}>
         {#if !processing}
-          Update your patient story and goals
+          Save your patient story and goals
         {:else}
-          Adding...
+          Saving...
         {/if}
       </Button>
     </Col>

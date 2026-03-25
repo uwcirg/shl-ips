@@ -13,11 +13,18 @@
   import type { CodeableConcept, Condition, MedicationStatement } from 'fhir/r4';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
+  import { ResourceHelper } from '$lib/utils/ResourceHelper';
+  import { copyOf } from '$lib/utils/util';
 
   export let disabled = false;
   export let formData: IResourceCollection | undefined;
   let resources;
   $: resources = formData?.resources;
+  $: if ($resources) {
+    initializeFieldsForFormData();
+  } else {
+    initializeDefaultFields();
+  }
 
   const CATEGORY = CATEGORIES.PATIENT_STORY;
   const METHOD = METHODS.PATIENT_MEDICAL_HISTORY_FORM;
@@ -26,26 +33,30 @@
     name: 'My Medical History'
   };
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
+  const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
   let processing = false;
   let fetchError = '';
 
   interface HealthHistoryEntry {
     name: string;
-    detail: string
+    detail: string;
+    date: string;
   };
 
-  let entries: Record<string, HealthHistoryEntry[]> = {
-    problems: [
-      {name: '', detail: ''}
-    ],
-    medications: [
-      {name: '', detail: ''}
-    ],
-    history: [
-      {name: '', detail: ''}
-    ]
-  };
+  let defaults = {
+    problem: {name: '', detail: '', date: ''},
+    medication: {name: '', detail: '', date: ''},
+    history: {name: '', detail: '', date: ''}
+  }
+  
+  let defaultValues: Record<string, HealthHistoryEntry[]> = {
+    problems: [copyOf(defaults.problem)],
+    medications: [copyOf(defaults.medication)],
+    history: [copyOf(defaults.history)]
+  }
+  
+  let values = copyOf(defaultValues);
 
   let issueSeverityOptions: Record<string, CodeableConcept|undefined> = {
     '': undefined,
@@ -66,7 +77,6 @@
     }
   };
   
-  const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
   let currentConditionTemplate: Condition = {
     resourceType: "Condition",
     clinicalStatus: {
@@ -129,26 +139,107 @@
     onsetString: ""
   }
 
-  function prepareCurrentConditionResource(entry: HealthHistoryEntry) {
+  function getProblemResources(rhs: ResourceHelper[]) {
+    return rhs?.filter(rh => rh.resource.resourceType === 'Condition' && rh.resource.clinicalStatus?.coding?.find(c => c.code === 'active' && c.system === 'http://terminology.hl7.org/CodeSystem/condition-clinical')).map(r => r.resource);
+  }
+
+  function getMedicationResources(rhs: ResourceHelper[]) {
+    return rhs?.filter(rh => rh.resource.resourceType === 'MedicationStatement').map(r => r.resource);
+  }
+  
+  function getHistoryResources(rhs: ResourceHelper[]) {
+    return rhs?.filter(rh => rh.resource.resourceType === 'Condition' && rh.resource.clinicalStatus?.coding?.find(c => c.code === 'inactive' && c.system === 'http://terminology.hl7.org/CodeSystem/condition-clinical')).map(r => r.resource);
+  }
+  
+  function initializeProblemFields(rhs: ResourceHelper[]) {
+    const problemResources = getProblemResources(rhs);
+    let problems = [];
+    for (const resource of problemResources) {
+      const problem = {
+        name: resource.code?.text ?? defaults.problem.name,
+        detail: resource.severity?.text ?? defaults.problem.detail,
+        date: resource.recordedDate ?? defaults.problem.date
+      };
+      problems.push(problem);
+    }
+    if (problems.length > 0) {
+      values.problems = problems;
+    } else {
+      values.problems = [copyOf(defaults.problem)];
+    }
+  }
+
+  function initializeMedicationFields(rhs: ResourceHelper[]) {
+    const medicationResources = getMedicationResources(rhs);
+    let medications = [];
+    for (const resource of medicationResources) {
+      const medication = {
+        name: resource.medicationCodeableConcept.text ?? defaults.medication.name,
+        detail: resource.dosage?.[0]?.text ?? defaults.medication.detail,
+        date: resource.effectiveDateTime ?? defaults.medication.date
+      };
+      medications.push(medication);
+    }
+    if (medications.length > 0) {
+      values.medications = medications;
+    } else {
+      values.medications = [copyOf(defaults.medication)];
+    }
+  }
+  
+  function initializeHistoryFields(rhs: ResourceHelper[]) {
+    const historyResources = getHistoryResources(rhs);
+    let histories = [];
+    for (const resource of historyResources) {
+      const history = {
+        name: resource.code?.text ?? defaults.problem.name,
+        detail: resource.onsetString ?? defaults.problem.detail,
+        date: resource.recordedDate ?? defaults.problem.date
+      };
+      histories.push(history);
+    }
+    if (histories.length > 0) {
+      values.history = histories;
+    } else {
+      values.history = [copyOf(defaults.history)];
+    }
+  }
+  
+  function initializeFieldsForFormData() {
+    if (!$resources) { return initializeDefaultFields(); }
+  
+    const resources = Object.values($resources) as ResourceHelper[];
+    if (!resources?.length) { return initializeDefaultFields(); }
+    
+    initializeProblemFields(resources);
+    initializeMedicationFields(resources);
+    initializeHistoryFields(resources);
+  }
+  
+  function initializeDefaultFields() {
+    values = copyOf(defaultValues);
+  }
+
+  function prepareProblemResource(entry: HealthHistoryEntry) {
     if (entry.name === '' && entry.detail === '') return;
     let currentCondition = JSON.parse(JSON.stringify(currentConditionTemplate));
     currentCondition.code.text = entry.name;
     currentCondition.severity.coding.push(issueSeverityOptions[entry.detail]);
     currentCondition.severity.text = entry.detail;
-    currentCondition.recordedDate = new Date().toISOString().slice(0, 10);;
+    currentCondition.recordedDate = new Date().toISOString().slice(0, 10);
     return currentCondition;
   }
 
-  function prepareMedicationStatementResource(entry: HealthHistoryEntry) {
+  function prepareMedicationResource(entry: HealthHistoryEntry) {
     if (entry.name === '' && entry.detail === '') return;
     let medication = JSON.parse(JSON.stringify(medicationTemplate));
     medication.medicationCodeableConcept.text = entry.name;
     medication.dosage[0].text = entry.detail;
-    medication.effectiveDateTime = new Date().toISOString().slice(0, 10);;
+    medication.effectiveDateTime = new Date().toISOString().slice(0, 10);
     return medication;
   }
-  
-  function preparePastConditionResource(entry: HealthHistoryEntry) {
+
+  function prepareHistoryResource(entry: HealthHistoryEntry) {
     if (entry.name === '' && entry.detail === '') return;
     let pastCondition = JSON.parse(JSON.stringify(pastConditionTemplate));
     pastCondition.code.text = entry.name;
@@ -158,9 +249,9 @@
   }
 
   function prepareIps() {
-    const currentConditions = entries.problems.map(prepareCurrentConditionResource).filter((entry) => entry !== undefined);
-    const medications = entries.medications.map(prepareMedicationStatementResource).filter((entry) => entry !== undefined);
-    const pastConditions = entries.history.map(preparePastConditionResource).filter((entry) => entry !== undefined);
+    const currentConditions = values.problems.map(prepareProblemResource).filter((entry) => entry !== undefined);
+    const medications = values.medications.map(prepareMedicationResource).filter((entry) => entry !== undefined);
+    const pastConditions = values.history.map(prepareHistoryResource).filter((entry) => entry !== undefined);
     const resources = [...currentConditions, ...medications, ...pastConditions];
     let result:ResourceRetrieveEvent = {
       resources: resources,
@@ -173,13 +264,13 @@
   }
 
   function addEntry(type: string) {
-    entries[type] = [...entries[type], {name: '', detail: ''}];
+    values[type] = [...values[type], {name: '', detail: ''}];
   }
 
   function removeEntry(type: string, i: number) {
-    entries[type].splice(i, 1);
-    entries[type] = entries[type];
-    if (entries[type].length == 0) {
+    values[type].splice(i, 1);
+    values[type] = values[type];
+    if (values[type].length == 0) {
       addEntry(type);
     }
   }
@@ -188,7 +279,7 @@
 <!-- <p class="text-secondary"><em>This section will show health issues found in your IPS, where they are from, and will let you remove existing health issues or add new issues that are important to you.</em></p> -->
 <form on:submit|preventDefault={() => {}}>
   <h5>Ongoing Health Issues</h5>
-  {#each entries.problems as problem, i}
+  {#each values.problems as problem, i}
     <Row class="mb-1" style="width: 100%">
       <Col>
         <FormGroup style="font-size:small" class="text-secondary" label="Health Issue">
@@ -199,16 +290,14 @@
         <FormGroup style="font-size:small" class="text-secondary" label="Severity">
           <Input type="select" bind:value={problem.detail} style="width: 100%; min-width: 150px">
             {#each Object.keys(issueSeverityOptions) as option}
-              <option style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
-                {option}
-              </option>
+              <option style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">{option}</option>
             {/each}
           </Input>
         </FormGroup>
       </Col>
       <Col xs="auto" class="align-items-end">
         <Button color="danger" outline on:click={() => removeEntry('problems', i)}>
-          {#if entries.problems.length > 1}
+          {#if values.problems.length > 1}
             Remove
           {:else}
             Clear
@@ -223,7 +312,7 @@
     </Col>
   </Row>
   <h5>Medications I'm Taking Currently</h5>
-  {#each entries.medications as medication, i}
+  {#each values.medications as medication, i}
     <Row class="mb-1" style="width: 100%">
       <Col>
         <FormGroup style="font-size:small" class="text-secondary" label="Medication">
@@ -237,7 +326,7 @@
       </Col>
       <Col xs="auto" class="align-items-end">
         <Button color="danger" outline on:click={() => removeEntry('medications', i)}>
-          {#if entries.medications.length > 1}
+          {#if values.medications.length > 1}
             Remove
           {:else}
             Clear
@@ -253,7 +342,7 @@
   </Row>
 
   <h5>Past Events/Illnesses</h5>
-  {#each entries.history as history, i}
+  {#each values.history as history, i}
     <Row class="mb-1" style="width: 100%">
       <Col>
         <FormGroup style="font-size:small" class="text-secondary" label="Event/Illness">
@@ -267,7 +356,7 @@
       </Col>
       <Col xs="auto" class="align-items-end">
         <Button color="danger" outline on:click={() => removeEntry('history', i)}>
-          {#if entries.history.length > 1}
+          {#if values.history.length > 1}
             Remove
           {:else}
             Clear
@@ -289,11 +378,11 @@
         color="primary"
         style="width:fit-content"
         disabled={processing || disabled}
-        on:click={FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, SOURCE.url, prepareIps)}>
+        on:click={FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, SOURCE.url, prepareIps)}>
         {#if !processing}
-          Update your conditions, medications and history
+          Save your conditions, medications and history
         {:else}
-          Adding...
+          Saving...
         {/if}
       </Button>
     </Col>
