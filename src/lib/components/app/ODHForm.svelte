@@ -2,12 +2,12 @@
   import { Accordion, AccordionItem, Button, Col, FormGroup, Icon, Input, Row } from '@sveltestrap/sveltestrap';
   import { createEventDispatcher, onMount } from 'svelte';
   import NIOAutoCoderInput from '$lib/components/form/NIOAutoCoderInput.svelte';
-  import type { IOResponse, ResourceRetrieveEvent } from '$lib/utils/types';
+  import type { IOResponse, IResourceCollection, ResourceRetrieveEvent } from '$lib/utils/types';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
-  import type { IResourceCollection } from '$lib/utils/types';
   import { ResourceHelper } from '$lib/utils/ResourceHelper';
   import type { Observation } from 'fhir/r4';
+  import { copyOf } from '$lib/utils/util';
 
   export let sectionKey: string = 'Occupational Data';
   export let formData: IResourceCollection | undefined;
@@ -199,10 +199,6 @@
     initializeEmploymentStatusFields(resources);
     initializeRetirementDateFields(resources);
     initializeCombatPeriodFields(resources);
-  }
-
-  function copyOf(a: any) {
-    return JSON.parse(JSON.stringify(a));
   }
 
   function initializeDefaultFields() {

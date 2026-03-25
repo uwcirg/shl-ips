@@ -17,6 +17,10 @@ export async function base64toBlob(base64:string, type="application/octet-stream
   return window.URL.createObjectURL(await result.blob());
 }
 
+export function copyOf(a: any) {
+  return JSON.parse(JSON.stringify(a));
+}
+
 const DATE_PRECISION = {
   "time": 4,
   "day": 3,
