@@ -13,11 +13,18 @@
   import type { CodeableConcept, Condition } from 'fhir/r4';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
+  import { ResourceHelper } from '$lib/utils/ResourceHelper';
+  import { copyOf } from '$lib/utils/util';
   
   export let disabled = false;
   export let formData: IResourceCollection | undefined;
   let resources;
   $: resources = formData?.resources;
+  $: if ($resources) {
+    initializeFieldsForFormData();
+  } else {
+    initializeDefaultFields();
+  }
 
   const CATEGORY = CATEGORIES.PATIENT_STORY;
   const METHOD = METHODS.PATIENT_CARE_NEEDS_FORM;
@@ -26,6 +33,7 @@
     name: 'My Care Needs'
   };
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
+  const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
   let processing = false;
   let fetchError = '';
@@ -222,8 +230,6 @@
   };
 
   let additionalInfo = '';
-    
-  const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
   let conditionTemplate: Condition = {
     resourceType: "Condition",
@@ -244,6 +250,41 @@
       coding: []
     }
   };
+
+  function getConditionResources(rhs: ResourceHelper[]) {
+    return rhs?.filter(rh => rh.resource.resourceType === 'Condition').map(r => r.resource);
+  }
+
+  function initializeConditionFields(rhs: ResourceHelper[]) {
+    const conditionResources = getConditionResources(rhs);
+    for (const resource of conditionResources) {
+      if (resource.code?.text && !resource.code?.system && !resource.code?.code) { 
+        additionalInfo = resource.code.text;
+        continue;
+      }
+      let formCondition = Object.values(conditions).find(c => c.code.system === resource.code?.coding?.[0]?.system && c.code.code === resource.code?.coding?.[0]?.code);
+      if (formCondition) {
+        formCondition.checked = true;
+      }
+    }
+  }
+
+  function initializeFieldsForFormData() {
+    if (!$resources) { return initializeDefaultFields(); }
+  
+    const resources = Object.values($resources) as ResourceHelper[];
+    if (!resources?.length) { return initializeDefaultFields(); }
+    
+    initializeConditionFields(resources);
+  }
+  
+  function initializeDefaultFields() {
+    for(const condition of Object.values(conditions)) {
+      condition.checked = false;
+    }
+    additionalInfo = '';
+    conditions = conditions;
+  }
 
   function prepareConditionResource(conditionOption: ConditionOption) {
     let condition = JSON.parse(JSON.stringify(conditionTemplate));
@@ -270,7 +311,7 @@
     resourceDispatch('update-resources', result);
   }
 </script>
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, SOURCE.url, prepareIps)}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, SOURCE.url, prepareIps)}>
   <!-- <p class="text-secondary"><em>Select any identities, functional concerns, or needs you would like your carers to be aware of.</em></p> -->
   <h5>Functional Identities and Concerns</h5>
   <FormGroup>
@@ -304,7 +345,7 @@
   
   <h5>Functional Aids</h5>
   <FormGroup>
-    <Label><b>I have:</b></Label>
+    <Label class="text-secondary">I have:</Label>
     <Input type="checkbox" name="dog" bind:checked={conditions.dog.checked} label="A Guide Dog"/>
     <Input type="checkbox" name="wheelchair" bind:checked={conditions.wheelchair.checked} label="A Wheelchair"/>
     <Input type="checkbox" name="comm-device" bind:checked={conditions.comm_device.checked} label="A Communication Device"/>
@@ -319,9 +360,9 @@
     <Col xs="auto">
       <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
         {#if !processing}
-          Update your care needs
+          Save your care needs
         {:else}
-          Adding...
+          Saving...
         {/if}
       </Button>
     </Col>

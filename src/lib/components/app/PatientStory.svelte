@@ -11,14 +11,21 @@
   } from '@sveltestrap/sveltestrap';
   import { createEventDispatcher } from 'svelte';
   import type { IResourceCollection, ResourceRetrieveEvent } from '$lib/utils/types';
-  import type { Goal, Observation, Resource, CompositionSection } from 'fhir/r4';
+  import type { Goal, Observation, Resource } from 'fhir/r4';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
+  import { ResourceHelper } from '$lib/utils/ResourceHelper';
+  import { copyOf } from '$lib/utils/util';
 
   export let disabled = false;
   export let formData: IResourceCollection | undefined;
   let resources;
   $: resources = formData?.resources;
+  $: if ($resources) {
+    initializeFieldsForFormData();
+  } else {
+    initializeDefaultFields();
+  }
 
   const CATEGORY = CATEGORIES.PATIENT_STORY;
   const METHOD = METHODS.PATIENT_STORY_FORM;
@@ -27,16 +34,22 @@
     name: 'My Story'
   };
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
+  const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
   let processing = false;
   let fetchError = '';
 
-  let story = '';
-  let goals = [
-    {value: '', checked: false}
-  ];
-  
-  const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
+  let defaults = {
+    story: '',
+    goal: {value: '', checked: false, date: ""}
+  }
+
+  let defaultValues = {
+    story: defaults.story,
+    goals: [copyOf(defaults.goal)]
+  }
+
+  let values = copyOf(defaultValues);
 
   let observationResourceTemplate: Observation = {
     resourceType: "Observation",
@@ -88,6 +101,65 @@
     }
   };
 
+  function getStoryResource(rhs: ResourceHelper[]) {
+    return rhs?.filter(rh => rh.resource.resourceType === 'Observation' && rh.resource.code?.coding?.find(c => c.code === '51855-5' && c.system === 'http://loinc.org')).map(r => r.resource).pop();
+  }
+
+  function getGoalResources(rhs: ResourceHelper[]) {
+    return rhs?.filter(rh => rh.resource.resourceType === 'Goal').map(r => r.resource);
+  }
+
+  function initializeStoryFields(rhs: ResourceHelper[]) {
+    const storyResource = getStoryResource(rhs);
+    if (!storyResource) { return; }
+    values.story = storyResource.valueString ?? "";
+  }
+  
+  function initializeGoalFields(rhs: ResourceHelper[]) {
+    const goalResources = getGoalResources(rhs);
+    let goals = [];
+    for (const resource of goalResources) {
+      const goal = {
+        value: resource.description.text ?? defaults.goal.value,
+        checked: resource.achievementStatus?.coding?.[0]?.code === "in-progress",
+        date: resource.statusDate ?? defaults.goal.date
+      };
+      goals.push(goal);
+    }
+    if (goals.length > 0) {
+      values.goals = goals;
+    } else {
+      values.goals = [copyOf(defaults.goal)];
+    }
+  }
+
+  function initializeFieldsForFormData() {
+    if (!$resources) { return; }
+  
+    const resources = Object.values($resources) as ResourceHelper[];
+    if (!resources?.length) { return; }
+    
+    initializeStoryFields(resources);
+    initializeGoalFields(resources);
+  }
+
+  function initializeDefaultFields() {
+    values = copyOf(defaultValues);
+  }
+
+  function addGoal() {
+    values.goals = [...values.goals, copyOf(defaults.goal)];
+  }
+  
+  function removeGoal(i: number) {
+    values.goals.splice(i, 1);
+    values.goals = values.goals;
+    if (values.goals.length == 0) {
+      addGoal();
+    }
+    values = values;
+  }
+
   function prepareGoalResource(goal: any) {
     if (!goal.value) {
       return;
@@ -100,17 +172,17 @@
   }
 
   function prepareObservationResource() {
-    if (!story) {
+    if (!values.story) {
       return;
     }
     let observationResource = JSON.parse(JSON.stringify(observationResourceTemplate));
-    observationResource.valueString = story;
+    observationResource.valueString = values.story;
     return observationResource;
   }
 
   function prepareIps() {
     let resources: Resource[] = [];
-    let goalResources = goals.map(prepareGoalResource).filter((entry) => entry);
+    let goalResources = values.goals.map(prepareGoalResource).filter((entry) => entry);
     if (goalResources.length > 0) {
       resources = [...resources, ...goalResources];
     }
@@ -133,18 +205,6 @@
     resourceDispatch('update-resources', result);
     console.log(resources);
   }
-
-  function addGoal() {
-    goals = [...goals, {value: '', checked: false}];
-  }
-
-  function removeGoal(i: number) {
-    goals.splice(i, 1);
-    goals = goals;
-    if (goals.length == 0) {
-      addGoal();
-    }
-  }
 </script>
 
 <form on:submit|preventDefault={() => {}}>
@@ -153,13 +213,13 @@
   <Row>
     <Col>
       <FormGroup style="font-size:small" class="text-secondary">
-        <Input type="textarea" bind:value={story} rows={4} />
+        <Input type="textarea" bind:value={values.story} rows={4} />
       </FormGroup>
     </Col>
   </Row>
   <h5>My Goals</h5>
   <Label class="text-secondary">What specific outcomes are important to you from your care?</Label>
-  {#each goals as goal, i}
+  {#each values.goals as goal, i}
     <Row class="mb-1">
       <Col>
         <FormGroup style="font-size:small" class="text-secondary" label="Goal">
@@ -171,7 +231,7 @@
       </Col>
       <Col xs="auto">
         <Button color="danger" outline on:click={() => removeGoal(i)}>
-          {#if goals.length > 1}
+          {#if values.goals.length > 1}
             Remove
           {:else}
             Clear
@@ -194,9 +254,9 @@
         disabled={processing || disabled}
         on:click={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, SOURCE.url, prepareIps)}>
         {#if !processing}
-          Update your patient story and goals
+          Save your patient story and goals
         {:else}
-          Adding...
+          Saving...
         {/if}
       </Button>
     </Col>
