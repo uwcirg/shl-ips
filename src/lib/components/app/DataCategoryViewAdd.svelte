@@ -289,7 +289,7 @@
               formData={$formData[formConfig.method]}
               on:update-resources
               on:sof-auth-init
-              on:sof-auth-fail 
+              on:sof-auth-fail
             />
           {/if}
         </TabPane>
@@ -323,7 +323,7 @@
       class="my-data-accordion"
       active
     >
-      <h5 slot="header">Data Previously Downloaded</h5>
+      <h5 slot="header">Imported Health Data</h5>
       {#if $userResources[category]}
         <Row class="g-4 d-flex justify-content-start">
           {#each datasets as dataset}

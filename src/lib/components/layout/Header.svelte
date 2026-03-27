@@ -186,7 +186,10 @@
         {#if $authenticated}
           {#if $user}
             <NavItem>
-              <NavLink class="header-link" style="text-wrap-mode: nowrap" href="/data" active={ activeItem === "data" }>My Data</NavLink>
+              <NavLink class="header-link" style="text-wrap-mode: nowrap" href="/data" active={ activeItem === "data" }>Add Data</NavLink>
+            </NavItem>
+            <NavItem>
+              <NavLink class="header-link" style="text-wrap-mode: nowrap" href="/data/manage" active={ activeItem === "manage" }>My Data</NavLink>
             </NavItem>
             {#if INSTANCE_CONFIG.pages.summaries}
               <NavItem>
