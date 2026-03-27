@@ -19,7 +19,7 @@
     SOFAuthEvent
   } from '$lib/utils/types';
   import FHIRDataService from '$lib/utils/FHIRDataService';
-  import DataCategoryView from '$lib/components/app/DataCategoryViewAdd.svelte';
+  import DataCategoryView from '$lib/components/app/DataCategoryViewManage.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
@@ -158,30 +158,32 @@
 
 <Accordion>
   {#each sections as section, index}
-    <AccordionItem class="{section.id} section-accordion" active={section.id === activeSection}>
-      <div slot="header" class="d-flex justify-content-start align-items-center">
-        <div class="me-3">
-          {#if section.category === undefined || ($loading ? undefined : Boolean($userResources?.[section.category])) === true}
-            <Icon name="check-circle-fill" class="text-success"/>
-          {:else if ($loading ? undefined : Boolean($userResources?.[section.category])) === false}
-            <Icon name="circle" class="text-secondary"/>
-          {:else if ($loading ? undefined : Boolean($userResources?.[section.category])) === undefined}
-            <Spinner color="secondary" size="sm"/>
-          {/if}
-        </div>
-        <h5 class="my-2">{section.title}</h5>
+    <div class="d-flex justify-content-start align-items-center">
+      <h5 class="my-2">{section.title}</h5>
+      <div class="me-3">
+        {#if section.category === undefined || ($loading ? undefined : Boolean($userResources?.[section.category])) === true}
+          <!-- <Icon name="check-circle-fill" class="text-success"/> -->
+        {:else if ($loading ? undefined : Boolean($userResources?.[section.category])) === false}
+          <!-- <Icon name="circle" class="text-secondary"/> -->
+        {:else if ($loading ? undefined : Boolean($userResources?.[section.category])) === undefined}
+          <Spinner color="secondary" size="sm"/>
+        {/if}
       </div>
-      <DataCategoryView
-        description={section.description}
-        category = {section.category}
-        forms={section.forms}
-        showAdd={section.id === activeSection}
-        on:loading-status-change={ ( { detail }) => { detail.index = index; updateStatus(detail) } }
-        on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
-        on:sof-auth-fail={ async ({ detail }) => { revertPreAuth(detail) }}
-        on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
-      />
-    </AccordionItem>
+    </div>
+    <div class="mb-4">
+    <DataCategoryView
+      id={section.id}
+      title={section.title}
+      description={section.description}
+      category = {section.category}
+      forms={section.forms}
+      showAdd={section.id === activeSection}
+      on:loading-status-change={ ( { detail }) => { detail.index = index; updateStatus(detail) } }
+      on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
+      on:sof-auth-fail={ async ({ detail }) => { revertPreAuth(detail) }}
+      on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
+    />
+    </div>
   {/each}
 </Accordion>
 

@@ -4,7 +4,7 @@
     Row
   } from '@sveltestrap/sveltestrap';
   import { getContext, onMount } from 'svelte';
-  import AddDataset from '$lib/components/app/AddDataset.svelte';
+  import ManageData from '$lib/components/app/ManageData.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
@@ -20,8 +20,8 @@
   <title>My Data - {INSTANCE_CONFIG.title}</title> 
 </svelte:head>
 
-<h4>Add Health Data</h4>
+<h4>Manage Health Data</h4>
 <p>
-  Select a category below to import and update your health data.
+  View and manage your imported health data.
 </p>
-<AddDataset />
+<ManageData />
