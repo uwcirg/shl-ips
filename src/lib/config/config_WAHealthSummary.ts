@@ -136,6 +136,14 @@ export default {
           ]
         },
         {
+          id: "about-me",
+          title: AboutMeTitle,
+          description: "Add or update information about yourself. Some fields may already be filled with information from your account login.<br>The information here can be added to your Shareable Health Summary, but this form will not change information that you download from healthcare providers or other sources.",
+          forms: [
+            { method: "patient", component: Demographic, editable: true }
+          ]
+        },
+        {
           id: "occupation",
           title: "Health-Related Work Info",
           description: "Manage information about the work you do to include in your Health Summary.",
@@ -146,14 +154,6 @@ export default {
               component: ODHForm,
               editable: true
             }
-          ]
-        },
-        {
-          id: "about-me",
-          title: AboutMeTitle,
-          description: "Add or update information about yourself. Some fields may already be filled with information from your account login.<br>The information here can be added to your Shareable Health Summary, but this form will not change information that you download from healthcare providers or other sources.",
-          forms: [
-            { method: "patient", component: Demographic, editable: true }
           ]
         }
       ]

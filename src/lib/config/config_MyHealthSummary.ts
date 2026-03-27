@@ -31,18 +31,6 @@ export default {
     data: {
       sections: [
         {
-          id: "about-me",
-          title: AboutMeTitle,
-          description: "Add or update information about yourself. Some fields may already be filled with information from your account login.<br>The information here can be added to your Shareable Health Summary, but this form will not change information that you download from healthcare providers or other sources.",
-          forms: [
-            {
-              method: "patient",
-              component: Demographic,
-              editable: true
-            }
-          ]
-        },
-        {
           id: "healthcare-providers",
           title: "Data from Healthcare Providers",
           description: "",
@@ -102,6 +90,18 @@ export default {
               method: METHODS.ADVANCE_DIRECTIVES_CREATE_POLST,
               tabTitle: "Create POLST",
               component: CreatePOLST
+            }
+          ]
+        },
+        {
+          id: "about-me",
+          title: AboutMeTitle,
+          description: "Add or update information about yourself. Some fields may already be filled with information from your account login.<br>The information here can be added to your Shareable Health Summary, but this form will not change information that you download from healthcare providers or other sources.",
+          forms: [
+            {
+              method: "patient",
+              component: Demographic,
+              editable: true
             }
           ]
         },
