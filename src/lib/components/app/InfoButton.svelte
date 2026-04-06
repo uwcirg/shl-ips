@@ -31,7 +31,9 @@
 
 </script>
 
-<button id="info-circle-{hash}" class="info-circle p-0" style="cursor: pointer; max-height: min-content; max-width: min-content; color: var(--bs-primary);"
+<button
+  id="info-circle-{hash}"
+  class="info-circle p-0"
   on:mouseover={(event) => {
     cancelIfHover(event);
   }}
@@ -48,7 +50,7 @@
   on:click={(event) => {
     event.stopPropagation();
   }}
-><Icon name="info-circle" style="text-color: info" /></button>
+><Icon name="info-circle"/></button>
 <Tooltip placement="right" bind:isOpen={active} target="info-circle-{hash}" container="inline" class="mx-2">
   <div class="{hover ? "" : "me-3"}" style="user-select: none">
     {#if !hover}
@@ -62,8 +64,21 @@
   button.info-circle {
     border: none;
     background-color: transparent;
+    width: min-content;
+    height: min-content;
+    cursor: pointer;
+    max-height: min-content;
+    max-width: min-content;
+    color: var(--bs-primary);
+    font-size: large;
   }
   button.info-circle:hover {
-    -webkit-text-stroke: 0.3px ;
+    -webkit-text-stroke: 0.5px ;
   }
+  /* :global(.tooltip-arrow) {
+  }
+  :global(.tooltip-inner) {
+    background-color: white !important;
+    border: 1px solid var(--bs-primary) !important;
+  } */
 </style>
