@@ -173,6 +173,7 @@
       </div>
       <DataCategoryView
         description={section.description}
+        info={section.info}
         category = {section.category}
         forms={section.forms}
         showAdd={section.id === activeSection}

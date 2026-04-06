@@ -113,6 +113,9 @@ async function getResources() {
             return resourcesToPass;
         });
     } else {
+        if (client.state.serverUrl === "https://api-dmdh-alpha.safhir.io/v1/api/carin-bb") {
+            client.state.serverUrl = "https://api-dmdh-alpha.safhir.io/v1/api";
+        }
         resources = (await Promise.allSettled(SOF_PATIENT_RESOURCES.map((resourceType) => {
             return requestResources(client, resourceType);
         }))).filter(x => x.status == "fulfilled").map(x => x.value);
