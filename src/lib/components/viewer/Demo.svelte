@@ -75,17 +75,12 @@
     let sample = await fetch('/samples/sample.json').then(function(response) {
         if (!response.ok) {
           // make the promise be rejected if we didn't get a 2xx response
-          throw new Error("Unable to fetch IPS", {cause: response});
+          throw new Error("Unable to load IPS sample", {cause: response});
         } else {
           return response;
         }
       }).then(function(response) {
-        if (!response.ok) {
-          // make the promise be rejected if we didn't get a 2xx response
-          throw new Error("Unable to fetch IPS", {cause: response});
-        } else {
-          return response.text();
-        }
+        return response.text();
       }).then((text) => {
         return JSON.stringify(JSON.parse(text), null, 2);
       }).catch(function (e) {

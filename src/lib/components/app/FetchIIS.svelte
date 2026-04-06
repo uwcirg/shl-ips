@@ -66,7 +66,7 @@
     }).then(function (response: any) {
       if (!response.ok) {
         // make the promise be rejected if we didn't get a 2xx response
-        throw new Error('Unable to fetch IIS immunization data', { cause: response });
+        throw new Error('Unable to import IIS immunization data', { cause: response });
       } else {
         return response;
       }
@@ -117,7 +117,7 @@
 
 <form on:submit|preventDefault={() => prepareIps()}>
   <FormGroup>
-    <Label>Enter your information to fetch immunizations from WA IIS</Label>
+    <Label>Enter your information to import immunizations from WA IIS</Label>
     <p class="text-secondary"><em>{INSTANCE_CONFIG.title} does not save this information</em></p>
     <Row cols={{ md: 2, sm: 1 }}>
       <Col>
