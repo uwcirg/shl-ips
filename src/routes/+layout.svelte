@@ -95,10 +95,11 @@
   :global(div.container-fluid.main) {
     /* Handle scroll gutter */
     position: relative;
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     scrollbar-gutter: stable;
+    /* background: linear-gradient(120deg, #4ca2cd, #67b26f); */
   }
   .main-content {
     max-width: 1200px;
