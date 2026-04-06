@@ -64,14 +64,21 @@
       updateFormDataIfApplicable(form.method);
     });
   }
+
+  function formForMethod(method: string) {
+    return forms.find(form => form.method === method);
+  }
+
+  function formIsEditable(method: string) {
+    return formForMethod(method)?.editable;
+  }
   
   function updateFormDataIfApplicable(method: string) {
-    let formForMethod = forms.find(form => form.method === method);
-    if (!formForMethod || !formForMethod.editable) {
+    if (!formIsEditable(method)) {
       return;
     }
     let collectionsForMethod = fhirDataService.getAllResourceCollections().filter(collection => collection.getTags().method === method);
-    setFormData(method, collectionsForMethod.length === 1 ? collectionsForMethod[0] : null);
+    setFormData(method, collectionsForMethod.length === 1 ? collectionsForMethod[0] : undefined);
   }
 
   $: {
@@ -80,8 +87,12 @@
     }
   }
 
-  function setFormData(method: string, data: ResourceCollection | null) {
-    $formData[method] = data;
+  function setFormData(method: string, data: ResourceCollection | undefined) {
+    if (data) {
+      $formData[method] = data;
+    } else {
+      delete $formData[method];
+    }
     $formData = $formData;
   }
 
@@ -333,7 +344,11 @@
               <DatasetView {dataset} {masterPatient}>
                 <DropdownMenu slot="menu">
                   <DropdownItem on:click={() => showDataset(collection)}><div class="d-flex justify-content-between w-100">View <Icon name="chevron-right"/></div></DropdownItem>
-                  <DropdownItem class="text-primary"on:click={() => updateDataset(collection)}><Icon name="arrow-repeat"/> Update</DropdownItem>
+                  {#if formIsEditable(method)}
+                    <DropdownItem class="text-primary"on:click={() => updateDataset(collection)}><Icon name="pencil"/> Edit</DropdownItem>
+                  {:else}
+                    <DropdownItem class="text-primary"on:click={() => updateDataset(collection)}><Icon name="arrow-repeat"/> Update</DropdownItem>
+                  {/if}
                   <DropdownItem divider />
                   <DropdownItem class="text-danger" on:click={() => deleteDataset(category, method, source)}><Icon name="trash"/> Delete</DropdownItem>
                 </DropdownMenu>

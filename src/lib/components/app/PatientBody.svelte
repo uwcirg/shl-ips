@@ -14,11 +14,18 @@
   import type { CodeableConcept, Condition } from 'fhir/r4';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
+  import { ResourceHelper } from '$lib/utils/ResourceHelper';
+  import { copyOf } from '$lib/utils/util';
 
   export let disabled = false;
   export let formData: IResourceCollection | undefined;
   let resources;
   $: resources = formData?.resources;
+  $: if ($resources) {
+    initializeFieldsForFormData();
+  } else {
+    initializeDefaultFields();
+  }
 
   const CATEGORY = CATEGORIES.PATIENT_STORY;
   const METHOD = METHODS.PATIENT_BODY_CONCERNS_FORM;
@@ -27,6 +34,7 @@
     name: 'My Body'
   };
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
+  const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
   let processing = false;
   let fetchError = '';
@@ -34,13 +42,19 @@
   interface BodyConcernEntry {
     bodyPart: string;
     side: string;
-    concern: string
+    concern: string;
+    date: string;
   }
-  let bodyPartConcerns: Array<BodyConcernEntry> = [
-    {bodyPart: '', side: '', concern: ''}
-  ];
 
-  const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
+  let defaults = {
+    bodyPartConcern: {bodyPart: '', side: '', concern: '', date: ''}
+  }
+
+  let defaultValues: Record<string, BodyConcernEntry[]> = {
+    bodyPartConcerns: [copyOf(defaults.bodyPartConcern)]
+  };
+
+  let values = copyOf(defaultValues);
 
   let bodyPartOptions: Record<string, Record<string, CodeableConcept>> = {
     "": {},
@@ -403,30 +417,47 @@
     }
   };
 
-  $: if ($resources) {
-    initializeFieldsForFormData();
+  function getConditionResources(rhs: ResourceHelper[]) {
+    return rhs?.filter(rh => rh.resource.resourceType === 'Condition').map(r => r.resource);
   }
   
-  function initializeFieldsForFormData() {
-    if (!$resources) { return; }
-  
-    const resources = Object.values($resources);
-    if (resources?.length) {
-      let conditionResources = resources?.filter(r => r.resource.resourceType === "Condition").map(r => r.resource);
-      if (conditionResources) {
-        let bodyPartEntries = Object.entries(bodyPartOptions);
-        for (const [bodyPart, sides] of bodyPartEntries) {
-          let availableCodings = Object.entries(sides);
-          for (const [side, coding] of availableCodings) {
-            for (const condition of conditionResources) {
-              if (condition.bodySite.coding[0].code === coding.code) {
-                bodyPartConcerns.push({bodyPart, side, concern: condition.code?.text ?? ''});
-              }
-            }
+  function initializeConditionFields(rhs: ResourceHelper[]) {
+    const conditionResources = getConditionResources(rhs);
+    let conditions = [];
+    let bodyPartEntries = Object.entries(bodyPartOptions);
+    for (const [bodyPart, sides] of bodyPartEntries) {
+      let availableCodings = Object.entries(sides);
+      for (const [side, coding] of availableCodings) {
+        for (const condition of conditionResources) {
+          if (condition.bodySite?.[0]?.coding?.[0]?.code === coding.code) {
+            conditions.push({
+              bodyPart: bodyPart ?? defaults.bodyPartConcern.bodyPart,
+              side: side ?? defaults.bodyPartConcern.side,
+              concern: condition.code?.text ?? defaults.bodyPartConcern.concern,
+              date: condition.recordedDate ?? defaults.bodyPartConcern.date
+            });
           }
         }
       }
     }
+    if (conditions.length > 0) {
+      values.bodyPartConcerns = conditions;
+    } else {
+      values.bodyPartConcerns = [copyOf(defaults.bodyPartConcern)];
+    }
+  }
+
+  function initializeFieldsForFormData() {
+    if (!$resources) { return initializeDefaultFields(); }
+  
+    const resources = Object.values($resources) as ResourceHelper[];
+    if (!resources?.length) { return initializeDefaultFields(); }
+    
+    initializeConditionFields(resources);
+  }
+
+  function initializeDefaultFields() {
+    values = copyOf(defaultValues);
   }
 
   function prepareConditionResource(entry: BodyConcernEntry) {
@@ -439,7 +470,7 @@
   }
 
   function prepareIps() {
-    const resources = bodyPartConcerns.map(prepareConditionResource).filter((entry) => entry !== undefined);
+    const resources = values.bodyPartConcerns.map(prepareConditionResource).filter((entry) => entry !== undefined);
     const result = {
       resources: resources,
       category: CATEGORY,
@@ -451,13 +482,13 @@
   }
 
   function addStatus() {
-    bodyPartConcerns = [...bodyPartConcerns, {bodyPart: '', side: '', concern: ''}];
+    values.bodyPartConcerns = [...values.bodyPartConcerns, {bodyPart: '', side: '', concern: ''}];
   }
 
   function removeBodyPart(i: number) {
-    bodyPartConcerns.splice(i, 1);
-    bodyPartConcerns = bodyPartConcerns;
-    if (bodyPartConcerns.length == 0) {
+    values.bodyPartConcerns.splice(i, 1);
+    values.bodyPartConcerns = values.bodyPartConcerns;
+    if (values.bodyPartConcerns.length == 0) {
       addStatus();
     }
   }
@@ -465,7 +496,7 @@
 
 <form on:submit|preventDefault={() => {}}>
   <h5>Body Concerns</h5>
-  {#each bodyPartConcerns as status, i}
+  {#each values.bodyPartConcerns as status, i}
     <Row>
       <Col xs="auto">
         <FormGroup style="font-size:small" class="text-secondary" label="Body Part">
@@ -504,7 +535,7 @@
       </Col>
       <Col xs="auto">
         <Button color="danger" outline on:click={() => removeBodyPart(i)}>
-          {#if bodyPartConcerns.length > 1}
+          {#if values.bodyPartConcerns.length > 1}
             Remove
           {:else}
             Clear
@@ -524,11 +555,11 @@
         color="primary"
         style="width:fit-content"
         disabled={processing || disabled}
-        on:click={FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, SOURCE.url, prepareIps)}>
+        on:click={FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, SOURCE.url, prepareIps)}>
         {#if !processing}
-          Update your body concerns
+          Save your body concerns
         {:else}
-          Adding...
+          Saving...
         {/if}
       </Button>
     </Col>
