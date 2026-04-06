@@ -10,6 +10,7 @@ export async function uploadResources(resources, token=undefined) {
                 method: "POST",
                 url: `${resource.resourceType}${resource.resourceType === "Patient" ? "/" + resource.id : ""}`
             },
+            fullUrl: `urn:uuid:${resource.id}`,
             resource: resource
         };
         entries.push(entry);
