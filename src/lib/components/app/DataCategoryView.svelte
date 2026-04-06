@@ -20,11 +20,13 @@
   import DatasetView from '$lib/components/app/DatasetView.svelte';
   import FHIRDataService from '$lib/utils/FHIRDataService';
   import FHIRResourceList from '$lib/components/app/FHIRResourceList.svelte';
+  import InfoButton from '$lib/components/app/InfoButton.svelte';
   import type { DataFormConfig } from '$lib/utils/types';
   import type { ResourceCollection } from '$lib/utils/ResourceCollection';
 
   // Top-level description
   export let description: string | undefined;
+  export let info: string | undefined;
   
   export let category: string;
   
@@ -272,10 +274,22 @@
   </Row>
 </Offcanvas>
 
-{#if description}
-  <p class="text-secondary"><em>{@html description}</em></p>
-{/if}
-<slot name="description"/>
+<Row>
+  <Col class="d-flex justify-content-start" style="max-width: fit-content">
+    {#if description}
+      <p class="text-secondary"><em>{@html description}</em></p>
+    {/if}
+      <slot name="description"/>
+  </Col>
+  <Col class="d-flex justify-content-start px-0" style="max-width: min-content; max-height: min-content">
+    {#if info}
+      <InfoButton>
+        <div slot="content">{@html info}</div>
+      </InfoButton>
+    {/if}
+  </Col>
+</Row>
+
 <Accordion stayOpen class="mb-2">
   <AccordionItem
     class="my-data-accordion {accordionClass}"

@@ -95,8 +95,9 @@ export default {
         },
         {
           id: "about-me",
-          title: AboutMeTitle,
-          description: "Add or update information about yourself. Some fields may already be filled with information from your account login.<br>The information here can be added to your Shareable Health Summary, but this form will not change information that you download from healthcare providers or other sources.",
+          title: "About Me",
+          description: "Add or update information about yourself.",
+          info: "Some fields may already be filled with information from your account login. The information here can be added to your Shareable Health Summary, but this form will not change information that you download from healthcare providers or other sources.",
           forms: [
             {
               method: "patient",
