@@ -295,13 +295,23 @@ if (env('VITE_INFERNO_CLIENT_ID')) {
 if (env('VITE_ONYX_CLIENT_ID')) {
   CARIN_HOSTS.push({
     id: "onyx",
-    name: "ONYX",
-    url: "https://api-dmdh-alpha.safhir.io/v1/api/carin-bb/",
+    name: "Onyx OS Test System",
+    url: "https://api-dmdh-alpha.safhir.io/v1/api/carin-bb",
     clientId: env('VITE_ONYX_CLIENT_ID'),
-    scope: 'openid fhirUser launch/patient patient/Coverage.read patient/ExplanationOfBenefit.read fhirUser launch/patient patient/Condition.read patient/Device.read patient/DiagnosticReport.read patient/DocumentReference.read patient/Encounter.read patient/Goal.read patient/Immunization.read patient/Location.read patient/Medication.read patient/MedicationRequest.read patient/Observation.read patient/Organization.read patient/Practitioner.read patient/PractitionerRole.read patient/Procedure.read patient/Provenance.read patient/AllergyIntolerance.read patient/CareTeam.read patient/MedicationDispense.read patient/QuestionnaireResponse.read patient/RelatedPerson.read patient/ServiceRequest.read openid offline_access patient/Patient.read patient/CarePlan.read patient/HealthcareService.read patient/Media.read patient/Questionnaire.read patient/Specimen.read patient/InsurancePlan.read',
-    note: "test30081@dmd.com / Track@04"
+    scope: "user/Observation.read patient/Immunization.read patient/Patient.read user/MedicationRequest.read user/Medication.read patient/DocumentReference.read user/MedicationKnowledge.read user/Goal.read patient/Provenance.read patient/AllergyIntolerance.read user/Procedure.read patient/Encounter.read user/DiagnosticReport.read user/AllergyIntolerance.read patient/MedicationKnowledge.read patient/Organization.read patient/Goal.read patient/Device.read patient/PractitionerRole.read user/CarePlan.read patient/CareTeam.read patient/MedicationDispense.read patient/MedicationRequest.read user/Condition.read patient/Medication.read user/Encounter.read user/DocumentReference.read patient/CarePlan.read user/CareTeam.read user/Immunization.read user/Provenance.read user/List.read user/ExplanationOfBenefit.read patient/DiagnosticReport.read user/Patient.read patient/Observation.read user/Organization.read patient/Condition.read user/Practitioner.read patient/Coverage.read launch/patient patient/List.read patient/Procedure.read patient/Practitioner.read patient/ExplanationOfBenefit.read user/MedicationDispense.read user/Coverage.read user/Device.read user/PractitionerRole.read patient/Location.read user/Location.read fhirUser openid offline offline_access",
+    note: "",
   });
 }
+// if (env('VITE_ONYX_CLIENT_ID')) {
+//   CARIN_HOSTS.push({
+//     id: "onyx",
+//     name: "ONYX",
+//     url: "https://api-dmdh-alpha.safhir.io/v1/api/carin-bb/",
+//     clientId: env('VITE_ONYX_CLIENT_ID'),
+//     scope: 'openid fhirUser launch/patient patient/Coverage.read patient/ExplanationOfBenefit.read fhirUser launch/patient patient/Condition.read patient/Device.read patient/DiagnosticReport.read patient/DocumentReference.read patient/Encounter.read patient/Goal.read patient/Immunization.read patient/Location.read patient/Medication.read patient/MedicationRequest.read patient/Observation.read patient/Organization.read patient/Practitioner.read patient/PractitionerRole.read patient/Procedure.read patient/Provenance.read patient/AllergyIntolerance.read patient/CareTeam.read patient/MedicationDispense.read patient/QuestionnaireResponse.read patient/RelatedPerson.read patient/ServiceRequest.read openid offline_access patient/Patient.read patient/CarePlan.read patient/HealthcareService.read patient/Media.read patient/Questionnaire.read patient/Specimen.read patient/InsurancePlan.read',
+//     note: "test30081@dmd.com / Track@04"
+//   });
+// }
 if (env('VITE_DELOITTE_CLIENT_ID')) {
   CARIN_HOSTS.push({
     id: "deloitte",
