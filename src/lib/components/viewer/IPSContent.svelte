@@ -66,7 +66,7 @@
     "Practitioner": Practitioner,
     "Procedure": Procedure,
     "Occupational Data": OccupationalData,
-    "Advance Directives": AdvanceDirective,
+    "Care Planning Documents": AdvanceDirective,
     "QuestionnaireResponse": QuestionnaireResponse
   };
 

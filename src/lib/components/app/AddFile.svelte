@@ -368,8 +368,8 @@
       />
     </AccordionItem>
     <AccordionItem class="ad-data">
-      <h5 slot="header" class="my-2">4. Add advance directives</h5>
-      <Label>Advance directives help providers know more about your medical preferences</Label>
+      <h5 slot="header" class="my-2">4. Add care planning documents</h5>
+      <Label>Care planning documents help providers know more about your medical preferences</Label>
       <FetchAD
         on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
       />

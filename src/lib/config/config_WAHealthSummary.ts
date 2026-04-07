@@ -120,7 +120,7 @@ export default {
         {
           id: "advance-directives",
           title: "Add Care Planning Documents",
-          description: "Create or retrieve your Advance Directive documents from a repository.",
+          description: "Create or retrieve your care planning documents from a repository.",
           category: CATEGORIES.ADVANCE_DIRECTIVES,
           forms: [
             {
