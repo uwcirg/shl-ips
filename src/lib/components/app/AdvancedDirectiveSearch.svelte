@@ -47,8 +47,8 @@
     country: ''
   });
 
-  export let description: string = "Search a repository for your advanced directives";
-  //Search the WA state POLST repository for your existing advance directives.
+  export let description: string = "Search a repository for your care planning documents";
+  //Search the WA state POLST repository for your existing care planning documents.
 
   /**
    * Indicates whether an editable form or only read-only info should be displayed
@@ -178,8 +178,8 @@
       }).then(function (response: any) {
         if (!response.ok) {
           // make the promise be rejected if we didn't get a 2xx response
-          // throw new Error('Unable to fetch advance directive data', { cause: response });
-          console.warn(`No advance directives found at ${url} for patient ${patient.id}`);
+          // throw new Error('Unable to fetch care planning documents', { cause: response });
+          console.warn(`No documents found at ${url} for patient ${patient.id}`);
         } else {
           return response.json();
         }
@@ -246,8 +246,8 @@
         }) : [];
       }
       if (resources.length === 0) {
-        console.warn("No advance directives found for patient "+patient.id);
-        message = "No advance directives found.";
+        console.warn("No care planning documents found for patient "+patient.id);
+        message = "No care planning documents found.";
         processing = false;
         return;
       }

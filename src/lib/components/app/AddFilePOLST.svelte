@@ -103,7 +103,7 @@
         handleAddDataAccordionOverflow('add-demographics');
         document.getElementsByClassName('add-demographics')?.[0]?.scrollIntoView({ behavior: 'smooth' });
       }
-      hasAdvanceDirective = Object.keys($resourcesByTypeStore['Advance Directives'] ?? {}).length > 0;
+      hasAdvanceDirective = Object.keys($resourcesByTypeStore['Care Planning Documents'] ?? {}).length > 0;
     }
   }
 
@@ -376,9 +376,10 @@
               <Card class="mb-4">
                 <CardBody>
                   <AdvancedDirectiveSearch
-                    description="Search the AD Vault repository for a demo patient's advance directive documents."
+                    description="Search the AD Vault repository for a demo patient's care planning documents."
                     sources = {{
                       "AD Vault Sandbox": {
+                        name: "AD Vault Sandbox",
                         url: "https://qa-rr-fhir.maxmddirect.com",
                         patients: [
                           {
@@ -416,9 +417,10 @@
               <Card class="mb-4">
                 <CardBody>
                   <AdvancedDirectiveSearch
-                    description="Search the WA State POLST repository for a demo patient's advance directive documents."
+                    description="Search the WA State POLST repository for a demo patient's care planning documents."
                     sources = {{
                       "WA POLST Repository Sample": {
+                        name: "WA POLST Repository Sample",
                         url: "https://fhir.ips-demo.dev.cirg.uw.edu/fhir",
                         patients: [{
                           last: "Wilson",

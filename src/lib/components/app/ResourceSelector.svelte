@@ -71,7 +71,7 @@
     'Procedure': Procedure,
     'Patient Story': Goal,
     'Occupational Data': Observation,
-    'Advance Directives': AdvanceDirective,
+    'Care Planning Documents': AdvanceDirective,
     'QuestionnaireResponse': QuestionnaireResponse
   };
 

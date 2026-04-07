@@ -28,7 +28,7 @@ export const DATA_CATEGORY_NAMES = {
     name: "Patient Story"
   },
   [CATEGORIES.ADVANCE_DIRECTIVES]: {
-    name: "Advance Directives",
+    name: "Care Planning Documents",
   },
   [CATEGORIES.PROVIDER_HEALTH_RECORD]: {
     name: "Provider Health Records",

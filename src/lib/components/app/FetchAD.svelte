@@ -181,8 +181,8 @@
       }).then(function (response: any) {
         if (!response.ok) {
           // make the promise be rejected if we didn't get a 2xx response
-          // throw new Error('Unable to fetch advance directive data', { cause: response });
-          console.warn(`No advance directives found at ${url} for patient ${patient.id}`);
+          // throw new Error('Unable to fetch care planning documents', { cause: response });
+          console.warn(`No care planning documents found at ${url} for patient ${patient.id}`);
         } else {
           return response.json();
         }
@@ -242,7 +242,7 @@
         return e.resource;
       }) : [];
       if (resources.length === 0) {
-        console.warn("No advance directives found for patient "+patient.id);
+        console.warn("No care planning documents found for patient "+patient.id);
         processing = false;
         return;
       }
@@ -396,8 +396,6 @@
       processing = false;
       let result:ResourceRetrieveEvent = {
         resources: resources,
-        sectionKey: sectionKey,
-        sectionTemplate: sectionTemplate,
         category: CATEGORY,
         method: METHOD,
         source: sources[selectedSource].url,
@@ -445,7 +443,7 @@
   </FormGroup>
   {#if selectedSource}
     <FormGroup>
-      <Label>Enter your information to fetch related advance directives</Label>
+      <Label>Enter your information to fetch related care planning documents</Label>
       <br>
       <DemographicForm demographics={formDemographics} show={ ["first", "last", "gender", "dob"]}/>
     </FormGroup>
@@ -454,7 +452,7 @@
       <Col xs="auto">
         <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
           {#if !processing}
-            Update advance directives
+            Update care planning documents
           {:else}
             Adding...
           {/if}

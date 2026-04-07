@@ -94,7 +94,7 @@
     <AccordionItem>
       <h5 slot="header">What is the International Patient Summary?</h5>
       <p class="info-paragraph">
-        The International Patient Summary (IPS) is a standardized set of basic clinical data that includes important clinical history, medications, immunizations, advance directives, and other data vital for health care. This data may be helpful to those traveling, to parents or caregivers, and to anyone who wants to be able to see their own records, or to securely share their data with healthcare providers or others of their choosing. {INSTANCE_CONFIG.title} uses the secure, patient-controlled SMART Health Link (SHL) standard to allow people to share information collected and stored on their behalf by the Washington State Department of Health.
+        The International Patient Summary (IPS) is a standardized set of basic clinical data that includes important clinical history, medications, immunizations, care planning documents, and other data vital for health care. This data may be helpful to those traveling, to parents or caregivers, and to anyone who wants to be able to see their own records, or to securely share their data with healthcare providers or others of their choosing. {INSTANCE_CONFIG.title} uses the secure, patient-controlled SMART Health Link (SHL) standard to allow people to share information collected and stored on their behalf by the Washington State Department of Health.
       </p>
     </AccordionItem>
   </Accordion>
