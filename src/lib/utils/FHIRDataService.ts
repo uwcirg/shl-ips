@@ -262,7 +262,9 @@ export class FHIRDataService {
       }],
       first: (userAuthProfile.given_name || userAuthProfile.firstName),
       last: (userAuthProfile.family_name || userAuthProfile.lastName),
-      email: userAuthProfile.email
+      email: userAuthProfile.email,
+      gender: userAuthProfile.gender?.toLowerCase(),
+      dob: userAuthProfile.birthday
     });
     return patient;
   }
