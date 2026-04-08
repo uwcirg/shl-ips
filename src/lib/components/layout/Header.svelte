@@ -186,14 +186,14 @@
         {#if $authenticated}
           {#if $user}
             <NavItem>
-              <NavLink class="header-link" style="text-wrap-mode: nowrap" href="/data" active={ activeItem === "data" }>Add Data</NavLink>
+              <NavLink class="header-link" style="text-wrap-mode: nowrap" href="/data" active={ activeItem === "data" }>Add/Import</NavLink>
             </NavItem>
             <NavItem>
-              <NavLink class="header-link" style="text-wrap-mode: nowrap" href="/data/manage" active={ activeItem === "manage" }>My Data</NavLink>
+              <NavLink class="header-link" style="text-wrap-mode: nowrap" href="/data/manage" active={ activeItem === "manage" }>Review</NavLink>
             </NavItem>
             {#if INSTANCE_CONFIG.pages.summaries}
               <NavItem>
-                <NavLink class="header-link" style="text-wrap-mode: nowrap" href="/summaries" active={ activeItem === "summaries" }>My Summaries</NavLink>
+                <NavLink class="header-link" style="text-wrap-mode: nowrap" href="/summaries" active={ activeItem === "summaries" }>Share</NavLink>
               </NavItem>
             {/if}
             {#if INSTANCE_CONFIG.pages.documents}
