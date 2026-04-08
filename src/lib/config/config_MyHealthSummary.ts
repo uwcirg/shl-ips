@@ -121,6 +121,7 @@ export default {
         }
       ]
     },
+    manage: {},
     summaries: {},
     share: {
       component: AddSummary

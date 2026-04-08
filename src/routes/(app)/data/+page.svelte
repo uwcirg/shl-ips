@@ -20,8 +20,8 @@
   <title>My Data - {INSTANCE_CONFIG.title}</title> 
 </svelte:head>
 
-<h4> My Health Data</h4>
+<h4>Import Health Data</h4>
 <p>
-  Select a data category to display health data that you have imported, add data to it, and make changes.
+  Select a category below to import and update your health data.
 </p>
 <AddDataset />
