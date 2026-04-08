@@ -20,7 +20,7 @@
   <title>My Data - {INSTANCE_CONFIG.title}</title> 
 </svelte:head>
 
-<h4>Add Health Data</h4>
+<h4>Import Health Data</h4>
 <p>
   Select a category below to import and update your health data.
 </p>
