@@ -3,6 +3,10 @@
     AccordionItem,
     Badge,
     Button,
+    Card,
+    CardBody,
+    CardHeader,
+    CardFooter,
     Col,
     DropdownItem,
     DropdownMenu,
@@ -13,7 +17,8 @@
     TabContent,
     TabPane
   } from '@sveltestrap/sveltestrap';
-  import { getContext } from 'svelte';
+  import { createEventDispatcher, getContext } from 'svelte';
+  import { goto } from '$app/navigation';
   import { derived, get, writable, type Writable, type Readable } from 'svelte/store';
   import { METHOD_NAMES } from '$lib/config/config';
   import DatasetStatusLoader from '$lib/components/app/DatasetStatusLoader.svelte';
@@ -22,8 +27,15 @@
   import FHIRResourceList from '$lib/components/app/FHIRResourceList.svelte';
   import type { DataFormConfig } from '$lib/utils/types';
   import type { ResourceCollection } from '$lib/utils/ResourceCollection';
+  import { SvelteComponent } from 'svelte';
+
+  const formDispatch = createEventDispatcher<{'show-form': {
+    form: DataFormConfig,
+    category: string
+  }}>();
 
   // Top-level description
+  export let title: string | SvelteComponent | undefined;
   export let description: string | undefined;
   
   export let category: string;
@@ -58,21 +70,6 @@
       accordionClass = "add-" + methodList[0];
     }
   }
-  let formData: Writable<Record<string, any | null>> = writable({});
-  $: if (forms && $userResources?.[category]) {
-    forms.forEach(form => {
-      updateFormDataIfApplicable(form.method);
-    });
-  }
-  
-  function updateFormDataIfApplicable(method: string) {
-    let formForMethod = forms.find(form => form.method === method);
-    if (!formForMethod || !formForMethod.editable) {
-      return;
-    }
-    let collectionsForMethod = fhirDataService.getAllResourceCollections().filter(collection => collection.getTags().method === method);
-    setFormData(method, collectionsForMethod.length === 1 ? collectionsForMethod[0] : null);
-  }
 
   $: {
     if (activeTab) {
@@ -80,10 +77,6 @@
     }
   }
 
-  function setFormData(method: string, data: ResourceCollection | null) {
-    $formData[method] = data;
-    $formData = $formData;
-  }
 
   function showDataset(collection: ResourceCollection) {
     let { method, source, sourceName } = collection.getTags();
@@ -111,11 +104,6 @@
       window.scrollTo({top: elementTop - offset-10, behavior: 'smooth'});
       activeTab = method;
     }
-  }
-
-  function deleteDataset(category: string, method: string, source: string) {
-    fhirDataService.deleteDataset(category, method, source);
-    updateFormDataIfApplicable(method);
   }
 
   let isOpen = false;
@@ -252,7 +240,7 @@
         on:click={() => {
           isOpen = false;
           let {category, method, source} = $ocDataset.collection.getTags();
-          deleteDataset(category, method, source);
+          // deleteDataset(category, method, source);
         }}
       >
         <Icon name="trash" /> Delete
@@ -261,99 +249,64 @@
   </Row>
 </Offcanvas>
 
-{#if description}
-  <p class="text-secondary"><em>{@html description}</em></p>
-{/if}
-<slot name="description"/>
-<Accordion stayOpen class="mb-2">
-  <AccordionItem
-    class="my-data-accordion {accordionClass}"
-    active={ showAdd || addDataActiveOnLoad }
-  >
-    <!-- <h5 slot="header" class="my-2">{editable ? "Enter or Edit Stored Data" : "Add New Data"}</h5> -->
-    <h5 slot="header">Add or Update My Data</h5>
-    {#if (forms.length > 1 && ($mode === "advanced" || forms.filter(form => !form.advanced).length > 1))}
-      <TabContent on:tab={(e) => {
-        currentTab = e.detail;
-      }}>
+<Card id={category} class="my-3 p-2">
+  <CardBody>
+    <h5>
+      {#if typeof title === 'string' }
+        {title}
+      {:else if title instanceof SvelteComponent}
+        <svelte:component this={title}/>
+      {/if}
+    </h5>
+    <Row>
+      <Col class="d-flex justify-content-start" style="max-width: fit-content">
+        {#if description}
+          <p class="text-secondary mb-0"><em>{@html description}</em></p>
+        {/if}
+          <slot name="description"/>
+      </Col>
+    </Row>
+    
+    {#if (forms.length > 0 && ($mode === "advanced" || forms.filter(form => !form.advanced).length > 0))}
+      <Row class="g-4 mt-0">
       {#each forms as formConfig, index}
         {#if $mode === "advanced" || !formConfig.advanced }
-        <TabPane class="{formConfig.method}-tab" tabId={formConfig.method} style="padding-top:10px" active={formConfig.method === activeTab || !activeTab && index === 0}>
-          <span class="{formConfig.method}-tab" slot="tab">{formConfig.advanced ? "* " : ""}{formConfig.tabTitle || formConfig.title}</span>
-          {#if formConfig.title}<h5 class="my-2">{formConfig.title}</h5>{/if}
-          {#if formConfig.description}<p class="text-secondary"><em>{@html formConfig.description}</em></p>{/if}
-          {#if formConfig.component}
-            <svelte:component
-              this={formConfig.component}
-              disabled={$loading}
-              formData={$formData[formConfig.method]}
-              on:update-resources
-              on:sof-auth-init
-              on:sof-auth-fail
-            />
-          {/if}
-        </TabPane>
+          <!-- Show the form -->
+          <Col class={index === 0 ? "col-12" : ""}>
+            <Button
+              id={formConfig.method}
+              class="h-100 w-100 d-flex align-items-top flex-column justify-content-between shadow"
+              style="text-align: left;"
+              outline
+              color={ index === 0 ? "primary" : "secondary"}
+              on:click={() => {
+                goto(`/data/add/${category}/${formConfig.method}`);
+                formDispatch('show-form', { category, form: formConfig });
+              }}
+            >
+              <Row>
+                <h5><strong>{formConfig.title ?? formConfig.tabTitle}{formConfig.advanced ? " *" : ""}</strong></h5>
+                <!-- {#if formConfig.title}<h5 class="my-2">{formConfig.title}</h5>{/if} -->
+                {#if formConfig.description}<span>{@html formConfig.description}</span>{/if}
+              </Row>
+              <Row>
+                <Col class="d-flex justify-content-end">
+                  <Icon name="chevron-right" />
+                </Col>
+              </Row>
+            </Button>
+          </Col>
         {/if}
       {/each}
-      </TabContent>
-    {:else}
-      {#if forms[0].title}<h5 class="my-2">{forms[0].title}</h5>{/if}
-      {#if forms[0].description}<p class="text-secondary"><em>{@html forms[0].description}</em></p>{/if}
-      {#if forms[0].component}
-        <svelte:component
-          this={forms[0].component}
-          disabled={$loading}
-          formData={$formData[forms[0].method]}
-          on:update-resources
-          on:sof-auth-init
-          on:sof-auth-fail
-        />
-      {/if}
+      </Row>
     {/if}
     {#if $mode === "advanced" && forms.some(form => form.advanced)}
-      <br>
-      <em class="text-secondary">* Advanced feature for demo purposes only</em>
-      <br>
+      <Row class="mt-3">
+        <em class="text-secondary">* Advanced feature for demo purposes only</em>
+      </Row>
     {/if}
-  </AccordionItem>
-</Accordion>
-{#if $userResources?.[category] && methodList?.length > 0 }
-  <Accordion stayOpen>
-    <AccordionItem
-      class="my-data-accordion"
-      active
-    >
-      <h5 slot="header">Imported Health Data</h5>
-      {#if $userResources[category]}
-        <Row class="g-4 d-flex justify-content-start">
-          {#each datasets as dataset}
-            {@const {method, source} = dataset.collection.getTags()}
-            {@const {status, collection} = dataset}
-            <Col xs="12" sm="6" lg="4" style="">
-              <DatasetView {dataset} {masterPatient}>
-                <DropdownMenu slot="menu">
-                  <DropdownItem on:click={() => showDataset(collection)}><div class="d-flex justify-content-between w-100">View <Icon name="chevron-right"/></div></DropdownItem>
-                  <DropdownItem class="text-primary"on:click={() => updateDataset(collection)}><Icon name="arrow-repeat"/> Update</DropdownItem>
-                  <DropdownItem divider />
-                  <DropdownItem class="text-danger" on:click={() => deleteDataset(category, method, source)}><Icon name="trash"/> Delete</DropdownItem>
-                </DropdownMenu>
-                <Button slot="footer" class="d-flex justify-content-between align-items-center" color="secondary" outline on:click={() => showDataset(collection)}>
-                  <div class="d-flex align-items-center" style="min-width: 37px">
-                    <DatasetStatusLoader {status}>
-                      <Badge color="primary">{collection.getResourceCount()}</Badge>
-                    </DatasetStatusLoader>
-                  </div>
-                  <div>View </div>
-                  <Icon name="chevron-right"/>
-                </Button>
-              </DatasetView>
-            </Col>
-          {/each}
-        </Row>
-      {/if}
-    </AccordionItem>
-  </Accordion>
-{/if}
+  </CardBody>
+</Card>
 
 <style>
   :global(div.my-data-accordion > h2.accordion-header > button.accordion-button) {

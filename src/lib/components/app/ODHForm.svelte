@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Accordion, AccordionItem, Button, Col, FormGroup, Icon, Input, Row } from '@sveltestrap/sveltestrap';
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher, onMount, getContext } from 'svelte';
   import NIOAutoCoderInput from '$lib/components/form/NIOAutoCoderInput.svelte';
   import type { IOResponse, ResourceRetrieveEvent } from '$lib/utils/types';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
@@ -8,11 +8,14 @@
   import type { IResourceCollection } from '$lib/utils/types';
   import { ResourceHelper } from '$lib/utils/ResourceHelper';
   import type { Observation } from 'fhir/r4';
+  import type { ToastStore } from '$lib/utils/toast';
 
   export let sectionKey: string = 'Occupational Data';
   export let formData: IResourceCollection | undefined;
   let resources;
   $: resources = formData?.resources;
+
+  const toast: ToastStore = getContext('toast');
 
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
   const CATEGORY = CATEGORIES.OCCUPATIONAL_DATA_FOR_HEALTH;
@@ -658,6 +661,7 @@
       source: SOURCE.url,
       sourceName: SOURCE.name
     };
+    toast.add("Successfully saved work info", 'success');
     resourceDispatch('update-resources', result);
   }
 </script>

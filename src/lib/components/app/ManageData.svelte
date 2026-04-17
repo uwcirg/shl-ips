@@ -5,8 +5,6 @@
   import { getContext } from 'svelte';
   import { type Writable } from 'svelte/store';
   import {
-    Accordion,
-    AccordionItem,
     Button,
     Col,
     Icon,
@@ -156,36 +154,34 @@
 
 </script>
 
-<Accordion>
-  {#each sections as section, index}
-    <div class="d-flex justify-content-start align-items-center">
-      <h5 class="my-2">{section.title}</h5>
-      <div class="me-3">
-        {#if section.category === undefined || ($loading ? undefined : Boolean($userResources?.[section.category])) === true}
-          <!-- <Icon name="check-circle-fill" class="text-success"/> -->
-        {:else if ($loading ? undefined : Boolean($userResources?.[section.category])) === false}
-          <!-- <Icon name="circle" class="text-secondary"/> -->
-        {:else if ($loading ? undefined : Boolean($userResources?.[section.category])) === undefined}
-          <Spinner color="secondary" size="sm"/>
-        {/if}
-      </div>
+{#each sections as section, index}
+  <div class="d-flex justify-content-start align-items-center">
+    <h5 class="my-2">{section.title}</h5>
+    <div class="me-3">
+      {#if section.category === undefined || ($loading ? undefined : Boolean($userResources?.[section.category])) === true}
+        <!-- <Icon name="check-circle-fill" class="text-success"/> -->
+      {:else if ($loading ? undefined : Boolean($userResources?.[section.category])) === false}
+        <!-- <Icon name="circle" class="text-secondary"/> -->
+      {:else if ($loading ? undefined : Boolean($userResources?.[section.category])) === undefined}
+        <Spinner color="secondary" size="sm"/>
+      {/if}
     </div>
-    <div class="mb-4">
-    <DataCategoryView
-      id={section.id}
-      title={section.title}
-      description={section.description}
-      category = {section.category}
-      forms={section.forms}
-      showAdd={section.id === activeSection}
-      on:loading-status-change={ ( { detail }) => { detail.index = index; updateStatus(detail) } }
-      on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
-      on:sof-auth-fail={ async ({ detail }) => { revertPreAuth(detail) }}
-      on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
-    />
-    </div>
-  {/each}
-</Accordion>
+  </div>
+  <div class="mb-4">
+  <DataCategoryView
+    id={section.id}
+    title={section.title}
+    description={section.description}
+    category = {section.category}
+    forms={section.forms}
+    showAdd={section.id === activeSection}
+    on:loading-status-change={ ( { detail }) => { detail.index = index; updateStatus(detail) } }
+    on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
+    on:sof-auth-fail={ async ({ detail }) => { revertPreAuth(detail) }}
+    on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
+  />
+  </div>
+{/each}
 
 <Row class="d-flex justify-content-center mt-4">
   <Col md="11">

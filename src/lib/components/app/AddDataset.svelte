@@ -8,6 +8,8 @@
     Accordion,
     AccordionItem,
     Button,
+    Card,
+    CardBody,
     Col,
     Icon,
     Row,
@@ -156,42 +158,41 @@
 
 </script>
 
-<Accordion>
-  {#each sections as section, index}
-    <AccordionItem class="{section.id} section-accordion" active={section.id === activeSection}>
-      <div slot="header" class="d-flex justify-content-start align-items-center">
-        <div class="me-3">
-          {#if section.category === undefined || ($loading ? undefined : Boolean($userResources?.[section.category])) === true}
-            <Icon name="check-circle-fill" class="text-success"/>
-          {:else if ($loading ? undefined : Boolean($userResources?.[section.category])) === false}
-            <Icon name="circle" class="text-secondary"/>
-          {:else if ($loading ? undefined : Boolean($userResources?.[section.category])) === undefined}
-            <Spinner color="secondary" size="sm"/>
-          {/if}
-        </div>
-        <h5 class="my-2">{section.title}</h5>
-      </div>
-      <DataCategoryView
-        description={section.description}
-        category = {section.category}
-        forms={section.forms}
-        showAdd={section.id === activeSection}
-        on:loading-status-change={ ( { detail }) => { detail.index = index; updateStatus(detail) } }
-        on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
-        on:sof-auth-fail={ async ({ detail }) => { revertPreAuth(detail) }}
-        on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
-      />
-    </AccordionItem>
-  {/each}
-</Accordion>
+<h4>Add Health Data</h4>
+<p>
+  Select a category below to import and update your health data.
+</p>
+{#each sections as section, index}
+  <div class="d-flex justify-content-start align-items-center">
+    <!-- <div class="me-3">
+      {#if section.category === undefined || ($loading ? undefined : Boolean($userResources?.[section.category])) === true}
+        <Icon name="check-circle-fill" class="text-success"/>
+      {:else if ($loading ? undefined : Boolean($userResources?.[section.category])) === false}
+        <Icon name="circle" class="text-secondary"/>
+      {:else if ($loading ? undefined : Boolean($userResources?.[section.category])) === undefined}
+        <Spinner color="secondary" size="sm"/>
+      {/if}
+    </div> -->
+  </div>
+  <DataCategoryView
+    title={section.title}
+    description={section.description}
+    category = {section.category}
+    forms={section.forms}
+    on:loading-status-change={ ( { detail }) => { detail.index = index; updateStatus(detail) } }
+    on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
+    on:sof-auth-fail={ async ({ detail }) => { revertPreAuth(detail) }}
+    on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
+  />
+{/each}
 
-<Row class="d-flex justify-content-center mt-4">
+<!-- <Row class="d-flex justify-content-center mt-4">
   <Col md="11">
     <Button color="success" style="width:100%" href={'/share'}>
       <b><Icon name="plus-lg" /></b> New Sharable Health Summary
     </Button>
   </Col>
-</Row>
+</Row> -->
 
 <style>
   :global(.at-load) {
