@@ -59,7 +59,10 @@ export class AuthService implements IAuthService {
         return user.access_token;
       } else {
         const user = await this.renewToken();
-        return user?.access_token;
+        if (!user) {
+          throw Error('Unable to renew token');
+        }
+        return user.access_token;
       } 
     } catch (error) {
       this.handleError(error);

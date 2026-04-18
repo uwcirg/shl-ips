@@ -39,7 +39,7 @@ export default {
             {
               method: METHODS.PROVIDER_HEALTH_RECORD_SOF_SEARCH,
               tabTitle: "Provider Search",
-              description: "Import US Core health data from your healthcare provider via SMART authorization.",
+              description: "Import your health data from your healthcare provider via SMART authorization.",
               component: FetchSoFSearch
             }
           ]
@@ -53,7 +53,7 @@ export default {
             {
               method: METHODS.PATIENT_STORY_FORM,
               tabTitle: "My Story",
-              description: "Create a description of your personal patient story and goals for care.",
+              description: "Describe your personal patient story and goals for care.",
               component: PatientStory,
               editable: true
             },
@@ -67,7 +67,7 @@ export default {
             {
               method: METHODS.PATIENT_CARE_NEEDS_FORM,
               tabTitle: "My Care Needs",
-              description: "Select any identities, functional concerns, or needs you would like your carers to be aware of.",
+              description: "Select identities, functional concerns, or needs you would like your carers to be aware of.",
               component: PatientNeeds,
               editable: true
             },
@@ -82,13 +82,14 @@ export default {
         },
         {
           id: "advance-directives",
-          title: "Care Planning Documents",
-          description: "Create or retrieve your care planning documents from a repository.",
+          title: "Add Care Planning Documents",
+          description: "Create or retrieve care planning documents.",
           category: CATEGORIES.ADVANCE_DIRECTIVES,
           forms: [
             {
               method: METHODS.ADVANCE_DIRECTIVES_CREATE_POLST,
-              tabTitle: "Create POLST",
+              tabTitle: "Create a POLST",
+              description: "Create a new WA State POLST document.",
               component: CreatePOLST
             }
           ]
@@ -98,9 +99,12 @@ export default {
           title: "About Me",
           description: "Add or update information about yourself.",
           info: "Some fields may already be filled with information from your account login. The information here can be added to your Shareable Health Summary, but this form will not change information that you download from healthcare providers or other sources.",
+          category: CATEGORIES.ABOUT_ME,
           forms: [
             {
-              method: "patient",
+              method: METHODS.DEMOGRAPHICS_FORM,
+              title: "Edit My Personal Information",
+              description: "Edit the information about yourself that you would like to include in your Shareable Health Summaries.",
               component: Demographic,
               editable: true
             }

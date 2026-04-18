@@ -1,6 +1,7 @@
 export const METHODS = {
   ADVANCE_DIRECTIVES_CREATE_POLST: "advance-directives-create-polst",
   ADVANCE_DIRECTIVES_SEARCH: "advance-directives-search",
+  DEMOGRAPHICS_FORM: "demographics-form",
   OCCUPATIONAL_DATA_FOR_HEALTH_FORM: "occupational-data-for-health-form",
   PATIENT_BODY_CONCERNS_FORM: "patient-body-concerns-form",
   PATIENT_IDENTITY_FORM: "patient-identity-form",
@@ -17,6 +18,7 @@ export const METHODS = {
 export type Method = typeof METHODS[keyof typeof METHODS];
 
 export const CATEGORIES = {
+  ABOUT_ME: "about-me",
   ADVANCE_DIRECTIVES: "advance-directives",
   OCCUPATIONAL_DATA_FOR_HEALTH: "occupational-data-for-health",
   PATIENT_STORY: "patient-story",

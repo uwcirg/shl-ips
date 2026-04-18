@@ -9,8 +9,10 @@
   import { FHIRDataService } from '$lib/utils/FHIRDataService';
   import Header from '$lib/components/layout/Header.svelte';
   import Footer from '$lib/components/layout/Footer.svelte';
+  import StickyNav from '$lib/components/layout/StickyNav.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
-  import type { IAuthService, SHLAdminParams } from '$lib/utils/types';
+  import type { IAuthService, NavConfig, SHLAdminParams } from '$lib/utils/types';
+  import ToastContainer from '$lib/components/layout/ToastContainer.svelte';
 
   let authService: IAuthService = new AuthService();
   setContext('authService', authService);
@@ -26,6 +28,13 @@
 
   let reset: Writable<number> = writable(0);
   setContext('reset', reset);
+
+  const navConfig = writable<NavConfig>({backLabel: '', forwardLabel: '', showBack: false, showForward: false, onBack: () => {}, onForward: () => {}});
+  setContext('navConfig', navConfig);
+
+  import { createToastStore } from '$lib/utils/toast';
+  const toastStore = createToastStore();
+  setContext('toast', toastStore);
 
   const MODE_KEY = 'demo_mode';
   let mode: Writable<string> = writable('normal');
@@ -85,9 +94,13 @@
 
 <Container class="main" fluid>
   <Header />
+  <ToastContainer />
   <div class="main-content">
     <slot />
   </div>
+  <StickyNav
+    {...$navConfig}
+  />
   <Footer />
 </Container>
 

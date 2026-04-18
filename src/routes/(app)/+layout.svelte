@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getContext, onMount } from 'svelte';
-  import { type Writable } from 'svelte/store';
+  import { type Writable, type Readable } from 'svelte/store';
   import {
     Col,
     Row
@@ -10,9 +10,13 @@
   import type { SHLAdminParams } from '$lib/utils/types';
   import { type SHLClient } from '$lib/utils/managementClient';
   import FHIRDataService from '$lib/utils/FHIRDataService';
+  import type { LayoutData } from './$types';
+  import { invalidateAll } from '$app/navigation';
+
+  export let data: LayoutData;
 
   let authService: IAuthService = getContext('authService');
-  let user: Writable<User | null> = authService.user;
+  let user: Readable<User | null> = authService.user;
 
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
 
@@ -27,13 +31,39 @@
     })();
   }
 
+  async function syncTokenToServer(token: string): Promise<boolean> {
+    const response = await fetch('/auth/settoken', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token })
+    });
+    return response.ok;
+  }
+
   async function checkUser() {
     await authService.isAuthenticated();
     user = authService.user;
     if ($user) {
+      if (data.unauthenticated) {
+        // User is valid but cookie was missing/invalid — sync current token
+        const token = await authService.getAccessToken();
+        if (token) {
+          await syncTokenToServer(token);
+          await invalidateAll();
+        }
+        return;
+      }
       let now = Date.now() / 1000;
       if (($user.expires_at ?? 0) < now) {
-        await authService.renewToken();
+        const renewedUser = await authService.renewToken();
+        if (renewedUser?.access_token) {
+          const synced = await syncTokenToServer(renewedUser.access_token);
+          if (synced) {
+            await invalidateAll(); // now safe — cookie is confirmed set on server
+          } else {
+            await authService.login();
+          }
+        }
       }
     } else {
       await authService.login();
@@ -42,8 +72,10 @@
 
   onMount(async () => {
     await checkUser();
-    await fhirDataService.loadUserData();
-    await shlClient.getUserShls();
+    if (!data.unauthenticated) {
+      await fhirDataService.loadUserData();
+      await shlClient.getUserShls();
+    }
   });
 
 </script>

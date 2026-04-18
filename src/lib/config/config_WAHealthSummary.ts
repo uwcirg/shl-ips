@@ -18,7 +18,6 @@ import PatientBody from '$lib/components/app/PatientBody.svelte';
 import FetchAD from '$lib/components/app/FetchAD.svelte';
 import CreatePOLST from '$lib/components/app/CreatePOLST.svelte';
 import ODHForm from '$lib/components/app/ODHForm.svelte';
-import AboutMeTitle from '$lib/components/app/AboutMeTitle.svelte';
 
 export default {
   title: "WA Health Summary",
@@ -47,9 +46,18 @@ export default {
           forms: [
             {
               method: METHODS.PROVIDER_HEALTH_RECORD_SOF,
-              tabTitle: "SMART Data Access",
-              description: "Import US Core health data from a healthcare provider test server via SMART authorization.",
+              tabTitle: "Find Your Healthcare Provider",
+              description: "Import sample health data from the following test servers.",
+              formDescription: "Import sample health data from the following test servers.",
               component: FetchSoF
+            },
+            {
+              method: METHODS.PROVIDER_HEALTH_RECORD_CARINBB,
+              tabTitle: "Find Your Insurance Provider",
+              description: "Import sample insurance and health data from the following test servers.",
+              formDescription: "Import sample health data from the following test servers.",
+              advanced: true,
+              component: FetchCARINBB
             },
             {
               method: METHODS.PROVIDER_HEALTH_RECORD_URL,
@@ -57,13 +65,6 @@ export default {
               description: "Import health data from a FHIR URL.",
               advanced: true,
               component: FetchUrl
-            },
-            {
-              method: METHODS.PROVIDER_HEALTH_RECORD_CARINBB,
-              tabTitle: "Insurance Access",
-              description: "Import CARIN insurance and health data from an insurance provider test server via SMART authorization.",
-              advanced: true,
-              component: FetchCARINBB
             },
             {
               method: METHODS.PROVIDER_HEALTH_RECORD_TEFCA,
@@ -90,7 +91,7 @@ export default {
             {
               method: METHODS.PATIENT_STORY_FORM,
               tabTitle: "My Story",
-              description: "Create a description of your personal patient story and goals for care.",
+              description: "Describe your personal patient story and goals for care.",
               component: PatientStory,
               editable: true
             },
@@ -104,7 +105,7 @@ export default {
             {
               method: METHODS.PATIENT_CARE_NEEDS_FORM,
               tabTitle: "My Care Needs",
-              description: "Select any identities, functional concerns, or needs you would like your carers to be aware of.",
+              description: "Select identities, functional concerns, or needs you would like your carers to be aware of.",
               component: PatientNeeds,
               editable: true
             },
@@ -120,17 +121,19 @@ export default {
         {
           id: "advance-directives",
           title: "Add Care Planning Documents",
-          description: "Create or retrieve your care planning documents from a repository.",
+          description: "Create or retrieve care planning documents.",
           category: CATEGORIES.ADVANCE_DIRECTIVES,
           forms: [
             {
               method: METHODS.ADVANCE_DIRECTIVES_SEARCH,
-              tabTitle: "Directive Search",
+              tabTitle: "Document Search",
+              description: "Retrieve your care planning documents from a document repository.",
               component: FetchAD
             },
             {
               method: METHODS.ADVANCE_DIRECTIVES_CREATE_POLST,
-              tabTitle: "Create POLST",
+              tabTitle: "Create a POLST",
+              description: "Create a new WA State POLST document.",
               component: CreatePOLST
             }
           ]
@@ -140,8 +143,16 @@ export default {
           title: "About Me",
           description: "Add or update information about yourself.",
           info: "Some fields may already be filled with information from your account login. The information here can be added to your Shareable Health Summary, but this form will not change information that you download from healthcare providers or other sources.",
+          category: CATEGORIES.ABOUT_ME,
           forms: [
-            { method: "patient", component: Demographic, editable: true }
+            {
+              method: METHODS.DEMOGRAPHICS_FORM,
+              tabTitle: "About Me",
+              title: "Edit My Personal Information",
+              description: "Edit the information about yourself that you would like to include in your Shareable Health Summaries.",
+              component: Demographic,
+              editable: true
+            }
           ]
         },
         {
@@ -152,6 +163,8 @@ export default {
           forms: [
             {
               method: METHODS.OCCUPATIONAL_DATA_FOR_HEALTH_FORM,
+              tabTitle: "Edit My Work Information",
+              description: "Add your employment history, retirement status, and combat zone exposure.",
               component: ODHForm,
               editable: true
             }

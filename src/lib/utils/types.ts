@@ -217,3 +217,12 @@ export type Status =
   | { state: typeof State.LOADING; message?: string }
   | { state: typeof State.ERROR; message?: string; error?: Error }
   | { state: typeof State.SYNCED; timestamp: Date };
+
+export interface NavConfig {
+  backLabel: string;
+  forwardLabel: string;
+  showBack: boolean;
+  showForward: boolean;
+  onBack: () => void;
+  onForward: () => void;
+}

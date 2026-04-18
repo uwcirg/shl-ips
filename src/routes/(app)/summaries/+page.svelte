@@ -1,5 +1,7 @@
 <script lang="ts">
   import {
+    Breadcrumb,
+    BreadcrumbItem,
     Button,
     Col,
     Icon,
@@ -12,6 +14,12 @@
 <svelte:head>
   <title>My Summaries - {INSTANCE_CONFIG.title}</title> 
 </svelte:head>
+
+<Breadcrumb divider="❯">
+  <BreadcrumbItem><a href="/data">Add/Import</a></BreadcrumbItem>
+  <BreadcrumbItem><a href="/data/manage">Review</a></BreadcrumbItem>
+  <BreadcrumbItem active>Share</BreadcrumbItem>
+</Breadcrumb>
 
 <Row>
   <h4> My Shareable Health Summaries</h4>

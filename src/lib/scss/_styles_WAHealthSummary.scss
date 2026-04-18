@@ -1,17 +1,20 @@
 // Default variable overrides:
 // See node_modules/bootstrap/scss/_variables.scss for full list of available variables
 
+@use "_common_variables" as common;
+
 @use "bootstrap/scss/bootstrap" with (
   // theme colors
   $primary: #1d77c0,
   $info: #149691,
+  $box-shadow: common.$box-shadow,
 );
 
 // End default variable overrides
 
 
 // Custom styles:
-@use "./_common_styles.scss";
+@use "_common_styles";
 
 .page-title {
   color: rgb(34, 72, 156);
