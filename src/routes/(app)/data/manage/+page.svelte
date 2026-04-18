@@ -27,6 +27,6 @@
   backLabel="Add more data"
   onBack={() => goto(`/data`)}
   showForward={true}
-  forwardLabel="Create a Summary"
-  onForward={() => goto(`/share`)}
+  forwardLabel="Your Summaries"
+  onForward={() => goto(`/summaries`)}
 />
