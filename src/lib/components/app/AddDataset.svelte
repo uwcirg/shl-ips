@@ -70,9 +70,10 @@
     if (sessionStorage.getItem('URL')) {
       let url = sessionStorage.getItem('URL') ?? '/data';
       let currentUrl = window.location.href.split('?')[0];
+      let params = new URLSearchParams(window.location.search);
       sessionStorage.removeItem('URL');
       if (url !== currentUrl) {
-        return goto(url);
+        return goto(`${url}?${params.toString()}`);
       }
     }
     sessionStorage.removeItem('CATEGORY');
