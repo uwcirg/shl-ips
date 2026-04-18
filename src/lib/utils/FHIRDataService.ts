@@ -26,7 +26,7 @@ import { ResourceHelper } from "$lib/utils/ResourceHelper";
 import type { Patient, Resource } from "fhir/r4";
 import { constructPatientResource, getDemographicsFromPatient, fetchEverything } from "$lib/utils/util";
 import { uploadResources, getPatientReferenceFromTransactionResponse } from "$lib/utils/resourceUploader";
-import { State, StateManager } from "$lib/utils/StateManager";
+import { StateManager } from "$lib/utils/StateManager";
 
 export class FHIRDataService {
   auth: IAuthService;
