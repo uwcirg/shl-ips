@@ -1,10 +1,10 @@
 <script lang="ts">
   import { Badge, Button, Card, CardBody, Col, DropdownItem,
-  DropdownMenu, Icon, Row } from '@sveltestrap/sveltestrap';
+  DropdownMenu, Icon, Offcanvas, Row, Spinner } from '@sveltestrap/sveltestrap';
   import type { SOFAuthEvent, ResourceRetrieveEvent } from '$lib/utils/types';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
-  import { writable, type Writable } from 'svelte/store';
+  import { get, derived, type Readable, writable, type Writable } from 'svelte/store';
   import { getContext, onMount } from 'svelte';
   import DatasetStatusLoader from '$lib/components/app/DatasetStatusLoader.svelte';
   import DatasetView from '$lib/components/app/DatasetView.svelte';
@@ -14,6 +14,7 @@
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import { randomStringWithEntropy } from '$lib/utils/util';
   import StickyNavConfig from '$lib/components/layout/StickyNavConfig.svelte';
+  import { METHOD_NAMES } from '$lib/config/config.js';
   
   export let data;
   let {category, method, categoryIndex, methodIndex} = data;
@@ -99,6 +100,49 @@
     }, 1000);
   }
 
+  function showDataset(collection: ResourceCollection) {
+    let { method, source, sourceName } = collection.getTags();
+    let methodName = METHOD_NAMES[method]?.name;
+  
+    let sourceString = sourceName ?? "Unknown source";
+    let methodString = methodName ? ` (${methodName})` : "";
+    setContent(
+      `${sourceString}${methodString}`,
+      collection
+    );
+  }
+
+  let isOpen = false;
+  let name = '';
+  let date = '';
+  let ocCategory: Writable<string> = writable('');
+  let ocMethod: Writable<string> = writable('');
+  let ocSource: Writable<string> = writable('');
+  let ocDataset: Readable<any> = derived(
+    [userResources, ocCategory, ocMethod, ocSource], 
+    ([$userResources, $ocCategory, $ocMethod, $ocSource]) => {
+      if (!$userResources || !$ocCategory || !$ocMethod || !$ocSource) {
+        return;
+      }
+      let dataset = $userResources?.[$ocCategory]?.[$ocMethod]?.[$ocSource];
+      return dataset;
+    }
+  );
+  function setContent(viewName: string, viewCollection: ResourceCollection) {
+    let { category, method, source } = viewCollection.getTags();
+    ocCategory.set(category);
+    ocMethod.set(method);
+    ocSource.set(source);
+    name = viewName;
+    date = new Date((get(viewCollection.patient)).meta.lastUpdated).toLocaleString(undefined, {
+      dateStyle: "medium",
+    })
+    isOpen = true;
+  }
+  function toggle() {
+    isOpen = !isOpen;
+  }
+
 </script>
 <StickyNavConfig
   showBack={true}
@@ -169,3 +213,114 @@
     </Row>
   {/if}
 {/if}
+
+<Offcanvas
+  {isOpen}
+  {toggle}
+  scroll
+  header={name}
+  placement="end"
+  title={name}
+  style="display: flex; overflow-y:hidden; height: 100dvh; max-width: calc(2 * var(--bs-offcanvas-width)); width: 80dvw; min-width: var(--bs-offcanvas-width);"
+>
+  <div class="
+      d-flex
+      justify-content-between
+      align-items-center
+      flex-nowrap
+      w-100
+      p-2
+      bg-light
+      rounded-top
+      border-top
+      border-start
+      border-end"
+    style="height: 50px"
+  >
+    <div class="flex-shrink-0">
+      <Icon name="calendar-check"/> {date}
+    </div>
+    <div class="ms-3 flex-shrink-0">
+      <Button
+        size="sm"
+        color="secondary"
+        outline
+        on:click={() => {
+          const accordionButtons = document.querySelectorAll(`div.resource-content:not(:has(div.accordion-collapse.show)) > h2 > button.accordion-button`);
+          for (const accordionButton of Array.from(accordionButtons)) {
+            accordionButton.click();
+          }
+        }}
+      >
+        Open All
+      </Button>
+      <Button
+        size="sm"
+        color="secondary"
+        outline
+        on:click={() => {
+          const accordionButtons = document.querySelectorAll(`div.resource-content:has(div.accordion-collapse.show) > h2 > button.accordion-button`);
+          for (const accordionButton of Array.from(accordionButtons)) {
+            accordionButton.click();
+          }
+        }}
+      >
+        Collapse All
+      </Button>
+    </div>
+  </div>
+  <div class="d-flex w-100" style="height: calc(100% - 100px);">
+    <Col class="d-flex pe-0 h-100 w-100" style="overflow: auto">
+      {#if $ocDataset && isOpen}
+        <DatasetStatusLoader status={$ocDataset.status} size="md">
+          <div slot="loader" class="d-flex justify-content-center align-items-center w-100">
+            <Spinner slot="loader" size="md" color="secondary" />
+          </div>
+          <FHIRResourceList
+            resourceCollection={$ocDataset.collection}
+            submitting={false}
+            scroll={false}
+            on:status-update={ ({ detail }) => { /*updateStatus(detail)*/ } }
+            on:error={ ({ detail }) => { /*showError(detail)*/ } }
+          />
+        </DatasetStatusLoader>
+      {/if}
+    </Col>
+  </div>
+  <Row class="d-flex pe-0" style="height: 50px">
+    <Col class="d-flex justify-content-start align-items-end" style="padding-top: 1rem">
+      <!-- <ButtonGroup>
+        <Button
+          size="sm"
+          outline
+          color="secondary"
+          on:click={() => download(name + '.json', json)}
+        >
+          <Icon name="download" /> Download
+        </Button>
+      </ButtonGroup> -->
+      <Button
+        size="sm"
+        outline
+        color="secondary"
+        on:click={() => { isOpen = false; updateDataset($ocDataset) }}
+      >
+        <Icon name="arrow-repeat" /> Update
+      </Button>
+    </Col>
+    <Col class="d-flex justify-content-end align-items-end" style="padding-top: 1rem">
+      <Button
+        size="sm"
+        outline
+        color="danger"
+        on:click={() => {
+          isOpen = false;
+          let {category, method, source} = $ocDataset.collection.getTags();
+          // deleteDataset(category, method, source);
+        }}
+      >
+        <Icon name="trash" /> Delete
+      </Button>
+    </Col>
+  </Row>
+</Offcanvas>
