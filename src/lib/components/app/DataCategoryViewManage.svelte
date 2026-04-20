@@ -21,6 +21,7 @@
   import DatasetView from '$lib/components/app/DatasetView.svelte';
   import FHIRDataService from '$lib/utils/FHIRDataService';
   import FHIRResourceList from '$lib/components/app/FHIRResourceList.svelte';
+  import InfoButton from '$lib/components/app/InfoButton.svelte';
   import type { DataFormConfig } from '$lib/utils/types';
   import type { ResourceCollection } from '$lib/utils/ResourceCollection';
 
@@ -30,6 +31,7 @@
   export let title: string;
   // Top-level description
   export let description: string | undefined;
+  export let info: string | undefined;
   
   export let category: string;
   
@@ -69,14 +71,21 @@
       updateFormDataIfApplicable(form.method);
     });
   }
+
+  function formForMethod(method: string) {
+    return forms.find(form => form.method === method);
+  }
+
+  function formIsEditable(method: string) {
+    return formForMethod(method)?.editable;
+  }
   
   function updateFormDataIfApplicable(method: string) {
-    let formForMethod = forms.find(form => form.method === method);
-    if (!formForMethod || !formForMethod.editable) {
+    if (!formIsEditable(method)) {
       return;
     }
     let collectionsForMethod = fhirDataService.getAllResourceCollections().filter(collection => collection.getTags().method === method);
-    setFormData(method, collectionsForMethod.length === 1 ? collectionsForMethod[0] : null);
+    setFormData(method, collectionsForMethod.length === 1 ? collectionsForMethod[0] : undefined);
   }
 
   $: {
@@ -85,8 +94,12 @@
     }
   }
 
-  function setFormData(method: string, data: ResourceCollection | null) {
-    $formData[method] = data;
+  function setFormData(method: string, data: ResourceCollection | undefined) {
+    if (data) {
+      $formData[method] = data;
+    } else {
+      delete $formData[method];
+    }
     $formData = $formData;
   }
 

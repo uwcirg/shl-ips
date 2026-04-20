@@ -18,6 +18,7 @@ import PatientBody from '$lib/components/app/PatientBody.svelte';
 import FetchAD from '$lib/components/app/FetchAD.svelte';
 import CreatePOLST from '$lib/components/app/CreatePOLST.svelte';
 import ODHForm from '$lib/components/app/ODHForm.svelte';
+import AboutMeTitle from '$lib/components/app/AboutMeTitle.svelte';
 
 export default {
   title: "WA Health Summary",
@@ -40,7 +41,7 @@ export default {
       sections: [
         {
           id: "healthcare-providers",
-          title: "Data from Healthcare Providers",
+          title: "Import from Healthcare Providers",
           description: "",
           category: CATEGORIES.PROVIDER_HEALTH_RECORD,
           forms: [
@@ -62,14 +63,14 @@ export default {
             {
               method: METHODS.PROVIDER_HEALTH_RECORD_URL,
               tabTitle: "FHIR URL",
-              description: "Fetch health summary data from a FHIR URL.",
+              description: "Import health data from a FHIR URL.",
               advanced: true,
               component: FetchUrl
             },
             {
               method: METHODS.PROVIDER_HEALTH_RECORD_TEFCA,
               tabTitle: "TEFCA Query",
-              description: "Fetch health summary data with a federated TEFCA query.",
+              description: "Import health data using a federated TEFCA query.",
               advanced: true,
               component: FetchTEFCA
             },
@@ -84,7 +85,7 @@ export default {
         },
         {
           id: "my-story",
-          title: "My Health in My Words",
+          title: "Personal Health Notes",
           description: "Your own representation of your health, history, needs and goals.",
           category: CATEGORIES.PATIENT_STORY,
           forms: [

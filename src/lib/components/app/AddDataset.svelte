@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher, onMount, SvelteComponent } from 'svelte';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { getContext } from 'svelte';
@@ -36,8 +36,9 @@
 
   let sections: Array<{
     id: string;
-    title?: string;
+    title?: string | SvelteComponent;
     description?: string;
+    info?: string;
     category: string;
     forms: DataFormConfig[]
   }> = INSTANCE_CONFIG.pages.data.sections;
@@ -178,6 +179,7 @@
   <DataCategoryView
     title={section.title}
     description={section.description}
+    info={section.info}
     category = {section.category}
     forms={section.forms}
     on:loading-status-change={ ( { detail }) => { detail.index = index; updateStatus(detail) } }

@@ -2,18 +2,23 @@
   import { Accordion, AccordionItem, Button, Col, FormGroup, Icon, Input, Row } from '@sveltestrap/sveltestrap';
   import { createEventDispatcher, onMount, getContext } from 'svelte';
   import NIOAutoCoderInput from '$lib/components/form/NIOAutoCoderInput.svelte';
-  import type { IOResponse, ResourceRetrieveEvent } from '$lib/utils/types';
+  import type { IOResponse, IResourceCollection, ResourceRetrieveEvent } from '$lib/utils/types';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
-  import type { IResourceCollection } from '$lib/utils/types';
   import { ResourceHelper } from '$lib/utils/ResourceHelper';
   import type { Observation } from 'fhir/r4';
+  import { copyOf } from '$lib/utils/util';
   import type { ToastStore } from '$lib/utils/toast';
 
   export let sectionKey: string = 'Occupational Data';
   export let formData: IResourceCollection | undefined;
   let resources;
   $: resources = formData?.resources;
+  $: if ($resources) {
+    initializeFieldsForFormData();
+  } else {
+    initializeDefaultFields();
+  }
 
   const toast: ToastStore = getContext('toast');
 
@@ -27,13 +32,6 @@
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let supportsMonthInput = false;
-  onMount(() => {
-    if (formData) {
-      initializeFieldsForFormData();
-    } else {
-      initializeDefaultFields();
-    }
-  });
 
   let statuses: Record<string, string> = {
     Employed: 'Employed',
@@ -81,10 +79,6 @@
   };
   // Form values
   let values = copyOf(defaultValues);
-
-  $: if ($resources) {
-    initializeFieldsForFormData();
-  }
 
   function getJobHistoryResources(rhs: ResourceHelper[]) {
     return rhs?.filter(rh => rh.resource.code?.coding?.find(c => c.code === '11341-5' && c.system === 'http://loinc.org')).map(r => r.resource);
@@ -202,10 +196,6 @@
     initializeEmploymentStatusFields(resources);
     initializeRetirementDateFields(resources);
     initializeCombatPeriodFields(resources);
-  }
-
-  function copyOf(a: any) {
-    return JSON.parse(JSON.stringify(a));
   }
 
   function initializeDefaultFields() {
