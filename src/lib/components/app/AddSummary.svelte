@@ -43,11 +43,11 @@
   import FHIRResourceList from '$lib/components/app/FHIRResourceList.svelte';
   import type FHIRDataService from '$lib/utils/FHIRDataService';
   import Patient from '$lib/components/resource-templates/Patient.svelte';
-  import { PLACEHOLDER_SYSTEM } from '$lib/config/config';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import DatasetStatusLoader from '$lib/components/app/DatasetStatusLoader.svelte';
   import DatasetView from '$lib/components/app/DatasetView.svelte';
   import { ResourceCollection } from '$lib/utils/ResourceCollection';
+  import StickyNavConfig from '$lib/components/layout/StickyNavConfig.svelte';
  
   export let status = "";
   
@@ -685,6 +685,15 @@
   {/if}
 {/if}
 <span class="text-danger">{fetchError}</span>
+
+<StickyNavConfig
+  showBack={true}
+  backLabel="Back to summaries"
+  onBack={() => goto(`/summaries`)}
+  showForward={resourcesAdded}
+  forwardLabel="Create Summary"
+  onForward={confirmContent}
+/>
 
 <style>
   :global(.at-load) {

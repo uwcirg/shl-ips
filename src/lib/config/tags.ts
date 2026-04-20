@@ -17,6 +17,7 @@ export const METHODS = {
 export type Method = typeof METHODS[keyof typeof METHODS];
 
 export const CATEGORIES = {
+  ABOUT_ME: "about-me",
   ADVANCE_DIRECTIVES: "advance-directives",
   OCCUPATIONAL_DATA_FOR_HEALTH: "occupational-data-for-health",
   PATIENT_STORY: "patient-story",

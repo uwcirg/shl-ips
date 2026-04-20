@@ -1,11 +1,16 @@
 <script lang="ts">
   import {
+    Breadcrumb,
+    BreadcrumbItem,
     Col,
     Row
   } from '@sveltestrap/sveltestrap';
   import { getContext, onMount } from 'svelte';
+  import { goto } from '$app/navigation';
   import AddDataset from '$lib/components/app/AddDataset.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
+  import type { FHIRDataService } from '$lib/utils/fhirDataService';
+  import StickyNavConfig from '$lib/components/layout/StickyNavConfig.svelte';
 
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
   let patient = fhirDataService.patient;
@@ -17,11 +22,20 @@
 
 
 <svelte:head>
-  <title>My Data - {INSTANCE_CONFIG.title}</title> 
+  <title>Add Data - {INSTANCE_CONFIG.title}</title> 
 </svelte:head>
 
-<h4> My Health Data</h4>
-<p>
-  Select a data category to display health data that you have imported, add data to it, and make changes.
-</p>
+<Breadcrumb divider="❯">
+  <BreadcrumbItem active>Add/Import</BreadcrumbItem>
+  <BreadcrumbItem><a href="/data/manage">Review</a></BreadcrumbItem>
+  <BreadcrumbItem><a href="/summaries">Share</a></BreadcrumbItem>
+</Breadcrumb>
+
 <AddDataset />
+
+<StickyNavConfig
+  showBack={false}
+  showForward={true}
+  forwardLabel="Review your data"
+  onForward={() => goto(`/data/manage`)}
+/>

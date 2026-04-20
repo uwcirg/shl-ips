@@ -4,6 +4,7 @@ import * as jose from 'jose';
 import { get } from 'svelte/store';
 import type { ConfigForServer, IAuthService, SHLAdminParams } from '$lib/utils/types';
 import { VIEWER_BASE } from '$lib/config/config';
+import { getUserShls } from '$lib/utils/shlServerUtils';
 
 export class SHLClient {
   // TODO: commit to jwt auth
@@ -33,27 +34,7 @@ export class SHLClient {
 
   async getUserShls(): Promise<SHLAdminParams[]> {
     const userId = await get(this.auth.userId);
-    if (!userId) return [];
-    const res = await fetch(`${API_BASE}/user`, {
-      method: 'POST',
-      headers: {
-        "Content-Type": 'application/json',
-        "Authorization": `Bearer ${await this.auth.getAccessToken()}`
-      },
-      body: JSON.stringify({ userId }),
-      cache: 'no-store'
-    });
-    const shls = await res.json();
-    return shls.map((shl: SHLAdminParams) => {
-      if (shl.config) {
-        shl = {
-          ...shl,
-          ...shl.config,
-        };
-        delete shl.config;
-      }
-      return shl;
-    });
+    return getUserShls(API_BASE, await this.auth.getAccessToken(), userId);
   }
 
   async createShl(config: ConfigForServer = {}): Promise<SHLAdminParams> {

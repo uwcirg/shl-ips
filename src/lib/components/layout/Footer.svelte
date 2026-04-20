@@ -8,7 +8,7 @@
 </script>
 
 <Row>
-  <Col style="margin-top: 20px; padding: 20px; border-top: 1px solid rgb(204, 204, 204);" >
+  <Col style="padding: 20px; border-top: 1px solid rgb(204, 204, 204);" >
     <footer>
       <p>
         This system lets an individual gather their health data from different sources, and create 

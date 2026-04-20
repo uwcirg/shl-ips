@@ -13,6 +13,7 @@
     TabContent,
     TabPane
   } from '@sveltestrap/sveltestrap';
+  import { goto } from '$app/navigation';
   import { getContext } from 'svelte';
   import { derived, get, writable, type Writable, type Readable } from 'svelte/store';
   import { METHOD_NAMES } from '$lib/config/config';
@@ -24,6 +25,10 @@
   import type { DataFormConfig } from '$lib/utils/types';
   import type { ResourceCollection } from '$lib/utils/ResourceCollection';
 
+  export let id: string;
+
+  // Title
+  export let title: string;
   // Top-level description
   export let description: string | undefined;
   export let info: string | undefined;
@@ -274,114 +279,38 @@
   </Row>
 </Offcanvas>
 
-<Row>
-  <Col class="d-flex justify-content-start" style="max-width: fit-content">
-    {#if description}
-      <p class="text-secondary"><em>{@html description}</em></p>
-    {/if}
-      <slot name="description"/>
-  </Col>
-  <Col class="d-flex justify-content-start px-0" style="max-width: min-content; max-height: min-content">
-    {#if info}
-      <InfoButton>
-        <div slot="content">{@html info}</div>
-      </InfoButton>
-    {/if}
-  </Col>
-</Row>
-
-<Accordion stayOpen class="mb-2">
-  <AccordionItem
-    class="my-data-accordion {accordionClass}"
-    active={ showAdd || addDataActiveOnLoad }
-  >
-    <!-- <h5 slot="header" class="my-2">{editable ? "Enter or Edit Stored Data" : "Add New Data"}</h5> -->
-    <h5 slot="header">Add or Update My Data</h5>
-    {#if (forms.length > 1 && ($mode === "advanced" || forms.filter(form => !form.advanced).length > 1))}
-      <TabContent on:tab={(e) => {
-        currentTab = e.detail;
-      }}>
-      {#each forms as formConfig, index}
-        {#if $mode === "advanced" || !formConfig.advanced }
-        <TabPane class="{formConfig.method}-tab" tabId={formConfig.method} style="padding-top:10px" active={formConfig.method === activeTab || !activeTab && index === 0}>
-          <span class="{formConfig.method}-tab" slot="tab">{formConfig.advanced ? "* " : ""}{formConfig.tabTitle || formConfig.title}</span>
-          {#if formConfig.title}<h5 class="my-2">{formConfig.title}</h5>{/if}
-          {#if formConfig.description}<p class="text-secondary"><em>{@html formConfig.description}</em></p>{/if}
-          {#if formConfig.component}
-            <svelte:component
-              this={formConfig.component}
-              disabled={$loading}
-              formData={$formData[formConfig.method]}
-              on:update-resources
-              on:sof-auth-init
-              on:sof-auth-fail 
-            />
-          {/if}
-        </TabPane>
-        {/if}
-      {/each}
-      </TabContent>
-    {:else}
-      {#if forms[0].title}<h5 class="my-2">{forms[0].title}</h5>{/if}
-      {#if forms[0].description}<p class="text-secondary"><em>{@html forms[0].description}</em></p>{/if}
-      {#if forms[0].component}
-        <svelte:component
-          this={forms[0].component}
-          disabled={$loading}
-          formData={$formData[forms[0].method]}
-          on:update-resources
-          on:sof-auth-init
-          on:sof-auth-fail
-        />
-      {/if}
-    {/if}
-    {#if $mode === "advanced" && forms.some(form => form.advanced)}
-      <br>
-      <em class="text-secondary">* Advanced feature for demo purposes only</em>
-      <br>
-    {/if}
-  </AccordionItem>
-</Accordion>
+{#if description}
+  <p class="text-secondary"><em>{@html description}</em></p>
+{/if}
+<slot name="description"/>
 {#if $userResources?.[category] && methodList?.length > 0 }
-  <Accordion stayOpen>
-    <AccordionItem
-      class="my-data-accordion"
-      active
-    >
-      <h5 slot="header">Data Previously Downloaded</h5>
-      {#if $userResources[category]}
-        <Row class="g-4 d-flex justify-content-start">
-          {#each datasets as dataset}
-            {@const {method, source} = dataset.collection.getTags()}
-            {@const {status, collection} = dataset}
-            <Col xs="12" sm="6" lg="4" style="">
-              <DatasetView {dataset} {masterPatient}>
-                <DropdownMenu slot="menu">
-                  <DropdownItem on:click={() => showDataset(collection)}><div class="d-flex justify-content-between w-100">View <Icon name="chevron-right"/></div></DropdownItem>
-                  {#if formIsEditable(method)}
-                    <DropdownItem class="text-primary"on:click={() => updateDataset(collection)}><Icon name="pencil"/> Edit</DropdownItem>
-                  {:else}
-                    <DropdownItem class="text-primary"on:click={() => updateDataset(collection)}><Icon name="arrow-repeat"/> Update</DropdownItem>
-                  {/if}
-                  <DropdownItem divider />
-                  <DropdownItem class="text-danger" on:click={() => deleteDataset(category, method, source)}><Icon name="trash"/> Delete</DropdownItem>
-                </DropdownMenu>
-                <Button slot="footer" class="d-flex justify-content-between align-items-center" color="secondary" outline on:click={() => showDataset(collection)}>
-                  <div class="d-flex align-items-center" style="min-width: 37px">
-                    <DatasetStatusLoader {status}>
-                      <Badge color="primary">{collection.getResourceCount()}</Badge>
-                    </DatasetStatusLoader>
-                  </div>
-                  <div>View </div>
-                  <Icon name="chevron-right"/>
-                </Button>
-              </DatasetView>
-            </Col>
-          {/each}
-        </Row>
-      {/if}
-    </AccordionItem>
-  </Accordion>
+  <Row class="g-4 d-flex justify-content-start">
+    {#each datasets as dataset}
+      {@const {method, source} = dataset.collection.getTags()}
+      {@const {status, collection} = dataset}
+      <Col xs="12" sm="6" lg="4" style="">
+        <DatasetView {dataset} {masterPatient}>
+          <DropdownMenu slot="menu">
+            <DropdownItem on:click={() => showDataset(collection)}><div class="d-flex justify-content-between w-100">View <Icon name="chevron-right"/></div></DropdownItem>
+            <DropdownItem class="text-primary"on:click={() => updateDataset(collection)}><Icon name="arrow-repeat"/> Update</DropdownItem>
+            <DropdownItem divider />
+            <DropdownItem class="text-danger" on:click={() => deleteDataset(category, method, source)}><Icon name="trash"/> Delete</DropdownItem>
+          </DropdownMenu>
+          <Button slot="footer" class="d-flex justify-content-between align-items-center" color="secondary" outline on:click={() => showDataset(collection)}>
+            <div class="d-flex align-items-center" style="min-width: 37px">
+              <DatasetStatusLoader {status}>
+                <Badge color="primary">{collection.getResourceCount()}</Badge>
+              </DatasetStatusLoader>
+            </div>
+            <div>View </div>
+            <Icon name="chevron-right"/>
+          </Button>
+        </DatasetView>
+      </Col>
+    {/each}
+  </Row>
+{:else}
+  <Button color="primary" on:click={() => goto(`/data#${id}`)}><Icon name="chevron-left"/> Add {title}</Button>
 {/if}
 
 <style>
