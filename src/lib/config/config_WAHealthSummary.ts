@@ -48,27 +48,27 @@ export default {
             {
               method: METHODS.PROVIDER_HEALTH_RECORD_SOF,
               tabTitle: "SMART Data Access",
-              description: "Fetch US Core data from a healthcare provider test server via SMART authorization.",
+              description: "Import US Core health data from a healthcare provider test server via SMART authorization.",
               component: FetchSoF
             },
             {
               method: METHODS.PROVIDER_HEALTH_RECORD_URL,
               tabTitle: "FHIR URL",
-              description: "Fetch health summary data from a FHIR URL.",
+              description: "Import health data from a FHIR URL.",
               advanced: true,
               component: FetchUrl
             },
             {
               method: METHODS.PROVIDER_HEALTH_RECORD_CARINBB,
               tabTitle: "Insurance Access",
-              description: "Fetch CARIN insurance data from an insurance provider test server via SMART authorization.",
+              description: "Import CARIN insurance and health data from an insurance provider test server via SMART authorization.",
               advanced: true,
               component: FetchCARINBB
             },
             {
               method: METHODS.PROVIDER_HEALTH_RECORD_TEFCA,
               tabTitle: "TEFCA Query",
-              description: "Fetch health summary data with a federated TEFCA query.",
+              description: "Import health data using a federated TEFCA query.",
               advanced: true,
               component: FetchTEFCA
             },

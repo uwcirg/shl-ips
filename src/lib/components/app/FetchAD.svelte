@@ -148,7 +148,7 @@
     }).then(function (response: any) {
       if (!response.ok) {
         // make the promise be rejected if we didn't get a 2xx response
-        // throw new Error('Unable to fetch patient data', { cause: response });
+        // throw new Error('Unable to import patient data', { cause: response });
         console.warn(`No matching patient found at ${baseUrl}`);
         return null;
       } else {
@@ -209,10 +209,10 @@
             attachment.data = base64String;
   */
       } else {
-        console.error(`Failed to fetch PDF from ${url}`);
+        console.error(`Failed to import PDF from ${url}`);
       }
     } catch (error) {
-      console.error(`Error fetching PDF from ${url}:`, error);
+      console.error(`Error importing PDF from ${url}:`, error);
     }
   }
 
@@ -223,8 +223,8 @@
       }).then(function (response: any) {
         if (!response.ok) {
           // make the promise be rejected if we didn't get a 2xx response
-          //throw new Error('Unable to fetch ', { cause: response });
-          console.error(`Failed to fetch resource from ${url}`);
+          //throw new Error('Unable to import ', { cause: response });
+          console.error(`Failed to import resource from ${url}`);
         } else {
           return response;
         }
@@ -445,7 +445,7 @@
   </FormGroup>
   {#if selectedSource}
     <FormGroup>
-      <Label>Enter your information to fetch related advance directives</Label>
+      <Label>Enter your information to import advance directives</Label>
       <br>
       <DemographicForm demographics={formDemographics} show={ ["first", "last", "gender", "dob"]}/>
     </FormGroup>

@@ -107,9 +107,9 @@
         <Col xs="auto">
         <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
             {#if !processing}
-            Fetch Data
+            Import Data
             {:else}
-            Fetching...
+            Importing...
             {/if}
         </Button>
         </Col>

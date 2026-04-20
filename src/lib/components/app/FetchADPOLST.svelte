@@ -111,7 +111,7 @@
     }).then(function (response: any) {
       if (!response.ok) {
         // make the promise be rejected if we didn't get a 2xx response
-        // throw new Error('Unable to fetch patient data', { cause: response });
+        // throw new Error('Unable to import patient data', { cause: response });
         console.warn(`No matching patient found at ${baseUrl}`);
         return null;
       } else {
@@ -144,7 +144,7 @@
       }).then(function (response: any) {
         if (!response.ok) {
           // make the promise be rejected if we didn't get a 2xx response
-          // throw new Error('Unable to fetch advance directive data', { cause: response });
+          // throw new Error('Unable to import advance directive data', { cause: response });
           console.warn(`No advance directives found at ${url} for patient ${patient.id}`);
         } else {
           return response.json();
@@ -172,10 +172,10 @@
             attachment.data = base64String;
   */
       } else {
-        console.error(`Failed to fetch PDF from ${url}`);
+        console.error(`Failed to import PDF from ${url}`);
       }
     } catch (error) {
-      console.error(`Error fetching PDF from ${url}:`, error);
+      console.error(`Error importing PDF from ${url}:`, error);
     }
   }
 
@@ -186,8 +186,8 @@
       }).then(function (response: any) {
         if (!response.ok) {
           // make the promise be rejected if we didn't get a 2xx response
-          //throw new Error('Unable to fetch ', { cause: response });
-          console.error(`Failed to fetch resource from ${url}`);
+          //throw new Error('Unable to import ', { cause: response });
+          console.error(`Failed to import resource from ${url}`);
         } else {
           return response;
         }
