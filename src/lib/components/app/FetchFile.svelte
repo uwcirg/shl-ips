@@ -77,7 +77,7 @@
                 source = source || filename;
             }
             let resources;
-            let composition = bundle.entry.find(entry => entry.resource.resourceType === "Composition").resource as Composition;
+            let composition = bundle.entry.find(entry => entry.resource.resourceType === "Composition")?.resource as Composition;
             if (composition && composition.type?.coding?.[0].system === "http://loinc.org" && composition.type?.coding?.[0].code === "60591-5") {
                 resources = getResourcesFromIPS(bundle);
             } else {
@@ -97,7 +97,7 @@
     }
 </script>
 
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, source, retrieveIps)}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, uploadFiles?.[0]?.name, retrieveIps)}>
     <FormGroup>
         <Label>Upload a FHIR Bundle (<code>.json</code> or signed <code>.smart-health-card</code>)</Label>
         <Input type="file" name="file" bind:files={uploadFiles} />
