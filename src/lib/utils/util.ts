@@ -469,7 +469,15 @@ export function constructPatientResource (
     patient.birthDate = props.dob;
   }
   if (props.gender) {
-    patient.gender = props.gender;
+    if (props.gender === 'male') {
+      patient.gender = 'male';
+    } else if (props.gender === 'female') {
+      patient.gender = 'female';
+    } else if (props.gender === 'non-binary' || props.gender === 'other') {
+      patient.gender = 'other';
+    } else {
+      patient.gender = 'unknown';
+    }
   }
   if (props.phone || props.email) {
     patient.telecom = [];
