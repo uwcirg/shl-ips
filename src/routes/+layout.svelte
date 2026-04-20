@@ -13,6 +13,7 @@
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import type { IAuthService, NavConfig, SHLAdminParams } from '$lib/utils/types';
   import ToastContainer from '$lib/components/layout/ToastContainer.svelte';
+  import { createToastStore } from '$lib/utils/toast';
 
   let authService: IAuthService = new AuthService();
   setContext('authService', authService);
@@ -32,7 +33,6 @@
   const navConfig = writable<NavConfig>({backLabel: '', forwardLabel: '', showBack: false, showForward: false, onBack: () => {}, onForward: () => {}});
   setContext('navConfig', navConfig);
 
-  import { createToastStore } from '$lib/utils/toast';
   const toastStore = createToastStore();
   setContext('toast', toastStore);
 
