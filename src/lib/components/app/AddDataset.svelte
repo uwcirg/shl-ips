@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher, onMount, SvelteComponent } from 'svelte';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { getContext } from 'svelte';
@@ -34,7 +34,7 @@
 
   let sections: Array<{
     id: string;
-    title?: string;
+    title?: string | SvelteComponent;
     description?: string;
     category: string;
     forms: DataFormConfig[]
@@ -169,10 +169,17 @@
             <Spinner color="secondary" size="sm"/>
           {/if}
         </div>
-        <h5 class="my-2">{section.title}</h5>
+        <h5 class="my-2">
+          {#if typeof section.title === 'string' }
+            {section.title}
+          {:else if section.title instanceof Object}
+            <svelte:component this={section.title}/>
+          {/if}
+        </h5>
       </div>
       <DataCategoryView
         description={section.description}
+        info={section.info}
         category = {section.category}
         forms={section.forms}
         showAdd={section.id === activeSection}
