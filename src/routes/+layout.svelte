@@ -94,13 +94,15 @@
 
 <Container class="main" fluid>
   <Header />
-  <ToastContainer />
   <div class="main-content">
     <slot />
   </div>
-  <StickyNav
-    {...$navConfig}
-  />
+  <div class="sticky-bottom">
+    <ToastContainer />
+    <StickyNav
+      {...$navConfig}
+    />
+  </div>
   <Footer />
 </Container>
 
@@ -133,5 +135,10 @@
   } */
   :global(.navbar .container-fluid) {
     padding: 0px;
+  }
+
+  .sticky-bottom {
+    margin-left: calc(-1 * var(--bs-gutter-x, 1.5rem) / 2);
+    margin-right: calc(-1 * var(--bs-gutter-x, 1.5rem) / 2);
   }
 </style>
