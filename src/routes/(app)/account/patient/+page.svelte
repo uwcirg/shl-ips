@@ -4,6 +4,7 @@
   import { Button, Card, CardHeader, CardBody, Row, Col } from '@sveltestrap/sveltestrap';
   import Patient from '$lib/components/resource-templates/Patient.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
+  import { CATEGORIES, METHODS } from '$lib/config/tags';
   import FHIRDataService from '$lib/utils/FHIRDataService';
 
   let mode = getContext('mode');
@@ -38,5 +39,5 @@
   </CardBody>
 </Card>
 {/if}
-<Button color="primary" style="width:fit-content" on:click={() => goto('/data#about-me')}>Update My Patient Data</Button>
+<Button color="primary" style="width:fit-content" on:click={() => goto(`/data/add/${CATEGORIES.ABOUT_ME}/${METHODS.PATIENT_DEMOGRAPHICS}`)}>Update My Patient Data</Button>
 

@@ -7,6 +7,7 @@ export const METHODS = {
   PATIENT_MEDICAL_HISTORY_FORM: "patient-medical-history-form",
   PATIENT_CARE_NEEDS_FORM: "patient-care-needs-form",
   PATIENT_STORY_FORM: "patient-story-form",
+  PATIENT_DEMOGRAPHICS: "patient",
   PROVIDER_HEALTH_RECORD_SOF: "provider-health-record-sof",
   PROVIDER_HEALTH_RECORD_SOF_SEARCH: "provider-health-record-sof-search",
   PROVIDER_HEALTH_RECORD_URL: "provider-health-record-url",

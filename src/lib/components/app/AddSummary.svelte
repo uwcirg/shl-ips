@@ -24,6 +24,7 @@
     Spinner,
   } from '@sveltestrap/sveltestrap';
   import { DATA_CATEGORY_NAMES, METHOD_NAMES, METHOD_SYSTEM } from '$lib/config/config';
+  import { CATEGORIES, METHODS } from '$lib/config/tags';
   import ResourceSelector from '$lib/components/app/ResourceSelector.svelte';
   import {
     getResourcesFromIPS,
@@ -489,7 +490,7 @@
                 size="sm"
                 color="secondary"
                 outline
-                on:click={() => goto('/data#about-me')}
+                on:click={() => goto(`/data/add/${CATEGORIES.ABOUT_ME}/${METHODS.PATIENT_DEMOGRAPHICS}`)}
               >
                 Edit
               </Button>

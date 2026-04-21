@@ -147,7 +147,7 @@ export default {
           category: CATEGORIES.ABOUT_ME,
           forms: [
             {
-              method: "patient",
+              method: METHODS.PATIENT_DEMOGRAPHICS,
               tabTitle: "About Me",
               title: "Edit My Personal Information",
               description: "Edit the information about yourself that you would like to include in your Shareable Health Summaries.",
