@@ -156,7 +156,7 @@
 
 {#each sections as section, index}
   <div class="d-flex justify-content-start align-items-center">
-    <h5 class="my-2">{section.title}</h5>
+    <h5 class="my-2 me-3">{section.title}</h5>
     <div class="me-3">
       {#if section.category === undefined || ($loading ? undefined : Boolean($userResources?.[section.category])) === true}
         <!-- <Icon name="check-circle-fill" class="text-success"/> -->
