@@ -310,7 +310,7 @@
     {/each}
   </Row>
 {:else}
-  <Button color="primary" on:click={() => goto(`/data#${id}`)}><Icon name="chevron-left"/> Add {title}</Button>
+  <Button color="primary" on:click={() => goto(`/data#${category}`)}><Icon name="chevron-left"/> Add {title}</Button>
 {/if}
 
 <style>
