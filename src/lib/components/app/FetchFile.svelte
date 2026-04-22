@@ -16,6 +16,10 @@
     import { METHODS, CATEGORIES } from '$lib/config/tags';
 
     export let disabled = false;
+    export let processing = false;
+    
+    let buttonText = "Import File";
+    let processingText = "Importing...";
     
     const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
@@ -27,14 +31,12 @@
         resources: undefined,
         category: CATEGORY,
         method: METHOD,
-        sourceName: undefined,
-        source: undefined
+        sourceName: "",
+        source: ""
     };
 
     let uploadFiles: FileList | undefined;
-    let processing = false;
     let fetchError = "";
-    let source: string | undefined;
 
     async function decodeSHC(shc: SHCFile) {
       try {
@@ -63,18 +65,17 @@
                 filename = uploadFiles[0].name;
                 content = JSON.parse(new TextDecoder().decode(await uploadFiles[0].arrayBuffer()));
             }
+
+            if (filename === undefined || content === undefined) { throw Error("Error: file is empty."); }
+
             let bundle;
-            source = filename;
             if (content == undefined) { throw Error("Error: file is empty."); }
             if (content.verifiableCredential) {
                 bundle = await decodeSHC(content);
-            } else if (content.resourceType == "Bundle") {
+            } else if (content.resourceType === "Bundle") {
                 bundle = content;
             } else {
                 throw Error("Error: file must contain a FHIR Bundle.");
-            }
-            if (!source) {
-                source = source || filename;
             }
             let resources;
             let composition = bundle.entry.find(entry => entry.resource.resourceType === "Composition")?.resource as Composition;
@@ -84,7 +85,6 @@
                 resources = bundle.entry.map(entry => entry.resource);
             }
             if (!resources) { throw Error("Error: file contains no FHIR resources."); }
-            processing = false;
             resourceResult.resources = resources;
             resourceResult.source = source;
             resourceResult.sourceName = filename;
@@ -92,7 +92,7 @@
         } catch (e) {
             processing = false;
             console.log('Failed', e);
-            fetchError = "Error preparing IPS";
+            fetchError = "Error importing file";
         }
     }
 </script>
@@ -104,25 +104,18 @@
     </FormGroup>
 
     <Row>
-        <Col xs="auto">
+      <Col xs="auto">
         <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
-            {#if !processing}
-            Import Data
-            {:else}
-            Importing...
-            {/if}
+          {processing ? processingText : buttonText}
         </Button>
-        </Col>
-        {#if processing}
-        <Col xs="auto" class="d-flex align-items-center px-0">
-            <Spinner color="primary" type="border" size="md"/>
-        </Col>
-        {/if}
+      </Col>
+      <Col xs="auto" class="d-flex align-items-center px-0">
         {#if disabled}
-          <Col xs="auto" class="d-flex align-items-center px-0">
-            Please wait...
-          </Col>
+          Please wait...
+        {:else if processing}
+          <Spinner color="primary" type="border" size="md"/>
         {/if}
+      </Col>
     </Row>
 </form>
 <FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>

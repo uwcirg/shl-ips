@@ -19,6 +19,10 @@
   import { METHODS, CATEGORIES } from '$lib/config/tags';
 
   export let disabled = false;
+  export let processing = false;
+  
+  let buttonText = "Import Data";
+  let processingText = "Importing...";
 
   // For "quick sample" in demo
   import { EXAMPLE_IPS, IPS_DEFAULT } from '$lib/config/config';
@@ -33,15 +37,13 @@
   const METHOD = METHODS.PROVIDER_HEALTH_RECORD_SOF;
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
-  let processing = false;
-  let loadingSample = false;
   let fetchError = "";
   let result: ResourceRetrieveEvent = {
     resources: undefined,
     category: CATEGORY,
     method: METHOD,
-    sourceName: undefined,
-    source: undefined
+    sourceName: "",
+    source: ""
   };
 
   let sofHostSelection = SOF_HOSTS[0].id;
@@ -87,14 +89,19 @@
           sofHost = sofHostAuthd;
           sofHostSelection = sofHost.id;
           await fetchData();
+        } else {
+          fetchError = `No registered SMART host found matching ${url}`;
         }
       }
     }
   });
 
   async function fetchData() {
-    processing = true;
     try {
+      processing = true;
+      if (!sofHost) {
+        throw Error("Please select a provider.");
+      }
       let retrievedResources = await getResourcesWithReferences(1);
       const isIps = (e) => e.resourceType === 'Bundle' && e.type === 'document'; 
       let ipsBundles = retrievedResources.filter(e => isIps(e));
@@ -115,8 +122,8 @@
     } catch (e: any) {
       console.log(e.message);
       fetchError = e.message;
-    } finally {
       processing = false;
+    } finally {
       window.history.replaceState(null, "", clearURLOfParams($page.url));
       endSession();
     }
@@ -124,7 +131,7 @@
 
   async function quickLoad() {
     fetchError = "";
-    loadingSample = true;
+    processing = true;
     try {
       let content;
       const contentResponse = await fetch(defaultUrl!, {
@@ -139,7 +146,6 @@
       });
       content = await contentResponse.json();
       let resources = await getResourcesFromIPS(content);
-      loadingSample = false
       result = {
         resources,
         category: CATEGORY,
@@ -149,9 +155,10 @@
       };
       resourceDispatch('update-resources', result);
     } catch (e) {
-      loadingSample = false;
       console.log('Failed', e);
-      fetchError = "Error preparing IPS";
+      fetchError = "Error loading sample";
+    } finally {
+      processing = false;
     }
   }
 </script>
@@ -166,42 +173,30 @@
       </Row>
     {/each}
   </FormGroup>
-
   <Row>
     <Col xs="auto">
-    <Button color="primary" style="width:fit-content" disabled={processing || disabled || loadingSample} type="submit">
-      {#if !processing}
-        Import Data
-      {:else}
-        Importing...
-      {/if}
-    </Button>
+      <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
+        {processing ? processingText : buttonText}
+      </Button>
     </Col>
     <Col xs="auto">
       <Button
       color="secondary"
       outline
       style="width:fit-content"
-      disabled={processing || disabled || loadingSample}
+      disabled={processing || disabled}
       type="button"
       on:click={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, defaultUrl, quickLoad)}>
-        {#if !loadingSample}
-          Quick Sample
-        {:else}
-          Loading...
-        {/if}
+        Quick Sample
       </Button>
     </Col>
-  {#if processing || loadingSample}
     <Col xs="auto" class="d-flex align-items-center px-0">
-      <Spinner color="primary" type="border" size="md"/>
+      {#if disabled}
+        Please wait...
+      {:else if processing}
+        <Spinner color="primary" type="border" size="md"/>
+      {/if}
     </Col>
-  {/if}
-  {#if disabled}
-    <Col xs="auto" class="d-flex align-items-center px-0">
-      Please wait...
-    </Col>
-  {/if}
   </Row>
 </form>
 <FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
