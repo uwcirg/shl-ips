@@ -21,6 +21,10 @@
   import { METHODS, CATEGORIES } from '$lib/config/tags';
 
   export let disabled = false;
+  export let processing = false;
+  
+  let buttonText = "Import Data";
+  let processingText = "Importing...";
 
   let authService: IAuthService = getContext('authService');
 
@@ -35,7 +39,6 @@
   let summaryUrls = EXAMPLE_IPS;
   let defaultUrl = summaryUrls[IPS_DEFAULT];
   let isOpen = false;
-  let processing = false;
   let fetchError = "";
 
   let shcResult: SHCRetrieveEvent = {
@@ -140,7 +143,6 @@
       let contentRaw = await contentResponse.text();
       content = JSON.parse(contentRaw);
       hostname = summaryUrlValidated?.hostname;
-      processing = false
       
       if (content != undefined && content.verifiableCredential) {
         shcResult = {
@@ -214,23 +216,16 @@
   <Row>
     <Col xs="auto">
       <Button color="primary" style="width:fit-content" disabled={processing || disabled || !summaryUrlValidated} type="submit">
-        {#if !processing}
-          Import Data
-        {:else}
-          Importing...
-        {/if}
+        {processing ? processingText : buttonText}
       </Button>
     </Col>
-    {#if processing}
     <Col xs="auto" class="d-flex align-items-center px-0">
-      <Spinner color="primary" type="border" size="md"/>
-    </Col>
-    {/if}
-    {#if disabled}
-      <Col xs="auto" class="d-flex align-items-center px-0">
+      {#if disabled}
         Please wait...
-      </Col>
-    {/if}
+      {:else if processing}
+        <Spinner color="primary" type="border" size="md"/>
+      {/if}
+    </Col>
   </Row>
 </form>
 <FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
