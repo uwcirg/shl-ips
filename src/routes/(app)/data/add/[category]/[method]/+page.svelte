@@ -79,7 +79,7 @@
       if (resourceResult.resources?.length) {
         // Trigger update in ResourceSelector
         await fhirDataService.addOrReplaceDataset(resourceResult);
-        showSuccessMessage();
+        showSuccessMessage(resourceResult.sourceName);
       }
     } catch (e) {
       console.log('Failed', e);
@@ -100,9 +100,9 @@
     updateFormDataIfApplicable(method);
   }
 
-  async function showSuccessMessage() {
+  async function showSuccessMessage(source?: string) {
     toast.add({
-      message: "Successfully saved data",
+      message: `Successfully saved data${source ? ` from ${source}` : ''}`,
       type: 'success'
     });
     successMessage = true;
