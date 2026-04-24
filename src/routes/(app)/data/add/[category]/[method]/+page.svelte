@@ -15,7 +15,7 @@
   import { randomStringWithEntropy } from '$lib/utils/util';
   import StickyNavConfig from '$lib/components/layout/StickyNavConfig.svelte';
   import { METHOD_NAMES } from '$lib/config/config.js';
-  import type { ToastStore } from '$lib/utils/toast.js';
+  import type { ToastStore } from '$lib/stores/toast';
   
   export let data;
   let {category, method, categoryIndex, methodIndex} = data;

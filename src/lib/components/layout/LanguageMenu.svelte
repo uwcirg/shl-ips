@@ -1,7 +1,7 @@
 <script lang="ts">
     import { Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Icon } from '@sveltestrap/sveltestrap';
     // import { locale } from 'svelte-i18n'; // TODO
-    import { locale, locales } from '$lib/utils/localeStore.ts';
+    import { locale, locales } from '$lib/stores/localeStore';
 </script>
 
 <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">

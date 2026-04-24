@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Col, Icon, Toast, ToastHeader, ToastBody } from '@sveltestrap/sveltestrap';
-  import { type ToastStore } from '$lib/utils/toast';
+  import { type ToastStore } from '$lib/stores/toast';
   import { getContext, onMount } from 'svelte';
 
   const toast: ToastStore = getContext('toast');
