@@ -13,7 +13,7 @@
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import type { IAuthService, NavConfig, SHLAdminParams } from '$lib/utils/types';
   import ToastContainer from '$lib/components/layout/ToastContainer.svelte';
-  import { createToastStore } from '$lib/utils/toast';
+  import { createToastStore } from '$lib/stores/toast';
 
   let authService: IAuthService = new AuthService();
   setContext('authService', authService);
