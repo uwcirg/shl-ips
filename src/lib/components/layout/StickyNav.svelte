@@ -1,5 +1,6 @@
 <!-- StickyNav.svelte -->
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { Button, Row, Col } from '@sveltestrap/sveltestrap';
   export let backLabel: string = 'Back';
   export let forwardLabel: string = 'Next';
@@ -11,7 +12,6 @@
   const NAV_HEIGHT = 63; // The height of the nav, so that the static/fixed transition happens at the right place
 
   let footerVisible = false;
-  import { onMount } from 'svelte';
   let sentinel: HTMLElement;
 
   onMount(() => {
@@ -30,7 +30,7 @@
   });
 </script>
 
-<div bind:this={sentinel} class="sticky-nav-sentinel mt-5" aria-hidden="true"></div>
+<div bind:this={sentinel} class="sticky-nav-sentinel" aria-hidden="true"></div>
 {#if showBack || showForward}
   <div class="sticky-nav {footerVisible ? 'sticky-nav--docked' : 'sticky-nav--fixed'}">
     <Row class="align-items-center">

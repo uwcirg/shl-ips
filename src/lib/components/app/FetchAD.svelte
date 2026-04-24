@@ -26,6 +26,10 @@
   import { METHODS, CATEGORIES } from '$lib/config/tags';
 
   export let disabled = false;
+  export let processing = false;
+
+  let buttonText = "Update Advance Directives";
+  let processingText = "Adding...";
 
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
   let demographics: UserDemographics = get(fhirDataService.demographics);
@@ -101,7 +105,6 @@
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let selectedSource = "Current User";
-  let processing = false;
   let fetchError = '';
   let message = '';
 
@@ -243,6 +246,7 @@
       }) : [];
       if (resources.length === 0) {
         console.warn("No advance directives found for patient "+patient.id);
+        fetchError = "No advance directives found.";
         processing = false;
         return;
       }
@@ -393,7 +397,6 @@
           }
         }
       }
-      processing = false;
       let result:ResourceRetrieveEvent = {
         resources: resources,
         category: CATEGORY,
@@ -451,23 +454,16 @@
     <Row>
       <Col xs="auto">
         <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
-          {#if !processing}
-            Update advance directives
-          {:else}
-            Adding...
-          {/if}
+          {processing ? processingText : buttonText}
         </Button>
       </Col>
-      {#if processing}
-        <Col xs="auto" class="d-flex align-items-center px-0">
-          <Spinner color="primary" type="border" size="md"/>
-        </Col>
-      {/if}
-      {#if disabled}
-        <Col xs="auto" class="d-flex align-items-center px-0">
+      <Col xs="auto" class="d-flex align-items-center px-0">
+        {#if disabled}
           Please wait...
-        </Col>
-      {/if}
+        {:else if processing}
+          <Spinner color="primary" type="border" size="md"/>
+        {/if}
+      </Col>
     </Row>
   {/if}
 </form>

@@ -15,11 +15,14 @@
   import { randomStringWithEntropy } from '$lib/utils/util';
   import StickyNavConfig from '$lib/components/layout/StickyNavConfig.svelte';
   import { METHOD_NAMES } from '$lib/config/config.js';
+  import type { ToastStore } from '$lib/stores/toast';
   
   export let data;
   let {category, method, categoryIndex, methodIndex} = data;
   let sections = INSTANCE_CONFIG.pages.data.sections;
   let form = sections[categoryIndex].forms[methodIndex];
+
+  const toast: ToastStore = getContext('toast');
   
   const hash = randomStringWithEntropy();
   const idSuffix = `${category}-${method}-${hash}`;
@@ -68,17 +71,21 @@
     sessionStorage.removeItem('URL');
   }
 
+  let processing = false;
   async function handleNewResources(details: ResourceRetrieveEvent) {
     try {
+      processing = true;
       resourceResult = details;
       if (resourceResult.resources?.length) {
         // Trigger update in ResourceSelector
         await fhirDataService.addOrReplaceDataset(resourceResult);
-        showSuccessMessage();
+        showSuccessMessage(resourceResult.sourceName);
       }
     } catch (e) {
       console.log('Failed', e);
       fetchError = "Error preparing IPS";
+    } finally {
+      processing = false;
     }
   }
 
@@ -93,7 +100,11 @@
     updateFormDataIfApplicable(method);
   }
 
-  async function showSuccessMessage() {
+  async function showSuccessMessage(source?: string) {
+    toast.add({
+      message: `Successfully saved data${source ? ` from ${source}` : ''}`,
+      type: 'success'
+    });
     successMessage = true;
     setTimeout(() => {
       successMessage = false;
@@ -174,6 +185,7 @@
         this={form.component}
         disabled={$loading}
         formData={$formData}
+        processing={processing}
         on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
         on:sof-auth-fail={ async ({ detail }) => { revertPreAuth(detail) }}
         on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }

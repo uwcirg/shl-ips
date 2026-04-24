@@ -19,6 +19,11 @@
 
   export let disabled = false;
   export let formData: IResourceCollection | undefined;
+  export let processing = false;
+  
+  let buttonText = "Save your body concerns";
+  let processingText = "Saving...";
+
   let resources;
   $: resources = formData?.resources;
   $: if ($resources) {
@@ -36,7 +41,6 @@
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
-  let processing = false;
   let fetchError = '';
 
   interface BodyConcernEntry {
@@ -470,6 +474,7 @@
   }
 
   function prepareIps() {
+    processing = true;
     const resources = values.bodyPartConcerns.map(prepareConditionResource).filter((entry) => entry !== undefined);
     const result = {
       resources: resources,
@@ -555,24 +560,18 @@
         color="primary"
         style="width:fit-content"
         disabled={processing || disabled}
-        on:click={FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, SOURCE.url, prepareIps)}>
-        {#if !processing}
-          Save your body concerns
-        {:else}
-          Saving...
-        {/if}
+        on:click={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, SOURCE.url, prepareIps)}
+      >
+        {processing ? processingText : buttonText}
       </Button>
     </Col>
-    {#if processing}
-      <Col xs="auto" class="d-flex align-items-center px-0">
-        <Spinner color="primary" type="border" size="md"/>
-      </Col>
-    {/if}
-    {#if disabled}
-      <Col xs="auto" class="d-flex align-items-center px-0">
+    <Col xs="auto" class="d-flex align-items-center px-0">
+      {#if disabled}
         Please wait...
-      </Col>
-    {/if}
+      {:else if processing}
+        <Spinner color="primary" type="border" size="md"/>
+      {/if}
+    </Col>
   </Row>
 </form>
 <FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>

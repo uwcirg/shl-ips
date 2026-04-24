@@ -14,10 +14,14 @@
 
   export let disabled = false;
   export let formData: IResourceCollection | undefined;
+  export let processing = false;
+  
+  let buttonText = "Update your care plan information";
+  let processingText = "Adding...";
+
   let resources;
   $: resources = formData?.resources;
 
-  let processing = false;
   let fetchError = '';
 
   let first = '';
@@ -33,6 +37,7 @@
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
   function prepareIps() {
+    processing = true;
     const resources = constructPatientResource();
     const result = {
       resources: resources
@@ -90,23 +95,16 @@
   <Row>
     <Col xs="auto">
       <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
-        {#if !processing}
-          Update your care plan information
-        {:else}
-          Adding...
-        {/if}
+        {processing ? processingText : buttonText}
       </Button>
     </Col>
-    {#if processing}
-      <Col xs="auto" class="d-flex align-items-center px-0">
-        <Spinner color="primary" type="border" size="md"/>
-      </Col>
-    {/if}
-    {#if disabled}
-      <Col xs="auto" class="d-flex align-items-center px-0">
+    <Col xs="auto" class="d-flex align-items-center px-0">
+      {#if disabled}
         Please wait...
-      </Col>
-    {/if}
+      {:else if processing}
+        <Spinner color="primary" type="border" size="md"/>
+      {/if}
+    </Col>
   </Row>
 </form>
 

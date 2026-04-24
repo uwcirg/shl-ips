@@ -23,6 +23,10 @@
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 
   export let disabled = false;
+  export let processing = false;
+  
+  let buttonText = "Search Repository";
+  let processingText = "Searching...";
 
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
@@ -64,7 +68,6 @@
     },
   };
   let selectedSource = "System Account";
-  let processing = false;
   let fetchError = '';
   let message = '';
 
@@ -332,7 +335,6 @@
         }
       }
       
-      processing = false;
       let result:ResourceRetrieveEvent = {
         resources: resources,
         source: hostname,
@@ -386,23 +388,16 @@
   <Row>
     <Col xs="auto">
       <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
-        {#if !processing}
-          Search Repository<Icon class="ms-2" name="search" />
-        {:else}
-          Searching...<Icon class="ms-2" name="search" />
-        {/if}
+        {processing ? processingText : buttonText} <Icon class="ms-2" name="search" />
       </Button>
     </Col>
-    {#if processing}
-      <Col xs="auto" class="d-flex align-items-center px-0">
-        <Spinner color="primary" type="border" size="md"/>
-      </Col>
-    {/if}
-    {#if disabled}
-      <Col xs="auto" class="d-flex align-items-center px-0">
+    <Col xs="auto" class="d-flex align-items-center px-0">
+      {#if disabled}
         Please wait...
-      </Col>
-    {/if}
+      {:else if processing}
+        <Spinner color="primary" type="border" size="md"/>
+      {/if}
+    </Col>
   </Row>
   {/if}
 </form>
