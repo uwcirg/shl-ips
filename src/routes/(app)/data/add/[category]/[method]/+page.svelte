@@ -95,9 +95,17 @@
     window.scrollTo({top: (elementTop ?? 0) - offset-10, behavior: 'smooth'});
   }
 
-  function deleteDataset(category: string, method: string, source: string) {
-    fhirDataService.deleteDataset(category, method, source);
-    updateFormDataIfApplicable(method);
+  async function deleteDataset(category: string, method: string, source: string, sourceName?: string) {
+    try {
+      await fhirDataService.deleteDataset(category, method, source);
+      updateFormDataIfApplicable(method);
+      toast.add({
+        message: `Successfully deleted ${sourceName ?? `data from ${source}`}`,
+        type: 'success'
+      });
+    } catch (err) {
+      reportError(err);
+    }
   }
 
   async function showSuccessMessage(source?: string) {
@@ -196,7 +204,7 @@
     <h4 class="mt-3">Data you've added</h4>
     <Row class="g-4 d-flex justify-content-start">
       {#each datasets as dataset}
-        {@const {method, source} = dataset.collection.getTags()}
+        {@const {method, source, sourceName} = dataset.collection.getTags()}
         {@const {status, collection} = dataset}
         <Col xs="12" sm="6" lg="4" style="">
           <DatasetView {dataset} {masterPatient}>
@@ -208,7 +216,7 @@
                 <DropdownItem class="text-primary"on:click={() => updateDataset(collection)}><Icon name="arrow-repeat"/> Update</DropdownItem>
               {/if}
               <DropdownItem divider />
-              <DropdownItem class="text-danger" on:click={() => deleteDataset(category, method, source)}><Icon name="trash"/> Delete</DropdownItem>
+              <DropdownItem class="text-danger" on:click={() => deleteDataset(category, method, source, sourceName)}><Icon name="trash"/> Delete</DropdownItem>
             </DropdownMenu>
             <Button slot="footer" class="d-flex justify-content-between align-items-center" color="secondary" outline on:click={() => showDataset(collection)}>
               <div class="d-flex align-items-center" style="min-width: 37px">
