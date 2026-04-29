@@ -82,6 +82,12 @@
     window.removeEventListener('resize', dispatchPageSize);
   });
 
+  function handleError(err: Error) {
+    // console.error(err);
+    toastStore.add({type: 'danger', message: err.message});
+    // show toast, log to service, etc.
+  }
+
 </script>
 
 <svelte:head>
@@ -91,6 +97,16 @@
     <link rel="preload" as="image" href={`${INSTANCE_CONFIG.imgPath}/logo-60h.png`} />
     <link rel="preload" as="image" href={`${INSTANCE_CONFIG.imgPath}/divider.png`} />
 </svelte:head>
+
+<svelte:window
+  on:error={(e) => handleError(e.error)}
+  on:unhandledrejection={(e) => handleError(e.reason)}
+/>
+
+<!-- Error testing
+<Button on:click={() => { throw new Error('Test Error'); }}>Error</Button>
+<Button on:click={() => { let a; a.b.c.d.e.f.g.h.i.j.k.l.m.n.o.p.q.r.s.t.u.v.w.x.y.z; }}>Error</Button>
+ -->
 
 <Container class="main" fluid>
   <Header />
