@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from '$types';
 import type { SHLAdminParams } from '$lib/utils/managementClient';
-import { API_BASE } from '$lib/config/config.ts';
+import { API_BASE } from '$lib/server/config';
 import { getUserShls } from '$lib/utils/shlServerUtils';
 
 
