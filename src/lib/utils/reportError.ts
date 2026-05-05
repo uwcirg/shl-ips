@@ -7,12 +7,20 @@ export function initErrorReporter(toastStore: ToastStore) {
   _toastStore = toastStore;
 }
 
-export function reportError(error: unknown) {
+export function reportError(error: unknown, msg?: string) {
   if (error instanceof FHIRServiceError) {
-    _toastStore?.add({ type: 'danger', message: error.message });
     console.error(`[${error.operation}]`, error.cause ?? error);
+    let message = error.message ?? String(error);
+    if (!message) {
+      return;
+    }
+    message = msg ? `${msg}: ${message}` : message;
+    _toastStore?.add({ type: 'danger', message });
   } else {
-    const message = error instanceof Error ? error.message : String(error);
+    let message = error instanceof Error ? error.message : String(error);
+    if (!message) {
+      return;
+    }
     _toastStore?.add({ type: 'danger', message });
   }
 }

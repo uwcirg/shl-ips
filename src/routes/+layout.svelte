@@ -1,5 +1,6 @@
 <script lang="ts">
   import {
+    Button,
     Container
   } from '@sveltestrap/sveltestrap';
   import { onMount, onDestroy, setContext } from 'svelte';
@@ -73,20 +74,31 @@
     prevPageSize = width;
   }
 
+  function handleError(message: any, source: any, lineno: any, colno: any, error: any) {
+    console.error(message, source, lineno, colno, error);
+    if (error) reportError(error);
+    return false;
+  }
+  
+  function handleUnhandledRejection(e: PromiseRejectionEvent) {
+    reportError(e.reason);
+  }
+
   onMount(async () => {
     await authService.isAuthenticated();
     // Initial call to set pagination size on page load
     dispatchPageSize()
     // Call dispatchPageSize() on window resize
     window.addEventListener('resize', dispatchPageSize);
+
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    window.onerror = handleError;
   });
   onDestroy(() => {
     window.removeEventListener('resize', dispatchPageSize);
+    window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    window.onerror = null;
   });
-
-  function handleError(err: Error) {
-    reportError(err);
-  }
 
 </script>
 
@@ -98,22 +110,17 @@
     <link rel="preload" as="image" href={`${INSTANCE_CONFIG.imgPath}/divider.png`} />
 </svelte:head>
 
-<svelte:window
-  on:error={(e) => handleError(e.error)}
-  on:unhandledrejection={(e) => handleError(e.reason)}
-/>
+<!-- Error testing -->
+<!-- <Button on:click={() => { throw new Error('Test Error'); }}>Error</Button>
+<Button on:click={() => { let a; a.b.c.d.e.f.g.h.i.j.k.l.m.n.o.p.q.r.s.t.u.v.w.x.y.z; }}>Error</Button> -->
 
-<!-- Error testing
-<Button on:click={() => { throw new Error('Test Error'); }}>Error</Button>
-<Button on:click={() => { let a; a.b.c.d.e.f.g.h.i.j.k.l.m.n.o.p.q.r.s.t.u.v.w.x.y.z; }}>Error</Button>
- -->
 
 <Container class="main" fluid>
   <Header />
   <div class="main-content">
     <slot />
   </div>
-  <div class="sticky-bottom">
+  <div class="sticky-bottom-nav">
     <ToastContainer />
     <StickyNav
       {...$navConfig}
@@ -153,7 +160,7 @@
     padding: 0px;
   }
 
-  .sticky-bottom {
+  :global(.sticky-bottom-nav, .navbar) {
     margin-left: calc(-1 * var(--bs-gutter-x, 1.5rem) / 2);
     margin-right: calc(-1 * var(--bs-gutter-x, 1.5rem) / 2);
   }
