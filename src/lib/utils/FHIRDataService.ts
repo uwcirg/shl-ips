@@ -310,7 +310,7 @@ export class FHIRDataService {
     if (!categoryContent) return [];
     const methodContent = Object.values(categoryContent);
     const datasetsWithStatus = methodContent.map(methodSource => Object.values(methodSource)).flat();
-    const sortedDatasetsWithStatus = datasetsWithStatus.sort((a, b) => new Date((get(b.collection.patient))?.meta?.lastUpdated) - new Date((get(a.collection.patient))?.meta?.lastUpdated));
+    const sortedDatasetsWithStatus = datasetsWithStatus.sort((a, b) => new Date((get(b.collection.patient))?.meta?.lastUpdated).getTime() - new Date((get(a.collection.patient))?.meta?.lastUpdated).getTime());
     return sortedDatasetsWithStatus as Array<{ status: StateManager, collection: ResourceCollection}>;
   }
 
@@ -321,7 +321,7 @@ export class FHIRDataService {
     const methodContent = categoryContent[method];
     if (!methodContent) return [];
     const datasetsWithStatus = Object.values(methodContent);
-    const sortedDatasetsWithStatus = datasetsWithStatus.sort((a, b) => new Date((get(b.collection.patient))?.meta?.lastUpdated) - new Date((get(a.collection.patient))?.meta?.lastUpdated));
+    const sortedDatasetsWithStatus = datasetsWithStatus.sort((a, b) => new Date((get(b.collection.patient))?.meta?.lastUpdated).getTime() - new Date((get(a.collection.patient))?.meta?.lastUpdated).getTime());
     return sortedDatasetsWithStatus as Array<{ status: StateManager, collection: ResourceCollection}>;
   }
 
