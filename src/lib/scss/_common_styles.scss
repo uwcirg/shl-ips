@@ -10,6 +10,12 @@
   color: #fff !important;
 }
 
+@include media-breakpoint-down(md) {
+  .top-row-nav {
+    width: 100%;
+  }
+}
+
 .info-paragraph {
   font-size: 16px;
   font-weight: 200;
@@ -124,6 +130,9 @@ h6.info-header {
   animation: animloader 1s linear infinite;
 }
 
+.nav-pills .nav-link:not(.active):hover {
+  background-color: var(--bs-primary-bg-subtle);
+}
 @keyframes animloader {
   0% {
     background-position: 0% 0, 0 0, 70px 5px, 70px 38px, 0px 66px;
