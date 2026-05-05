@@ -13,7 +13,8 @@
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import type { IAuthService, NavConfig, SHLAdminParams } from '$lib/utils/types';
   import ToastContainer from '$lib/components/layout/ToastContainer.svelte';
-  import { createToastStore } from '$lib/utils/toast';
+  import { createToastStore } from '$lib/stores/toast';
+  import { initErrorReporter, reportError } from '$lib/utils/reportError';
 
   let authService: IAuthService = new AuthService();
   setContext('authService', authService);
@@ -35,6 +36,7 @@
 
   const toastStore = createToastStore();
   setContext('toast', toastStore);
+  initErrorReporter(toastStore);
 
   const MODE_KEY = 'demo_mode';
   let mode: Writable<string> = writable('normal');
@@ -82,6 +84,10 @@
     window.removeEventListener('resize', dispatchPageSize);
   });
 
+  function handleError(err: Error) {
+    reportError(err);
+  }
+
 </script>
 
 <svelte:head>
@@ -92,15 +98,27 @@
     <link rel="preload" as="image" href={`${INSTANCE_CONFIG.imgPath}/divider.png`} />
 </svelte:head>
 
+<svelte:window
+  on:error={(e) => handleError(e.error)}
+  on:unhandledrejection={(e) => handleError(e.reason)}
+/>
+
+<!-- Error testing
+<Button on:click={() => { throw new Error('Test Error'); }}>Error</Button>
+<Button on:click={() => { let a; a.b.c.d.e.f.g.h.i.j.k.l.m.n.o.p.q.r.s.t.u.v.w.x.y.z; }}>Error</Button>
+ -->
+
 <Container class="main" fluid>
   <Header />
-  <ToastContainer />
   <div class="main-content">
     <slot />
   </div>
-  <StickyNav
-    {...$navConfig}
-  />
+  <div class="sticky-bottom">
+    <ToastContainer />
+    <StickyNav
+      {...$navConfig}
+    />
+  </div>
   <Footer />
 </Container>
 
@@ -133,5 +151,10 @@
   } */
   :global(.navbar .container-fluid) {
     padding: 0px;
+  }
+
+  .sticky-bottom {
+    margin-left: calc(-1 * var(--bs-gutter-x, 1.5rem) / 2);
+    margin-right: calc(-1 * var(--bs-gutter-x, 1.5rem) / 2);
   }
 </style>

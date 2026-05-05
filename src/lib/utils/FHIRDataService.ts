@@ -28,6 +28,17 @@ import { constructPatientResource, getDemographicsFromPatient, fetchEverything }
 import { uploadResources, getPatientReferenceFromTransactionResponse } from "$lib/utils/resourceUploader";
 import { StateManager } from "$lib/utils/StateManager";
 
+export class FHIRServiceError extends Error {
+  constructor(
+    userMessage: string,
+    public readonly operation: string,
+    public readonly cause?: unknown
+  ) {
+    super(userMessage);
+    this.name = 'FHIRServiceError';
+  }
+}
+
 export class FHIRDataService {
   auth: IAuthService;
 
@@ -44,7 +55,7 @@ export class FHIRDataService {
     this.userResources = writable({});
     this.masterPatient = writable(null);
     this.demographics = writable({});
-    this.patientLinks = derived(this.masterPatient, ($masterPatient) => $masterPatient.resource.link);
+    this.patientLinks = derived(this.masterPatient, ($masterPatient) => $masterPatient?.resource?.link ?? []);
     this.loading = writable(false);
   }
 
@@ -83,18 +94,10 @@ export class FHIRDataService {
     if (resourceCollections.length === 0) {
       this.loading.set(true);
       // Load bare minimum for datasets to be operated on
-      let resourceCollections = await this.seedUserResources();
-      if (!resourceCollections) {
-        throw new Error('Unable to retrieve user data');
-      }
-      resourceCollections.map((collection) => this.addDatasetToUserResources(collection));
-      this.loading.set(false);
-      
-      // Finish loading datasets
-      resourceCollections.forEach((collection) => {
-        const { category, method, source } = collection.getTags();
-        this.syncDataset(category, method, source);
-      });
+      resourceCollections = await this.seedUserResources().catch((error) => {
+        this.loading.set(false);
+        throw new FHIRServiceError('Unable to load user data', 'loadUserData', error);
+      }) ?? [];
     }
     resourceCollections.map((collection) => this.addDatasetToUserResources(collection));
     this.loading.set(false);
@@ -126,24 +129,91 @@ export class FHIRDataService {
         .then((patient) => new ResourceCollection(patient));
       return patientOnlyDatasets;
     }));
-    let patientOnlyDatasets = patientResults.filter((result) => result.status === 'fulfilled' && result.value !== undefined).map((result) => result.value);
-    return patientOnlyDatasets;
+    
+    let patientOnlyDatasets = patientResults
+      .filter((result): result is PromiseFulfilledResult<ResourceCollection> => result.status === 'fulfilled' && result.value !== undefined)
+      .map((result) => result.value);
+    
+    patientResults
+      .filter((result): result is PromiseRejectedResult => result.status === 'rejected')
+      .forEach((result) => console.warn('Failed to load dataset', result.reason));
+    
+    return await this.deduplicateCollections(patientOnlyDatasets);
+  }
+  
+  private async deduplicateCollections(collections: ResourceCollection[]): Promise<ResourceCollection[]> {
+    // Group by category|method|source
+    const getKey = (collection: ResourceCollection) => {
+      const { category, method, source } = collection.getTags();
+      return `${category}|${method}|${source}`;
+    }
+    const grouped: Record<string, ResourceCollection[]> = {};
+    for (const collection of collections) {
+      const key = getKey(collection);
+      grouped[key] = [...(grouped[key] ?? []), collection];
+    }
+
+    const isDuplicated = (collections: ResourceCollection[]) => collections.length > 1;
+    const duplicates: ResourceCollection[][] = Object.values(grouped).filter((group) => isDuplicated(group));
+    if (duplicates.length === 0) {
+      return collections;
+    }
+  
+    const deduplicated: ResourceCollection[] = Object.values(grouped).filter((group) => !isDuplicated(group)).flat();
+  
+    await Promise.allSettled(
+      Object.values(duplicates).map(async (group) => {
+        // Sort newest first
+        const sorted = group.sort((a, b) =>
+          new Date(get(b.patient).meta?.lastUpdated).getTime() -
+          new Date(get(a.patient).meta?.lastUpdated).getTime()
+        );
+  
+        const [newest, ...older] = sorted;
+        deduplicated.push(newest);
+  
+        // Silently clean up older duplicates
+        await Promise.allSettled(
+          older.map(async (duplicate) => {
+            const key = getKey(duplicate);
+            const patientId = get(duplicate.patient).id;
+            try {
+              await this.removeLinkFromMasterPatient(`Patient/${patientId}`);
+              await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient/${patientId}?_cascade=delete`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${await this.auth.getAccessToken()}` }
+              });
+              console.info(`Cleaned up duplicate dataset ${key}`);
+            } catch (err) {
+              // Non-fatal — the duplicate stays until next load
+              console.warn(`Failed to clean up duplicate dataset ${key}`, err);
+            }
+          })
+        );
+      })
+    );
+  
+    return deduplicated;
   }
 
   private async syncDataset(category: string, method: string, source: string): Promise<void> {
     let dataset = get(this.userResources)?.[category]?.[method]?.[source];
     if (!dataset) {
-      console.warn("Category " + category + "/method " + method + "/source " + source + " not found");
+      console.warn(`Category ${category}/method ${method}/source ${source} not found`);
       return;
     }
     let { status, collection } = dataset;
     status.set({ state: StateManager.State.LOADING });
-    let datasetPatientId = get(collection.patient).id;
-    let newDataset = await this.fetchDatasetFromPatientReference(`Patient/${datasetPatientId}`);
-    this.addDatasetToUserResources(newDataset);
-    // Update status reference
-    status = get(this.userResources)?.[category]?.[method]?.[source].status;
-    status.set({ state: StateManager.State.IDLE });
+    try {
+      let datasetPatientId = get(collection.patient).id;
+      let newDataset = await this.fetchDatasetFromPatientReference(`Patient/${datasetPatientId}`);
+      this.addDatasetToUserResources(newDataset);
+      status = get(this.userResources)?.[category]?.[method]?.[source].status;
+      status.set({ state: StateManager.State.IDLE });
+    } catch (err) {
+      status.set({ state: StateManager.State.ERROR });
+      console.warn(`Couldn't show current data for ${source}`, err);
+    }
   }
 
   async fetchDatasetFromPatientReference(patientReference: string): Promise<ResourceCollection> {
@@ -177,11 +247,8 @@ export class FHIRDataService {
           return data.entry?.[0].resource;
         }
       })
-      .catch((error) => {
-        if (error.status === 404) {
-          return undefined;
-        }
-        throw error;
+      .catch((response) => {
+        throw new FHIRServiceError('Unable to get current patient', 'fetchAuthUserPatient', response);
       });
     if (patient !== undefined) {
       return this.setMasterPatient(patient);
@@ -205,18 +272,20 @@ export class FHIRDataService {
         body: JSON.stringify(patient)
       })
       .then((response) => {
-        if (response.ok) {
-          return response.text()
-        }
-        Promise.reject(response);
+        if (response.ok) return response.text();
+        return Promise.reject(response);
       })
       .then((data) => JSON.parse(data))
       .catch((response) => {
-        console.log(response.status, response.statusText);
-        response.json().then((json: any) => {
-          console.log(json);
+        response.text().then((text: any) => {
+          try {
+            console.log(JSON.parse(text));
+          } catch (err) {
+            console.log(text);
+          }
         });
-      })
+        throw new FHIRServiceError('Failed to save patient', 'createOrUpdateMasterPatient', response);
+      });
       savedPatient = updatedPatient;
     } else {
       if (patient.id) {
@@ -231,22 +300,24 @@ export class FHIRDataService {
         body: JSON.stringify(patient)
       })
       .then((response) => {
-        if (response.ok) {
-          return response.text()
-        }
-        Promise.reject(response);
+        if (response.ok) return response.text();
+        return Promise.reject(response);
       })
       .then((data) => JSON.parse(data))
       .catch((response) => {
-        console.log(response.status, response.statusText);
-        response.json().then((json: any) => {
-          console.log(json);
+        response.text().then((text: any) => {
+          try {
+            console.log(JSON.parse(text));
+          } catch (err) {
+            console.log(text);
+          }
         });
+        throw new FHIRServiceError('Failed to save patient', 'createOrUpdateMasterPatient', response);
       })
       savedPatient = newPatient;
     }
     if (savedPatient === undefined) {
-      throw new Error("Unable to create or update patient");
+      throw new FHIRServiceError('Failed to save patient', 'createOrUpdateMasterPatient');
     }
     return this.setMasterPatient(savedPatient);
   }
@@ -276,13 +347,17 @@ export class FHIRDataService {
 
   // Update master patient with demographics data
   async saveDemographicsToPatient(): Promise<void> {
-    const demographics = get(this.demographics);
-    let patientFromDemographics = constructPatientResource(demographics, get(this.masterPatient).resource);
-    delete patientFromDemographics.meta.tag;
-    return this.createOrUpdateMasterPatient(patientFromDemographics);
+    try {
+      const demographics = get(this.demographics);
+      let patientFromDemographics = constructPatientResource(demographics, get(this.masterPatient).resource);
+      delete patientFromDemographics.meta.tag;
+      await this.createOrUpdateMasterPatient(patientFromDemographics);
+    } catch (err) {
+      throw new FHIRServiceError('Failed to save changes', 'saveDemographicsToPatient', err);
+    }
   }
 
-  generateCategoryPlaceholderPatient(): Promise<Resource> {
+  generateCategoryPlaceholderPatient(): Resource {
     const masterPatientResource = get(this.masterPatient).resource;
     let patient = constructPatientResource({
       first: masterPatientResource.name?.[0].given?.[0],
@@ -310,7 +385,7 @@ export class FHIRDataService {
     if (!categoryContent) return [];
     const methodContent = Object.values(categoryContent);
     const datasetsWithStatus = methodContent.map(methodSource => Object.values(methodSource)).flat();
-    const sortedDatasetsWithStatus = datasetsWithStatus.sort((a, b) => new Date((get(b.collection.patient))?.meta?.lastUpdated) - new Date((get(a.collection.patient))?.meta?.lastUpdated));
+    const sortedDatasetsWithStatus = datasetsWithStatus.sort((a, b) => new Date((get(b.collection.patient))?.meta?.lastUpdated).getTime() - new Date((get(a.collection.patient))?.meta?.lastUpdated).getTime());
     return sortedDatasetsWithStatus as Array<{ status: StateManager, collection: ResourceCollection}>;
   }
 
@@ -321,24 +396,24 @@ export class FHIRDataService {
     const methodContent = categoryContent[method];
     if (!methodContent) return [];
     const datasetsWithStatus = Object.values(methodContent);
-    const sortedDatasetsWithStatus = datasetsWithStatus.sort((a, b) => new Date((get(b.collection.patient))?.meta?.lastUpdated) - new Date((get(a.collection.patient))?.meta?.lastUpdated));
+    const sortedDatasetsWithStatus = datasetsWithStatus.sort((a, b) => new Date((get(b.collection.patient))?.meta?.lastUpdated).getTime() - new Date((get(a.collection.patient))?.meta?.lastUpdated).getTime());
     return sortedDatasetsWithStatus as Array<{ status: StateManager, collection: ResourceCollection}>;
   }
 
   addDatasetToUserResources(collection: ResourceCollection): {status: StateManager; collection: ResourceCollection;} {
     let patient = get(collection.patient);
     if (!patient) {
-      throw new Error('No patient resource found in resource collection');
+      throw new FHIRServiceError('No patient resource found in resource collection', 'addDatasetToUserResources');
     }
     const { category, method, source } = collection.getTags();
     if (!category) {
-      throw new Error('Category must be passed when creating a new dataset, or contained in the dataset patient resource\s meta.tag attribute.');
+      throw new FHIRServiceError('Could not determine dataset category', 'addDatasetToUserResources');
     }
     if (!method) {
-      throw new Error('Method must be passed when creating a new dataset, or contained in the dataset patient resource\'s meta.tag attribute.');
+      throw new FHIRServiceError('Could not determine dataset method', 'addDatasetToUserResources');
     }
     if (!source) {
-      throw new Error('Source must be passed when creating a new dataset, or contained in the dataset patient resource\'s meta.source attribute.');
+      throw new FHIRServiceError('Could not determine dataset source', 'addDatasetToUserResources');
     }
 
     let sm = new StateManager();
@@ -374,15 +449,14 @@ export class FHIRDataService {
       }
       if (categoryMapCopy[category]?.[method]?.[source]) {
         delete categoryMapCopy[category][method][source];
-        if (categoryMapCopy[category][method] && Object.keys(categoryMapCopy[category][method]).length === 0) {
+        if (Object.keys(categoryMapCopy[category][method]).length === 0) {
           delete categoryMapCopy[category][method];
         }
-        if (categoryMapCopy[category] && Object.keys(categoryMapCopy[category]).length === 0) {
+        if (Object.keys(categoryMapCopy[category]).length === 0) {
           delete categoryMapCopy[category];
         }
-        
-        return categoryMapCopy;
       }
+      return categoryMapCopy;
     });
   }
 
@@ -391,19 +465,30 @@ export class FHIRDataService {
     let updatedResources = datasetCollection.getFHIRResources();
     let transactionResponse = await uploadResources(updatedResources, await this.auth.getAccessToken());
     if (transactionResponse.resourceType === "OperationOutcome") {
-      throw new Error(JSON.stringify(transactionResponse.issue));
+      throw new FHIRServiceError('Failed to upload dataset', 'createDatasetOnServer', transactionResponse.issue);
     }
     let patientReference = await getPatientReferenceFromTransactionResponse(transactionResponse);
     return patientReference;
   }
 
   addLinkToMasterPatient(patientReference: string): Patient {
-    let masterPatient = get(this.masterPatient).resource;
+    let masterPatient = structuredClone(get(this.masterPatient).resource);
     if (!masterPatient.link) {
       masterPatient.link = [];
     }
     masterPatient.link.push({ other: { reference: patientReference }, type: "seealso" });
     return masterPatient;
+  }
+
+  private async removeLinkFromMasterPatient(patientReference: string): Promise<void> {
+    const masterPatient = structuredClone(get(this.masterPatient).resource);
+    masterPatient.link = (masterPatient.link ?? []).filter(
+      (link) => link.other.reference !== patientReference
+    );
+    if (masterPatient.link.length === 0) {
+      delete masterPatient.link;
+    }
+    await this.createOrUpdateMasterPatient(masterPatient);
   }
 
   async deleteDatasetFromServer(category: string, method: string, source: string): Promise<void> {
@@ -412,28 +497,34 @@ export class FHIRDataService {
       return;
     }
     if (dataset.status.state === StateManager.State.LOADING) {
-      return; //TODO: raise error
+      throw new FHIRServiceError('Cannot delete a dataset that is currently loading', 'deleteDatasetFromServer');
     }
 
     // Update master patient
     let collection = dataset.collection;
     const datasetPatientId = get(collection.patient).id;
-    let masterPatient = get(this.masterPatient).resource;
+    let masterPatient = structuredClone(get(this.masterPatient).resource);
     if (!masterPatient.link) {
-      throw new Error('Patient has no linked datasets.');
+      throw new FHIRServiceError('Patient has no linked datasets.', 'deleteDatasetFromServer');
     }
     const datasetPatientReference = `Patient/${datasetPatientId}`;
     let datasetPatientLinkIndex = masterPatient.link.findIndex((link) => link.other.reference === datasetPatientReference);
     if (datasetPatientLinkIndex === -1) {
-      throw new Error('Dataset does not exist in master patient.');
+      throw new FHIRServiceError('Dataset does not exist in patient records.', 'deleteDatasetFromServer');
     }
-    if (datasetPatientLinkIndex > -1) {
-      masterPatient.link.splice(datasetPatientLinkIndex, 1);
-    }
+    masterPatient.link.splice(datasetPatientLinkIndex, 1);
     if (masterPatient.link.length === 0) {
       delete masterPatient.link;
     }
-    await this.createOrUpdateMasterPatient(masterPatient);
+    try {
+      await this.createOrUpdateMasterPatient(masterPatient);
+    } catch (err) {
+      throw new FHIRServiceError(
+        'Failed to delete dataset from patient record',
+        'deleteDatasetFromServer',
+        err
+      );
+    }
 
     // Delete after master patient.link is updated to prevent cascade from deleting master patient resource
     let deleteResult = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient/${datasetPatientId}?_cascade=delete`, {
@@ -444,15 +535,17 @@ export class FHIRDataService {
     });
 
     if (!deleteResult.ok) {
-      let rolledBackMasterPatient = this.addLinkToMasterPatient(datasetPatientReference)
-      await this.createOrUpdateMasterPatient(rolledBackMasterPatient);
-      throw new Error(`Failed to delete dataset: ${await deleteResult.text()}`);
+      throw new FHIRServiceError(`Failed to delete dataset: ${await deleteResult.text()}`, 'deleteDatasetFromServer', deleteResult);
     }
   }
 
   async deleteDataset(category: string, method: string, source: string) {
-    await this.deleteDatasetFromServer(category, method, source);
-    this.removeDatasetFromUserResources(category, method, source);
+    try {
+      await this.deleteDatasetFromServer(category, method, source);
+      this.removeDatasetFromUserResources(category, method, source);
+    } catch (err) {
+      throw new FHIRServiceError(`Failed to delete ${source} dataset`, 'deleteDataset', err);
+    }
   }
 
   async addOrReplaceDataset(dataset: ResourceRetrieveEvent) {
@@ -475,7 +568,7 @@ export class FHIRDataService {
       patientReference = await this.createDatasetOnServer(resourcesWithUpdatedPatient);
     } catch(error) {
       status.set({ state: StateManager.State.ERROR });
-      throw error;
+      throw new FHIRServiceError(`Failed to upload ${dataset.source} dataset`, 'addOrReplaceDataset', error);
     }
 
     try {
@@ -484,25 +577,30 @@ export class FHIRDataService {
     } catch(error) {
       // Rollback create
       status.set({ state: StateManager.State.ERROR });
-      await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/${patientReference}?_cascade=delete`, {
+      if (!existingDataset) {
+        this.removeDatasetFromUserResources(dataset.category, dataset.method, dataset.source);
+      }
+      const rollback = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/${patientReference}?_cascade=delete`, {
         method: 'DELETE',
         headers: {
           "Authorization": `Bearer ${await this.auth.getAccessToken()}`
         }
       });
-      throw error;
+      if (!rollback.ok) {
+        console.warn(`Rollback failed for ${dataset.source} — will be cleaned up on next load`);
+      }
+      throw new FHIRServiceError('Failed to link dataset to your account', 'addOrReplaceDataset', error);
     }
 
-    // TODO: Please review ordering and fallback strategy!
     try {
       if (existingDataset) {
         await this.deleteDatasetFromServer(dataset.category, dataset.method, dataset.source);
       }
     } catch(error) {
-      // Rollback add
-      status.set({ state: StateManager.State.ERROR });
-      throw error;
+      console.warn('Failed to delete old dataset, will be cleaned up on next load', error);
     }
+
+    // Finalize the add - dataset is on server, bring it to the client
     newDataset = await this.fetchDatasetFromPatientReference(patientReference);
     this.addDatasetToUserResources(newDataset);
     status.set({ state: StateManager.State.IDLE });
@@ -511,10 +609,10 @@ export class FHIRDataService {
   updateDatasetPatient(datasetInfo: ResourceRetrieveEvent): Resource {
     let { resources, category, method, source, sourceName } = datasetInfo;
     let resourcesWithUpdatedPatient = resources;
-    let patient = resources.find((resource) => resource.resourceType === "Patient");
+    let patient = resources?.find((resource) => resource.resourceType === "Patient");
     if (!patient) {
       patient = this.generateCategoryPlaceholderPatient();
-      resourcesWithUpdatedPatient = [ patient, ...resources ];
+      resourcesWithUpdatedPatient = [ patient, ...(resources ?? []) ];
     }
     patient.meta = patient.meta ?? {};
     patient.meta.tag = patient.meta.tag ?? [];

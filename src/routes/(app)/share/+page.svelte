@@ -7,11 +7,14 @@
   import type { SHLSubmitEvent, SHCFile } from '$lib/utils/types';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import AddFile from '$lib/components/app/AddFile.svelte';
+  import type { ToastStore } from '$lib/stores/toast';
 
   let component = INSTANCE_CONFIG.pages.share.component ?? AddFile;
 
   let shlClient: SHLClient = getContext('shlClient');
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
+
+  const toast: ToastStore = getContext('toast');
 
   let shl: SHLAdminParams | undefined;
   let shlStatus = "";
@@ -61,10 +64,18 @@
     if (shl) {
       shl = await addFiles(shl, detail.shcs, patientName, detail.contentType);
       $shlStore = await shlClient.getUserShls();
+      toast.add({
+        message: `Added summary to ${shl.label}`,
+        type: 'success'
+      });
       goto(`/view/${shl.id}`);
     } else {
       const newShl = await newShlFromShc(detail);
       $shlStore = await shlClient.getUserShls();
+      toast.add({
+        message: `Saved ${newShl.label}`,
+        type: 'success'
+      });
       goto(`/view/${newShl.id}`);
     }
   }}

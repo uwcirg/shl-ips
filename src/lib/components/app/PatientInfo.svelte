@@ -20,6 +20,10 @@
 
   export let patient: Patient | undefined;
   export let disabled = false;
+  export let processing = false;
+  
+  let buttonText = "Update your patient information";
+  let processingText = "Saving...";
 
   const CATEGORY = CATEGORIES.PATIENT_STORY;
   const METHOD = METHODS.PATIENT_IDENTITY_FORM;
@@ -54,7 +58,6 @@
     }
   }
 
-  let processing = false;
   let fetchError = '';
 
   let first = '';
@@ -189,7 +192,7 @@
 </script>
 
 <!-- <p class="text-secondary"><em>Add or update the personal information that will be shown in this Health Summary.</em></p> -->
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, SOURCE.url, prepareIps)}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, SOURCE.url, prepareIps)}>
   <h5>Patient Details</h5>
   <Row>
     <Col>
@@ -306,23 +309,16 @@
   <Row>
     <Col xs="auto">
       <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
-        {#if !processing}
-          Update your patient information
-        {:else}
-          Adding...
-        {/if}
+        {processing ? processingText : buttonText}
       </Button>
     </Col>
-    {#if processing}
-      <Col xs="auto" class="d-flex align-items-center px-0">
-        <Spinner color="primary" type="border" size="md"/>
-      </Col>
-    {/if}
-    {#if disabled}
-      <Col xs="auto" class="d-flex align-items-center px-0">
+    <Col xs="auto" class="d-flex align-items-center px-0">
+      {#if disabled}
         Please wait...
-      </Col>
-    {/if}
+      {:else if processing}
+        <Spinner color="primary" type="border" size="md"/>
+      {/if}
+    </Col>
   </Row>
 </form>
 <FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>

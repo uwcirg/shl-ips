@@ -26,6 +26,10 @@
   import { METHODS, CATEGORIES } from '$lib/config/tags';
 
   export let disabled = false;
+  export let processing = false;
+  
+  let buttonText = "Import Data";
+  let processingText = "Importing...";
   
   const authDispatch = createEventDispatcher<{'sof-auth-init': SOFAuthEvent; 'sof-auth-fail': SOFAuthEvent}>();
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
@@ -34,7 +38,6 @@
   const METHOD = METHODS.PROVIDER_HEALTH_RECORD_SOF_SEARCH;
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
-  let processing = false;
   let fetchError = "";
   let result: ResourceRetrieveEvent = {
     resources: undefined,
@@ -151,12 +154,11 @@
         sourceName: sofHost?.name
       };
       resourceDispatch('update-resources', result);
-      return;
     } catch (e: any) {
+      processing = false;
       console.log(e.message);
       fetchError = e.message;
     } finally {
-      processing = false;
       window.history.replaceState(null, "", clearURLOfParams($page.url));
       endSession();
     }
@@ -164,7 +166,7 @@
 
 </script>
 
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, sofHost?.endpoint, prepareIps)}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, sofHost?.endpoint ?? "", prepareIps)}>
   <FormGroup>
     <div style="width: 100%" class="d-inline-block mb-1">
       <div style="position:relative">
@@ -242,24 +244,17 @@
 
   <Row>
     <Col xs="auto">
-    <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
-      {#if !processing}
-        Import Data
-      {:else}
-        Importing...
+      <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
+        {processing ? processingText : buttonText}
+      </Button>
+    </Col>
+    <Col xs="auto" class="d-flex align-items-center px-0">
+      {#if disabled}
+        Please wait...
+      {:else if processing}
+        <Spinner color="primary" type="border" size="md"/>
       {/if}
-    </Button>
     </Col>
-  {#if processing}
-    <Col xs="auto" class="d-flex align-items-center px-0">
-      <Spinner color="primary" type="border" size="md"/>
-    </Col>
-  {/if}
-  {#if disabled}
-    <Col xs="auto" class="d-flex align-items-center px-0">
-      Please wait...
-    </Col>
-  {/if}
   </Row>
 </form>
 <FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
