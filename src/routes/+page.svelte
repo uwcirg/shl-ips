@@ -34,7 +34,7 @@
       <Col class="d-flex align-items-center px-2">
         <Card color="light" class="flex-fill">
           <CardBody>
-            <Button color="primary" size="lg" on:click={() => myData()} class="px-5 w-100"
+            <Button color="primary" size="lg" on:click={() => myData()} class="w-100 text-nowrap justify-content-center"
               >My Health Data</Button
             >
           </CardBody>
@@ -43,7 +43,7 @@
       <Col class="d-flex align-items-center px-2">
         <Card color="light" class="flex-fill">
           <CardBody>
-            <Button color="primary" size="lg" on:click={() => mySummaries()} class="px-5 w-100"
+            <Button color="primary" size="lg" on:click={() => mySummaries()} class="w-100 text-nowrap justify-content-center"
               >My Summaries</Button
             >
           </CardBody>
