@@ -176,7 +176,7 @@
 {:else if form.component}
   <Row id={`back-button-${idSuffix}`} class="mb-3">
     <Col>
-      <Button size="sm" color="secondary" outline on:click={() => goto(`/data#${category}`)}><Icon name="chevron-left" /> Back to data types</Button>
+      <Button size="sm" color="secondary" outline on:click={() => goto(`/data#${category}`)}><Icon name="chevron-left" /> Back to menu</Button>
     </Col>
   </Row>
   <h4>{form.title ?? form.tabTitle}</h4>
