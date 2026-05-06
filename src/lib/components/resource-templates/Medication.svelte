@@ -22,7 +22,7 @@
     color={!showComposition ? "secondary" : "primary"}
     outline
     on:click={() => showComposition = !showComposition}>
-    {showComposition ? 'Hide' : 'Show'} ingredients <Icon style="font-size: x-small;"name={!showComposition ? "caret-down" : "caret-up"} />
+    {showComposition ? 'Hide' : 'Show'} ingredients <Icon style="font-size: x-small;"name={!showComposition ? "caret-down-fill" : "caret-up-fill"} />
   </Button><br>
   {#if showComposition}
     <table class="table table-bordered table-sm">

@@ -100,7 +100,7 @@
         color={!showContact ? "secondary" : "primary"}
         outline
         on:click={() => showContact = !showContact}>
-        {showContact ? 'Hide' : 'Show'} contact information <Icon style="font-size: x-small;"name={!showContact ? "caret-down" : "caret-up"} />
+        {showContact ? 'Hide' : 'Show'} contact information <Icon style="font-size: x-small;"name={!showContact ? "caret-down-fill" : "caret-up-fill"} />
     </Button>
     {#if showContact}
         <div style="overflow: auto;">
