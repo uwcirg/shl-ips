@@ -14,6 +14,7 @@
   import type { IAuthService, NavConfig, SHLAdminParams } from '$lib/utils/types';
   import ToastContainer from '$lib/components/layout/ToastContainer.svelte';
   import { createToastStore } from '$lib/utils/toast';
+  import { initAsyncHandler } from '$lib/stores/asyncHandler';
 
   let authService: IAuthService = new AuthService();
   setContext('authService', authService);
@@ -35,6 +36,7 @@
 
   const toastStore = createToastStore();
   setContext('toast', toastStore);
+  initAsyncHandler(toastStore);
 
   const MODE_KEY = 'demo_mode';
   let mode: Writable<string> = writable('normal');
