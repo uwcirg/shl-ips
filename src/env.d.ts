@@ -11,6 +11,7 @@ interface ImportMetaEnv {
     readonly VITE_INTERMEDIATE_FHIR_SERVER_BASE: string
     readonly VITE_APP_VERSION_STRING: string
     readonly VITE_DEMO_WARNING: boolean
+    readonly VITE_SYSTEM_NAME: string
 
     // Authentication
     readonly VITE_AUTH_URL: string

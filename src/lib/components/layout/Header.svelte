@@ -24,7 +24,7 @@
   import TabNav from '$lib/components/layout/TabNav.svelte';
   import LanguageMenu from '$lib/components/layout/LanguageMenu.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
-  import { DEMO_WARNING, VERSION_STRING } from '$lib/config/config';
+  import { DEMO_WARNING, SYSTEM_NAME, VERSION_STRING } from '$lib/config/config';
   import type { IAuthService } from '$lib/utils/types';
   import FHIRDataService from '$lib/utils/FHIRDataService';
   import { imagePreload } from '$lib/utils/preloadImages';
@@ -276,7 +276,7 @@
 {/if}
 {#if DEMO_WARNING}
   <Alert color="warning" dismissible class="mt-2 mb-0">
-    <span class="text-danger">Demonstration/test system - do not use with real health information</span>
+    <span class="text-danger">{ SYSTEM_NAME ?? 'Demonstration/test system'} - do not use with real health information</span>
   </Alert>
 {/if}
 <!-- <Banner title={INSTANCE_CONFIG.header.title} style={INSTANCE_CONFIG.header.title_style}/> -->
