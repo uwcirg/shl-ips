@@ -10,7 +10,6 @@
   import AddDataset from '$lib/components/app/AddDataset.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import type { FHIRDataService } from '$lib/utils/fhirDataService';
-  import StickyNavConfig from '$lib/components/layout/StickyNavConfig.svelte';
 
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
   let patient = fhirDataService.patient;
@@ -32,10 +31,3 @@
 </Breadcrumb>
 
 <AddDataset />
-
-<StickyNavConfig
-  showBack={false}
-  showForward={true}
-  forwardLabel="Review your data"
-  onForward={() => goto(`/data/manage`)}
-/>

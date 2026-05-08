@@ -10,7 +10,6 @@
   import { goto } from '$app/navigation';
   import HealthLinkOverview from '$lib/components/app/HealthLinkOverview.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
-  import StickyNavConfig from '$lib/components/layout/StickyNavConfig.svelte';
 </script>
 
 <svelte:head>
@@ -41,12 +40,3 @@
     <HealthLinkOverview />
   </Col>
 </Row>
-
-<StickyNavConfig
-  showBack={true}
-  backLabel="Back to review data"
-  onBack={() => goto(`/data/manage`)}
-  showForward={true}
-  forwardLabel="Create new summary"
-  onForward={() => goto(`/share`)}
-/>

@@ -1,4 +1,3 @@
-<!-- StickyNav.svelte -->
 <script lang="ts">
   import { Button, Row, Col } from '@sveltestrap/sveltestrap';
   export let backLabel: string = 'Back';
