@@ -219,11 +219,7 @@
   }
 
   async function deleteFile(fileContent:string) {
-    shl = await shlClient.deleteFile(shl, fileContent).then((shl) => {
-      let updatedFiles = shl.files.filter((f) => f.contentHash !== fileContent);
-      shl.files = updatedFiles;
-      return shl;
-    });
+    shl = await shlClient.deleteFile(shl, fileContent);
     $shlStore = await shlClient.getUserShls();
   }
 </script>
