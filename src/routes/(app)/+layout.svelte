@@ -74,7 +74,7 @@
     await checkUser();
     if (!data.unauthenticated) {
       await fhirDataService.loadUserData();
-      await shlClient.getUserShls();
+      $shlStore = await shlClient.getUserShls();
     }
   });
 
