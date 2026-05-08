@@ -196,9 +196,6 @@
         <LanguageMenu />
       </Nav>
       <Nav class="ms-auto" navbar>
-        <NavItem>
-          <NavLink class="header-link" style="text-wrap-mode: nowrap" href={"/"} active={ activeItem === "home" }>Home</NavLink>
-        </NavItem>
         {#if $authenticated && $user}
           {#if INSTANCE_CONFIG.pages.documents}
             <NavItem>
@@ -254,10 +251,10 @@
               </DropdownMenu>
           </Dropdown>
         {:else}
-        <NavItem>
-          <NavLink class="header-link" on:click={() => authService.login()} style="text-wrap-mode: nowrap"><Icon name="person-circle"/> Sign In</NavLink>
-        </NavItem>
-      {/if}
+          <NavItem>
+            <NavLink class="header-link" on:click={() => authService.login()} style="text-wrap-mode: nowrap"><Icon name="person-circle"/> Sign In</NavLink>
+          </NavItem>
+        {/if}
       </Nav>
     </Collapse>
     {#if $authenticated && $user}
