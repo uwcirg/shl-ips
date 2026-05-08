@@ -96,7 +96,7 @@ export class FHIRDataService {
       // Load bare minimum for datasets to be operated on
       resourceCollections = await this.seedUserResources().catch((error) => {
         this.loading.set(false);
-        throw new FHIRServiceError('Unable to load user data', 'loadUserData', error);
+        throw new FHIRServiceError('Unable to load health data', 'loadUserData', error);
       }) ?? [];
     }
     resourceCollections.map((collection) => this.addDatasetToUserResources(collection));
