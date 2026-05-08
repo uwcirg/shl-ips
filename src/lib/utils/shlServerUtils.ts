@@ -14,15 +14,23 @@ export async function getUserShls(apiBase: string, token: string | undefined, us
     body: JSON.stringify({ userId }),
     cache: 'no-store'
   });
-  const shls = await res.json();
-  return shls.map((shl: SHLAdminParams) => {
-    if (shl.config) {
-      shl = {
-        ...shl,
-        ...shl.config,
-      };
-      delete shl.config;
-    }
-    return shl;
-  });
+  if (!res.ok) {
+    return [];
+  }
+  const text = await res.text();
+  try {
+    let shls = JSON.parse(text);
+    return shls?.map((shl: SHLAdminParams) => {
+      if (shl.config) {
+        shl = {
+          ...shl,
+          ...shl.config,
+        };
+        delete shl.config;
+      }
+      return shl;
+    });
+  } catch (e) {
+    return [];
+  }
 }
