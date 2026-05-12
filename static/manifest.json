@@ -1,0 +1,12 @@
+{
+  "name": "WA Health Summary",
+  "short_name": "WA Health",
+  "start_url": "/",
+  "scope": "/",
+  "icons": [
+    
+  ],
+  "display": "standalone",
+  "background_color": "#f8f9fa",
+  "theme_color": "#f8f9fa"
+}
