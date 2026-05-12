@@ -1,4 +1,3 @@
-<!-- StickyNav.svelte -->
 <script lang="ts">
   import { onMount } from 'svelte';
   import { Button, Row, Col } from '@sveltestrap/sveltestrap';

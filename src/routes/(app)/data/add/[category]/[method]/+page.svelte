@@ -13,7 +13,6 @@
   import type { ResourceCollection } from '$lib/utils/ResourceCollection';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import { randomStringWithEntropy } from '$lib/utils/util';
-  import StickyNavConfig from '$lib/components/layout/StickyNavConfig.svelte';
   import { METHOD_NAMES } from '$lib/config/config.js';
   import type { ToastStore } from '$lib/stores/toast';
   
@@ -163,14 +162,7 @@
   }
 
 </script>
-<StickyNavConfig
-  showBack={true}
-  backLabel="Back to data types"
-  onBack={() => goto(`/data#${category}`)}
-  showForward={Object.keys($userResources).length > 0}
-  forwardLabel="Review your data"
-  onForward={() => goto(`/data/manage`)}
-/>
+
 {#if !form}
   Loading...
 {:else if form.component}

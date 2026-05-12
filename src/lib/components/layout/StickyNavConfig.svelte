@@ -16,3 +16,14 @@
 
   onDestroy(() => $navConfig = { ...$navConfig, showBack: false, showForward: false });
 </script>
+<!-- Example: -->
+<!--
+<StickyNavConfig
+  showBack={true}
+  backLabel="Back to data types"
+  onBack={() => goto(`/data#${category}`)}
+  showForward={Object.keys($userResources).length > 0}
+  forwardLabel="Review your data"
+  onForward={() => goto(`/data/manage`)}
+/>
+-->
