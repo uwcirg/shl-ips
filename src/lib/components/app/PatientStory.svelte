@@ -19,6 +19,11 @@
 
   export let disabled = false;
   export let formData: IResourceCollection | undefined;
+  export let processing = false;
+  
+  let buttonText = "Save your story and goals";
+  let processingText = "Saving...";
+
   let resources;
   $: resources = formData?.resources;
   $: if ($resources) {
@@ -36,7 +41,6 @@
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
-  let processing = false;
   let fetchError = '';
 
   let defaults = {
@@ -193,7 +197,6 @@
     if (resources.length == 0) {
       return;
     }
-    processing = false;
 
     let result:ResourceRetrieveEvent = {
       resources: resources,
@@ -246,31 +249,25 @@
     </Col>
   </Row>
 
-  <Row>
-    <Col xs="auto">
-      <Button
-        color="primary"
-        style="width:fit-content"
-        disabled={processing || disabled}
-        on:click={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, SOURCE.url, prepareIps)}>
-        {#if !processing}
-          Save your patient story and goals
-        {:else}
-          Saving...
-        {/if}
-      </Button>
-    </Col>
-    {#if processing}
-      <Col xs="auto" class="d-flex align-items-center px-0">
-        <Spinner color="primary" type="border" size="md"/>
-      </Col>
-    {/if}
+<Row>
+  <Col xs="auto">
+    <Button
+      color="primary"
+      style="width:fit-content"
+      disabled={processing || disabled}
+      on:click={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, SOURCE.url, prepareIps)}
+    >
+      {processing ? processingText : buttonText}
+    </Button>
+  </Col>
+  <Col xs="auto" class="d-flex align-items-center px-0">
     {#if disabled}
-      <Col xs="auto" class="d-flex align-items-center px-0">
-        Please wait...
-      </Col>
+      Please wait...
+    {:else if processing}
+      <Spinner color="primary" type="border" size="md"/>
     {/if}
-  </Row>
+  </Col>
+</Row>
 </form>
 <FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 <span class="text-danger">{fetchError}</span>

@@ -1,11 +1,11 @@
 <script lang="ts">
     import { Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Icon } from '@sveltestrap/sveltestrap';
     // import { locale } from 'svelte-i18n'; // TODO
-    import { locale, locales } from '$lib/utils/localeStore.ts';
+    import { locale, locales } from '$lib/stores/localeStore';
 </script>
 
 <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
-  <DropdownToggle color="primary" class="pt-0" nav caret>
+  <DropdownToggle color="primary" class="header-link pt-0" nav caret>
     <span style="font-size:small">
       {locales[$locale].lang} <Icon name="globe2" />
     </span>

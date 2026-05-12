@@ -17,12 +17,14 @@
     Row
   } from '@sveltestrap/sveltestrap';
   import { onMount, onDestroy, getContext } from 'svelte';
+  import { fly } from 'svelte/transition';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { get, type Writable } from 'svelte/store';
+  import TabNav from '$lib/components/layout/TabNav.svelte';
   import LanguageMenu from '$lib/components/layout/LanguageMenu.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
-  import { DEMO_WARNING, VERSION_STRING } from '$lib/config/config';
+  import { DEMO_WARNING, SYSTEM_NAME, VERSION_STRING } from '$lib/config/config';
   import type { IAuthService } from '$lib/utils/types';
   import FHIRDataService from '$lib/utils/FHIRDataService';
   import { imagePreload } from '$lib/utils/preloadImages';
@@ -49,9 +51,20 @@
     }
   }
 
+  let navbarEl: HTMLElement;
+  let showFixedTabs = false;
+
   onMount(async () => {
     $isOpen = false;
     addDynamicNavbarListeners();
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        showFixedTabs = !entry.isIntersecting && window.scrollY > 0;
+      },
+      { threshold: 0, rootMargin: '-10px 0px 0px 0px' }
+    );
+    observer.observe(navbarEl);
+    return () => observer.disconnect();
   });
   onDestroy(() => {
     removeDynamicNavbarListeners();
@@ -160,112 +173,107 @@
 
 <canvas id="header-image" class="img-fluid" style="display: none;"/>
 
-<Row>
-  <Navbar sticky="top" color="light" light expand="md" style="border-bottom: 1px solid rgb(204, 204, 204);">
-    <div class="container-fluid d-flex align-items-center justify-content-between">
+<div bind:this={navbarEl}>
+  <Navbar color="light" light expand="md" style="border-bottom: 1px solid rgb(204, 204, 204);">
+    <div class="d-flex top-row-nav align-items-center justify-content-between">
       {#await createHeaderImage()}
       <!-- <NavbarBrand class="flex-shrink-1"> <img id="nav-image" src={`${INSTANCE_CONFIG.imgPath}/company-logo.png`} alt="Site Logo" style="width: fit-content; height: 60px;" /> </NavbarBrand> -->
       {:then headerImageUrl}
       <!-- <NavbarBrand class="flex-shrink-1"> <img id="nav-image" style="height: 60px;"/> </NavbarBrand> -->
       <NavbarBrand class="flex-shrink-1 ms-3">
-        <img id="nav-image" alt="Washington State Department of Health Logo" style="height: 60px; vertical-align: left" src={headerImageUrl}/>
+        <img id="nav-image" alt="Washington State Department of Health Logo" style="height: 43px; vertical-align: left" src={headerImageUrl}/>
       </NavbarBrand>
       {/await}
       <div class="flex-grow-1 d-flex align-items-center justify-content-end">
         <NavbarToggler class="me-2" on:click={() => ($isOpen = !$isOpen)} />
       </div>
     </div>
+    {#if $authenticated && $user}
+      <TabNav class="d-none d-md-flex" activeItem={activeItem}/>
+    {/if}
     <Collapse class="flex-column ms-2" isOpen={$isOpen} navbar expand="md" on:update={handleUpdate}>
       <Nav class="ms-auto" navbar>
         <LanguageMenu />
       </Nav>
       <Nav class="ms-auto" navbar>
-        <NavItem>
-          <NavLink class="header-link" style="text-wrap-mode: nowrap" href={"/"} active={ activeItem === "home" }>Home</NavLink>
-        </NavItem>
-        {#if $authenticated}
-          {#if $user}
+        {#if $authenticated && $user}
+          {#if INSTANCE_CONFIG.pages.documents}
             <NavItem>
-              <NavLink class="header-link" style="text-wrap-mode: nowrap" href="/data" active={ activeItem === "data" }>Add/Import</NavLink>
-            </NavItem>
-            <NavItem>
-              <NavLink class="header-link" style="text-wrap-mode: nowrap" href="/data/manage" active={ activeItem === "manage" }>Review</NavLink>
-            </NavItem>
-            {#if INSTANCE_CONFIG.pages.summaries}
-              <NavItem>
-                <NavLink class="header-link" style="text-wrap-mode: nowrap" href="/summaries" active={ activeItem === "summaries" }>Share</NavLink>
-              </NavItem>
-            {/if}
-            {#if INSTANCE_CONFIG.pages.documents}
-              <NavItem>
-                <NavLink class="header-link" style="text-wrap-mode: nowrap" href="/documents" active={ activeItem === "documents" }>Documents</NavLink>
-              </NavItem>
-            {/if}
-            {#if INSTANCE_CONFIG.pages.provider}
-              <NavItem>
-                <NavLink class="header-link" style="text-wrap-mode: nowrap" href="/provider" active={ activeItem === "provider" }>Provider</NavLink>
-              </NavItem>
-            {/if}
-            <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
-              <DropdownToggle color="primary" nav caret class={`header-link ${activeItem === "account" ? "active" : "" }`}>
-                <Icon name="person-circle"/> Account
-              </DropdownToggle>
-              <DropdownMenu end style="max-height: 350px; overflow:auto">
-                <DropdownItem header>
-                  Welcome, {get(fhirDataService.demographics)?.firstName ?? $user.profile.given_name ?? $user.profile.preferred_username} ({$user.profile.email})
-                  {#if $user.profile.idp === 'google'}
-                    <br><Icon name="google" alt="Google logo" aria-label="Signed in using Google"/> Signed in using Google
-                  {/if}
-                </DropdownItem>
-                <DropdownItem on:click={() => {
-                  goto('/account');
-                }}><Icon name="gear-fill"/> Settings</DropdownItem>
-                <DropdownItem
-                  on:click={() => {
-                    authService.logout();
-                  }}><Icon name="box-arrow-right"/> Sign Out</DropdownItem>
-                  {#if INSTANCE_CONFIG.advanced}
-                    <DropdownItem divider />
-                    <DropdownItem header>Demo Options</DropdownItem>
-                    <DropdownItem
-                      on:click={() => {
-                        $mode = ($mode === 'advanced' ? 'normal' : 'advanced');
-                    }}>
-                      <Row class="mr-0" style="min-width:240px">
-                        <Col class="d-flex justify-content-start align-items-center pe-0">
-                          Show Advanced Features
-                        </Col>
-                        <Col class="d-flex justify-content-end ps-0">
-                          {#if $mode == 'advanced'}
-                          <Icon class="text-primary" name="toggle-on"></Icon>
-                          {:else}
-                          <Icon class="text-secondary" name="toggle-off"></Icon>
-                          {/if}
-                        </Col>
-                      </Row>
-                    </DropdownItem>
-                  {/if}
-                  <DropdownItem divider />
-                  <DropdownItem header>Build: {VERSION_STRING.split('-g')[0]}</DropdownItem>
-                </DropdownMenu>
-            </Dropdown>
-          {:else}
-            <NavItem>
-              <NavLink class="header-link" on:click={() => authService.login()} style="text-wrap-mode: nowrap"><Icon name="person-circle"/> Sign In</NavLink>
+              <NavLink class="header-link" style="text-wrap-mode: nowrap" href="/documents" active={ activeItem === "documents" }>Documents</NavLink>
             </NavItem>
           {/if}
+          {#if INSTANCE_CONFIG.pages.provider}
+            <NavItem>
+              <NavLink class="header-link" style="text-wrap-mode: nowrap" href="/provider" active={ activeItem === "provider" }>Provider</NavLink>
+            </NavItem>
+          {/if}
+          <Dropdown nav inNavbar class="navbar-dropdown" size="sm" direction="down">
+            <DropdownToggle color="primary" nav caret class={`header-link ${activeItem === "account" ? "active" : "" }`}>
+              <Icon name="person-circle"/> Account
+            </DropdownToggle>
+            <DropdownMenu end style="max-height: 350px; overflow:auto">
+              <DropdownItem header>
+                Welcome, {get(fhirDataService.demographics)?.firstName ?? $user.profile.given_name ?? $user.profile.preferred_username} ({$user.profile.email})
+                {#if $user.profile.idp === 'google'}
+                  <br><Icon name="google" alt="Google logo" aria-label="Signed in using Google"/> Signed in using Google
+                {/if}
+              </DropdownItem>
+              <DropdownItem on:click={() => {
+                goto('/account');
+              }}><Icon name="gear-fill"/> Settings</DropdownItem>
+              <DropdownItem
+                on:click={() => {
+                  authService.logout();
+                }}><Icon name="box-arrow-right"/> Sign Out</DropdownItem>
+                {#if INSTANCE_CONFIG.advanced}
+                  <DropdownItem divider />
+                  <DropdownItem header>Demo Options</DropdownItem>
+                  <DropdownItem
+                    on:click={() => {
+                      $mode = ($mode === 'advanced' ? 'normal' : 'advanced');
+                  }}>
+                    <Row class="mr-0" style="min-width:240px">
+                      <Col class="d-flex justify-content-start align-items-center pe-0">
+                        Show Advanced Features
+                      </Col>
+                      <Col class="d-flex justify-content-end ps-0">
+                        {#if $mode == 'advanced'}
+                        <Icon class="text-primary" name="toggle-on"></Icon>
+                        {:else}
+                        <Icon class="text-secondary" name="toggle-off"></Icon>
+                        {/if}
+                      </Col>
+                    </Row>
+                  </DropdownItem>
+                {/if}
+                <DropdownItem divider />
+                <DropdownItem header>Build: {VERSION_STRING.split('-g')[0]}</DropdownItem>
+              </DropdownMenu>
+          </Dropdown>
         {:else}
-        <NavItem>
-          <NavLink class="header-link" on:click={() => authService.login()} style="text-wrap-mode: nowrap"><Icon name="person-circle"/> Sign In</NavLink>
-        </NavItem>
-      {/if}
+          <NavItem>
+            <NavLink class="header-link" on:click={() => authService.login()} style="text-wrap-mode: nowrap"><Icon name="person-circle"/> Sign In</NavLink>
+          </NavItem>
+        {/if}
       </Nav>
     </Collapse>
+    {#if $authenticated && $user}
+      <TabNav class="d-flex d-md-none mx-1" activeItem={activeItem}/>
+    {/if}
   </Navbar>
-</Row>
+</div>
+{#if showFixedTabs && $authenticated && $user}
+  <div class="fixed-top m-3 shadow rounded-4"
+    in:fly={{ y: -50, duration: 200 }}
+    out:fly={{ y: -50, duration: 100 }}
+    style="z-index: 1030;"
+  >
+    <TabNav activeItem={activeItem} />
+  </div>
+{/if}
 {#if DEMO_WARNING}
   <Alert color="warning" dismissible class="mt-2 mb-0">
-    <span class="text-danger">Demonstration/test system - do not use with real health information</span>
+    <span class="text-danger">{ SYSTEM_NAME ?? 'Demonstration/test system'} - do not use with real health information</span>
   </Alert>
 {/if}
 <!-- <Banner title={INSTANCE_CONFIG.header.title} style={INSTANCE_CONFIG.header.title_style}/> -->

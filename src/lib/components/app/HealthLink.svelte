@@ -29,9 +29,13 @@
   import type { SHLAdminParams, SHLClient } from '$lib/utils/managementClient';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import { generate } from "text-to-image";
+  import type { ToastStore } from '$lib/stores/toast';
 
   export let shl: SHLAdminParams;
   let shlControlled: SHLAdminParams;
+
+  const toast: ToastStore = getContext('toast');
+
   let open = false;
   const toggle = () => (open = !open);
 
@@ -210,6 +214,10 @@
     if (success) {
       $shlStore = await shlClient.getUserShls();
       toggle();
+      toast.add({
+        message: `Deleted ${shl.label}`,
+        type: 'success'
+      })
       goto('/');
     }
   }
@@ -219,12 +227,12 @@
   }
 
   async function deleteFile(fileContent:string) {
-    shl = await shlClient.deleteFile(shl, fileContent).then((shl) => {
-      let updatedFiles = shl.files.filter((f) => f.contentHash !== fileContent);
-      shl.files = updatedFiles;
-      return shl;
-    });
+    shl = await shlClient.deleteFile(shl, fileContent);
     $shlStore = await shlClient.getUserShls();
+    toast.add({
+      message: `Deleted file from ${shl.label}`,
+      type: 'success'
+    })
   }
 </script>
 {#if linkNotFound}
@@ -280,7 +288,7 @@
                     navigator.share({ url: await href, title: shl.label });
                   }
                 }}>
-                  <Icon name="share" /> Share
+                  <Icon name="send" /> Share
                 </Button>
             {/await}
           {/if}
@@ -350,6 +358,10 @@
           on:click={async () => {
             await shlClient.resetShl({ ...shl, label: shlControlled.label });
             $shlStore = await shlClient.getUserShls();
+            toast.add({
+              message: `Renamed summary to ${shlControlled.label}`,
+              type: 'success'
+            });
           }}>
           <Icon name="sticky" /> Update Label
         </Button>
@@ -380,6 +392,7 @@
           on:click={async () => {
             await shlClient.resetShl({ ...shl, passcode: shlControlled.passcode });
             $shlStore = await shlClient.getUserShls();
+            toast.add({ message: "Passcode updated", type: "success" });
           }}><Icon name="lock" /> Update Passcode</Button>
         <Button size="sm" on:click={toggle} color="danger"><Icon name="trash3" /> Delete Summary Link</Button>
         <Modal isOpen={open} backdrop="static" {toggle}>

@@ -25,6 +25,7 @@ export interface SHLAdminParams {
   flag?: string;
   label?: string;
   v?: number;
+  active?: boolean;
 }
 
 export interface SHLFile {

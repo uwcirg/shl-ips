@@ -1,15 +1,19 @@
 import { writable, type Writable } from 'svelte/store';
 
-export type ToastMessage = {
+export interface ToastMessage extends ToastOptions {
   id: number;
-  message: string;
-  type: 'success' | 'info' | 'warning' | 'danger';
   visible: boolean;
 };
 
+export type ToastOptions = {
+  title?: string;
+  message?: string;
+  type?: 'success' | 'info' | 'warning' | 'danger';
+}
+
 export interface ToastStore extends Writable<ToastMessage[]> {
   messages: ToastMessage[];
-  add: (message: string, type: ToastMessage['type']) => void;
+  add: (options: ToastOptions) => void;
   remove: any;
   dismiss: any;
   subscribe: any;
@@ -20,10 +24,10 @@ let nextId = 0;
 export function createToastStore() {
   const { subscribe, update } = writable<ToastMessage[]>([]);
 
-  function add(message: string, type: ToastMessage['type']) {
+  function add(options: ToastOptions) {
     const id = nextId++;
-    update(msgs => [...msgs, { id, message, type, visible: true }]);
-    setTimeout(() => remove(id), 4000);
+    update(msgs => [...msgs, { id, ...options, visible: true }]);
+    setTimeout(() => remove(id), 10000);
   }
 
   function remove(id: number) {

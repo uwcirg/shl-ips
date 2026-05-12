@@ -275,7 +275,7 @@
           <Col class={index === 0 ? "col-12" : ""}>
             <Button
               id={formConfig.method}
-              class="h-100 w-100 d-flex align-items-top flex-column justify-content-between shadow"
+              class="h-100 w-100 d-flex align-items-top flex-column justify-content-between shadow-sm"
               style="text-align: left;"
               outline
               color={ index === 0 ? "primary" : "secondary"}
