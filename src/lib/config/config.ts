@@ -10,6 +10,7 @@ const env = (key: string, fallback: any = import.meta.env[key]) => {
 }
 
 export const DEMO_WARNING = env('VITE_DEMO_WARNING');
+export const SYSTEM_NAME = env('VITE_SYSTEM_NAME');
 
 export const API_BASE = env('VITE_API_BASE');
 
