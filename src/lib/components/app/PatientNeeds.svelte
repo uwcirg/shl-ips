@@ -18,6 +18,11 @@
   
   export let disabled = false;
   export let formData: IResourceCollection | undefined;
+  export let processing = false;
+  
+  let buttonText = "Save your care needs";
+  let processingText = "Saving...";
+
   let resources;
   $: resources = formData?.resources;
   $: if ($resources) {
@@ -35,7 +40,6 @@
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
-  let processing = false;
   let fetchError = '';
   
   interface ConditionOption { checked: boolean, code: CodeableConcept };
@@ -359,23 +363,16 @@
   <Row>
     <Col xs="auto">
       <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
-        {#if !processing}
-          Save your care needs
-        {:else}
-          Saving...
-        {/if}
+        {processing ? processingText : buttonText}
       </Button>
     </Col>
-    {#if processing}
-      <Col xs="auto" class="d-flex align-items-center px-0">
-        <Spinner color="primary" type="border" size="md"/>
-      </Col>
-    {/if}
-    {#if disabled}
-      <Col xs="auto" class="d-flex align-items-center px-0">
+    <Col xs="auto" class="d-flex align-items-center px-0">
+      {#if disabled}
         Please wait...
-      </Col>
-    {/if}
+      {:else if processing}
+        <Spinner color="primary" type="border" size="md"/>
+      {/if}
+    </Col>
   </Row>
 </form>
 <FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>

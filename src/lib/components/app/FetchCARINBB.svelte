@@ -20,6 +20,10 @@
   import { METHODS, CATEGORIES } from '$lib/config/tags';
 
   export let disabled = false;
+  export let processing = false;
+  
+  let buttonText = "Import Data";
+  let processingText = "Importing...";
 
   let authService: IAuthService = getContext('authService');
   
@@ -30,7 +34,6 @@
   const METHOD = METHODS.PROVIDER_HEALTH_RECORD_CARINBB;
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
-  let processing = false;
   let loadingSample = false;
   let fetchError = "";
 
@@ -207,10 +210,10 @@
           resourceDispatch('update-resources', result);
         }
       } catch (e) {
+        processing = false;
         console.log('Failed', e);
         fetchError = "Error importing insurance data";
       } finally {
-        processing = false;
         window.history.replaceState(null, "", clearURLOfParams($page.url));
         endSession();
       }
@@ -243,24 +246,17 @@
 
   <Row>
     <Col xs="auto">
-    <Button color="primary" style="width:fit-content" disabled={processing || disabled || loadingSample} type="submit">
-      {#if !processing}
-        Import Data
-      {:else}
-        Importing...
-      {/if}
-    </Button>
+      <Button color="primary" style="width:fit-content" disabled={processing || disabled || loadingSample} type="submit">
+        {processing ? processingText : buttonText}
+      </Button>
     </Col>
-    {#if processing || loadingSample}
-      <Col xs="auto" class="d-flex align-items-center px-0">
-        <Spinner color="primary" type="border" size="md"/>
-      </Col>
-    {/if}
-    {#if disabled}
-      <Col xs="auto" class="d-flex align-items-center px-0">
+    <Col xs="auto" class="d-flex align-items-center px-0">
+      {#if disabled}
         Please wait...
-      </Col>
-    {/if}
+      {:else if processing || loadingSample}
+        <Spinner color="primary" type="border" size="md"/>
+      {/if}
+    </Col>
   </Row>
 </form>
 <FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>

@@ -25,6 +25,10 @@
   import { METHODS, CATEGORIES } from '$lib/config/tags';
 
   export let disabled = false;
+  export let processing = false;
+  
+  let buttonText = "Import Data";
+  let processingText = "Importing...";
 
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
 
@@ -61,7 +65,6 @@
   let baseUrl = "https://concept01.ehealthexchange.org:52780/fhirproxy/r4";
   let selectedSource = "MeldOpen";
   let method = 'destination'; // url or destination
-  let processing = false;
   let fetchError = '';
 
   let mrn = '';
@@ -366,7 +369,6 @@
       ));
       const resources = await fetchPatientData(patient.id);
       hostname = method === 'url' ? sources[selectedSource].url : baseUrl;
-      processing = false;
       if (resources.length === 0) {
         console.warn(`No resources found for patient ${patient.id} at ${hostname} for ${selectedSource}`);
       }
@@ -479,23 +481,16 @@
   <Row>
     <Col xs="auto">
       <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
-        {#if !processing}
-          Import Data
-        {:else}
-          Importing...
-        {/if}
+        {processing ? processingText : buttonText}
       </Button>
     </Col>
-    {#if processing}
-      <Col xs="auto" class="d-flex align-items-center px-0">
-        <Spinner color="primary" type="border" size="md"/>
-      </Col>
-    {/if}
-    {#if disabled}
-      <Col xs="auto" class="d-flex align-items-center px-0">
+    <Col xs="auto" class="d-flex align-items-center px-0">
+      {#if disabled}
         Please wait...
-      </Col>
-    {/if}
+      {:else if processing}
+        <Spinner color="primary" type="border" size="md"/>
+      {/if}
+    </Col>
   </Row>
   {/if}
 </form>

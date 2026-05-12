@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { Button, Row, Col } from '@sveltestrap/sveltestrap';
   export let backLabel: string = 'Back';
   export let forwardLabel: string = 'Next';
@@ -10,7 +11,6 @@
   const NAV_HEIGHT = 63; // The height of the nav, so that the static/fixed transition happens at the right place
 
   let footerVisible = false;
-  import { onMount } from 'svelte';
   let sentinel: HTMLElement;
 
   onMount(() => {
@@ -29,18 +29,18 @@
   });
 </script>
 
-<div bind:this={sentinel} class="sticky-nav-sentinel mt-5" aria-hidden="true"></div>
+<div bind:this={sentinel} class="sticky-nav-sentinel" aria-hidden="true"></div>
 {#if showBack || showForward}
   <div class="sticky-nav {footerVisible ? 'sticky-nav--docked' : 'sticky-nav--fixed'}">
     <Row class="align-items-center">
       <Col class="text-start">
         {#if showBack}
-          <Button color="secondary" on:click={onBack}>{backLabel}</Button>
+          <Button color="secondary" class="btn-arrow-left" on:click={onBack}>{backLabel}</Button>
         {/if}
       </Col>
       <Col class="text-end">
         {#if showForward}
-          <Button color="primary" on:click={onForward}>{forwardLabel}</Button>
+          <Button color="primary" class="btn-arrow-right" on:click={onForward}>{forwardLabel}</Button>
         {/if}
       </Col>
     </Row>
@@ -69,5 +69,14 @@
     &--docked {
       position: static;
     }
+  }
+  
+  :global(.btn-arrow-left) {
+    clip-path: polygon(100% 0%, 10% 0%, 0% 50%, 10% 100%, 100% 100%);
+    padding-left: 1.5rem; /* extra padding so text isn't clipped */
+  }
+  :global(.btn-arrow-right) {
+    clip-path: polygon(0% 0%, 90% 0%, 100% 50%, 90% 100%, 0% 100%);
+    padding-right: 1.5rem; /* extra padding so text isn't clipped */
   }
 </style>

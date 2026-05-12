@@ -59,7 +59,7 @@
     if (aDate && !bDate) return 1;
     if (bDate && !aDate) return -1;
     if (!aDate && !bDate) return 0;
-    return (new Date(aDate) as any) - (new Date(bDate) as any);
+    return (new Date(aDate).getTime() - new Date(bDate).getTime());
   };
 
   function getResourceSortDate(resource: Resource, fieldsOrPrefixes: string[] = []): {date: Date, precision: number} | null {

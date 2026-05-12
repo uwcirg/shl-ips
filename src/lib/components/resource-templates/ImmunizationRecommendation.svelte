@@ -18,7 +18,7 @@
         if (!b.dateCriterion) return 1;
         const aDate = a.dateCriterion?.find((x) => x.code.coding[0].code === '30981-5' && x.code.coding[0].system == 'http://hl7.org/fhir/ValueSet/immunization-recommendation-date-criterion')?.value;
         const bDate = b.dateCriterion?.find((x) => x.code.coding[0].code === '30981-5' && x.code.coding[0].system == 'http://hl7.org/fhir/ValueSet/immunization-recommendation-date-criterion')?.value;
-        return new Date(aDate) - new Date(bDate);
+        return new Date(aDate).getTime() - new Date(bDate).getTime();
       })
       ?.filter(r => {
         return !(

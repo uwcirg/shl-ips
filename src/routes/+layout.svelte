@@ -1,5 +1,6 @@
 <script lang="ts">
   import {
+    Button,
     Container
   } from '@sveltestrap/sveltestrap';
   import { onMount, onDestroy, setContext } from 'svelte';
@@ -13,7 +14,8 @@
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import type { IAuthService, NavConfig, SHLAdminParams } from '$lib/utils/types';
   import ToastContainer from '$lib/components/layout/ToastContainer.svelte';
-  import { createToastStore } from '$lib/utils/toast';
+  import { createToastStore } from '$lib/stores/toast';
+  import { initErrorReporter, reportError } from '$lib/utils/reportError';
 
   let authService: IAuthService = new AuthService();
   setContext('authService', authService);
@@ -35,6 +37,7 @@
 
   const toastStore = createToastStore();
   setContext('toast', toastStore);
+  initErrorReporter(toastStore);
 
   const MODE_KEY = 'demo_mode';
   let mode: Writable<string> = writable('normal');
@@ -71,15 +74,30 @@
     prevPageSize = width;
   }
 
+  function handleError(message: any, source: any, lineno: any, colno: any, error: any) {
+    console.error(message, source, lineno, colno, error);
+    if (error) reportError(error);
+    return false;
+  }
+  
+  function handleUnhandledRejection(e: PromiseRejectionEvent) {
+    reportError(e.reason);
+  }
+
   onMount(async () => {
     await authService.isAuthenticated();
     // Initial call to set pagination size on page load
     dispatchPageSize()
     // Call dispatchPageSize() on window resize
     window.addEventListener('resize', dispatchPageSize);
+
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    window.onerror = handleError;
   });
   onDestroy(() => {
     window.removeEventListener('resize', dispatchPageSize);
+    window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    window.onerror = null;
   });
 
 </script>
@@ -92,15 +110,22 @@
     <link rel="preload" as="image" href={`${INSTANCE_CONFIG.imgPath}/divider.png`} />
 </svelte:head>
 
+<!-- Error testing -->
+<!-- <Button on:click={() => { throw new Error('Test Error'); }}>Error</Button>
+<Button on:click={() => { let a; a.b.c.d.e.f.g.h.i.j.k.l.m.n.o.p.q.r.s.t.u.v.w.x.y.z; }}>Error</Button> -->
+
+
 <Container class="main" fluid>
   <Header />
-  <ToastContainer />
   <div class="main-content">
     <slot />
   </div>
-  <StickyNav
-    {...$navConfig}
-  />
+  <div class="sticky-bottom-nav">
+    <ToastContainer />
+    <StickyNav
+      {...$navConfig}
+    />
+  </div>
   <Footer />
 </Container>
 
@@ -133,5 +158,10 @@
   } */
   :global(.navbar .container-fluid) {
     padding: 0px;
+  }
+
+  :global(.sticky-bottom-nav, .navbar) {
+    margin-left: calc(-1 * var(--bs-gutter-x, 1.5rem) / 2);
+    margin-right: calc(-1 * var(--bs-gutter-x, 1.5rem) / 2);
   }
 </style>
