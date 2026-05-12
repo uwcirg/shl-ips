@@ -280,7 +280,7 @@
                     navigator.share({ url: await href, title: shl.label });
                   }
                 }}>
-                  <Icon name="share" /> Share
+                  <Icon name="send" /> Share
                 </Button>
             {/await}
           {/if}
