@@ -59,7 +59,7 @@
     addDynamicNavbarListeners();
     const observer = new IntersectionObserver(
       ([entry]) => {
-        showFixedTabs = !entry.isIntersecting;
+        showFixedTabs = !entry.isIntersecting && window.scrollY > 0;
       },
       { threshold: 0, rootMargin: '-10px 0px 0px 0px' }
     );
