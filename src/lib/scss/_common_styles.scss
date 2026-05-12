@@ -6,8 +6,44 @@
   scroll-margin-top: var(--header-height);
 }
 
-.text-bg-info {
-  color: #fff !important;
+.accordion-item.resource-content.scroll > .accordion-collapse > .accordion-body {
+  overflow: auto;
+  max-height: calc(65vh);
+}
+
+@each $variant in primary, secondary, success, danger, warning, info {
+  .btn-outline-#{$variant}:hover,
+  .btn-outline-#{$variant}:focus-visible {
+    color: var(--bs-#{$variant}-text-emphasis);
+    background-color: var(--bs-#{$variant}-bg-subtle);
+    border-color: var(--bs-#{$variant});
+  }
+}
+
+.code {
+  overflow:auto;
+  margin: 0;
+  padding: 10px;
+  width: 100%;
+}
+
+.code-container {
+  background-color: #f5f5f5;
+  border-radius: 10px;
+  border: 1px solid rgb(200, 200, 200);
+  overflow: hidden;
+}
+
+div.offcanvas-body {
+  overflow-y: hidden !important;
+}
+
+h6.info-header {
+  display: block;
+  margin-bottom: 0;
+  font-size: 0.875rem;
+  color: #6c757d;
+  white-space: nowrap;
 }
 
 .info-paragraph {
@@ -15,6 +51,39 @@
   font-weight: 200;
   font-family: Verdana, sans-serif;
 }
+
+.loader {
+  width: 100%;
+  height: 150px;
+  margin: 40px;
+  display: block;
+  position: relative;
+  background: #FFF;
+  box-sizing: border-box;
+}
+
+.loader::after {
+  content: '';  
+  width: calc(100% - 30px);
+  height: calc(100% - 30px);
+  top: 15px;
+  left: 15px;
+  position: absolute;
+  background-image: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.5) 50%, transparent 80%),
+    linear-gradient(#DDD 56px, transparent 0), /* box 1 */
+    linear-gradient(#DDD 24px, transparent 0), /* box 2 */
+    linear-gradient(#DDD 18px, transparent 0), /* box 3 */
+    linear-gradient(#DDD 66px, transparent 0); /* box 4 */
+  background-repeat: no-repeat;
+  background-size: 75px 130px, /* wave */
+    55px 56px, /* box 1 */
+    160px 30px, /* box 2 */
+    220px 20px, /* box 3 */
+    290px 56px; /* box 4 */
+  box-sizing: border-box;
+  animation: animloader 1s linear infinite;
+}
+
 
 .resource-content {
   table {
@@ -61,67 +130,8 @@
   }
 }
 
-.accordion-item.resource-content.scroll > .accordion-collapse > .accordion-body {
-  overflow: auto;
-  max-height: calc(65vh);
-}
-
-.code {
-  overflow:auto;
-  margin: 0;
-  padding: 10px;
-  width: 100%;
-}
-
-.code-container {
-  background-color: #f5f5f5;
-  border-radius: 10px;
-  border: 1px solid rgb(200, 200, 200);
-  overflow: hidden;
-}
-
-div.offcanvas-body {
-  overflow-y: hidden !important;
-}
-
-h6.info-header {
-  display: block;
-  margin-bottom: 0;
-  font-size: 0.875rem;
-  color: #6c757d;
-  white-space: nowrap;
-}
-
-.loader {
-  width: 100%;
-  height: 150px;
-  margin: 40px;
-  display: block;
-  position: relative;
-  background: #FFF;
-  box-sizing: border-box;
-}
-
-.loader::after {
-  content: '';  
-  width: calc(100% - 30px);
-  height: calc(100% - 30px);
-  top: 15px;
-  left: 15px;
-  position: absolute;
-  background-image: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.5) 50%, transparent 80%),
-    linear-gradient(#DDD 56px, transparent 0), /* box 1 */
-    linear-gradient(#DDD 24px, transparent 0), /* box 2 */
-    linear-gradient(#DDD 18px, transparent 0), /* box 3 */
-    linear-gradient(#DDD 66px, transparent 0); /* box 4 */
-  background-repeat: no-repeat;
-  background-size: 75px 130px, /* wave */
-    55px 56px, /* box 1 */
-    160px 30px, /* box 2 */
-    220px 20px, /* box 3 */
-    290px 56px; /* box 4 */
-  box-sizing: border-box;
-  animation: animloader 1s linear infinite;
+.text-bg-info {
+  color: #fff !important;
 }
 
 @keyframes animloader {
