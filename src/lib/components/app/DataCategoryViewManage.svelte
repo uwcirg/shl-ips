@@ -24,6 +24,7 @@
   import InfoButton from '$lib/components/app/InfoButton.svelte';
   import type { DataFormConfig } from '$lib/utils/types';
   import type { ResourceCollection } from '$lib/utils/ResourceCollection';
+  import type { ToastStore } from '$lib/stores/toast';
 
   export let id: string;
 
@@ -48,6 +49,8 @@
   let userResources = fhirDataService.userResources;
   let loading = fhirDataService.loading;
   let masterPatient = fhirDataService.masterPatient;
+
+  const toast: ToastStore = getContext('toast');
   
   let mode: Writable<string> = getContext('mode');
 
@@ -131,9 +134,17 @@
     }
   }
 
-  function deleteDataset(category: string, method: string, source: string) {
-    fhirDataService.deleteDataset(category, method, source);
-    updateFormDataIfApplicable(method);
+  async function deleteDataset(category: string, method: string, source: string, sourceName?: string) {
+    try {
+      await fhirDataService.deleteDataset(category, method, source);
+      updateFormDataIfApplicable(method);
+      toast.add({
+        message: `Successfully deleted ${sourceName ?? `data from ${source}`}`,
+        type: 'success'
+      });
+    } catch (err) {
+      reportError(err);
+    }
   }
 
   let isOpen = false;

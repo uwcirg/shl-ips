@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Accordion, AccordionItem, Button, Col, FormGroup, Icon, Input, Row } from '@sveltestrap/sveltestrap';
+  import { Accordion, AccordionItem, Button, Col, FormGroup, Icon, Input, Row, Spinner } from '@sveltestrap/sveltestrap';
   import { createEventDispatcher, onMount, getContext } from 'svelte';
   import NIOAutoCoderInput from '$lib/components/form/NIOAutoCoderInput.svelte';
   import type { IOResponse, IResourceCollection, ResourceRetrieveEvent } from '$lib/utils/types';
@@ -8,10 +8,13 @@
   import { ResourceHelper } from '$lib/utils/ResourceHelper';
   import type { Observation } from 'fhir/r4';
   import { copyOf } from '$lib/utils/util';
-  import type { ToastStore } from '$lib/utils/toast';
 
-  export let sectionKey: string = 'Occupational Data';
   export let formData: IResourceCollection | undefined;
+  export let processing: boolean = false;
+
+  let buttonText = 'Save work info';
+  let processingText = 'Saving...';
+
   let resources;
   $: resources = formData?.resources;
   $: if ($resources) {
@@ -19,8 +22,6 @@
   } else {
     initializeDefaultFields();
   }
-
-  const toast: ToastStore = getContext('toast');
 
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
   const CATEGORY = CATEGORIES.OCCUPATIONAL_DATA_FOR_HEALTH;
@@ -620,16 +621,7 @@
     return [employmentStatusResource];
   }
 
-  let buttonText = 'Save work info';
-  let buttonDisabled = false;
   function updateOdhSection() {
-    let prevButtonText = buttonText;
-    buttonText = 'Added!';
-    buttonDisabled = true;
-    setTimeout(() => {
-      buttonDisabled = false;
-      buttonText = prevButtonText;
-    }, 1000);
     const employmentStatusResources = generateEmploymentStatusResources();
     const currentJobResources = generateCurrentJobResources();
     const pastJobResources = generatePastJobResources();
@@ -645,13 +637,11 @@
     ]
     let result: ResourceRetrieveEvent = {
       resources,
-      sectionKey: sectionKey,
       category: CATEGORY,
       method: METHOD,
       source: SOURCE.url,
       sourceName: SOURCE.name
     };
-    toast.add("Successfully saved work info", 'success');
     resourceDispatch('update-resources', result);
   }
 </script>
@@ -794,10 +784,15 @@
 </Accordion>
 <br>
 <Row class="justify-content-between align-content-center">
-  <Col class="d-flex flex-grow-1">
-    <Button color="primary" on:click={FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, SOURCE.url, updateOdhSection)} disabled={buttonDisabled}>
-      {buttonText}
+  <Col xs="auto">
+    <Button color="primary" on:click={FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, SOURCE.url, updateOdhSection)} disabled={processing}>
+      {processing ? processingText : buttonText}
     </Button>
+  </Col>
+  <Col class="d-flex justify-content-start align-items-center px-0 flex-grow-1">
+    {#if processing}
+    <Spinner color="primary" type="border" size="md"/>
+    {/if}
   </Col>
   <Col class="d-flex justify-content-end align-items-start">
     <Button color="danger" outline on:click={() => resetWorkInfo()}>

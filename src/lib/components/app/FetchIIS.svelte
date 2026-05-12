@@ -21,11 +21,14 @@
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 
   export let disabled = false;
+  export let processing = false;
+  
+  let buttonText = "Fetch Data";
+  let processingText = "Fetching...";
 
   const resourceDispatch = createEventDispatcher<{ 'update-resources': ResourceRetrieveEvent }>();
 
   let defaultUrl = 'https://35.160.125.146:8039/fhir/Patient';
-  let processing = false;
   let fetchError = '';
 
   let mrn = '123456789';
@@ -97,7 +100,6 @@
       ));
       content = await contentResponse.json();
       hostname = 'WA IIS';
-      processing = false;
       let resources = content.entry.map((e) => {
         return e.resource;
       })
@@ -177,23 +179,16 @@
   <Row>
     <Col xs="auto">
       <Button color="primary" style="width:fit-content" disabled={processing || disabled} type="submit">
-        {#if !processing}
-          Fetch Data
-        {:else}
-          Fetching...
-        {/if}
+        {processing ? processingText : buttonText}
       </Button>
     </Col>
-    {#if processing}
-      <Col xs="auto" class="d-flex align-items-center px-0">
-        <Spinner color="primary" type="border" size="md"/>
-      </Col>
-    {/if}
-    {#if disabled}
-      <Col xs="auto" class="d-flex align-items-center px-0">
+    <Col xs="auto" class="d-flex align-items-center px-0">
+      {#if disabled}
         Please wait...
-      </Col>
-    {/if}
+      {:else if processing}
+        <Spinner color="primary" type="border" size="md"/>
+      {/if}
+    </Col>
   </Row>
 </form>
 

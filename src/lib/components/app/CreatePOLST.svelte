@@ -21,6 +21,10 @@
   import { METHODS, CATEGORIES } from '$lib/config/tags';
 
   export let disabled = false;
+  export let processing = false;
+
+  let buttonText = "Sign Document and Save";
+  let processingText = "Saving...";
   
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
@@ -35,8 +39,6 @@
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
   let demographics: UserDemographics = get(fhirDataService.demographics);
   let userFormDemographics = writable(demographics); // Copy to avoid reactivity loop
-
-  let processing = false;
 
   const forms: Record<string, any> = {
     full: {
@@ -124,8 +126,6 @@
   }
   
   async function generatePreview() {
-    processing = true;
-
     if (pdfPreviewSrc) {
       window.URL.revokeObjectURL(pdfPreviewSrc);
     }
@@ -261,7 +261,6 @@
       };
       reader.readAsDataURL(blob);
     }
-    processing = false;
   }
 
   let resourceTemplate = {
@@ -323,7 +322,6 @@
     resource.content[0].attachment.creation = createdDate;
     resource.date = createdDate;
     let resources = [resource];
-    processing = false;
     let result:ResourceRetrieveEvent = {
       resources: resources,
       category: CATEGORY,
@@ -336,7 +334,7 @@
 
 </script>
 
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, SOURCE.url, submit)}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, SOURCE.url, submit)}>
   <p>To prepare a new POLST form, specify your preferences below.</p>
   <DemographicForm demographics={userFormDemographics} show={['first', 'last', 'gender', 'dob', 'phone']} />
   <Row>
@@ -491,23 +489,16 @@
     <Row class="my-4">
       <Col xs="auto">
         <Button color="primary" style="width:fit-content" disabled={processing || disabled} on:click={submit}>
-          {#if !processing}
-            Sign Document and Save
-          {:else}
-            Submitting...
-          {/if}
+          {processing ? processingText : buttonText}
         </Button>
       </Col>
-      {#if processing}
-        <Col xs="auto" class="d-flex align-items-center px-0">
-          <Spinner color="primary" type="border" size="md"/>
-        </Col>
-      {/if}
-      {#if disabled}
-        <Col xs="auto" class="d-flex align-items-center px-0">
+      <Col xs="auto" class="d-flex align-items-center px-0">
+        {#if disabled}
           Please wait...
-        </Col>
-      {/if}
+        {:else if processing}
+          <Spinner color="primary" type="border" size="md"/>
+        {/if}
+      </Col>
     </Row>
     <Row>
       <Col>
