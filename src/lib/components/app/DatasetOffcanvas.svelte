@@ -17,58 +17,34 @@
   let loading = fhirDataService.loading;
 
   let name = '';
-  let ocCategory = writable('');
-  let ocMethod = writable('');
-  let ocSource = writable('');
-  let ocDataset: any = derived(
-    [userResources], 
-    ([$userResources]) => {
-      if (!$userResources) {
-        return;
-      }
-      let dataset = $userResources?.[$ocCategory]?.[$ocMethod]?.[$ocSource];
-      return dataset;
-    });
-  let dateDisplay = derived([ocDataset], ([$ocDataset]) => {
-    if (!$ocDataset) {
-      return '';
-    }
-    let patientStore = $ocDataset.collection.patient;
-    let patient = get(patientStore);
-    let updated = patient.meta.lastUpdated;
-    let date = new Date(updated);
-    let dateFormatted = date.toLocaleString(undefined, {
-      dateStyle: "medium",
-    });
-    let timeFormatted = date.toLocaleString(undefined, {
-      timeStyle: "short",
-    });
-    console.log($ocDataset);
-    return dateFormatted;
-  });
-  let dateStr = '';
-  $: dateStr = $dateDisplay;
+  let date = '';
+  
+  let ocDataset: any;
 
-  $: if (dataset) {
-    showDataset(dataset.collection);
+  $: if (dataset && $userResources) {
+    let { category, method, source } = dataset.collection.getTags();
+    ocDataset = $userResources?.[category]?.[method]?.[source];
+    if (ocDataset) {
+      showDataset(ocDataset.collection);
+    }
   }
   
   function showDataset(collection: ResourceCollection) {
-    let { category, method, source, sourceName } = collection.getTags();
-    $ocCategory = category;
-    $ocMethod = method;
-    $ocSource = source;
+    let { method, sourceName } = collection.getTags();
     let methodName = METHOD_NAMES[method]?.name;
   
     let sourceString = sourceName ?? "Unknown source";
     let methodString = methodName ? ` (${methodName})` : "";
     name = `${sourceString}${methodString}`;
+    date = new Date((get(collection.patient)).meta.lastUpdated).toLocaleString(undefined, {dateStyle: "medium"});
     isOpen = true;
   }
+  
   function toggle() {
     isOpen = !isOpen;
   }
 </script>
+
 <Offcanvas
   {isOpen}
   {toggle}
@@ -93,8 +69,8 @@
     style="height: 50px"
   >
     <div class="flex-shrink-0">
-      {#if $dateDisplay} <!-- Updates the date if it changes after the offcanvas renders -->
-        <Icon name="calendar-check"/> {$dateDisplay}
+      {#if date} <!-- Updates the date if it changes after the offcanvas renders -->
+        <Icon name="calendar-check"/> {date}
       {/if}
     </div>
     <div class="ms-3 flex-shrink-0">
@@ -128,13 +104,13 @@
   </div>
   <div class="d-flex w-100" style="height: calc(100% - 100px);">
     <Col class="d-flex pe-0 h-100 w-100" style="overflow: auto">
-      {#if $ocDataset && isOpen} <!-- Page freezes without this check -->
-        <DatasetStatusLoader status={$ocDataset.status} size="md">
+      {#if ocDataset && isOpen} <!-- Page freezes without this check -->
+        <DatasetStatusLoader status={ocDataset.status} size="md">
           <div slot="loader" class="d-flex justify-content-center align-items-center w-100">
             <Spinner slot="loader" size="md" color="secondary" />
           </div>
           <FHIRResourceList
-            resourceCollection={$ocDataset.collection}
+            resourceCollection={ocDataset.collection}
             bind:submitting={$loading}
             scroll={false}
             on:status-update={ ({ detail }) => { /*updateStatus(detail)*/ } }
