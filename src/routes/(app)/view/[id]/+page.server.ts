@@ -5,17 +5,21 @@ import { API_BASE } from '$lib/server/config';
 import { getUserShls } from '$lib/utils/shlServerUtils';
 
 
-export const load: PageServerLoad = async ({ params, locals }) => {
+export const load: PageServerLoad = async ({ params, locals, parent }) => {
+  // Wait for layout data — if unauthenticated, don't bother loading
+  const parentData = await parent();
+  if (parentData.unauthenticated) {
+    return { shl: null };
+  }
+
   const shls = await getUserShls(API_BASE, locals.token);
   if (!Array.isArray(shls)) {
     console.error("SHLs aren't array");
     return { shl: null };
   }
   const shl = shls.find((shl: SHLAdminParams) => shl.id === params.id);
-
-  if (locals.token && !shl) {
+  if (!shl) {
     throw error(404, 'Health link not found');
   }
-
   return { shl };
 };
