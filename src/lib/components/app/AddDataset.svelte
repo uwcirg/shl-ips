@@ -1,20 +1,9 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount, SvelteComponent } from 'svelte';
+  import { onMount, SvelteComponent } from 'svelte';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { getContext } from 'svelte';
   import { type Writable } from 'svelte/store';
-  import {
-    Accordion,
-    AccordionItem,
-    Button,
-    Card,
-    CardBody,
-    Col,
-    Icon,
-    Row,
-    Spinner
-  } from '@sveltestrap/sveltestrap';
   import type {
     ResourceRetrieveEvent,
     DataFormConfig,
@@ -64,8 +53,6 @@
       setTimeout(() => document.querySelector(`span.patient-tab`)?.parentElement?.click(), 1); 
     }
   }
-
-  let activeSection: string = $page.url.hash.split('#')[1] ?? sessionStorage.getItem('CATEGORY'); // item cleared on mount
 
   onMount(async function() {
     if (sessionStorage.getItem('URL')) {
@@ -148,10 +135,6 @@
     }, 1000);
   }
 
-  function showError(message: string) {
-    fetchError = message;
-  }
-
   let categoryStatuses: Array<boolean | undefined> = sections.map(s => undefined);
   function updateStatus(detail: {index: number, status: boolean | undefined}) {
     categoryStatuses[detail.index] = detail.status;
@@ -188,14 +171,6 @@
     on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
   />
 {/each}
-
-<!-- <Row class="d-flex justify-content-center mt-4">
-  <Col md="11">
-    <Button color="success" style="width:100%" href={'/share'}>
-      <b><Icon name="plus-lg" /></b> New Sharable Health Summary
-    </Button>
-  </Col>
-</Row> -->
 
 <style>
   :global(.at-load) {

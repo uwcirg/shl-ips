@@ -48,6 +48,8 @@
   import DatasetStatusLoader from '$lib/components/app/DatasetStatusLoader.svelte';
   import DatasetView from '$lib/components/app/DatasetView.svelte';
   import { ResourceCollection } from '$lib/utils/ResourceCollection';
+  import DatasetOffcanvas from '$lib/components/app/DatasetOffcanvas.svelte';
+  import type { StateManager } from '$lib/utils/StateManager';
  
   export let status = "";
   
@@ -341,134 +343,27 @@
 
   let loadingMap: Record<string, boolean> = {};
 
-  function showDataset(collection: ResourceCollection) {
-    let { method, source, sourceName } = collection.getTags();
-    let methodName = METHOD_NAMES[method]?.name;
-  
-    let sourceString = sourceName ?? "Unknown source";
-    let methodString = methodName ? ` (${methodName})` : "";
-    setContent(
-      `${sourceString}${methodString}`,
-      collection
-    );
-  }
-
   let isOpen = false;
-  let name = '';
-  let date = '';
-  let ocCategory: Writable<string> = writable('');
-  let ocSource: Writable<string> = writable('');
-  let ocDataset: Readable<any> = derived(
-    [userResources, ocCategory, ocSource], 
-    ([$userResources, $ocCategory, $ocSource]) => {
-      if (!$userResources || !$ocCategory || !$ocSource) {
-        return;
-      }
-      let dataset = $userResources?.[$ocCategory]?.[$ocSource];
-      return dataset;
-    }
-  );
-  function setContent(viewName: string, viewCollection: ResourceCollection) {
-    let { category, source } = viewCollection.getTags();
-    ocCategory.set(category);
-    ocSource.set(source);
-    name = viewName;
-    date = new Date((get(viewCollection.patient)).meta.lastUpdated).toLocaleString(undefined, {
-      dateStyle: "medium",
-    })
-    isOpen = true;
-  }
-  function toggle() {
-    isOpen = !isOpen;
+  let dataset: { status: StateManager, collection: ResourceCollection };
+  function showDataset(ds: { status: StateManager, collection: ResourceCollection }) {
+    dataset = ds;
   }
 </script>
 
-<Offcanvas
-  {isOpen}
-  {toggle}
-  scroll
-  header={name}
-  placement="end"
-  title={name}
-  style="display: flex; overflow-y:hidden; height: 100dvh; max-width: calc(2 * var(--bs-offcanvas-width)); width: 80dvw; min-width: var(--bs-offcanvas-width);"
+<DatasetOffcanvas
+  bind:isOpen={isOpen}
+  {dataset}
 >
-  <div class="
-      d-flex
-      justify-content-between
-      align-items-center
-      flex-nowrap
-      w-100
-      p-2
-      bg-light
-      rounded-top
-      border-top
-      border-start
-      border-end"
-    style="height: 50px"
+  <Button
+    slot="action-button-start"
+    size="sm"
+    outline
+    color="success"
+    on:click={() => { isOpen = false; addDataset(dataset.collection) }}
   >
-    <div class="flex-shrink-0">
-      <Icon name="calendar-check"/> {date}
-    </div>
-    <div class="ms-3 flex-shrink-0">
-      <Button
-        size="sm"
-        color="secondary"
-        outline
-        on:click={() => {
-          const accordionButtons = document.querySelectorAll(`div.resource-content:not(:has(div.accordion-collapse.show)) > h2 > button.accordion-button`);
-          for (const accordionButton of Array.from(accordionButtons)) {
-            accordionButton.click();
-          }
-        }}
-      >
-        Open All
-      </Button>
-      <Button
-        size="sm"
-        color="secondary"
-        outline
-        on:click={() => {
-          const accordionButtons = document.querySelectorAll(`div.resource-content:has(div.accordion-collapse.show) > h2 > button.accordion-button`);
-          for (const accordionButton of Array.from(accordionButtons)) {
-            accordionButton.click();
-          }
-        }}
-      >
-        Collapse All
-      </Button>
-    </div>
-  </div>
-  <div class="d-flex w-100" style="height: calc(100% - 100px);">
-    <Col class="d-flex pe-0 h-100 w-100" style="overflow: auto">
-      {#if $ocDataset && isOpen} <!-- Page freezes without this check -->
-        <DatasetStatusLoader status={$ocDataset.status} size="md">
-          <div slot="loader" class="d-flex justify-content-center align-items-center w-100">
-            <Spinner slot="loader" size="md" color="secondary" />
-          </div>
-          <FHIRResourceList
-            resourceCollection={$ocDataset.collection}
-            bind:submitting={submitting}
-            scroll={false}
-            on:status-update={ ({ detail }) => { /*updateStatus(detail)*/ } }
-            on:error={ ({ detail }) => { /*showError(detail)*/ } }
-          />
-        </DatasetStatusLoader>
-      {/if}
-    </Col>
-  </div>
-  <Row class="d-flex pe-0" style="height: 50px">
-    <Col class="d-flex justify-content-start align-items-end" style="padding-top: 1rem">
-      <Button
-        size="sm"
-        outline
-        color="success"
-        on:click={() => { isOpen = false; addDataset($ocDataset.collection) }}
-      >
-        <Icon name="plus-circle" /> Add to summary
-      </Button>
-    </Col>
-  </Row>
-</Offcanvas>
+    <Icon name="plus-circle" /> Add to summary
+  </Button>
+</DatasetOffcanvas>
 
 <h4>Create a Shareable Health Summary</h4>
 <p>Create a Health Summary, which can be shared with providers, family members, and others with a QR code or URL.</p>
@@ -523,7 +418,7 @@
                 <Col xs="12" sm="6" lg="4" style="">
                   <DatasetView {dataset} {masterPatient}>
                     <DropdownMenu slot="menu">
-                      <DropdownItem on:click={() => showDataset(collection)}>
+                      <DropdownItem on:click={() => showDataset(dataset)}>
                         <div class="d-flex justify-content-between w-100">
                           View <Icon name="chevron-right"/>
                         </div>
