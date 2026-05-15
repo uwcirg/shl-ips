@@ -17,7 +17,7 @@ import { isIPSBundle } from "$lib/utils/util";
 // This is both allowable and reverse order of loading
 const allowableResourceTypes = [
     'AllergyIntolerance',
-    // 'CarePlan', Still needs some work for referential integrity
+    'CarePlan',
     'Consent',
     'Condition',
     'ClinicalImpression',
@@ -38,7 +38,7 @@ const allowableResourceTypes = [
     'Organization',
     // 'Patient', // This is loaded separately
     'Practitioner',
-    // 'PractitionerRole', Not relevant to IPS
+    'PractitionerRole',
     'Procedure',
     'QuestionnaireResponse', // FIXME this is not part of IPS, should get a carve-out elsewhere...
     'Specimen',
