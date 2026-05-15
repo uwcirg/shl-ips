@@ -363,6 +363,9 @@ export function getResourcesFromIPS(ips: Bundle): Resource[] | undefined {
               return item.url !== "http://hl7.org/fhir/StructureDefinition/narrativeLink";
           })
       }
+      if (!entry.resource.id && entry.fullUrl) {
+        entry.resource.id = entry.fullUrl.split('/').pop().split(':').pop();
+      }
       resources.push(entry.resource);
   });
   return resources;

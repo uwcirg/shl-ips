@@ -8,8 +8,9 @@ export async function uploadResources(resources, token=undefined) {
             request: {
                 // method: resource.resourceType === "Patient" ? "PUT" : "POST",
                 method: "POST",
-                url: `${resource.resourceType}${resource.resourceType === "Patient" ? "/" + resource.id : ""}`
+                url: `${resource.resourceType}`
             },
+            fullUrl: `urn:uuid:${resource.id}`,
             resource: resource
         };
         entries.push(entry);
