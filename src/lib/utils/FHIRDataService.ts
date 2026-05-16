@@ -116,28 +116,43 @@ export class FHIRDataService {
     if (!(patientLinks?.length > 0)) {
       return [];
     }
-    let patientResults = await Promise.allSettled(patientLinks.map(async (link) => {
-      let datasetPatientReference = link.other.reference;
-      let patientOnlyDatasets = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/${datasetPatientReference}`, {
-        cache: "no-cache",
-        headers: {
-          "Authorization": `Bearer ${await this.auth.getAccessToken()}`
+  
+    let patientResults = await Promise.allSettled(
+      patientLinks.map(async (link) => {
+        const datasetPatientReference = link.other.reference;
+        const token = await this.auth.getAccessToken();
+  
+        const response = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/${datasetPatientReference}`, {
+          cache: "no-cache",
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+  
+        if (!response.ok) {
+          // Causes this promise to count as 'rejected' in allSettled
+          throw new Error(`Failed to fetch ${datasetPatientReference}: ${response.status} ${response.statusText}`);
         }
+  
+        const data = await response.json();
+  
+        // Guard against FHIR OperationOutcome slipping through (some servers return 200 + OperationOutcome)
+        if (data.resourceType === 'OperationOutcome') {
+          throw new Error(`OperationOutcome for ${datasetPatientReference}: ${data.issue?.[0]?.diagnostics ?? 'unknown error'}`);
+        }
+  
+        return new ResourceCollection(data);
       })
-        .then((response) => response.text())
-        .then((data) => JSON.parse(data))
-        .then((patient) => new ResourceCollection(patient));
-      return patientOnlyDatasets;
-    }));
-    
-    let patientOnlyDatasets = patientResults
-      .filter((result): result is PromiseFulfilledResult<ResourceCollection> => result.status === 'fulfilled' && result.value !== undefined)
+    );
+  
+    const patientOnlyDatasets = patientResults
+      .filter((result): result is PromiseFulfilledResult<ResourceCollection> =>
+        result.status === 'fulfilled' && result.value !== undefined
+      )
       .map((result) => result.value);
-    
+  
     patientResults
       .filter((result): result is PromiseRejectedResult => result.status === 'rejected')
-      .forEach((result) => console.warn('Failed to load dataset', result.reason));
-    
+      .forEach((result) => console.warn('Failed to load dataset:', result.reason));
+  
     return await this.deduplicateCollections(patientOnlyDatasets);
   }
   
