@@ -124,7 +124,7 @@ export default {
         }
       ]
     },
-    manage: {},
+    review: {},
     summaries: {},
     share: {
       component: AddSummary
