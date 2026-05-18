@@ -263,31 +263,33 @@
 {:else if shlContents.length > 1 || SHOW_VIEWER_DEMO}
   <!-- Multiple tab/demo view -->
   <TabContent>
-    {#each shlContents as contents, index}
-      <TabPane class={`ips${index}`} tabId={`ips${index}`} active={index === 0} style="padding-top:10px">
-        <span slot="tab">{getTabLabel(contents)}</span>
-        <IPSContent bundle={contents} mode={$displayMode} />
+    {#if shlContents.length > 1}
+      {#each shlContents as contents, index}
+        <TabPane class={`ips${index}`} tabId={`ips${index}`} active={index === 0} style="padding-top:10px">
+          <span slot="tab">{getTabLabel(contents)}</span>
+          <IPSContent bundle={contents} mode={$displayMode} />
+        </TabPane>
+      {/each}
+      <TabPane class="decision-support-tab" tabId="decision-support" style="padding-top:10px">
+        <span class="decision-support-tab" slot="tab">Decision Support</span>
+        <Row>
+          <Col>
+            <p>Get recommendations and health record analysis based the health summary content.</p>
+            {#if shlContents.length > 1}
+              <Label>Select a summary to use for decision support:</Label>
+              <select bind:value={decisionSupportContent}>
+                {#each shlContents as content}
+                  <option value={content}>{getTabLabel(content)}</option>
+                {/each}
+              </select>
+            {/if}
+          </Col>
+        </Row>
+        <ImmunizationDecisionSupport
+          patient={shlContents[0].entry.find(entry => entry.resource.resourceType === "Patient").resource}
+          immunizations={shlContents[0].entry.filter(entry => entry.resource.resourceType === "Immunization").map(entry => entry.resource)} />
       </TabPane>
-    {/each}
-    <TabPane class="decision-support-tab" tabId="decision-support" style="padding-top:10px">
-      <span class="decision-support-tab" slot="tab">Decision Support</span>
-      <Row>
-        <Col>
-          <p>Get recommendations and health record analysis based the health summary content.</p>
-          {#if shlContents.length > 1}
-            <Label>Select a summary to use for decision support:</Label>
-            <select bind:value={decisionSupportContent}>
-              {#each shlContents as content}
-                <option value={content}>{getTabLabel(content)}</option>
-              {/each}
-            </select>
-          {/if}
-        </Col>
-      </Row>
-      <ImmunizationDecisionSupport
-        patient={shlContents[0].entry.find(entry => entry.resource.resourceType === "Patient").resource}
-        immunizations={shlContents[0].entry.filter(entry => entry.resource.resourceType === "Immunization").map(entry => entry.resource)} />
-    </TabPane>
+    {/if}
     {#if SHOW_VIEWER_DEMO}
       <TabPane tabId="demo" active={shlContents.length === 0} style="padding-top:10px">
         <span class="demo-tab" slot="tab">IPS Sandbox</span>
