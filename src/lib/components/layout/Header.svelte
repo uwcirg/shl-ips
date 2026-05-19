@@ -269,7 +269,7 @@
   </Navbar>
 </div>
 {#if showFixedTabs && $authenticated && $user}
-  <div class="d-none d-md-flex fixed-top m-3 shadow rounded-4"
+  <div class="d-none d-sm-flex fixed-top m-3 shadow rounded-4"
     in:fly={{ y: -50, duration: 200 }}
     out:fly={{ y: -50, duration: 100 }}
     style="z-index: 1030;"
