@@ -258,12 +258,12 @@
       </Nav>
     </Collapse>
     {#if $authenticated && $user}
-      <TabNav class="d-flex d-md-none mx-1" activeItem={activeItem}/>
+      <TabNav class="d-flex d-md-none mx-2" activeItem={activeItem}/>
     {/if}
   </Navbar>
 </div>
 {#if showFixedTabs && $authenticated && $user}
-  <div class="fixed-top m-3 shadow rounded-4"
+  <div class="fixed-top m-2 shadow rounded-4"
     in:fly={{ y: -50, duration: 200 }}
     out:fly={{ y: -50, duration: 100 }}
     style="z-index: 1030;"
