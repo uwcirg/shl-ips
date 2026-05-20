@@ -22,7 +22,6 @@
   import { derived, get, writable, type Writable, type Readable } from 'svelte/store';
   import { METHOD_NAMES } from '$lib/config/config';
   import DatasetStatusLoader from '$lib/components/app/DatasetStatusLoader.svelte';
-  import DatasetView from '$lib/components/app/DatasetView.svelte';
   import FHIRDataService from '$lib/utils/FHIRDataService';
   import FHIRResourceList from '$lib/components/app/FHIRResourceList.svelte';
   import type { DataFormConfig } from '$lib/utils/types';
