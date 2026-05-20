@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
   import ManageData from '$lib/components/app/ManageData.svelte';
+  import SourceSummary from '$lib/components/app/SourceSummary.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 </script>
 
@@ -13,4 +13,5 @@
 <p>
   View and manage your imported health data.
 </p>
+<SourceSummary/>
 <ManageData />
