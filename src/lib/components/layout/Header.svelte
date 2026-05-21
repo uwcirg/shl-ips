@@ -174,13 +174,13 @@
 <canvas id="header-image" class="img-fluid" style="display: none;"/>
 
 <div bind:this={navbarEl}>
-  <Navbar color="light" light expand="md" style="border-bottom: 1px solid rgb(204, 204, 204);">
+  <Navbar class="px-3" color="light" light expand="md" style="border-bottom: 1px solid rgb(204, 204, 204);">
     <div class="d-flex top-row-nav align-items-center justify-content-between">
       {#await createHeaderImage()}
       <!-- <NavbarBrand class="flex-shrink-1"> <img id="nav-image" src={`${INSTANCE_CONFIG.imgPath}/company-logo.png`} alt="Site Logo" style="width: fit-content; height: 60px;" /> </NavbarBrand> -->
       {:then headerImageUrl}
       <!-- <NavbarBrand class="flex-shrink-1"> <img id="nav-image" style="height: 60px;"/> </NavbarBrand> -->
-      <NavbarBrand class="flex-shrink-1 ms-3">
+      <NavbarBrand class="flex-shrink-1">
         <img id="nav-image" alt="Washington State Department of Health Logo" style="height: 43px; vertical-align: left" src={headerImageUrl}/>
       </NavbarBrand>
       {/await}
@@ -258,7 +258,7 @@
       </Nav>
     </Collapse>
     {#if $authenticated && $user}
-      <TabNav class="d-flex d-md-none mx-2" activeItem={activeItem}/>
+      <TabNav class="d-flex d-md-none" activeItem={activeItem}/>
     {/if}
   </Navbar>
 </div>
