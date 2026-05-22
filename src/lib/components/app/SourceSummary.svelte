@@ -12,10 +12,13 @@
     DataFormConfig
   } from '$lib/utils/types';
   import FHIRDataService from '$lib/utils/FHIRDataService';
+  import SourcePill from '$lib/components/app/SourcePill.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import { CATEGORIES, METHODS } from '$lib/config/tags';
-
   import { buildColorMap } from '$lib/utils/colors';
+
+  let className = '';
+  export { className as class };
   
   let colorMap: Map<string, string> = new Map();
 
@@ -111,6 +114,7 @@
     }
   }
   
+  let overlayScrollbars = hasOverlayScrollbars();
   onMount(() => {
     checkOverflow();
     const observer = new ResizeObserver(checkOverflow);
@@ -123,10 +127,19 @@
   function handleScroll() {
     scrollLeft = scrollRow.scrollLeft;
   }
+
+  function hasOverlayScrollbars(): boolean {
+    const el = document.createElement('div');
+    el.style.cssText = 'width:100px;overflow-x:scroll;';
+    document.body.appendChild(el);
+    const overlaid = el.offsetHeight === el.scrollHeight;
+    document.body.removeChild(el);
+    return overlaid;
+  }
 </script>
 
 {#if displayCollectionInfo}
-<Card class="bg-light">
+<Card class={"bg-light " + className }>
   <CardBody class="p-2">
   {#if $loading}
     <Row>
@@ -136,27 +149,11 @@
     </Row>
   {:else if expanded}
     <!-- Expanded: wrap view -->
-    <Row class="g-1">
+    <Row class="g-1 mb-2">
       {#each displayCollectionInfo as source, index}
-        {#if index < 2 || true}
-          <Col class="col-auto">
-            <Card class="rounded-5" style="width: fit-content">
-              <CardBody class="py-1 px-3">
-                <Row class="flex-nowrap">
-                  <Col class="col-auto pe-0">
-                    <span
-                      class="d-inline-block rounded-circle"
-                      style="width:10px; height:10px; background-color:{colorMap.get(source.sourceName)};"
-                    ></span>
-                  </Col>
-                  <Col style="padding-left: 0.5rem">
-                    <small class="text-secondary text-nowrap">{source.sourceName}</small>
-                  </Col>
-                </Row>
-              </CardBody>
-            </Card>
-          </Col>
-        {/if}
+        <Col class="col-auto">
+          <SourcePill name={source.sourceName} color={colorMap.get(source.sourceName)} />
+        </Col>
       {/each}
     </Row>
     <div class="d-flex justify-content-end">
@@ -165,34 +162,18 @@
   {:else}
     <!-- Collapsed: single scrollable row with "See all" overlay -->
     <div class="scroll-row-wrapper">
-      <div class="scroll-row" class:has-overflow={isOverflowing} bind:this={scrollRow} on:scroll={handleScroll}>
+      <div class="scroll-row" class:has-overflow={isOverflowing} class:scrollbar-overlay={overlayScrollbars} bind:this={scrollRow} on:scroll={handleScroll}>
         {#each displayCollectionInfo as source, index}
-          {#if index < 2 || true}
           <div class="pill-col">
-            <Card class="rounded-5" style="width: fit-content">
-              <CardBody class="py-1 px-3">
-                <Row class="flex-nowrap">
-                  <Col class="col-auto pe-0">
-                    <span
-                      class="d-inline-block rounded-circle"
-                      style="width:10px; height:10px; background-color:{colorMap.get(source.sourceName)};"
-                    ></span>
-                  </Col>
-                  <Col style="padding-left: 0.5rem">
-                    <small class="text-secondary text-nowrap">{source.sourceName}</small>
-                  </Col>
-                </Row>
-              </CardBody>
-            </Card>
+            <SourcePill name={source.sourceName} color={colorMap.get(source.sourceName)} />
           </div>
-          {/if}
         {/each}
       </div>
       {#if scrollLeft > 0}
-        <div class="see-start-overlay"></div>
+        <div class="see-start-overlay" class:scrollbar-overlay={overlayScrollbars}></div>
       {/if}
       {#if isOverflowing}
-        <button class="see-all-overlay" on:click={() => expanded = true}>See all</button>
+        <button class="see-all-overlay" class:scrollbar-overlay={overlayScrollbars} on:click={() => expanded = true}>See all</button>
       {/if}
     </div>
   {/if}
@@ -211,15 +192,15 @@
     flex-wrap: nowrap;
     overflow-x: auto;
     gap: 0.25rem;
-    scrollbar-width: none; /* Firefox */
-  }
-
-  .scroll-row::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
+    scrollbar-width: thin; /* Firefox */
   }
 
   .scroll-row.has-overflow {
     padding-right: 70px;
+    padding-bottom: 0rem;
+  }
+  .scroll-row.has-overflow.scrollbar-overlay {
+    padding-bottom: 0.8rem;
   }
 
   .pill-col {
@@ -230,9 +211,9 @@
     position: absolute;
     right: 0;
     top: 0;
-    height: 100%;
+    height: calc(100% - 0.6rem);
     width: 80px;
-    background: linear-gradient(to right, transparent, var(--bs-light) 30%);
+    background: linear-gradient(to right, transparent, var(--bs-light) 40%);
     border: none;
     cursor: pointer;
     font-size: 0.8rem;
@@ -243,6 +224,10 @@
     justify-content: flex-end;
     padding-right: 0.5rem;
   }
+  .see-all-overlay.scrollbar-overlay {
+    height: calc(100% - 0.6rem);
+  }
+
 
   .see-start-overlay {
     position: absolute;

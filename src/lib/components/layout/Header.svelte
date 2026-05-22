@@ -256,6 +256,9 @@
           </NavItem>
         {/if}
       </Nav>
+      {#if $isOpen}
+        <Row class="mb-2"></Row>
+      {/if}
     </Collapse>
     {#if $authenticated && $user}
       <TabNav class="d-flex d-md-none" activeItem={activeItem}/>
