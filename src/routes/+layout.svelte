@@ -147,7 +147,6 @@
     flex-direction: column;
     flex-grow: 1;
     margin-top: 1.5rem;
-    padding: 0 1rem;
   }
   :global(html, body) {
     height: 100%;
