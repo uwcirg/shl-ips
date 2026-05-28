@@ -14,13 +14,12 @@
   import FHIRDataService from '$lib/utils/FHIRDataService';
   import SourcePill from '$lib/components/app/SourcePill.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
-  import { CATEGORIES, METHODS } from '$lib/config/tags';
-  import { buildColorMap } from '$lib/utils/colors';
+  import {derived, type Writable } from 'svelte/store';
+  
+  const colorMap = getContext<Writable<Map<string, string>>>('colorMap');
 
   let className = '';
   export { className as class };
-  
-  let colorMap: Map<string, string> = new Map();
 
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
   let masterPatient;
@@ -39,59 +38,12 @@
   }> = INSTANCE_CONFIG.pages.data.sections;
 
   let collectionInfo: Array<{sourceName: string, category: string, method: string, source: string}> | undefined;
-  let displayCollectionInfo: Array<{sourceName: string, category: string, method: string, source: string}> | undefined;
-
-  $: if ($userResources) {
-    collectionInfo = fhirDataService.getAllResourceCollections().map(c => c.getTags());
-    let providerCollections = collectionInfo.filter(isProviderCollection).sort(sortCollections);
-    let patientCollections = collectionInfo.filter(isPatientCollection);
-    let otherCollections = collectionInfo.filter(isOtherCollection).sort(sortCollections);
-    displayCollectionInfo = [
-      ...(patientCollections.length > 0 ? [{
-        sourceName: "Patient Authored Data",
-        category: "",
-        method: "",
-        source: "",
-      }] : []),
-      ...providerCollections,
-      ...otherCollections
-    ];
-    colorMap = buildColorMap(displayCollectionInfo.map(c => c.sourceName));
-  }
+  let displaySourceNames = derived(colorMap, ($colorMap) => {
+    return Array.from($colorMap.keys());
+  });
 
   $: if (collectionInfo) {
     tick().then(checkOverflow);
-  }
-
-  // Get collections that come from provider servers
-  function isProviderCollection(collection: {sourceName: string, category: string, method: string, source: string}) {
-    return (
-      collection.method === METHODS.PROVIDER_HEALTH_RECORD_SOF ||
-      collection.method === METHODS.PROVIDER_HEALTH_RECORD_SOF_SEARCH ||
-      collection.method === METHODS.PROVIDER_HEALTH_RECORD_TEFCA ||
-      collection.method === METHODS.PROVIDER_HEALTH_RECORD_CARINBB ||
-      collection.method === METHODS.ADVANCE_DIRECTIVES_SEARCH
-    );
-  }
-
-  // Get collections that the patient wrote
-  function isPatientCollection(collection: {sourceName: string, category: string, method: string, source: string}) {
-    return (
-      !isProviderCollection(collection) &&
-      collection.category !== CATEGORIES.PROVIDER_HEALTH_RECORD
-    );
-  }
-
-  // Get collections that are ambiguous (url, file, etc.)
-  function isOtherCollection(collection: {sourceName: string, category: string, method: string, source: string}) {
-    return (
-      !isProviderCollection(collection) &&
-      !isPatientCollection(collection)
-    );
-  }
-
-  function sortCollections(a: {sourceName: string, category: string, method: string, source: string}, b: {sourceName: string, category: string, method: string, source: string}) {
-    return a.sourceName.localeCompare(b.sourceName);
   }
 
   function showError(message: string) {
@@ -107,19 +59,24 @@
   let expanded = false;
   let scrollRow: HTMLElement;
   let isOverflowing = false;
+  let resizeObserver: ResizeObserver;
   
   function checkOverflow() {
     if (scrollRow) {
       isOverflowing = scrollRow.scrollWidth > scrollRow.clientWidth;
     }
   }
+
+  $: if (scrollRow) {
+    checkOverflow();
+    resizeObserver?.disconnect();
+    resizeObserver = new ResizeObserver(checkOverflow);
+    resizeObserver.observe(scrollRow);
+  }
   
   let overlayScrollbars = hasOverlayScrollbars();
   onMount(() => {
-    checkOverflow();
-    const observer = new ResizeObserver(checkOverflow);
-    observer.observe(scrollRow);
-    return () => observer.disconnect();
+    return () => resizeObserver?.disconnect();
   });
 
   let scrollLeft = 0;
@@ -138,47 +95,47 @@
   }
 </script>
 
-{#if displayCollectionInfo}
-<Card class={"bg-light " + className }>
-  <CardBody class="p-2">
-  {#if $loading}
-    <Row>
-      <Col class="d-flex justify-content-center">
-        <Spinner color="secondary"/>
-      </Col>
-    </Row>
-  {:else if expanded}
-    <!-- Expanded: wrap view -->
-    <Row class="g-1 mb-2">
-      {#each displayCollectionInfo as source, index}
-        <Col class="col-auto">
-          <SourcePill name={source.sourceName} color={colorMap.get(source.sourceName)} />
+{#if $displaySourceNames}
+  <Card class={"bg-light " + className }>
+    <CardBody class="p-2">
+    {#if $loading}
+      <Row>
+        <Col class="d-flex justify-content-center">
+          <Spinner color="secondary"/>
         </Col>
-      {/each}
-    </Row>
-    <div class="d-flex justify-content-end">
-      <button class="collapse-btn" on:click={() => { expanded = false; scrollLeft = 0 }}>Collapse</button>
-    </div>
-  {:else}
-    <!-- Collapsed: single scrollable row with "See all" overlay -->
-    <div class="scroll-row-wrapper">
-      <div class="scroll-row" class:has-overflow={isOverflowing} class:scrollbar-overlay={overlayScrollbars} bind:this={scrollRow} on:scroll={handleScroll}>
-        {#each displayCollectionInfo as source, index}
-          <div class="pill-col">
-            <SourcePill name={source.sourceName} color={colorMap.get(source.sourceName)} />
-          </div>
+      </Row>
+    {:else if expanded}
+      <!-- Expanded: wrap view -->
+      <Row class="g-1 mb-2">
+        {#each $displaySourceNames as source, index}
+          <Col class="col-auto">
+            <SourcePill name={source} color={$colorMap.get(source)} />
+          </Col>
         {/each}
+      </Row>
+      <div class="d-flex justify-content-end">
+        <button class="collapse-btn" on:click={() => { expanded = false; scrollLeft = 0 }}>Collapse</button>
       </div>
-      {#if scrollLeft > 0}
-        <div class="see-start-overlay" class:scrollbar-overlay={overlayScrollbars}></div>
-      {/if}
-      {#if isOverflowing}
-        <button class="see-all-overlay" class:scrollbar-overlay={overlayScrollbars} on:click={() => expanded = true}>See all</button>
-      {/if}
-    </div>
-  {/if}
-  </CardBody>
-</Card>
+    {:else}
+      <!-- Collapsed: single scrollable row with "See all" overlay -->
+      <div class="scroll-row-wrapper">
+        <div class="scroll-row" class:has-overflow={isOverflowing} class:scrollbar-overlay={overlayScrollbars} bind:this={scrollRow} on:scroll={handleScroll}>
+          {#each $displaySourceNames as source, index}
+            <div class="pill-col">
+              <SourcePill name={source} color={$colorMap.get(source)} />
+            </div>
+          {/each}
+        </div>
+        {#if scrollLeft > 0}
+          <div class="see-start-overlay" class:scrollbar-overlay={overlayScrollbars}></div>
+        {/if}
+        {#if isOverflowing}
+          <button class="see-all-overlay" class:scrollbar-overlay={overlayScrollbars} on:click={() => expanded = true}>See all</button>
+        {/if}
+      </div>
+    {/if}
+    </CardBody>
+  </Card>
 {/if}
 
 <style>

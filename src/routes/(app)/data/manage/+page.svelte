@@ -18,13 +18,13 @@
   View and manage your imported health data.
 </p>
 <TabContent>
-  <TabPane tabId="data" active class="p-3">
+  <TabPane tabId="data" active class="py-3">
     <span slot="tab">My Health Data</span>
     <h6>Your Sources:</h6>
     <SourceSummary class="mb-3"/>
     <DataSummary />
   </TabPane>
-  <TabPane tabId="sources" class="p-3">
+  <TabPane tabId="sources" class="py-3">
     <span slot="tab">My Imports</span>
     <ManageData />
   </TabPane>

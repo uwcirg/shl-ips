@@ -1,30 +1,23 @@
 <script lang="ts">
   import { download } from '$lib/utils/util.js';
-  import { createEventDispatcher, getContext } from 'svelte';
+  import { createEventDispatcher, getContext, onMount, tick } from 'svelte';
   import { derived, type Readable, type Writable } from 'svelte/store';
   import {
-    Badge,
     Button,
     ButtonGroup,
-    Card,
-    CardBody,
-    CardHeader,
     Col,
-    FormGroup,
     Icon,
-    Input,
     Offcanvas,
-    Label,
     Row
   } from '@sveltestrap/sveltestrap';
   import { get } from 'svelte/store';
   import { PLACEHOLDER_SYSTEM } from '$lib/config/config';
   import { ResourceHelper } from '$lib/utils/ResourceHelper.js';
-  import type { ResourceCollection } from '$lib/utils/ResourceCollection.js';
   import { getFHIRDateAndPrecision } from '$lib/utils/util';
   import type { Resource } from 'fhir/r4';
   import CategoryView from '$lib/components/app/CategoryView.svelte';
   import FHIRDataService from '$lib/utils/FHIRDataService';
+  import {getFriendlySourceNameBySource} from '$lib/utils/resourceCollectionUtils';
 
   import AdvanceDirective from '$lib/components/resource-templates/AdvanceDirective.svelte';
   import AllergyIntolerance from '$lib/components/resource-templates/AllergyIntolerance.svelte';
@@ -53,6 +46,8 @@
   let userResources = fhirDataService.userResources;
   let masterPatient = fhirDataService.masterPatient;
   let allResourceCollections = derived(userResources, ($userResources) => fhirDataService.getAllResourceCollections());
+
+  let colorMap = getContext<Writable<Map<string, string>>>('colorMap');
 
   export let submitting: boolean = false;
 
@@ -199,13 +194,19 @@
 
   let mode: Writable<string> = getContext('mode');
 
+  interface ResourceHelperWithSource {
+    source: string,
+    rh: ResourceHelper
+  };
+
   // Proxy for resourceCollection's resourcesByType to allow reactive updates
-  let categorizedResourceStore: Readable<Record<string, Record<string, ResourceHelper>>> = derived(
+  let categorizedResourceStore: Readable<Record<string, Record<string, ResourceHelperWithSource>>> = derived(
     allResourceCollections,
     ($allResourceCollections) => {
-      let resourcesByType: Record<string, Record<string, ResourceHelper>> = {};
+      let resourcesByCategory: Record<string, Record<string, ResourceHelperWithSource>> = {};
       if ($allResourceCollections) {
         for (const rc of $allResourceCollections) {
+          let { sourceName } = rc.getTags();
           for (const [id, rh] of Object.entries(get(rc.resources)) as Array<[string, ResourceHelper]>) {
             if (rh.resource.resourceType === 'Patient' && rh.resource?.meta?.tag?.find(t => t.system === PLACEHOLDER_SYSTEM)) {
               continue;
@@ -214,18 +215,18 @@
             if (!type) {
               type = rh.resource.resourceType;
             }
-            if (!(type in resourcesByType)) {
-              resourcesByType[type] = {};
+            if (!(type in resourcesByCategory)) {
+              resourcesByCategory[type] = {};
             }
-            resourcesByType[type][rh.tempId] = rh;
-          } 
+            resourcesByCategory[type][id] = {source: sourceName, rh: rh};
+          }
         }
       }
-      return resourcesByType;
+      return resourcesByCategory;
     }
   );
 
-  let patientStore: Record<string, ResourceHelper>;
+  let patientStore: Record<string, ResourceHelperWithSource>;
   $: {
     if ($categorizedResourceStore) {
       patientStore = $categorizedResourceStore['Patient'];
@@ -320,43 +321,52 @@
         >
         <div slot="resources">
           {#each Object.values($categorizedResourceStore[category]).sort((a, b) => {
-            let value = resourceSort(a.resource, b.resource);
-            return value;
+            let sortValue = resourceSort(a.rh.resource, b.rh.resource);
+            return sortValue;
           }) as value, index}
-              <Row class={index > 0 ? "border-top pt-2 mt-2" : ""} style="overflow: hidden">
-                <Col class="overflow-auto justify-content-center align-items-center">
-                  {#if value.resource.resourceType in resourceConfig && resourceConfig[value.resource.resourceType].component}
-                    <svelte:component
-                      this={resourceConfig[value.resource.resourceType].component}
-                      content={{
-                        resource: value.resource,
-                        entries: Object.values($categorizedResourceStore)
-                      }}
-                    />
-                    <!-- ResourceType: {category}
-                      Resource: {JSON.stringify(value.resource)} -->
-                  {:else if value.resource.text?.div}
-                    {@html value.resource.text?.div}
-                  {:else}
-                    {value.tempId}
-                  {/if}
-                </Col>
-                <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
-                  {#if $mode === 'advanced'}
-                    <Button
-                      size="sm"
-                      color="secondary"
-                      outline
-                      on:click={(event) => {
-                        event.stopPropagation();
-                        setJson(value)
-                      }}
-                    >
-                      View
-                    </Button>
-                  {/if}
-                </Col>
-              </Row>
+            {@const sourceName=getFriendlySourceNameBySource(value.source)}
+            <Row class={(index > 0 ? "border-top pt-2 mt-2" : "") + " source-row"} style="overflow-x: clip; position: relative">
+              <div
+                class="ps-2 pe-4 tooltip-host"
+                data-tooltip="From {sourceName}"
+                style="max-width: 0px; align-self: stretch;"
+                style:--tooltip-color={$colorMap.get(sourceName)}
+                >
+                <div class="p-0 m-0 rounded h-100" style="max-width: 0px; border: .2rem solid {$colorMap.get(sourceName)}"></div>
+              </div>
+              <Col class="ps-0 overflow-auto justify-content-center align-items-center">
+                {#if value.rh.resource.resourceType in resourceConfig && resourceConfig[value.rh.resource.resourceType].component}
+                  <svelte:component
+                    this={resourceConfig[value.rh.resource.resourceType].component}
+                    content={{
+                      resource: value.rh.resource,
+                      entries: Object.values($categorizedResourceStore)
+                    }}
+                  />
+                  <!-- ResourceType: {category}
+                    Resource: {JSON.stringify(value.rh.resource)} -->
+                {:else if value.rh.resource.text?.div}
+                  {@html value.rh.resource.text?.div}
+                {:else}
+                  {value.rh.tempId}
+                {/if}
+              </Col>
+              <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
+                {#if $mode === 'advanced'}
+                  <Button
+                    size="sm"
+                    color="secondary"
+                    outline
+                    on:click={(event) => {
+                      event.stopPropagation();
+                      setJson(value.rh)
+                    }}
+                  >
+                    View
+                  </Button>
+                {/if}
+              </Col>
+            </Row>
           {/each}
         </div>
       </CategoryView>
@@ -370,5 +380,42 @@
   }
   :global(div.resource-list-accordion:has(div.accordion-collapse.collapsing) > h2.accordion-header > button.accordion-button) {
     background-color: var(--bs-accordion-active-bg) !important;
+  }
+
+  .tooltip-host {
+    position: relative;
+  }
+  
+  .tooltip-host::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 0.5rem;
+    top: calc(100% + 0.25rem);
+    /* transform: translateY(); */
+    background: var(--tooltip-color, #333);
+    color: #fff;
+    padding: 0;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: height 0.15s, padding 0.15s;
+    height: 0;
+    z-index: 1000;
+  }
+  
+  .tooltip-host:hover::after {
+    opacity: 1;
+    height: auto;
+    padding: 0.25rem 0.5rem;
+  }
+
+  :global(.source-row) {
+    transition: padding-bottom 0.15s;
+  }
+  
+  :global(.source-row:has(.tooltip-host:hover)) {
+    padding-bottom: 1.75rem;
   }
 </style>

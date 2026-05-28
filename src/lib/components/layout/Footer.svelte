@@ -27,7 +27,9 @@
           International Patient Summary
         </a> documents using the HL7 FHIR standard.
       </p>
-      <h6 class="info-header">{VERSION_STRING ? "App version: " + VERSION_STRING : ""}</h6>
+      {#if VERSION_STRING}
+        <h6 class="info-header">App version:</h6><h6 class="info-header">{VERSION_STRING}</h6>
+      {/if}
     </footer>
   </Col>
 </Row>
