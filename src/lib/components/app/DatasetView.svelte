@@ -13,14 +13,19 @@
     Icon,
     Row,
   } from '@sveltestrap/sveltestrap';
+  import { getContext } from 'svelte';
   import { get, type Writable } from 'svelte/store';
   import { METHOD_NAMES } from '$lib/config/config';
   import { ResourceCollection } from '$lib/utils/ResourceCollection';
   import { StateManager } from '$lib/utils/StateManager';
   import type { Patient } from 'fhir/r4';
 
+  import { getFriendlySourceNameBySource } from '$lib/utils/resourceCollectionUtils';
+
   export let dataset: { status: StateManager, collection: ResourceCollection };
   export let masterPatient: Writable<Patient>;
+
+  let colorMap = getContext<Writable<Map<string, string>>>('colorMap');
 
   let collection: ResourceCollection;
   let category: string;
@@ -39,7 +44,7 @@
   }
 </script>
 
-<Card class="{category}-dataset h-100 w-100">
+<Card class="{category}-dataset h-100 w-100" style="border-left: .4rem solid {$colorMap.get(getFriendlySourceNameBySource(sourceName))}">
   <CardHeader>
     <Row class="align-items-center">
       <Col>
