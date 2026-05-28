@@ -325,13 +325,12 @@
             return sortValue;
           }) as value, index}
             {@const sourceName=getFriendlySourceNameBySource(value.source)}
-            <Row class={(index > 0 ? "border-top pt-2 mt-2" : "") + " source-row"} style="overflow-x: clip; position: relative">
+            <Row class={(index > 0 ? "border-top pt-2 mt-2" : "") + " source-row"} style="overflow-x: clip; position: relative; flex-wrap: wrap;">
               <div
                 class="ps-2 pe-4 tooltip-host"
-                data-tooltip="From {sourceName}"
                 style="max-width: 0px; align-self: stretch;"
                 style:--tooltip-color={$colorMap.get(sourceName)}
-                >
+              >
                 <div class="p-0 m-0 rounded h-100" style="max-width: 0px; border: .2rem solid {$colorMap.get(sourceName)}"></div>
               </div>
               <Col class="ps-0 overflow-auto justify-content-center align-items-center">
@@ -366,6 +365,11 @@
                   </Button>
                 {/if}
               </Col>
+              <Row class="ps-2 ms-0 pt-1">
+                <div class="source-label" style:--tooltip-color={$colorMap.get(sourceName)}>
+                  From {sourceName}
+                </div>
+              </Row>
             </Row>
           {/each}
         </div>
@@ -382,40 +386,30 @@
     background-color: var(--bs-accordion-active-bg) !important;
   }
 
-  .tooltip-host {
-    position: relative;
-  }
-  
-  .tooltip-host::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    left: 0.5rem;
-    top: calc(100% + 0.25rem);
-    /* transform: translateY(); */
-    background: var(--tooltip-color, #333);
-    color: #fff;
-    padding: 0;
-    border-radius: 4px;
+  .source-label {
+    flex-basis: 100%;
     font-size: 0.75rem;
-    white-space: nowrap;
-    pointer-events: none;
+    color: #fff;
+    background: var(--tooltip-color, #333);
+    border-radius: 4px;
+    padding: 0;
+    max-height: 0;
+    overflow: hidden;
     opacity: 0;
-    transition: height 0.15s, padding 0.15s;
-    height: 0;
-    z-index: 1000;
+    transition: max-height 0.15s, padding 0.15s, opacity 0.15s;
+    white-space: nowrap;
+    flex-basis: 100%;
+    align-self: flex-start;
+    max-width: fit-content;
   }
   
-  .tooltip-host:hover::after {
-    opacity: 1;
-    height: auto;
+  :global(.source-row:has(.tooltip-host:hover)) .source-label {
+    max-height: 2rem;
     padding: 0.25rem 0.5rem;
+    opacity: 1;
   }
-
+  
   :global(.source-row) {
     transition: padding-bottom 0.15s;
-  }
-  
-  :global(.source-row:has(.tooltip-host:hover)) {
-    padding-bottom: 1.75rem;
   }
 </style>
