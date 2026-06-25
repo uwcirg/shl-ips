@@ -28,6 +28,9 @@
   let dataset = writable({} as { status: any, collection: any });
 
   export async function checkFHIRDataServiceBeforeFetch(categoryCode: string, methodCode: string, sourceUrl: string, fetchCallback: Function) {
+    category = categoryCode;
+    method = methodCode;
+    source = sourceUrl;
     if (!category || !method || !source) {
       let msg = "";
       if (!category) msg += `Category not specified: ${category}; `;
@@ -38,9 +41,7 @@
     if (!fetchCallback) {
       throw new Error("Fetch callback function not specified");
     }
-    category = categoryCode;
-    method = methodCode;
-    source = sourceUrl;
+    
     callbackFn = fetchCallback;
     if (fhirDataService.datasetExists(category, method, source)) {
       $dataset = $userResources[category][method][source];
