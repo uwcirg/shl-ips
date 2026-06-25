@@ -45,5 +45,5 @@
   <Date period fields={choiceDTFields("onset", resource)} />
 {/if}
 {#if resource.lastOccurrence}
-  <br>Last occurrence: <Date fields={{dateTime: resource.lastOccurrence}} />
+  <br>Last occurrence: <Date fields={choiceDTFields("lastOccurrence", resource)} />
 {/if}

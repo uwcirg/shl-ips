@@ -5,7 +5,7 @@
   import Date from '$lib/components/resource-templates/Date.svelte';
   import Dosage from '$lib/components/resource-templates/Dosage.svelte';
   import MedicationTemplate from '$lib/components/resource-templates/Medication.svelte';
-  import { getEntry } from '$lib/utils/util';
+  import { getEntry, choiceDTFields, hasChoiceDTField } from '$lib/utils/util';
   import type { ResourceTemplateParams } from '$lib/utils/types';
 
   export let content: ResourceTemplateParams<MedicationStatement>; // Define a prop to pass the data to the component
@@ -51,6 +51,10 @@
   {resource.reasonReference?.[0].display}<br>
 {/if}
 
-<Dosage dosages={resource.dosage} />
+{#if resource.medicationCodeableConcept?.coding?.filter((c) => c.system === "http://hl7.org/fhir/uv/ips/CodeSystem/absent-unknown-uv-ips").length === 0 }
+  <Dosage dosages={resource.dosage} />
+{/if}
 
-Effective: <Date fields={{ period: resource.effectivePeriod, dateTime: resource.effectiveDateTime }} />
+{#if hasChoiceDTField("effective", resource)}
+  Effective: <Date fields={choiceDTFields("effective", resource)} />
+{/if}
