@@ -104,7 +104,7 @@
         return fetch(`${sofHost!.url}/${reference}`, {
           headers: headers
         }).then(response => response.json());
-      }))).filter(x => x.status == "fulfilled").map(x => x.value);
+      }))).filter(x => x.status == "fulfilled" && x.value.resourceType && x.value.resourceType !== "OperationOutcome").map(x => x.value);
       allResources = allResources.concat(...resources);
       referenceMap = {};
       depth--;

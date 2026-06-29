@@ -26,34 +26,37 @@
     resource?: Observation;
     display?: string;
   }
-  let members: ResolvedMember[] | undefined = [];
+  let members: ResolvedMember[] = [];
 
   $: {
-    if (resource) {
-      if (resource.hasMember) {
-        for (let member of resource.hasMember) {
-          let memberFields: ResolvedMember = {};
-          if (member.reference) {
-            let memberResource;
-            if (resource.contained?.[0]?.resourceType === 'Observation') {
-              // If the member observation is contained in this resource
-              memberResource = resource.contained[0];
-            } else {
-              // If the member observation is a bundle reference
-              memberResource = getEntry(content.entries as BundleEntry[], member.reference) as Observation;
-            }
-            if (memberResource) {
-              memberFields.resource = memberResource;
-            }
+    if (resource?.hasMember) {
+      members = resource.hasMember.reduce<ResolvedMember[]>((acc, member) => {
+        let memberFields: ResolvedMember = {};
+  
+        if (member.reference) {
+          let memberResource: Observation | undefined;
+          if (resource.contained?.[0]?.resourceType === 'Observation') {
+            memberResource = resource.contained[0] as Observation;
+          } else {
+            memberResource = getEntry(content.entries as BundleEntry[], member.reference) as Observation;
           }
-          if (member.display) {
-            memberFields.display = member.display;
-          }
-          if (Object.keys(memberFields).length > 0) {
-            members.push(memberFields);
+          if (memberResource) {
+            memberFields.resource = memberResource;
           }
         }
-      }
+  
+        if (member.display) {
+          memberFields.display = member.display;
+        }
+  
+        if (Object.keys(memberFields).length > 0) {
+          acc.push(memberFields);
+        }
+  
+        return acc;
+      }, []);
+    } else {
+      members = [];
     }
   }
 </script>
@@ -96,7 +99,7 @@
             {#if member.resource}
               <svelte:self
                 content={{ resource: member.resource, entries: content.entries }}
-                contained={hasChoiceDTField("effective", resource)}
+                contained={hasChoiceDTField("effective", member.resource)}
               />
             {:else if member.display}
               <strong>{member.display}</strong>
