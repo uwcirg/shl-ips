@@ -69,5 +69,5 @@
   Abatement: <Date fields={choiceDTFields("abatement", resource)} /><br>
 {/if}
 {#if resource.recordedDate}
-  Recorded: <Date fields={{ dateTime: resource.recordedDate }} /><br>
+  Recorded: <Date fields={choiceDTFields("recordedDate", resource)} /><br>
 {/if}
