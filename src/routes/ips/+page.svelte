@@ -263,7 +263,7 @@
 {:else if shlContents.length > 1 || SHOW_VIEWER_DEMO}
   <!-- Multiple tab/demo view -->
   <TabContent>
-    {#if shlContents.length > 1}
+    {#if shlContents.length > 0}
       {#each shlContents as contents, index}
         <TabPane class={`ips${index}`} tabId={`ips${index}`} active={index === 0} style="padding-top:10px">
           <span slot="tab">{getTabLabel(contents)}</span>
