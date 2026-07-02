@@ -1,7 +1,7 @@
 <script lang="ts">
   import { download } from '$lib/utils/util.js';
-  import { createEventDispatcher, getContext, onMount, tick } from 'svelte';
-  import { derived, type Readable, type Writable } from 'svelte/store';
+  import { createEventDispatcher, getContext } from 'svelte';
+  import { type Writable } from 'svelte/store';
   import {
     Button,
     ButtonGroup,
@@ -10,57 +10,44 @@
     Offcanvas,
     Row
   } from '@sveltestrap/sveltestrap';
-  import { get } from 'svelte/store';
-  import { PLACEHOLDER_SYSTEM } from '$lib/config/config';
   import { ResourceHelper } from '$lib/utils/ResourceHelper.js';
   import CategoryView from '$lib/components/app/CategoryView.svelte';
-  import FHIRDataService from '$lib/utils/FHIRDataService';
   import {getFriendlySourceNameBySource} from '$lib/utils/resourceCollectionUtils';
-  import { createCategorizedStore, type ResourceInput } from '$lib/stores/categorizedResources';
+  import { createCategorizedStore, type CategoryMap } from '$lib/stores/categorizedResources';
   import ResourceDisplay from '$lib/components/app/ResourceDisplay.svelte';
-
-  let fhirDataService: FHIRDataService = getContext('fhirDataService');
-  let userResources = fhirDataService.userResources;
-  let masterPatient = fhirDataService.masterPatient;
-  let allResourceCollections = derived(userResources, ($userResources) => fhirDataService.getAllResourceCollections());
+  import { derived, type Readable } from 'svelte/store';
+  import { goto } from '$app/navigation';
 
   let colorMap = getContext<Writable<Map<string, string>>>('colorMap');
+  
+  export let categorizedStore: ReturnType<typeof createCategorizedStore> = getContext('categorizedStore');
+  const categorizedResourceStore = categorizedStore.store;
+  const getRenderInfo = categorizedStore.getRenderInfo;
+  const sortResources = categorizedStore.sortResources;
 
+  export let summary = false;
+  export let categories: string[] = [];
+  let categoryDataToDisplay: Readable<CategoryMap> = derived(
+    categorizedResourceStore,
+    ($categorizedResourceStore) => {
+      if (categories.length === 0) {
+        return $categorizedResourceStore;
+      }
+      let result: CategoryMap = {};
+      categories.forEach(category => {
+        if ($categorizedResourceStore[category]) {
+          result[category] = $categorizedResourceStore[category];
+        }
+      });
+      return result;
+    }
+  );
   export let submitting: boolean = false;
   
   const statusDispatch = createEventDispatcher<{ 'status-update': string }>();
   const errorDispatch = createEventDispatcher<{ error: string }>();
 
   let mode: Writable<string> = getContext('mode');
-
-  interface ResourceHelperWithSource {
-    source: string,
-    rh: ResourceHelper
-  };
-
-  // Proxy for resourceCollection's resourcesByType to allow reactive updates
-  let categorizerInput = derived(
-    allResourceCollections,
-    ($allResourceCollections) => {
-      let input: ResourceInput = [];
-      if ($allResourceCollections) {
-        for (const rc of $allResourceCollections) {
-          let { sourceName } = rc.getTags();
-          const isTestPatient = (rh: ResourceHelper) => 
-            rh.resource.resourceType === 'Patient' && 
-            rh.resource?.meta?.tag?.find(t => t.system === PLACEHOLDER_SYSTEM);
-          let resources = Object.values(get(rc.resources)).filter(rh => !isTestPatient(rh));
-          input.push({ source: sourceName, resources });
-        }
-      }
-      return input;
-    }
-  );
-  
-  const categorized = createCategorizedStore(categorizerInput);
-  const categorizedResourceStore = categorized.store;
-  const getRenderInfo = categorized.getRenderInfo;
-  const sortResources = categorized.sortResources;
 
   let json = '';
   let resourceType = '';
@@ -112,24 +99,21 @@
 </Offcanvas>
 
 
-{#if $categorizedResourceStore && Object.keys($categorizedResourceStore).length > 0}
-  {#each Object.keys($categorizedResourceStore) as category}
-    {#if Object.keys($categorizedResourceStore[category]).length > 0}
+{#if $categoryDataToDisplay && Object.keys($categoryDataToDisplay).length > 0}
+  {#each Object.keys($categoryDataToDisplay) as category}
+    {#if $categoryDataToDisplay[category] && Object.keys($categoryDataToDisplay[category]).length > 0}
+      {@const values = Object.values($categoryDataToDisplay[category]).sort((a, b) => sortResources(a, b))}
+      {@const valuesToDisplay = summary ? values.slice(0, 3) : values}
       <CategoryView
         class="mb-4"
         title={category}
-        summary
-        addFn={() => {
-          
-        }}
-        seeAllFn={() => {
-          
-        }}
+        summary={summary}
+        seeAllFn={summary ? () => goto(`/data/manage/${category}`) : undefined}
         sortFields={['sourceName', 'category', 'method', 'source']}
         filterFields={['sourceName', 'category', 'method', 'source']}
-        >
+      >
         <div slot="resources">
-          {#each Object.values($categorizedResourceStore[category]).sort((a, b) => sortResources(a, b)) as value, index}
+          {#each valuesToDisplay as value, index}
             {@const sourceName=getFriendlySourceNameBySource(value.source)}
             <Row class={(index > 0 ? "border-top pt-2 mt-2" : "") + " source-row"} style="overflow-x: clip; position: relative; flex-wrap: wrap;">
               <div
@@ -140,7 +124,7 @@
                 <div class="p-0 m-0 rounded h-100" style="max-width: 0px; border: .2rem solid {$colorMap.get(sourceName)}"></div>
               </div>
               <Col class="ps-0 overflow-auto justify-content-center align-items-center">
-                <ResourceDisplay resource={value} entries={Object.values($categorizedResourceStore)} />
+                <ResourceDisplay resource={value} entries={Object.values($categoryDataToDisplay)} />
               </Col>
               <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
                 {#if $mode === 'advanced'}
