@@ -8,7 +8,7 @@ const SOURCE_COLORS = [
   '#E84C8B', // pink
   '#8BE84C', // lime
   '#4C67E8', // indigo
-  '#E8A54C', // orange
+  // '#E8A54C', // orange
   '#4CE87A', // mint
   '#E84C4C', // red
   '#4CB4E8', // sky
@@ -19,6 +19,7 @@ const SOURCE_COLORS = [
   '#E8674C', // coral
   '#4C8BE8', // cornflower
   '#A4E84C', // chartreuse
+  '#E84C4C', // strawberry
 ];
 
 export function buildColorMap(keys: string[]): Map<string, string> {

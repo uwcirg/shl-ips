@@ -18,8 +18,8 @@
 
   export let summary: boolean = false;
   export let title: string = "";
-  export let seeAllFn = () => {};
-  export let addFn = () => {};
+  export let seeAllFn: (() => any) | undefined = undefined;
+  export let addFn: (() => any) | undefined = undefined;
   export let sortFields: string[] = [];
   export let filterFields: string[] = [];
   export let searchInput: string = "";
@@ -29,7 +29,7 @@
   <CardHeader>
     <div class="d-flex justify-content-between">
       <h5>{title}</h5>
-      {#if summary}
+      {#if summary && seeAllFn}
         <div>
           <Button size="sm" color="secondary" on:click={seeAllFn}>See all</Button>
         </div>
@@ -60,7 +60,9 @@
     <slot name="resources" />
 
   </CardBody>
+  {#if addFn}
   <CardFooter>
     <Button class="w-100" outline size="sm" color="secondary" style="border: 1px dashed" on:click={addFn}><Icon name="plus" /> Add your own</Button>
   </CardFooter>
+  {/if}
 </Card>

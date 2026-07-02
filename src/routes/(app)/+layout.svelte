@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { getContext, onMount } from 'svelte';
-  import { type Writable, type Readable } from 'svelte/store';
+  import { getContext, setContext, onMount } from 'svelte';
+  import { writable, type Writable, type Readable } from 'svelte/store';
   import {
     Col,
     Row
@@ -12,6 +12,8 @@
   import FHIRDataService from '$lib/utils/FHIRDataService';
   import type { LayoutData } from './$types';
   import { invalidateAll } from '$app/navigation';
+  import { buildColorMap } from '$lib/utils/colors';
+  import { getFriendlySourceNames } from '$lib/utils/resourceCollectionUtils';
 
   export let data: LayoutData;
 
@@ -19,6 +21,15 @@
   let user: Readable<User | null> = authService.user;
 
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
+  let userResources = fhirDataService.userResources;
+
+  const colorMap = writable<Map<string, string>>(new Map());
+  setContext('colorMap', colorMap);
+  $: if ($userResources) {
+    let collectionInfo = fhirDataService.getAllResourceCollections().map(c => c.getTags());
+    let friendlySourceNames = getFriendlySourceNames(collectionInfo);
+    $colorMap = buildColorMap(friendlySourceNames);
+  }
 
   let shlStore: Writable<SHLAdminParams[]> = getContext('shlStore');
   let shlClient: SHLClient = getContext('shlClient');

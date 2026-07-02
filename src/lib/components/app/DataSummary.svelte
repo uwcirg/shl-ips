@@ -1,256 +1,53 @@
 <script lang="ts">
   import { download } from '$lib/utils/util.js';
   import { createEventDispatcher, getContext } from 'svelte';
-  import { derived, type Readable, type Writable } from 'svelte/store';
+  import { type Writable } from 'svelte/store';
   import {
-    Badge,
     Button,
     ButtonGroup,
-    Card,
-    CardBody,
-    CardHeader,
     Col,
-    FormGroup,
     Icon,
-    Input,
     Offcanvas,
-    Label,
     Row
   } from '@sveltestrap/sveltestrap';
-  import { get } from 'svelte/store';
-  import { PLACEHOLDER_SYSTEM } from '$lib/config/config';
   import { ResourceHelper } from '$lib/utils/ResourceHelper.js';
-  import type { ResourceCollection } from '$lib/utils/ResourceCollection.js';
-  import { getFHIRDateAndPrecision } from '$lib/utils/util';
-  import type { Resource } from 'fhir/r4';
   import CategoryView from '$lib/components/app/CategoryView.svelte';
-  import FHIRDataService from '$lib/utils/FHIRDataService';
+  import {getFriendlySourceNameBySource} from '$lib/utils/resourceCollectionUtils';
+  import { createCategorizedStore, type CategoryMap } from '$lib/stores/categorizedResources';
+  import ResourceDisplay from '$lib/components/app/ResourceDisplay.svelte';
+  import { derived, type Readable } from 'svelte/store';
+  import { goto } from '$app/navigation';
 
-  import AdvanceDirective from '$lib/components/resource-templates/AdvanceDirective.svelte';
-  import AllergyIntolerance from '$lib/components/resource-templates/AllergyIntolerance.svelte';
-  import Condition from '$lib/components/resource-templates/Condition.svelte';
-  import Coverage from '$lib/components/resource-templates/Coverage.svelte';
-  import Device from '$lib/components/resource-templates/Device.svelte';
-  import DeviceUseStatement from '$lib/components/resource-templates/DeviceUseStatement.svelte';
-  import DiagnosticReport from '$lib/components/resource-templates/DiagnosticReport.svelte';
-  import Encounter from '$lib/components/resource-templates/Encounter.svelte';
-  import ExplanationOfBenefit from '$lib/components/resource-templates/ExplanationOfBenefit.svelte';
-  import Goal from '$lib/components/resource-templates/Goal.svelte';
-  import Immunization from '$lib/components/resource-templates/Immunization.svelte';
-  import Location from '$lib/components/resource-templates/Location.svelte';
-  import Medication from '$lib/components/resource-templates/Medication.svelte';
-  import MedicationRequest from '$lib/components/resource-templates/MedicationRequest.svelte';
-  import MedicationStatement from '$lib/components/resource-templates/MedicationStatement.svelte';
-  import Observation from '$lib/components/resource-templates/Observation.svelte';
-  import Organization from '$lib/components/resource-templates/Organization.svelte';
-  import Patient from '$lib/components/resource-templates/Patient.svelte';
-  import Practitioner from '$lib/components/resource-templates/Practitioner.svelte';
-  import Procedure from '$lib/components/resource-templates/Procedure.svelte';
-  import OccupationalData from '$lib/components/resource-templates/OccupationalData.svelte';
-  import QuestionnaireResponse from '$lib/components/resource-templates/QuestionnaireResponse.svelte';
+  let colorMap = getContext<Writable<Map<string, string>>>('colorMap');
+  
+  export let categorizedStore: ReturnType<typeof createCategorizedStore> = getContext('categorizedStore');
+  const categorizedResourceStore = categorizedStore.store;
+  const getRenderInfo = categorizedStore.getRenderInfo;
+  const sortResources = categorizedStore.sortResources;
 
-  let fhirDataService: FHIRDataService = getContext('fhirDataService');
-  let userResources = fhirDataService.userResources;
-  let masterPatient = fhirDataService.masterPatient;
-  let allResourceCollections = derived(userResources, ($userResources) => fhirDataService.getAllResourceCollections());
-
+  export let summary = false;
+  export let categories: string[] = [];
+  let categoryDataToDisplay: Readable<CategoryMap> = derived(
+    categorizedResourceStore,
+    ($categorizedResourceStore) => {
+      if (categories.length === 0) {
+        return $categorizedResourceStore;
+      }
+      let result: CategoryMap = {};
+      categories.forEach(category => {
+        if ($categorizedResourceStore[category]) {
+          result[category] = $categorizedResourceStore[category];
+        }
+      });
+      return result;
+    }
+  );
   export let submitting: boolean = false;
-
-  function lastUpdatedSort(a, b) {
-    let aDate = a?.meta?.lastUpdated;
-    let bDate = b?.meta?.lastUpdated;
-    if (aDate && !bDate) return 1;
-    if (bDate && !aDate) return -1;
-    if (!aDate && !bDate) return 0;
-    return (new Date(aDate).getTime() - new Date(bDate).getTime());
-  };
-
-  function getResourceSortDate(resource: Resource, fieldsOrPrefixes: string[] = []): {date: Date, precision: number} | null {
-    const birthdate = get(masterPatient)?.resource.birthDate;
-    for (const field of fieldsOrPrefixes) {
-      const val = getFHIRDateAndPrecision(resource, field, birthdate);
-      if (val) return val;
-    }
-    return null;
-  }
-
-  function resourceSort(a: Resource, b: Resource, order: 'asc' | 'desc' = 'desc') {
-    let orderFactor = order === 'asc' ? 1 : -1;
-    
-    let aVal: {date: Date, precision: number} | null = getResourceSortDate(a, resourceConfig[a.resourceType]?.sortFields ?? []);
-    let bVal: {date: Date, precision: number} | null = getResourceSortDate(b, resourceConfig[b.resourceType]?.sortFields ?? []);
-    if (aVal && !bVal) return 1 * orderFactor;
-    if (bVal && !aVal) return -1 * orderFactor;
-    if (!aVal && !bVal) return lastUpdatedSort(a, b) * orderFactor;
-    let val = aVal.date - bVal.date;
-    if (val === 0) val = bVal.precision - aVal.precision;
-    return val * orderFactor;
-  }
-
-  const resourceConfig: Record<string, any> = {
-    'AllergyIntolerance': {
-      category: 'Allergies and Intolerances',
-      component: AllergyIntolerance,
-      sortFields: ['onset', 'lastOccurrence', 'recordedDate']
-    },
-    'Condition': {
-      category: 'Conditions',
-      component: Condition,
-      sortFields: ['onset', 'abatement', 'recordedDate']
-    },
-    'Consent': {
-      category: 'Advance Directives',
-      component: AdvanceDirective,
-      sortFields: ['dateTime']
-    },
-    'Coverage': {
-      category: 'Coverages',
-      component: Coverage,
-      sortFields: ['period']
-    },
-    'Device': {
-      category: 'Devices',
-      component: Device,
-    },
-    'DeviceUseStatement': {
-      category: 'Devices',
-      component: DeviceUseStatement,
-      sortFields: ['timing', 'recordedOn']
-    },
-    'DiagnosticReport': {
-      category: 'Diagnostics',
-      component: DiagnosticReport,
-      sortFields: ['effective', 'instant']
-    },
-    'DocumentReference': {
-      category: 'Documents',
-      component: AdvanceDirective,
-      sortFields: ['date']
-    },
-    'Encounter': {
-      category: 'Encounters',
-      component: Encounter,
-      sortFields: ['period']
-    },
-    'ExplanationOfBenefit': {
-      category: 'Explanations of Benefits',
-      component: ExplanationOfBenefit,
-      sortFields: ['created', 'billablePeriod']
-    },
-    'Goal': {
-      category: 'Goals',
-      component: Goal,
-      sortFields: ['start', 'target']
-    },
-    'Immunization': {
-      category: 'Immunizations',
-      component: Immunization,
-      sortFields: ['occurrence']
-    },
-    'Location': {
-      category: 'Locations',
-      component: Location,
-    },
-    'Medication': {
-      category: 'Medications',
-      component: Medication,
-    },
-    'MedicationRequest': {
-      category: 'Medications',
-      component: MedicationRequest,
-      sortFields: ['reported', 'authoredOn']
-    },
-    'MedicationStatement': {
-      category: 'Medications',
-      component: MedicationStatement,
-      sortFields: ['effective', 'dateAsserted']
-    },
-    'Observation': {
-      category: 'Observations/Results',
-      component: Observation,
-      sortFields: ['effective', 'issued']
-    },
-    'Organization': {
-      category: 'Organizations',
-      component: Organization,
-    },
-    'Patient': {
-      category: 'Patient',
-      component: Patient,
-    },
-    'Practitioner': {
-      category: 'Practitioners',
-      component: Practitioner,
-    },
-    'Procedure': {
-      category: 'Procedures',
-      component: Procedure,
-      sortFields: ['performed']
-    },
-    'QuestionnaireResponse': {
-      category: 'Questionnaires',
-      component: QuestionnaireResponse,
-      sortFields: ['authored']
-    }
-  };
   
   const statusDispatch = createEventDispatcher<{ 'status-update': string }>();
   const errorDispatch = createEventDispatcher<{ error: string }>();
 
   let mode: Writable<string> = getContext('mode');
-
-  // Proxy for resourceCollection's resourcesByType to allow reactive updates
-  let categorizedResourceStore: Readable<Record<string, Record<string, ResourceHelper>>> = derived(
-    allResourceCollections,
-    ($allResourceCollections) => {
-      let resourcesByType: Record<string, Record<string, ResourceHelper>> = {};
-      if ($allResourceCollections) {
-        for (const rc of $allResourceCollections) {
-          for (const [id, rh] of Object.entries(get(rc.resources)) as Array<[string, ResourceHelper]>) {
-            if (rh.resource.resourceType === 'Patient' && rh.resource?.meta?.tag?.find(t => t.system === PLACEHOLDER_SYSTEM)) {
-              continue;
-            }
-            let type = resourceConfig[rh.resource.resourceType]?.category;
-            if (!type) {
-              type = rh.resource.resourceType;
-            }
-            if (!(type in resourcesByType)) {
-              resourcesByType[type] = {};
-            }
-            resourcesByType[type][rh.tempId] = rh;
-          } 
-        }
-      }
-      return resourcesByType;
-    }
-  );
-
-  let patientStore: Record<string, ResourceHelper>;
-  $: {
-    if ($categorizedResourceStore) {
-      patientStore = $categorizedResourceStore['Patient'];
-    }
-  }
-  let patientBadgeColor: string = 'danger';
-  let patientCount: number = 0;
-  $: {
-    if (patientStore) {
-      patientCount = Object.keys(patientStore).length;
-    }
-  }
-  $: patientBadgeColor = patientCount > 1 ? 'danger' : 'secondary';
-
-  function updateBadge(type: string, color = '') {
-    if (type === 'Patient') {
-      let badgeColor;
-      if (color) {
-        badgeColor = color;
-      } else if (patientBadgeColor === 'danger') {
-        badgeColor = 'secondary';
-      }
-      patientBadgeColor = badgeColor ?? patientBadgeColor;
-    }
-  }
 
   let json = '';
   let resourceType = '';
@@ -302,61 +99,54 @@
 </Offcanvas>
 
 
-{#if $categorizedResourceStore && Object.keys($categorizedResourceStore).length > 0}
-  {#each Object.keys($categorizedResourceStore) as category}
-    {#if Object.keys($categorizedResourceStore[category]).length > 0}
+{#if $categoryDataToDisplay && Object.keys($categoryDataToDisplay).length > 0}
+  {#each Object.keys($categoryDataToDisplay) as category}
+    {#if $categoryDataToDisplay[category] && Object.keys($categoryDataToDisplay[category]).length > 0}
+      {@const values = Object.values($categoryDataToDisplay[category]).sort((a, b) => sortResources(a, b))}
+      {@const valuesToDisplay = summary ? values.slice(0, 3) : values}
       <CategoryView
         class="mb-4"
         title={category}
-        summary
-        addFn={() => {
-          
-        }}
-        seeAllFn={() => {
-          
-        }}
+        summary={summary}
+        seeAllFn={summary ? () => goto(`/data/manage/${category}`) : undefined}
         sortFields={['sourceName', 'category', 'method', 'source']}
         filterFields={['sourceName', 'category', 'method', 'source']}
-        >
+      >
         <div slot="resources">
-          {#each Object.values($categorizedResourceStore[category]).sort((a, b) => {
-            let value = resourceSort(a.resource, b.resource);
-            return value;
-          }) as value, index}
-              <Row class={index > 0 ? "border-top pt-2 mt-2" : ""} style="overflow: hidden">
-                <Col class="overflow-auto justify-content-center align-items-center">
-                  {#if value.resource.resourceType in resourceConfig && resourceConfig[value.resource.resourceType].component}
-                    <svelte:component
-                      this={resourceConfig[value.resource.resourceType].component}
-                      content={{
-                        resource: value.resource,
-                        entries: Object.values($categorizedResourceStore)
-                      }}
-                    />
-                    <!-- ResourceType: {category}
-                      Resource: {JSON.stringify(value.resource)} -->
-                  {:else if value.resource.text?.div}
-                    {@html value.resource.text?.div}
-                  {:else}
-                    {value.tempId}
-                  {/if}
-                </Col>
-                <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
-                  {#if $mode === 'advanced'}
-                    <Button
-                      size="sm"
-                      color="secondary"
-                      outline
-                      on:click={(event) => {
-                        event.stopPropagation();
-                        setJson(value)
-                      }}
-                    >
-                      View
-                    </Button>
-                  {/if}
-                </Col>
+          {#each valuesToDisplay as value, index}
+            {@const sourceName=getFriendlySourceNameBySource(value.source)}
+            <Row class={(index > 0 ? "border-top pt-2 mt-2" : "") + " source-row"} style="overflow-x: clip; position: relative; flex-wrap: wrap;">
+              <div
+                class="ps-2 pe-4 tooltip-host"
+                style="max-width: 0px; align-self: stretch;"
+                style:--tooltip-color={$colorMap.get(sourceName)}
+              >
+                <div class="p-0 m-0 rounded h-100" style="max-width: 0px; border: .2rem solid {$colorMap.get(sourceName)}"></div>
+              </div>
+              <Col class="ps-0 overflow-auto justify-content-center align-items-center">
+                <ResourceDisplay resource={value} entries={Object.values($categoryDataToDisplay)} />
+              </Col>
+              <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
+                {#if $mode === 'advanced'}
+                  <Button
+                    size="sm"
+                    color="secondary"
+                    outline
+                    on:click={(event) => {
+                      event.stopPropagation();
+                      setJson(value.rh)
+                    }}
+                  >
+                    View
+                  </Button>
+                {/if}
+              </Col>
+              <Row class="ps-2 ms-0 pt-1">
+                <div class="source-label" style:--tooltip-color={$colorMap.get(sourceName)}>
+                  From {sourceName}
+                </div>
               </Row>
+            </Row>
           {/each}
         </div>
       </CategoryView>
@@ -370,5 +160,32 @@
   }
   :global(div.resource-list-accordion:has(div.accordion-collapse.collapsing) > h2.accordion-header > button.accordion-button) {
     background-color: var(--bs-accordion-active-bg) !important;
+  }
+
+  .source-label {
+    flex-basis: 100%;
+    font-size: 0.75rem;
+    color: #fff;
+    background: var(--tooltip-color, #333);
+    border-radius: 4px;
+    padding: 0;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.15s, padding 0.15s, opacity 0.15s;
+    white-space: nowrap;
+    flex-basis: 100%;
+    align-self: flex-start;
+    max-width: fit-content;
+  }
+  
+  :global(.source-row:has(.tooltip-host:hover)) .source-label {
+    max-height: 2rem;
+    padding: 0.25rem 0.5rem;
+    opacity: 1;
+  }
+  
+  :global(.source-row) {
+    transition: padding-bottom 0.15s;
   }
 </style>

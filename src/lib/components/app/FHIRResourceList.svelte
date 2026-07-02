@@ -19,177 +19,15 @@
     Label,
     Row
   } from '@sveltestrap/sveltestrap';
-  import { get } from 'svelte/store';
   import { PLACEHOLDER_SYSTEM } from '$lib/config/config';
   import { ResourceHelper } from '$lib/utils/ResourceHelper.js';
   import type { ResourceCollection } from '$lib/utils/ResourceCollection.js';
-  import { getFHIRDateAndPrecision } from '$lib/utils/util';
-  import type { Resource } from 'fhir/r4';
-
-  import AdvanceDirective from '$lib/components/resource-templates/AdvanceDirective.svelte';
-  import AllergyIntolerance from '$lib/components/resource-templates/AllergyIntolerance.svelte';
-  import Condition from '$lib/components/resource-templates/Condition.svelte';
-  import Coverage from '$lib/components/resource-templates/Coverage.svelte';
-  import Device from '$lib/components/resource-templates/Device.svelte';
-  import DeviceUseStatement from '$lib/components/resource-templates/DeviceUseStatement.svelte';
-  import DiagnosticReport from '$lib/components/resource-templates/DiagnosticReport.svelte';
-  import Encounter from '$lib/components/resource-templates/Encounter.svelte';
-  import ExplanationOfBenefit from '$lib/components/resource-templates/ExplanationOfBenefit.svelte';
-  import Goal from '$lib/components/resource-templates/Goal.svelte';
-  import Immunization from '$lib/components/resource-templates/Immunization.svelte';
-  import Location from '$lib/components/resource-templates/Location.svelte';
-  import Medication from '$lib/components/resource-templates/Medication.svelte';
-  import MedicationRequest from '$lib/components/resource-templates/MedicationRequest.svelte';
-  import MedicationStatement from '$lib/components/resource-templates/MedicationStatement.svelte';
-  import Observation from '$lib/components/resource-templates/Observation.svelte';
-  import Organization from '$lib/components/resource-templates/Organization.svelte';
-  import Patient from '$lib/components/resource-templates/Patient.svelte';
-  import Practitioner from '$lib/components/resource-templates/Practitioner.svelte';
-  import Procedure from '$lib/components/resource-templates/Procedure.svelte';
-  import OccupationalData from '$lib/components/resource-templates/OccupationalData.svelte';
-  import QuestionnaireResponse from '$lib/components/resource-templates/QuestionnaireResponse.svelte';
+  import { createCategorizedStore, type ResourceInput, type CategorizedResource } from '$lib/stores/categorizedResources';
+  import ResourceDisplay from '$lib/components/app/ResourceDisplay.svelte';
 
   export let resourceCollection: ResourceCollection;
   export let scroll: boolean = true;
   export let submitting: boolean = false;
-
-  function lastUpdatedSort(a, b) {
-    let aDate = a?.meta?.lastUpdated;
-    let bDate = b?.meta?.lastUpdated;
-    if (aDate && !bDate) return 1;
-    if (bDate && !aDate) return -1;
-    if (!aDate && !bDate) return 0;
-    return (new Date(aDate).getTime() - new Date(bDate).getTime());
-  };
-
-  function getResourceSortDate(resource: Resource, fieldsOrPrefixes: string[] = []): {date: Date, precision: number} | null {
-    const birthdate = get(resourceCollection.patient)?.birthDate;
-    for (const field of fieldsOrPrefixes) {
-      const val = getFHIRDateAndPrecision(resource, field, birthdate);
-      if (val) return val;
-    }
-    return null;
-  }
-
-  function resourceSort(a: Resource, b: Resource, order: 'asc' | 'desc' = 'desc') {
-    let orderFactor = order === 'asc' ? 1 : -1;
-    
-    let aVal: {date: Date, precision: number} | null = getResourceSortDate(a, resourceConfig[a.resourceType]?.sortFields ?? []);
-    let bVal: {date: Date, precision: number} | null = getResourceSortDate(b, resourceConfig[b.resourceType]?.sortFields ?? []);
-    if (aVal && !bVal) return 1 * orderFactor;
-    if (bVal && !aVal) return -1 * orderFactor;
-    if (!aVal && !bVal) return lastUpdatedSort(a, b) * orderFactor;
-    let val = aVal.date - bVal.date;
-    if (val === 0) val = bVal.precision - aVal.precision;
-    return val * orderFactor;
-  }
-
-  const resourceConfig: Record<string, any> = {
-    'AllergyIntolerance': {
-      category: 'Allergies and Intolerances',
-      component: AllergyIntolerance,
-      sortFields: ['onset', 'lastOccurrence', 'recordedDate']
-    },
-    'Condition': {
-      category: 'Conditions',
-      component: Condition,
-      sortFields: ['onset', 'abatement', 'recordedDate']
-    },
-    'Consent': {
-      category: 'Advance Directives',
-      component: AdvanceDirective,
-      sortFields: ['dateTime']
-    },
-    'Coverage': {
-      category: 'Coverages',
-      component: Coverage,
-      sortFields: ['period']
-    },
-    'Device': {
-      category: 'Devices',
-      component: Device,
-    },
-    'DeviceUseStatement': {
-      category: 'Devices',
-      component: DeviceUseStatement,
-      sortFields: ['timing', 'recordedOn']
-    },
-    'DiagnosticReport': {
-      category: 'Diagnostics',
-      component: DiagnosticReport,
-      sortFields: ['effective', 'instant']
-    },
-    'DocumentReference': {
-      category: 'Documents',
-      component: AdvanceDirective,
-      sortFields: ['date']
-    },
-    'Encounter': {
-      category: 'Encounters',
-      component: Encounter,
-      sortFields: ['period']
-    },
-    'ExplanationOfBenefit': {
-      category: 'Explanations of Benefits',
-      component: ExplanationOfBenefit,
-      sortFields: ['created', 'billablePeriod']
-    },
-    'Goal': {
-      category: 'Goals',
-      component: Goal,
-      sortFields: ['start', 'target']
-    },
-    'Immunization': {
-      category: 'Immunizations',
-      component: Immunization,
-      sortFields: ['occurrence']
-    },
-    'Location': {
-      category: 'Locations',
-      component: Location,
-    },
-    'Medication': {
-      category: 'Medications',
-      component: Medication,
-    },
-    'MedicationRequest': {
-      category: 'Medications',
-      component: MedicationRequest,
-      sortFields: ['reported', 'authoredOn']
-    },
-    'MedicationStatement': {
-      category: 'Medications',
-      component: MedicationStatement,
-      sortFields: ['effective', 'dateAsserted']
-    },
-    'Observation': {
-      category: 'Observations/Results',
-      component: Observation,
-      sortFields: ['effective', 'issued']
-    },
-    'Organization': {
-      category: 'Organizations',
-      component: Organization,
-    },
-    'Patient': {
-      category: 'Patient',
-      component: Patient,
-    },
-    'Practitioner': {
-      category: 'Practitioners',
-      component: Practitioner,
-    },
-    'Procedure': {
-      category: 'Procedures',
-      component: Procedure,
-      sortFields: ['performed']
-    },
-    'QuestionnaireResponse': {
-      category: 'Questionnaires',
-      component: QuestionnaireResponse,
-      sortFields: ['authored']
-    }
-  };
   
   const statusDispatch = createEventDispatcher<{ 'status-update': string }>();
   const errorDispatch = createEventDispatcher<{ error: string }>();
@@ -199,56 +37,32 @@
   let reference: string;
   let selectedPatient = resourceCollection.selectedPatient;
 
+  let resources = resourceCollection.resources;
   // Proxy for resourceCollection's resourcesByType to allow reactive updates
-  let categorizedResourceStore: Readable<Record<string, Record<string, ResourceHelper>>> = derived(
-    resourceCollection.resources,
+  let categorizerInput = derived(
+    resources,
     ($resources) => {
-      let resourcesByType: Record<string, Record<string, ResourceHelper>> = {};
+      let input: ResourceInput = [];
       if ($resources) {
-        for (const rh of Object.values($resources) as ResourceHelper[]) {
-          if (rh.resource.resourceType === 'Patient' && rh.resource?.meta?.tag?.find(t => t.system === PLACEHOLDER_SYSTEM)) {
-            continue;
-          }
-          let type = resourceConfig[rh.resource.resourceType]?.category;
-          if (!type) {
-            type = rh.resource.resourceType;
-          }
-          if (!(type in resourcesByType)) {
-            resourcesByType[type] = {};
-          }
-          resourcesByType[type][rh.tempId] = rh;
-        }
+        let { sourceName } = resourceCollection.getTags();
+        const isTestPatient = (rh: ResourceHelper) => 
+          rh.resource.resourceType === 'Patient' && 
+          rh.resource?.meta?.tag?.find(t => t.system === PLACEHOLDER_SYSTEM);
+        let resources = Object.values($resources).filter(rh => !isTestPatient(rh));
+        input.push({ source: sourceName, resources });
       }
-      return resourcesByType;
+      return input;
     }
   );
+  
+  const { store: categorizedResourceStore, getRenderInfo, sortResources } = createCategorizedStore(categorizerInput);
 
-  let patientStore: Record<string, ResourceHelper>;
-  $: {
-    if ($categorizedResourceStore) {
-      patientStore = $categorizedResourceStore['Patient'];
-    }
-  }
+  let patientStore: Record<string, CategorizedResource>;
   let patientBadgeColor: string = 'danger';
   let patientCount: number = 0;
-  $: {
-    if (patientStore) {
-      patientCount = Object.keys(patientStore).length;
-    }
-  }
+  $: patientStore = $categorizedResourceStore?.['Patient'];
+  $: patientCount = patientStore ? Object.keys(patientStore).length : 0;
   $: patientBadgeColor = patientCount > 1 ? 'danger' : 'secondary';
-
-  function updateBadge(type: string, color = '') {
-    if (type === 'Patient') {
-      let badgeColor;
-      if (color) {
-        badgeColor = color;
-      } else if (patientBadgeColor === 'danger') {
-        badgeColor = 'secondary';
-      }
-      patientBadgeColor = badgeColor ?? patientBadgeColor;
-    }
-  }
 
   let json = '';
   let resourceType = '';
@@ -305,7 +119,7 @@
     {#if Object.keys($categorizedResourceStore).length > 0}
       {#each Object.keys($categorizedResourceStore) as category}
         {#if Object.keys($categorizedResourceStore[category]).length > 0}
-          <AccordionItem class="resource-content {scroll ? "scroll" : ""} resource-list-accordion" active={Object.keys($categorizedResourceStore[category]).length <= 3} on:toggle={() => updateBadge(category)}>
+          <AccordionItem class="resource-content {scroll ? 'scroll' : ''} resource-list-accordion" active={Object.keys($categorizedResourceStore[category]).length <= 3}>
             <span slot="header">
               {category}
               {#if category === 'Patients'}
@@ -316,46 +130,32 @@
                 <Badge
                   class="mx-1"
                   color={Object.values($categorizedResourceStore[category]).filter(
-                    (resource) => resource.include
+                    (resource) => resource.rh.include
                   ).length == Object.keys($categorizedResourceStore[category]).length
                     ? 'primary'
                     : Object.values($categorizedResourceStore[category]).filter(
-                          (resource) => resource.include
+                          (resource) => resource.rh.include
                         ).length == Object.keys($categorizedResourceStore[category]).length
                       ? 'primary'
                       : Object.values($categorizedResourceStore[category]).filter(
-                            (resource) => resource.include
+                            (resource) => resource.rh.include
                           ).length > 0
                         ? 'info'
                         : 'secondary'}
                 >
                   {Object.values($categorizedResourceStore[category]).filter(
-                    (resource) => resource.include
+                    (resource) => resource.rh.include
                   ).length}
                 </Badge>
               {/if}
             </span>
             {#each Object.values($categorizedResourceStore[category]).sort((a, b) => {
-              let value = resourceSort(a.resource, b.resource);
+              let value = sortResources(a, b);
               return value;
             }) as value, index}
                 <Row class={index > 0 ? "border-top pt-2 mt-2" : ""} style="overflow: hidden">
                   <Col class="overflow-auto justify-content-center align-items-center">
-                    {#if value.resource.resourceType in resourceConfig && resourceConfig[value.resource.resourceType].component}
-                      <svelte:component
-                        this={resourceConfig[value.resource.resourceType].component}
-                        content={{
-                          resource: value.resource,
-                          entries: resourceCollection.flattenResources($categorizedResourceStore)
-                        }}
-                      />
-                      <!-- ResourceType: {category}
-                        Resource: {JSON.stringify(value.resource)} -->
-                    {:else if value.resource.text?.div}
-                      {@html value.resource.text?.div}
-                    {:else}
-                      {value.tempId}
-                    {/if}
+                    <ResourceDisplay resource={value} entries={Object.values($categorizedResourceStore)} />
                   </Col>
                   <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
                     {#if $mode === 'advanced'}
