@@ -165,7 +165,7 @@
                         outline
                         on:click={(event) => {
                           event.stopPropagation();
-                          setJson(value)
+                          setJson(value.rh)
                         }}
                       >
                         View
