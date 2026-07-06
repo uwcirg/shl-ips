@@ -19,6 +19,7 @@
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { getResourcesFromIPS, isIPSBundle } from '$lib/utils/util';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
+    import { get } from 'svelte/store';
 
   export let disabled = false;
   export let processing = false;
@@ -96,7 +97,7 @@
 
   function getSourceName(url: URL | undefined) {
     const selectedUrl = url?.toString();
-    const allUrls = {...PATIENT_IPS, ...EXAMPLE_IPS};
+    const allUrls: Record<string, string> = {...PATIENT_IPS, ...EXAMPLE_IPS};
     let name = Object.keys(allUrls).find(title => allUrls[title] === selectedUrl);
     if (name) {
       name = name + " Sample Dataset";
@@ -104,6 +105,11 @@
       name = selectedUrl;
     }
     return name;
+  }
+
+  function getSourceUrl(url: URL | undefined) {
+    const selectedUrl = url?.toString() ?? "";
+    return selectedUrl;
   }
 
   async function prepareIps() {
@@ -142,7 +148,7 @@
       });
       let contentRaw = await contentResponse.text();
       content = JSON.parse(contentRaw);
-      hostname = summaryUrlValidated?.hostname;
+      hostname = getSourceUrl(summaryUrlValidated);
       
       if (content != undefined && content.verifiableCredential) {
         shcResult = {
@@ -160,7 +166,7 @@
         resources: getResourcesFromIPS(content),
         category: CATEGORY,
         method: METHOD,
-        source: hostname ?? summaryUrlValidated?.toString() ?? "",
+        source: hostname,
         sourceName: getSourceName(summaryUrlValidated) ?? ""
       };
       // ipsDispatch('ips-retrieved', ipsResult);
@@ -173,7 +179,7 @@
   }
 </script>
 
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, summaryUrlValidated?.toString() ?? "", prepareIps)}>
+<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, getSourceUrl(summaryUrlValidated), prepareIps)}>
   <FormGroup>
     <Dropdown {isOpen} toggle={() => {isOpen = !isOpen; updateMenuPosition();}}>
       <DropdownToggle tag="div" class="d-inline-block" style="width:100%">
