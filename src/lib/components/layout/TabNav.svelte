@@ -7,7 +7,7 @@
   $: classes = className || '';
 </script>
 
-<div class="border container-fluid d-flex align-items-center justify-content-center p-2 rounded-4 {classes}" style="background-color: white;">
+<div class="border container-fluid d-flex align-items-center justify-content-center p-2 {classes}" style="background-color: white;">
   <Nav pills class="nav-justified w-100">
     <NavItem class="mx-1 flex-grow-0" style="width: min-content !important">
       <NavLink href="/home" active={activeItem === "home"} class="d-flex align-items-center justify-content-center rounded-5 px-3 py-0" style="line-height: 1; height: 100%">

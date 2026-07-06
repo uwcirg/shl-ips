@@ -53,9 +53,10 @@
 
   let navbarEl: HTMLElement;
   let showFixedTabs = false;
-
+  let pwaMode = false;
   onMount(async () => {
     $isOpen = false;
+    pwaMode = window.matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches;
     addDynamicNavbarListeners();
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -189,7 +190,7 @@
       </div>
     </div>
     {#if $authenticated && $user}
-      <TabNav class="d-none d-md-flex" activeItem={activeItem}/>
+      <TabNav class="d-none d-md-flex rounded-4" activeItem={activeItem}/>
     {/if}
     <Collapse class="flex-column ms-2" isOpen={$isOpen} navbar expand="md" on:update={handleUpdate}>
       <Nav class="ms-auto" navbar>
@@ -258,17 +259,22 @@
       </Nav>
     </Collapse>
     {#if $authenticated && $user}
-      <TabNav class="d-flex d-md-none mx-1" activeItem={activeItem}/>
+      <TabNav class="d-none d-sm-flex d-md-none mx-1 rounded-4" activeItem={activeItem}/>
+      <div class="d-flex d-sm-none fixed-bottom m-0"
+        style="z-index: 1030;"
+      >
+        <TabNav class={pwaMode ? 'pb-4' : ''} activeItem={activeItem} />
+      </div>
     {/if}
   </Navbar>
 </div>
 {#if showFixedTabs && $authenticated && $user}
-  <div class="fixed-top m-3 shadow rounded-4"
+  <div class="d-none d-sm-flex fixed-top m-3 shadow rounded-4"
     in:fly={{ y: -50, duration: 200 }}
     out:fly={{ y: -50, duration: 100 }}
     style="z-index: 1030;"
   >
-    <TabNav activeItem={activeItem} />
+    <TabNav class="rounded-4" activeItem={activeItem} />
   </div>
 {/if}
 {#if DEMO_WARNING}

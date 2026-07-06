@@ -16,9 +16,7 @@
           href="https://docs.smarthealthit.org/smart-health-links/user-stories"
           target="_blank"
           rel="noreferrer"
-        >
-          SMART Health Links (SHL)
-        </a>, either as a web address or a QR code.
+        >SMART Health Links (SHL)</a>, either as a web address or a QR code.
         The health data are organized as <a
           href="https://build.fhir.org/ig/HL7/fhir-ips/"
           target="_blank"
@@ -31,3 +29,4 @@
     </footer>
   </Col>
 </Row>
+<Row class="d-flex d-sm-none" style="padding-bottom: 6rem"></Row>
