@@ -31,6 +31,17 @@
     category = categoryCode;
     method = methodCode;
     source = sourceUrl;
+    if (!category || !method || !source) {
+      let msg = "";
+      if (!category) msg += `Category not specified: ${category}; `;
+      if (!method) msg += `Method not specified: ${method}; `;
+      if (!source) msg += `Source not specified: ${source}; `;
+      throw new Error(msg);
+    }
+    if (!fetchCallback) {
+      throw new Error("Fetch callback function not specified");
+    }
+    
     callbackFn = fetchCallback;
     if (fhirDataService.datasetExists(category, method, source)) {
       $dataset = $userResources[category][method][source];
