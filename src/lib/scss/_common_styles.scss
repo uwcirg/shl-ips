@@ -2,6 +2,10 @@
   --header-height: 64px;
 }
 
+* {
+  touch-action: manipulation;
+}
+
 [id] {
   scroll-margin-top: var(--header-height);
 }
@@ -9,6 +13,14 @@
 .accordion-item.resource-content.scroll > .accordion-collapse > .accordion-body {
   overflow: auto;
   max-height: calc(65vh);
+}
+
+@media (hover: none) {
+  .btn:hover {
+    background-color: var(--bs-btn-bg) !important;
+    border-color: var(--bs-btn-border-color) !important;
+    color: var(--bs-btn-color) !important;
+  }
 }
 
 @each $variant in primary, secondary, success, danger, warning, info {
@@ -140,9 +152,12 @@ h6.info-header {
   color: #fff !important;
 }
 
-.nav-pills .nav-link:not(.active):hover {
-  background-color: var(--bs-primary-bg-subtle);
+@media (hover: hover) {
+  .nav-pills .nav-link:not(.active):hover {
+    background-color: var(--bs-primary-bg-subtle);
+  }
 }
+
 @keyframes animloader {
   0% {
     background-position: 0% 0, 0 0, 70px 5px, 70px 38px, 0px 66px;

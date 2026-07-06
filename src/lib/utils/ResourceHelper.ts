@@ -7,6 +7,7 @@ export interface SerializedResourceHelper {
 }
 
 export class ResourceHelper {
+    id: string;
     tempId: string;
     original_resource: Resource;
     simple_resource: Resource;
@@ -15,6 +16,7 @@ export class ResourceHelper {
     inject: boolean;
 
     constructor(resource: Resource, inject?: boolean, include?: boolean) {
+        this.id = crypto.randomUUID();
         this.original_resource = resource;
         this.include = include ?? true;
         this.inject = inject ?? false;

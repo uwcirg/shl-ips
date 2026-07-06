@@ -13,14 +13,19 @@
     Icon,
     Row,
   } from '@sveltestrap/sveltestrap';
+  import { getContext } from 'svelte';
   import { get, type Writable } from 'svelte/store';
   import { METHOD_NAMES } from '$lib/config/config';
   import { ResourceCollection } from '$lib/utils/ResourceCollection';
   import { StateManager } from '$lib/utils/StateManager';
   import type { Patient } from 'fhir/r4';
 
+  import { getFriendlySourceNameBySource } from '$lib/utils/resourceCollectionUtils';
+
   export let dataset: { status: StateManager, collection: ResourceCollection };
   export let masterPatient: Writable<Patient>;
+
+  let colorMap = getContext<Writable<Map<string, string>>>('colorMap');
 
   let collection: ResourceCollection;
   let category: string;
@@ -39,7 +44,7 @@
   }
 </script>
 
-<Card class="{category}-dataset h-100 w-100">
+<Card class="{category}-dataset h-100 w-100" style="border-left: .4rem solid {$colorMap.get(getFriendlySourceNameBySource(sourceName))}">
   <CardHeader>
     <Row class="align-items-center">
       <Col>
@@ -51,7 +56,7 @@
       </Col>
       {#if $$slots.menu}
         <Col class="ps-0" style="max-width: fit-content">
-          <Dropdown>
+          <Dropdown style="user-select: none">
             <DropdownToggle tag="div" style="cursor: pointer">
               <Icon name="three-dots-vertical" style="cursor: pointer"></Icon>
             </DropdownToggle>
@@ -73,17 +78,17 @@
           </CardTitle>
         </Col>
       </Row>
-      <Row>
-        <CardSubtitle class="mb-1 text-secondary">
-          For {
-            placeholder ?
-              `${$masterPatient?.resource?.name?.[0]?.given?.join(" ")} ${$masterPatient?.resource?.name?.[0]?.family}` :
-              `${patient.name?.[0]?.given?.join(" ")} ${patient.name?.[0]?.family}`
-          }
-        </CardSubtitle>
-      </Row>
-      <Row>
-        <Col class="pe-0">
+      <Row class="align-items-center">
+        <Col class="col-auto pe-0">
+          <h6 class="mb-0 text-secondary">
+            For {
+              placeholder ?
+                `${$masterPatient?.resource?.name?.[0]?.given?.join(" ")} ${$masterPatient?.resource?.name?.[0]?.family}` :
+                `${patient.name?.[0]?.given?.join(" ")} ${patient.name?.[0]?.family}`
+            }
+          </h6>
+        </Col>
+        <Col>
           <Badge color="info">
             {METHOD_NAMES[method]?.name || "Unknown"}
           </Badge>

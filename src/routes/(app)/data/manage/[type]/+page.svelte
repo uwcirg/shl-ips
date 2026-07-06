@@ -7,25 +7,17 @@
     TabContent,
     TabPane
   } from '@sveltestrap/sveltestrap';
+
+  import { page } from '$app/stores';
+
+  let category = $page.params.type;
 </script>
 
 <svelte:head>
   <title>Review - {INSTANCE_CONFIG.title}</title> 
 </svelte:head>
 
-<h4>Review Health Data</h4>
-<p>
-  View and manage your imported health data.
-</p>
-<TabContent>
-  <TabPane tabId="data" active class="py-3">
-    <span slot="tab">My Health Data</span>
-    <h6>Your Sources:</h6>
-    <SourceSummary class="mb-3"/>
-    <DataSummary summary={true} />
-  </TabPane>
-  <TabPane tabId="sources" class="py-3">
-    <span slot="tab">My Imports</span>
-    <ManageData />
-  </TabPane>
-</TabContent>
+<h4>Review {category} Data</h4>
+<h6>Your Sources:</h6>
+<SourceSummary class="mb-3"/>
+<DataSummary categories={[category]}/>
