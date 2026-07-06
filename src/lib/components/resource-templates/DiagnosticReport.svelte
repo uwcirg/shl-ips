@@ -5,7 +5,7 @@
   import ObservationTemplate from '$lib/components/resource-templates/Observation.svelte';
   import Date from '$lib/components/resource-templates/Date.svelte';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
-  import { getEntry } from '$lib/utils/util';
+  import { getEntry, choiceDTFields } from '$lib/utils/util';
 
   export let content: ResourceTemplateParams<DiagnosticReport>; // Define a prop to pass the data to the component
 
@@ -46,7 +46,7 @@
   </Badge><br>
 {/if}
 <CodeableConcept codeableConcept={resource.code} />
-Effective: <Date fields={{period: resource.effective, dateTime: resource.effectiveDateTime}} />
+Effective: <Date fields={choiceDTFields("effective", resource)} />
 <br>
 {#if resource.result}
   <table class="table table-bordered table-sm">

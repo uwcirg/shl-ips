@@ -6,7 +6,7 @@
   import Date from '$lib/components/resource-templates/Date.svelte';
   import Dosage from '$lib/components/resource-templates/Dosage.svelte';
   import MedicationTemplate from '$lib/components/resource-templates/Medication.svelte';
-  import { getEntry } from '$lib/utils/util';
+  import { getEntry, choiceDTFields } from '$lib/utils/util';
 
   export let content: ResourceTemplateParams<MedicationRequest>; // Define a prop to pass the data to the component
 
@@ -46,7 +46,7 @@
 {/if}
 
 {#if resource.authoredOn}
-  Authored: <Date fields={{ dateTime: resource.authoredOn }} /><br>
+  Authored: <Date fields={choiceDTFields("authoredOn", resource)} /><br>
 {/if}
 {#if resource.dispenseRequest?.validityPeriod}
   Valid: <Date period fields={{ period: resource.dispenseRequest.validityPeriod }} /><br>
