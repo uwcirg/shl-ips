@@ -358,6 +358,7 @@ export function getResourcesFromIPS(ips: Bundle): Resource[] | undefined {
   entries.forEach((entry: BundleEntry) => {
       if (!entry.resource) return;
       if (entry.resource.resourceType == 'Composition') return;
+      if (JSON.stringify(entry.resource).includes("http://hl7.org/fhir/uv/ips/CodeSystem/absent-unknown-uv-ips")) return;
       if ('extension' in entry.resource && entry.resource.extension) {
           entry.resource.extension = entry.resource.extension.filter(function(item) {
               return item.url !== "http://hl7.org/fhir/StructureDefinition/narrativeLink";
