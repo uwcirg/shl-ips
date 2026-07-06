@@ -16,7 +16,7 @@
     <link rel="preload" as="image" href={`${INSTANCE_CONFIG.imgPath}/qr-banner-bottom.png`} />
 </svelte:head>
 
-{#if data.unauthenticated || !data.shl}
+{#if data.unauthenticated || data.shl === undefined || data.shl === null}
 <!-- Render nothing or a spinner while auth recovery runs -->
   <div>Loading...</div>
 {:else}
