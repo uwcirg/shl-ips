@@ -19,7 +19,6 @@
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { getResourcesFromIPS, isIPSBundle } from '$lib/utils/util';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
-    import { get } from 'svelte/store';
 
   export let disabled = false;
   export let processing = false;
