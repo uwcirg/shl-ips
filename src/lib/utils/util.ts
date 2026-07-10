@@ -258,13 +258,9 @@ export function getEntry(entries: Array<BundleEntry>, reference: string) {
     } else {
       // Attempt to match based on resource and uuid
       let splitReference = reference.split('/');
-      let referenceId = splitReference?.pop();
-      if (entry.resource?.resourceType && splitReference.includes(entry.resource?.resourceType) && referenceId) {
-        if (entry.fullUrl?.includes(referenceId)) {
-          return entry.resource;
-        } else if (entry.resource?.id?.includes(referenceId)) {
-          return entry.resource;
-        }
+      let referenceId = splitReference[splitReference.length - 1];
+      if (entry.resource?.id?.includes(referenceId)) {
+        return entry.resource;
       }
     }
   }
@@ -321,23 +317,77 @@ export async function fetchEverything(reqUrl: string, options: RequestInit): Pro
 }
 
 export function getReferences(resourceContent: any, references: any[] | undefined=undefined): string[]{
-    let referenceFieldKey = "reference";
-    if (references === undefined) {
-      references = [];
+  let referenceFieldKey = "reference";
+  if (references === undefined) {
+    references = [];
+  }
+  if (typeof resourceContent === "object") {
+    for (let k in resourceContent) {
+      if (k !== "subject" && k !== "patient") {
+        if (k === referenceFieldKey && references !== undefined) {
+          references.push(resourceContent[k]);
+        } else {
+          references = getReferences(resourceContent[k], references);
+        }
+      } 
     }
-    if (typeof resourceContent === "object") {
-      for (let k in resourceContent) {
-        if (k !== "subject" && k !== "patient") {
-          if (k === referenceFieldKey && references !== undefined) {
-            references.push(resourceContent[k]);
-          } else {
-            references = getReferences(resourceContent[k], references);
-          }
-        } 
+  }
+  return references;
+}
+
+export function findFhirReferencePaths(resource: Resource): string[] {
+  const results: string[] = [];
+
+  function traverse(obj: any, path: string) {
+    if (!obj || typeof obj !== 'object') return;
+
+    if (typeof obj.reference === 'string') {
+      const finalPath = `${path}.reference`;
+      results.push(finalPath);
+      return;
+    }
+
+    for (const [key, value] of Object.entries(obj)) {
+      if (key === 'subject' || key === 'patient') continue;
+      const nextPath = path ? `${path}.${key}` : key;
+      if (Array.isArray(value)) {
+        value.forEach((item, i) => traverse(item, `${nextPath}[${i}]`));
+      } else {
+        traverse(value, nextPath);
       }
     }
-    return references;
   }
+
+  traverse(resource, '');
+  return results;
+}
+
+export function getReferenceIdAtPath(obj: any, path: string) {
+  const parts = path.replace(/\[(\d+)\]/g, '.$1').split('.').filter(Boolean);
+  const last = parts.pop()!;
+  const target = parts.reduce((o, k) => o[k], obj);
+  const current: string = target[last];
+  const id = current.split('/').pop()?.split(':').pop() ?? '';
+  return id;
+}
+
+export function convertToFullUrlReference(obj: any, path: string) {
+  const parts = path.replace(/\[(\d+)\]/g, '.$1').split('.').filter(Boolean);
+  const last = parts.pop()!;
+  const target = parts.reduce((o, k) => o[k], obj);
+  const current: string = target[last];
+  if (!current.startsWith('urn:uuid:')) {
+    target[last] = `urn:uuid:${current.split('/').pop()}`;
+  }
+}
+
+export function convertToFullUrlReferences(resource: Resource) {
+  const paths = findFhirReferencePaths(resource);
+  for (const path of paths) {
+    convertToFullUrlReference(resource, path);
+  }
+  return resource;
+}
 
 export function isIPSBundle(bundle: Bundle): boolean {
   let composition = bundle?.entry?.find(entry => entry.resource?.resourceType === "Composition").resource as Composition;
