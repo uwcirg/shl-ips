@@ -6,7 +6,9 @@
   export let fields: DateTimeFields = {};
   export let period = false;
 
-  function buildDateString() {
+  $: dateString = buildDateString(fields, period);
+
+  function buildDateString(fields: DateTimeFields, period: boolean): string {
     if (!fields) return "";
     let unk = formatDate(undefined) ?? "??"; // get format function's default string if available
     let date = unk;
@@ -16,7 +18,7 @@
     if (fields.period) {
       let start = formatDate(fields.period.start);
       let end = formatDate(fields.period.end);
-      periodStartOnly = periodStartOnly && !fields.period.end;
+      periodStartOnly = (periodStartOnly || fields.period.start) && !fields.period.end;
       date = `${start}${fields.period.end ? ' - '+end : ""}`;
     } else if (fields.range) {
       periodStartOnly = periodStartOnly && !fields.range.high;
@@ -53,4 +55,4 @@
   }
 </script>
 
-{buildDateString()}
+{dateString}
