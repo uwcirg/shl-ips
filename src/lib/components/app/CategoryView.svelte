@@ -29,40 +29,44 @@
   <CardHeader>
     <div class="d-flex justify-content-between">
       <h5>{title}</h5>
-      {#if summary && seeAllFn}
+      {#if addFn}
         <div>
-          <Button size="sm" color="secondary" on:click={seeAllFn}>See all</Button>
+          <Button class="w-100" outline size="sm" color="secondary" style="border: 1px dashed" on:click={addFn}><Icon name="plus" /> Add</Button>
         </div>
       {/if}
     </div>
   </CardHeader>
   <CardBody>
     {#if !summary}
-      <Row>
-        <Col>
-          <Input type="search" bind:value={searchInput} class="form-control" placeholder="Search" />
-        </Col>
-      </Row>
-      <Row>
-        <Col>
-          <FormGroup>
-            <Label>Sort by:</Label>
-            <Input type="select" bind:value={sortFields}>
-              {#each filterFields as field}
-                <option value={field}>{field}</option>
-              {/each}
-            </Input>
-          </FormGroup>
-        </Col>
-      </Row>
+      <div class="mb-3">
+        <Row>
+          <Col>
+            <Input type="search" bind:value={searchInput} class="form-control" placeholder="Search" />
+          </Col>
+        </Row>
+        {#if filterFields.length > 0}
+          <Row>
+            <Col>
+              <FormGroup>
+                <Label>Sort by:</Label>
+                <Input type="select" bind:value={sortFields}>
+                  {#each filterFields as field}
+                    <option value={field}>{field}</option>
+                  {/each}
+                </Input>
+              </FormGroup>
+            </Col>
+          </Row>
+        {/if}
+      </div>
     {/if}
 
     <slot name="resources" />
 
   </CardBody>
-  {#if addFn}
-  <CardFooter>
-    <Button class="w-100" outline size="sm" color="secondary" style="border: 1px dashed" on:click={addFn}><Icon name="plus" /> Add your own</Button>
-  </CardFooter>
+  {#if summary && seeAllFn}
+    <CardFooter>
+      <Button class="w-100" outline size="sm" color="secondary" style="border: 1px dashed" on:click={seeAllFn}>See all {title.toLowerCase()} <Icon name="arrow-right" /></Button>
+    </CardFooter>
   {/if}
 </Card>
