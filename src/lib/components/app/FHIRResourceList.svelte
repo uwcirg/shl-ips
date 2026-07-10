@@ -115,6 +115,7 @@
 
 
 {#if $categorizedResourceStore}
+  {@const allDataAsBundleEntries = Object.values($categorizedResourceStore).map(types => Object.values(types)).flat().map(cr => cr.rh)}
   <Accordion stayOpen class="w-100">
     {#if Object.keys($categorizedResourceStore).length > 0}
       {#each Object.keys($categorizedResourceStore) as category}
@@ -155,7 +156,7 @@
             }) as value, index}
                 <Row class={index > 0 ? "border-top pt-2 mt-2" : ""} style="overflow: hidden">
                   <Col class="overflow-auto justify-content-center align-items-center">
-                    <ResourceDisplay resource={value} entries={Object.values($categorizedResourceStore)} />
+                    <ResourceDisplay resource={value} entries={allDataAsBundleEntries} />
                   </Col>
                   <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
                     {#if $mode === 'advanced'}

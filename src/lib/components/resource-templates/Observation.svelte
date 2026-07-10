@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { Button, Icon } from '@sveltestrap/sveltestrap';
   import type { BundleEntry, Observation } from "fhir/r4";
   import type { ResourceTemplateParams } from '$lib/utils/types';
   import { getEntry } from '$lib/utils/util';
@@ -20,6 +21,8 @@
     "11341-5", // Job history
     "21843-8", // Usual work
   ];
+
+  let showResults = false;
 
   // handle Observation.hasMember references
   interface ResolvedMember {
@@ -87,29 +90,39 @@
     <br>
   {/if}
   {#if members.length > 0}
-  <table class="table table-bordered table-sm">
-    <thead>
-      <tr><th>Result(s)</th></tr>
-    </thead>
-    <tbody>
-    {#each members as member}
-      <tr>
-        <td>
-          <div class="mx-4">
-            {#if member.resource}
-              <svelte:self
-                content={{ resource: member.resource, entries: content.entries }}
-                contained={hasChoiceDTField("effective", member.resource)}
-              />
-            {:else if member.display}
-              <strong>{member.display}</strong>
-            {/if}
-          </div>
-        </td>
-      </tr>
-    {/each}
-    </tbody>
-  </table>
+    <Button
+      class="my-1"
+      size="sm"
+      color={!showResults ? "secondary" : "primary"}
+      outline
+      on:click={() => showResults = !showResults}>
+      {showResults ? 'Hide' : 'Show'}  {members.length} result{members.length > 1 ? 's' : ''} <Icon style="font-size: x-small;"name={!showResults ? "caret-down-fill" : "caret-up-fill"} />
+    </Button><br>
+    {#if showResults}
+      <table class="table table-bordered table-sm">
+        <thead>
+          <tr><th>Result(s)</th></tr>
+        </thead>
+        <tbody>
+        {#each members as member}
+          <tr>
+            <td>
+              <div class="mx-4">
+                {#if member.resource}
+                  <svelte:self
+                    content={{ resource: member.resource, entries: content.entries }}
+                    contained={hasChoiceDTField("effective", member.resource)}
+                  />
+                {:else if member.display}
+                  <strong>{member.display}</strong>
+                {/if}
+              </div>
+            </td>
+          </tr>
+        {/each}
+        </tbody>
+      </table>
+    {/if}
   {/if}
   {#if !contained && hasChoiceDTField("effective", resource)}
     Date: <Date fields={choiceDTFields("effective", resource)} />

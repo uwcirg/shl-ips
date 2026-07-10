@@ -1,9 +1,17 @@
 import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
+import { convertToFullUrlReference, findFhirReferencePaths, getReferenceIdAtPath} from '$lib/utils/util';
 
 // Create Bundle and POST
 export async function uploadResources(resources, token=undefined) {
     let entries = [];
+    const ids = new Set(resources.map(r => r.id));
     resources.forEach(resource => {
+        const paths = findFhirReferencePaths(resource);
+        for (const path of paths) {
+            if (ids.has(getReferenceIdAtPath(resource, path))) {
+                convertToFullUrlReference(resource, path);
+            }
+        }
         let entry = {
             request: {
                 // method: resource.resourceType === "Patient" ? "PUT" : "POST",
@@ -11,7 +19,7 @@ export async function uploadResources(resources, token=undefined) {
                 url: `${resource.resourceType}`
             },
             fullUrl: `urn:uuid:${resource.id}`,
-            resource: resource
+            resource
         };
         entries.push(entry);
     });

@@ -13,7 +13,7 @@
   import { ResourceHelper } from '$lib/utils/ResourceHelper.js';
   import CategoryView from '$lib/components/app/CategoryView.svelte';
   import {getFriendlySourceNameBySource} from '$lib/utils/resourceCollectionUtils';
-  import { createCategorizedStore, type CategoryMap } from '$lib/stores/categorizedResources';
+  import { createCategorizedStore, type CategoryMap, defaultResourceConfig } from '$lib/stores/categorizedResources';
   import ResourceDisplay from '$lib/components/app/ResourceDisplay.svelte';
   import { derived, type Readable } from 'svelte/store';
   import { goto } from '$app/navigation';
@@ -100,17 +100,18 @@
 
 
 {#if $categoryDataToDisplay && Object.keys($categoryDataToDisplay).length > 0}
+  {@const allDataAsBundleEntries = Object.values($categorizedResourceStore).map(types => Object.values(types)).flat().map(cr => cr.rh)}
   {#each Object.keys($categoryDataToDisplay) as category}
     {#if $categoryDataToDisplay[category] && Object.keys($categoryDataToDisplay[category]).length > 0}
       {@const values = Object.values($categoryDataToDisplay[category]).sort((a, b) => sortResources(a, b))}
       {@const valuesToDisplay = summary ? values.slice(0, 3) : values}
+      <div id={`${category}`}></div>
       <CategoryView
         class="mb-4"
-        title={category}
+        title={Object.values(defaultResourceConfig).find((cr) => cr.category === category) ? category : `${category}s`}
         summary={summary}
         seeAllFn={summary ? () => goto(`/data/manage/${category}`) : undefined}
         sortFields={['sourceName', 'category', 'method', 'source']}
-        filterFields={['sourceName', 'category', 'method', 'source']}
       >
         <div slot="resources">
           {#each valuesToDisplay as value, index}
@@ -123,8 +124,8 @@
               >
                 <div class="p-0 m-0 rounded h-100" style="max-width: 0px; border: .2rem solid {$colorMap.get(sourceName)}"></div>
               </div>
-              <Col class="ps-0 overflow-auto justify-content-center align-items-center">
-                <ResourceDisplay resource={value} entries={Object.values($categoryDataToDisplay)} />
+              <Col class="ps-0 resource-content overflow-auto justify-content-center align-items-center">
+                <ResourceDisplay resource={value} entries={allDataAsBundleEntries} />
               </Col>
               <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
                 {#if $mode === 'advanced'}
