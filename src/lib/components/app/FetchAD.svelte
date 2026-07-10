@@ -330,7 +330,9 @@
       for (let dr of resources) {
         // If this DR is a POLST, add the following chain of queries:
         if (isPolst(dr)){
-          dr.isPolst = true;
+          let structuredFields: any = {};
+
+          structuredFields.isPolst = true;
           // In the POLST find the content[] with format.code = "urn:hl7-org:pe:adipmo-structuredBody:1.1" (ADIPMO Structured Body Bundle),
           const contentAdipmoBundleRef = dr.content.find((content) => {
             return (content.format?.code === 'urn:hl7-org:pe:adipmo-structuredBody:1.1' && content.attachment?.url?.includes('Bundle'));
@@ -350,8 +352,8 @@
             // then set the appropriate flags in the DR
             (
               {
-                exists: dr.isCpr,
-                doNotPerform: dr.doNotPerformCpr
+                exists: structuredFields.isCpr,
+                doNotPerform: structuredFields.doNotPerformCpr
               } = digestServiceRequestByCode(serviceRequests, '100822-6')
             );
 
@@ -359,10 +361,10 @@
             // then set the appropriate flags in the DR
             (
               {
-                exists: dr.isComfortTreatments,
-                doNotPerform: dr.doNotPerformComfortTreatments,
-                type: dr.typeComfortTreatments,
-                detail: dr.detailComfortTreatments
+                exists: structuredFields.isComfortTreatments,
+                doNotPerform: structuredFields.doNotPerformComfortTreatments,
+                type: structuredFields.typeComfortTreatments,
+                detail: structuredFields.detailComfortTreatments
               } = digestServiceRequestByCode(serviceRequests, '100823-4')
             );
 
@@ -370,9 +372,9 @@
             // then set the appropriate flags in the DR
             (
               {
-                exists: dr.isAdditionalTx,
-                doNotPerform: dr.doNotPerformAdditionalTx,
-                detail: dr.detailAdditionalTx
+                exists: structuredFields.isAdditionalTx,
+                doNotPerform: structuredFields.doNotPerformAdditionalTx,
+                detail: structuredFields.detailAdditionalTx
               } = digestServiceRequestByCode(serviceRequests, '100824-2')
             );
 
@@ -380,12 +382,24 @@
             // then set the appropriate flags in the DR
             (
               {
-                exists: dr.isMedicallyAssisted,
-                doNotPerform: dr.doNotPerformMedicallyAssisted,
-                detail: dr.detailMedicallyAssisted
+                exists: structuredFields.isMedicallyAssisted,
+                doNotPerform: structuredFields.doNotPerformMedicallyAssisted,
+                detail: structuredFields.detailMedicallyAssisted
               } = digestServiceRequestByCode(serviceRequests, '100825-9')
             );
           }
+          
+          let extension = dr.extension || [];
+          Object.entries(structuredFields).forEach(([key, value]) => {
+            const extensionUrl = `http://fhir.cirg.uw.edu/StructuredBodyFields/${key}`;
+            if (value) {
+              extension.push({
+                url: extensionUrl,
+                valueBoolean: value
+              })
+            }
+          });
+          dr.extension = extension;
         }
       }
 
