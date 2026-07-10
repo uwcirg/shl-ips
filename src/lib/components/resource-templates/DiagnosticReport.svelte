@@ -1,41 +1,56 @@
 <script lang="ts">
-  import { Badge } from '@sveltestrap/sveltestrap';
+  import { Badge, Button, Icon } from '@sveltestrap/sveltestrap';
   import type { BundleEntry, DiagnosticReport, Observation } from 'fhir/r4';
   import type { ResourceTemplateParams } from '$lib/utils/types';
   import ObservationTemplate from '$lib/components/resource-templates/Observation.svelte';
   import Date from '$lib/components/resource-templates/Date.svelte';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
   import { getEntry, choiceDTFields } from '$lib/utils/util';
+  import { hasChoiceDTField } from '$lib/utils/util';
 
   export let content: ResourceTemplateParams<DiagnosticReport>; // Define a prop to pass the data to the component
 
   let resource: DiagnosticReport;
   $: if (content) resource = content.resource;
 
-  let results: Observation[] | undefined = [];
+  let showResults = false;
 
+  // handle DiagnosticReport.result references
+  interface ResolvedResult {
+    resource?: Observation;
+    display?: string;
+  }
+  let results: ResolvedResult[] = [];
+  
   $: {
-    if (resource) {
-      if (resource.result) {
-        for (let result of resource.result) {
-          if (result.reference) {
-            let resultResource;
-            if (resource.contained?.[0]?.resourceType === 'Observation') {
-              // If the result observation is contained in the resource
-              resultResource = resource.contained[0];
-            } else {
-              // If the result observation is referenced
-              resultResource = getEntry(
-                content.entries as BundleEntry[],
-                result.reference
-              ) as Observation;
-            }
-            if (resultResource) {
-              results.push(resultResource);
-            }
+    if (resource?.result) {
+      results = resource.result.reduce<ResolvedResult[]>((acc, result) => {
+        let resultFields: ResolvedResult = {};
+  
+        if (result.reference) {
+          let resultResource: Observation | undefined;
+          if (resource.contained?.[0]?.resourceType === 'Observation') {
+            resultResource = resource.contained[0] as Observation;
+          } else {
+            resultResource = getEntry(content.entries as BundleEntry[], result.reference) as Observation;
+          }
+          if (resultResource) {
+            resultFields.resource = resultResource;
           }
         }
-      }
+  
+        if (result.display) {
+          resultFields.display = result.display;
+        }
+  
+        if (Object.keys(resultFields).length > 0) {
+          acc.push(resultFields);
+        }
+  
+        return acc;
+      }, []);
+    } else {
+      results = [];
     }
   }
 </script>
@@ -49,30 +64,37 @@
 Effective: <Date fields={choiceDTFields("effective", resource)} />
 <br>
 {#if resource.result}
+  <Button
+    class="my-1"
+    size="sm"
+    color={!showResults ? "secondary" : "primary"}
+    outline
+    on:click={() => showResults = !showResults}>
+    {showResults ? 'Hide' : 'Show'} {resource.result.length} result{resource.result.length > 1 ? 's' : ''} <Icon style="font-size: x-small;"name={!showResults ? "caret-down-fill" : "caret-up-fill"} />
+  </Button><br>
+  {#if showResults}
   <table class="table table-bordered table-sm">
     <thead>
-      <tr><th>Result(s)</th></tr>
+      <tr><th>Results</th></tr>
     </thead>
     <tbody>
     {#each results as result}
       <tr>
         <td>
           <div class="ml-4">
-            <ObservationTemplate
-              content={{ resource: result, entries: content.entries }}
-              contained={resource.effectiveDateTime !== undefined || resource.effectivePeriod !== undefined}
-            />
+            {#if result.resource}
+              <ObservationTemplate
+                content={{ resource: result.resource, entries: content.entries }}
+                contained={hasChoiceDTField("effective", result.resource)}
+              />
+            {:else if result.display}
+              {result.display}
+            {/if}
           </div>
         </td>
       </tr>
     {/each}
-    {#each resource.result as result}
-      {#if result.display}
-        <tr>
-          <td>{result.display}</td>
-        </tr>
-      {/if}
-    {/each}
     </tbody>
   </table>
+  {/if}
 {/if}

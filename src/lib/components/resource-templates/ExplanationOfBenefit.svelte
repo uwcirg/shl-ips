@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Badge } from '@sveltestrap/sveltestrap';
+  import { Badge, Button, Icon } from '@sveltestrap/sveltestrap';
   import type { ExplanationOfBenefit } from 'fhir/r4';
   import type { ResourceTemplateParams } from '$lib/utils/types';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
@@ -10,6 +10,9 @@
 
   let resource: ExplanationOfBenefit;
   $: if (content) resource = content.resource;
+
+  let showProcedures = false;
+  let showServices = false;
 
   function statusBadgeColor(status: string) {
     if (status == 'active') {
@@ -82,73 +85,92 @@
   Insurance: {resource.insurance[0].coverage.display}<br>
 {/if}
 {#if resource.procedure}
-  <table class="table table-bordered table-sm">
-    <thead>
-      <tr><th colspan="3">Procedure(s)</th></tr>
-    </thead>
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Procedure</th>
-        <th>Type</th>
-      </tr>
-    </thead>
-    <tbody>
-    {#each resource.procedure as procedure}
-      <tr>
-        <td>
-          <Date fields={choiceDTFields("date", procedure)} />
-        </td>
-        <td>
-          <CodeableConcept codeableConcept={procedure.procedureCodeableConcept} badge={true} bold={false} />
-        </td>
-        <td>
-          <CodeableConcept codeableConcept={procedure.type[0]} badge={false} bold={false} />
-        </td>
-      </tr>
-    {/each}
-    </tbody>
-  </table>
-{/if}
-{#if resource.item}
-  <table class="table table-bordered table-sm">
-    <thead>
-      <tr>
-        <th colspan="5">Services</th>
-      </tr>
-      <tr>
-        <th>Name</th>
-        <th>Date</th>
-        <th>Location</th>
-        <th>Copay</th>
-        <th>Insurance</th>
-      </tr>
-    </thead>
-    <tbody>
-      {#each resource.item as item}
-        {@const copayAmount = item.adjudication?.find((x) => x.category.coding[0].code == 'coinsurance')?.amount}
-        {@const copayValuePieces = copayAmount?.value.toString()?.split('.')}
-        {@const copayValueTruncated = `${copayValuePieces?.[0]}.${copayValuePieces?.[1]?.slice(0, 2)}`}
+  <Button
+    class="my-1"
+    size="sm"
+    color={!showProcedures ? "secondary" : "primary"}
+    outline
+    on:click={() => showProcedures = !showProcedures}>
+    {showProcedures ? 'Hide' : 'Show'}  {resource.procedure.length} procedure{resource.procedure.length > 1 ? 's' : ''} <Icon style="font-size: x-small;"name={!showProcedures ? "caret-down-fill" : "caret-up-fill"} />
+  </Button><br>
+  {#if showProcedures}
+    <table class="table table-bordered table-sm">
+      <thead>
+        <tr><th colspan="3">Procedure(s)</th></tr>
+      </thead>
+      <thead>
         <tr>
-          <td><CodeableConcept codeableConcept={item.productOrService} badge={false} bold={false} /></td>
-          <td><Date fields={choiceDTFields("serviced", item)} /></td>
-          <td><CodeableConcept codeableConcept={item.locationCodeableConcept} badge={false} bold={false} /></td>
+          <th>Date</th>
+          <th>Procedure</th>
+          <th>Type</th>
+        </tr>
+      </thead>
+      <tbody>
+      {#each resource.procedure as procedure}
+        <tr>
           <td>
-            {#if copayAmount}
-              {!copayAmount || copayAmount.currency == 'USD' ? '$' + copayValueTruncated : copayValueTruncated + ' ' + copayAmount.currency}
-            {/if}
+            <Date fields={choiceDTFields("date", procedure)} />
           </td>
           <td>
-            {#if item.net}
-            {!item.net || item.net.currency == 'USD' ? '$' + item.net.value : item.net.value + ' ' + item.net.currency}
-            {/if}
+            <CodeableConcept codeableConcept={procedure.procedureCodeableConcept} badge={true} bold={false} />
+          </td>
+          <td>
+            <CodeableConcept codeableConcept={procedure.type[0]} badge={false} bold={false} />
           </td>
         </tr>
-        <tr></tr>
       {/each}
-    </tbody>
-  </table>
-  
+      </tbody>
+    </table>
+  {/if}
+{/if}
+{#if resource.item}
+  <Button
+    class="my-1"
+    size="sm"
+    color={!showServices ? "secondary" : "primary"}
+    outline
+    on:click={() => showServices = !showServices}>
+    {showServices ? 'Hide' : 'Show'}  {resource.item.length} service{resource.item.length > 1 ? 's' : ''} <Icon style="font-size: x-small;"name={!showServices ? "caret-down-fill" : "caret-up-fill"} />
+  </Button><br>
+  {#if showServices}
+    <table class="table table-bordered table-sm">
+      <thead>
+        <tr>
+          <th colspan="5">Services</th>
+        </tr>
+        <tr>
+          <th>Name</th>
+          <th>Date</th>
+          <th>Location</th>
+          <th>Copay</th>
+          <th>Insurance</th>
+        </tr>
+      </thead>
+      <tbody>
+        {#each resource.item as item}
+          {@const copayAmount = item.adjudication?.find((x) => x.category.coding[0].code == 'coinsurance')?.amount}
+          {@const copayValuePieces = copayAmount?.value.toString()?.split('.')}
+          {@const copayValueTruncated = `${copayValuePieces?.[0]}.${copayValuePieces?.[1]?.slice(0, 2)}`}
+          <tr>
+            <td><CodeableConcept codeableConcept={item.productOrService} badge={false} bold={false} /></td>
+            <td><Date fields={choiceDTFields("serviced", item)} /></td>
+            <td><CodeableConcept codeableConcept={item.locationCodeableConcept} badge={false} bold={false} /></td>
+            <td>
+              {#if copayAmount}
+                {!copayAmount || copayAmount.currency == 'USD' ? '$' + copayValueTruncated : copayValueTruncated + ' ' + copayAmount.currency}
+              {/if}
+            </td>
+            <td>
+              {#if item.net}
+              {!item.net || item.net.currency == 'USD' ? '$' + item.net.value : item.net.value + ' ' + item.net.currency}
+              {/if}
+            </td>
+          </tr>
+          <tr></tr>
+        {/each}
+      </tbody>
+    </table>
+  {/if}
 {/if}
 {#if hasChoiceDTField("period", resource)}
   <Date fields={choiceDTFields("period", resource)} /><br>
