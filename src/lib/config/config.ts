@@ -344,6 +344,7 @@ export const SOF_RESOURCES = [
   'DiagnosticReport', // TODO change to subject
   // 'ImagingStudy', // Not in EPIC USCDI R4
   // 'Media', // Not in EPIC USCDI R4
+  'Location',
   'Practitioner', // can't search by patient; "Either name, family, or identifier is a required parameter."
   'PractitionerRole',  // can't search by patient; "An identifier, practitioner, organization, location, or specialty parameter is required."
   'Procedure', // TODO change to subject
