@@ -157,10 +157,6 @@
         return shcDispatch('shc-retrieved', shcResult);
       }
 
-      if (!isIPSBundle(content)) {
-        throw Error("Error: URL must return a FHIR IPS Bundle.");
-      }
-
       let result = {
         resources: getResourcesFromIPS(content),
         category: CATEGORY,
