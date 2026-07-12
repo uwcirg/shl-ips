@@ -333,10 +333,13 @@
           let structuredFields: any = {};
 
           structuredFields.isPolst = true;
-          // In the POLST find the content[] with format.code = "urn:hl7-org:pe:adipmo-structuredBody:1.1" (ADIPMO Structured Body Bundle),
+          // In the POLST find the content[] with format.code = "urn:hl7-org:pe:adipmo-structuredBody[|Bundle]:1.1" (ADIPMO Structured Body Bundle),
           const contentAdipmoBundleRef = dr.content.find((content) => {
-            //return (content.format?.code === 'urn:hl7-org:pe:adipmo-structuredBody:1.1' && content.attachment?.url?.includes('Bundle'));
-            return (content.format?.code === 'urn:hl7-org:pe:adipmo-structuredBodyBundle:1.1' && content.attachment?.url?.includes('Bundle'));
+            return (
+              (content.format?.code === 'urn:hl7-org:pe:adipmo-structuredBodyBundle:1.1' ||
+                content.format?.code === 'urn:hl7-org:pe:adipmo-structuredBody:1.1') &&
+              content.attachment?.url?.includes('Bundle')
+            );
           });
           // look in that content's attachment.url, that will point at a Bundle (e.g. https://qa-rr-fhir2.maxmddirect.com/Bundle/10f4ff31-2c24-414d-8d70-de3a86bed808?_format=json)
           const adipmoBundleUrl = contentAdipmoBundleRef?.attachment.url;
