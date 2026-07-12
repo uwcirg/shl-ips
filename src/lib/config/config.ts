@@ -360,6 +360,7 @@ export const PATIENT_IPS = {
   'Peter Kieth Jordan': 'https://terminz.azurewebsites.net/fhir/Patient/$summary?profile=http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips&identifier=https://standards.digital.health.nz/ns/nhi-id|NNJ9186&_format=json'
 }
 export const EXAMPLE_IPS = {
+  'Betsy QuestionnaireResponses 2026-07 Connectathon': 'https://gw.interop.community/paciosandbox/open/QuestionnaireResponse?patient=patient-betsysmith-johnson01&questionnaire=https://gw.interop.community/paciosandbox/open/Questionnaire/GAD7Questionnaire',
   'Epic $summary Connectathon 2025-05': 'https://connectathon.epic.com/Interconnect-Fhir-Oauth/api/FHIR/R4/Patient/e5ZHnklVuYuT85PnDVOepOg3/$summary',
   'Epic HIMSS': 'https://ihe-nimbus.epic.com/Interconnect-FHIR-Open/api/FHIR/R4/Patient/e1o-b5iIsAPxRiD2Ct8KekQ3/$summary',
   'Maria SEATTLE Gravitate': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/14599/$summary',
