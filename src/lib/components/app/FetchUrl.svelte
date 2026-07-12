@@ -18,6 +18,7 @@
   import type { SHCRetrieveEvent, IAuthService, IPSRetrieveEvent, ResourceRetrieveEvent } from '$lib/utils/types';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { getResourcesFromIPS, isIPSBundle } from '$lib/utils/util';
+  import { normalizeGad7QuestionnaireResponses } from '$lib/utils/sdcClient';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
 
   export let disabled = false;
@@ -158,7 +159,8 @@
       }
 
       let result = {
-        resources: getResourcesFromIPS(content),
+        // Normalize GAD7 QuestionnaireResponses so they're ready for $extract on upload.
+        resources: normalizeGad7QuestionnaireResponses(getResourcesFromIPS(content)),
         category: CATEGORY,
         method: METHOD,
         source: hostname,
