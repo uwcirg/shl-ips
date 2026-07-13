@@ -15,6 +15,8 @@
   import {getFriendlySourceNameBySource} from '$lib/utils/resourceCollectionUtils';
   import { createCategorizedStore, type CategoryMap } from '$lib/stores/categorizedResources';
   import ResourceDisplay from '$lib/components/app/ResourceDisplay.svelte';
+  import ObservationSparkline from '$lib/components/app/ObservationSparkline.svelte';
+  import { buildObservationSeriesMap, sparklineSeriesFor } from '$lib/utils/observationSparkline';
   import { derived, type Readable } from 'svelte/store';
   import { goto } from '$app/navigation';
 
@@ -104,6 +106,7 @@
     {#if $categoryDataToDisplay[category] && Object.keys($categoryDataToDisplay[category]).length > 0}
       {@const values = Object.values($categoryDataToDisplay[category]).sort((a, b) => sortResources(a, b))}
       {@const valuesToDisplay = summary ? values.slice(0, 3) : values}
+      {@const observationSeriesMap = buildObservationSeriesMap(values)}
       <CategoryView
         class="mb-4"
         title={category}
@@ -126,6 +129,12 @@
               <Col class="ps-0 overflow-auto justify-content-center align-items-center">
                 <ResourceDisplay resource={value} entries={Object.values($categoryDataToDisplay)} />
               </Col>
+              {@const sparklineSeries = sparklineSeriesFor(value, observationSeriesMap)}
+              {#if sparklineSeries}
+                <Col class="d-flex justify-content-center align-items-center" style="flex: 0 0 auto; max-width: fit-content">
+                  <ObservationSparkline series={sparklineSeries} currentId={value.rh.tempId} />
+                </Col>
+              {/if}
               <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
                 {#if $mode === 'advanced'}
                   <Button
