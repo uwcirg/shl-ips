@@ -37,7 +37,7 @@ export const RESOURCE_CONFIG: Record<string, any> = {
       sortFields: ['dateTime']
     },
     'Coverage': {
-      category: 'Coverages',
+      category: 'Insurance Policies',
       component: Coverage,
       sortFields: ['period']
     },
@@ -99,7 +99,7 @@ export const RESOURCE_CONFIG: Record<string, any> = {
       sortFields: ['effective', 'dateAsserted']
     },
     'Observation': {
-      category: 'Observations/Results',
+      category: 'Observations and Results',
       component: Observation,
       sortFields: ['effective', 'issued']
     },
@@ -108,7 +108,7 @@ export const RESOURCE_CONFIG: Record<string, any> = {
       component: Organization,
     },
     'Patient': {
-      category: 'Patient',
+      category: 'Patient Data',
       component: Patient,
     },
     'Practitioner': {
@@ -124,5 +124,9 @@ export const RESOURCE_CONFIG: Record<string, any> = {
       category: 'Questionnaires',
       component: QuestionnaireResponse,
       sortFields: ['authored']
+    },
+    'RelatedPerson': {
+      category: 'Family Members',
+      component: Patient,
     }
   };
