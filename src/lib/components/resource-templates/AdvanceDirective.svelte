@@ -19,16 +19,29 @@
   // Determine if any extension has the revoked status reactively
   let isRevoked = false;
 
-  // Reactive declaration to update isRevoked when resource.extension changes
+  // Collect any structured body field extension values for display
+  let structuredFields: Record<string, unknown> = {};
+
+  // Reactive declaration to update isRevoked and structuredFields when resource.extension changes
   $: {
     if (resource.extension) {
       isRevoked = resource.extension.some(
         ext => ext.url === 'http://hl7.org/fhir/us/pacio-adi/StructureDefinition/adi-document-revoke-status-extension'
         && ext.valueCoding?.code === 'cancelled'
       );
+
+      structuredFields = resource.extension.reduce((acc, ext) => {
+        if (ext.url.startsWith('http://fhir.cirg.uw.edu/StructuredBodyFields/')) {
+          let valueField = Object.keys(ext).find(key => key.startsWith('value'));
+          if (valueField) {
+            acc[ext.url.split('/').pop() as string] = ext[valueField];
+          }
+        }
+        return acc;
+      }, structuredFields);
+
     }
   }
-
 </script>
 
 <div class:is-revoked={isRevoked}>
@@ -110,14 +123,14 @@ Text:
   <br>
 {/if}
 
-{#if resource.isPolst && (resource.isCpr || resource.isComfortTreatments || resource.isAdditionalTx || resource.isMedicallyAssisted)}
+{#if structuredFields.isPolst && (structuredFields.isCpr || structuredFields.isComfortTreatments || structuredFields.isAdditionalTx || structuredFields.isMedicallyAssisted)}
   <br>
   <b>POLST Details:</b>
     <ul>
-      {#if resource.isCpr}
+      {#if structuredFields.isCpr}
         <ol>
           <b>
-            {#if resource.doNotPerformCpr}
+            {#if structuredFields.doNotPerformCpr}
               This includes an order to NOT perform CPR.
             {:else}
               This includes an order to perform CPR.
@@ -126,32 +139,32 @@ Text:
         </ol>
       {/if}
 
-      {#if resource.isComfortTreatments}
+      {#if structuredFields.isComfortTreatments}
         <ol>
-          {#if resource.doNotPerformComfortTreatments}
-            <b>This includes an order to NOT perform treatments:</b> {@html resource.detailComfortTreatments}
+          {#if structuredFields.doNotPerformComfortTreatments}
+            <b>This includes an order to NOT perform treatments:</b> {@html structuredFields.detailComfortTreatments ?? "Unknown"}
           {:else}
-            <b>This includes an order to perform {resource.typeComfortTreatments ? `${resource.typeComfortTreatments.toLowerCase()}` : 'treatments'}:</b> {@html resource.detailComfortTreatments}
+            <b>This includes an order to perform {structuredFields.typeComfortTreatments ? `${structuredFields.typeComfortTreatments.toLowerCase()}` : 'treatments'}:</b> {@html structuredFields.detailComfortTreatments}
           {/if}
         </ol>
       {/if}
 
-      {#if resource.isAdditionalTx}
+      {#if structuredFields.isAdditionalTx}
         <ol>
-          {#if resource.doNotPerformAdditionalTx}
-            <b>This includes an order to NOT perform additional treatments:</b> {@html resource.detailAdditionalTx}
+          {#if structuredFields.doNotPerformAdditionalTx}
+            <b>This includes an order to NOT perform additional treatments:</b> {@html structuredFields.detailAdditionalTx ?? "Unknown"}
           {:else}
-            <b>This includes an order to perform additional treatments:</b> {@html resource.detailAdditionalTx}
+            <b>This includes an order to perform additional treatments:</b> {@html structuredFields.detailAdditionalTx ?? "Unknown"}
           {/if}
         </ol>
       {/if}
 
-      {#if resource.isMedicallyAssisted}
+      {#if structuredFields.isMedicallyAssisted}
         <ol>
-          {#if resource.doNotPerformMedicallyAssisted}
-            <b>This includes an order to NOT perform medically assisted nutrition:</b> {@html resource.detailMedicallyAssisted}
+          {#if structuredFields.doNotPerformMedicallyAssisted}
+            <b>This includes an order to NOT perform medically assisted nutrition:</b> {@html structuredFields.detailMedicallyAssisted ?? "Unknown"}
           {:else}
-            <b>This includes an order to perform medically assisted nutrition:</b> {@html resource.detailMedicallyAssisted}
+            <b>This includes an order to perform medically assisted nutrition:</b> {@html structuredFields.detailMedicallyAssisted ?? "Unknown"}
           {/if}
         </ol>
       {/if}
