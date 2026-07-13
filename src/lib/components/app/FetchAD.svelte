@@ -397,10 +397,15 @@
           Object.entries(structuredFields).forEach(([key, value]) => {
             const extensionUrl = `http://fhir.cirg.uw.edu/StructuredBodyFields/${key}`;
             if (value) {
-              extension.push({
-                url: extensionUrl,
-                valueBoolean: value
-              })
+              let newExtension: any = { url: extensionUrl };
+              if (typeof value === 'boolean') {
+                newExtension.valueBoolean = value;
+              } else if (typeof value === 'number') {
+                newExtension.valueInteger = value;
+              } else if (typeof value === 'string') {
+                newExtension.valueString = value;
+              }
+              extension.push(newExtension);
             }
           });
           dr.extension = extension;
