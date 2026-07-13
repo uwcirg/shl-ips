@@ -123,11 +123,6 @@ Text:
   <br>
 {/if}
 
-{#if structuredFields.isPolst}
-  <b>Is POLST</b>
-  <br>
-{/if}
-
 {#if structuredFields.isPolst && (structuredFields.isCpr || structuredFields.isComfortTreatments || structuredFields.isAdditionalTx || structuredFields.isMedicallyAssisted)}
   <br>
   <b>POLST Details:</b>
@@ -147,7 +142,7 @@ Text:
       {#if structuredFields.isComfortTreatments}
         <ol>
           {#if structuredFields.doNotPerformComfortTreatments}
-            <b>This includes an order to NOT perform treatments:</b> {@html structuredFields.detailComfortTreatments}
+            <b>This includes an order to NOT perform treatments:</b> {@html structuredFields.detailComfortTreatments ?? "Unknown"}
           {:else}
             <b>This includes an order to perform {structuredFields.typeComfortTreatments ? `${structuredFields.typeComfortTreatments.toLowerCase()}` : 'treatments'}:</b> {@html structuredFields.detailComfortTreatments}
           {/if}
@@ -157,9 +152,9 @@ Text:
       {#if structuredFields.isAdditionalTx}
         <ol>
           {#if structuredFields.doNotPerformAdditionalTx}
-            <b>This includes an order to NOT perform additional treatments:</b> {@html structuredFields.detailAdditionalTx}
+            <b>This includes an order to NOT perform additional treatments:</b> {@html structuredFields.detailAdditionalTx ?? "Unknown"}
           {:else}
-            <b>This includes an order to perform additional treatments:</b> {@html structuredFields.detailAdditionalTx}
+            <b>This includes an order to perform additional treatments:</b> {@html structuredFields.detailAdditionalTx ?? "Unknown"}
           {/if}
         </ol>
       {/if}
@@ -167,9 +162,9 @@ Text:
       {#if structuredFields.isMedicallyAssisted}
         <ol>
           {#if structuredFields.doNotPerformMedicallyAssisted}
-            <b>This includes an order to NOT perform medically assisted nutrition:</b> {@html structuredFields.detailMedicallyAssisted}
+            <b>This includes an order to NOT perform medically assisted nutrition:</b> {@html structuredFields.detailMedicallyAssisted ?? "Unknown"}
           {:else}
-            <b>This includes an order to perform medically assisted nutrition:</b> {@html structuredFields.detailMedicallyAssisted}
+            <b>This includes an order to perform medically assisted nutrition:</b> {@html structuredFields.detailMedicallyAssisted ?? "Unknown"}
           {/if}
         </ol>
       {/if}
