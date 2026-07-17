@@ -69,13 +69,13 @@
       selected: false,
       url: "https://qa-rr-fhir.maxmddirect.com",
       patient: writable({
-        last: "Mosley",
-        //last: "Smith-Johnson",
-        first: "Jenny",
-        //first: "Betsy",
+        //last: "Mosley",
+        last: "Smith-Johnson",
+        //first: "Jenny",
+        first: "Betsy",
         gender: "female",
-        dob: "1955-10-03",
-        //dob: "1950-11-15",
+        //dob: "1955-10-03",
+        dob: "1950-11-15",
       })
     },
     // "AD Vault 2025-07": { // 2025-07 Connectathon
@@ -330,10 +330,16 @@
       for (let dr of resources) {
         // If this DR is a POLST, add the following chain of queries:
         if (isPolst(dr)){
-          dr.isPolst = true;
-          // In the POLST find the content[] with format.code = "urn:hl7-org:pe:adipmo-structuredBody:1.1" (ADIPMO Structured Body Bundle),
+          let structuredFields: any = {};
+
+          structuredFields.isPolst = true;
+          // In the POLST find the content[] with format.code = "urn:hl7-org:pe:adipmo-structuredBody[|Bundle]:1.1" (ADIPMO Structured Body Bundle),
           const contentAdipmoBundleRef = dr.content.find((content) => {
-            return (content.format?.code === 'urn:hl7-org:pe:adipmo-structuredBody:1.1' && content.attachment?.url?.includes('Bundle'));
+            return (
+              (content.format?.code === 'urn:hl7-org:pe:adipmo-structuredBodyBundle:1.1' ||
+                content.format?.code === 'urn:hl7-org:pe:adipmo-structuredBody:1.1') &&
+              content.attachment?.url?.includes('Bundle')
+            );
           });
           // look in that content's attachment.url, that will point at a Bundle (e.g. https://qa-rr-fhir2.maxmddirect.com/Bundle/10f4ff31-2c24-414d-8d70-de3a86bed808?_format=json)
           const adipmoBundleUrl = contentAdipmoBundleRef?.attachment.url;
@@ -350,8 +356,8 @@
             // then set the appropriate flags in the DR
             (
               {
-                exists: dr.isCpr,
-                doNotPerform: dr.doNotPerformCpr
+                exists: structuredFields.isCpr,
+                doNotPerform: structuredFields.doNotPerformCpr
               } = digestServiceRequestByCode(serviceRequests, '100822-6')
             );
 
@@ -359,10 +365,10 @@
             // then set the appropriate flags in the DR
             (
               {
-                exists: dr.isComfortTreatments,
-                doNotPerform: dr.doNotPerformComfortTreatments,
-                type: dr.typeComfortTreatments,
-                detail: dr.detailComfortTreatments
+                exists: structuredFields.isComfortTreatments,
+                doNotPerform: structuredFields.doNotPerformComfortTreatments,
+                type: structuredFields.typeComfortTreatments,
+                detail: structuredFields.detailComfortTreatments
               } = digestServiceRequestByCode(serviceRequests, '100823-4')
             );
 
@@ -370,9 +376,9 @@
             // then set the appropriate flags in the DR
             (
               {
-                exists: dr.isAdditionalTx,
-                doNotPerform: dr.doNotPerformAdditionalTx,
-                detail: dr.detailAdditionalTx
+                exists: structuredFields.isAdditionalTx,
+                doNotPerform: structuredFields.doNotPerformAdditionalTx,
+                detail: structuredFields.detailAdditionalTx
               } = digestServiceRequestByCode(serviceRequests, '100824-2')
             );
 
@@ -380,12 +386,29 @@
             // then set the appropriate flags in the DR
             (
               {
-                exists: dr.isMedicallyAssisted,
-                doNotPerform: dr.doNotPerformMedicallyAssisted,
-                detail: dr.detailMedicallyAssisted
+                exists: structuredFields.isMedicallyAssisted,
+                doNotPerform: structuredFields.doNotPerformMedicallyAssisted,
+                detail: structuredFields.detailMedicallyAssisted
               } = digestServiceRequestByCode(serviceRequests, '100825-9')
             );
           }
+          
+          let extension = dr.extension || [];
+          Object.entries(structuredFields).forEach(([key, value]) => {
+            const extensionUrl = `http://fhir.cirg.uw.edu/StructuredBodyFields/${key}`;
+            if (value) {
+              let newExtension: any = { url: extensionUrl };
+              if (typeof value === 'boolean') {
+                newExtension.valueBoolean = value;
+              } else if (typeof value === 'number') {
+                newExtension.valueInteger = value;
+              } else if (typeof value === 'string') {
+                newExtension.valueString = value;
+              }
+              extension.push(newExtension);
+            }
+          });
+          dr.extension = extension;
         }
       }
 
