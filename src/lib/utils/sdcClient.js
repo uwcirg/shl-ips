@@ -3,6 +3,7 @@ import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
 // GAD7 QuestionnaireResponses coming from these sources point at Questionnaire
 // canonicals our $extract can't process. Repoint them to the integer-total
 // variant (which our server knows how to $extract).
+// NOTE: This addressed a special case in the 2026-07 Connectathon.
 const GAD7_SOURCE_QUESTIONNAIRE_URLS = [
     "https://gw.interop.community/paciosandbox/open/Questionnaire/GAD7Questionnaire",
     "http://example.org/fhir/Questionnaire/GAD7Questionnaire",
@@ -10,6 +11,7 @@ const GAD7_SOURCE_QUESTIONNAIRE_URLS = [
 const GAD7_TARGET_QUESTIONNAIRE_URL = "https://cirg.uw.edu/Questionnaire/GAD7Questionnaire.integer-total";
 
 // Recursively convert the total-score item's decimal answers to integer answers.
+// NOTE: This addressed a special case in the 2026-07 Connectathon.
 function convertTotalScoreAnswersToInteger(items) {
     if (!Array.isArray(items)) return;
     items.forEach(item => {
@@ -29,6 +31,7 @@ function convertTotalScoreAnswersToInteger(items) {
 
 // Normalize GAD7 QuestionnaireResponses so they can be run through $extract.
 // Mutates and returns the given resources array.
+// NOTE: This addressed a special case in the 2026-07 Connectathon.
 export function normalizeGad7QuestionnaireResponses(resources) {
     if (!Array.isArray(resources)) return resources;
     resources.forEach(resource => {
@@ -45,6 +48,9 @@ export function normalizeGad7QuestionnaireResponses(resources) {
 
 // Run the SDC $extract operation on a QuestionnaireResponse that hasn't been
 // persisted yet, and return the resources (e.g. Observations) it extracts.
+// **Unlike most of the other code in this file, this function is generalized**
+// and should be functional if the Questionnaire has SDC $extract metadata defined 
+// (see example at https://github.com/uwcirg/fhir-questionnaires/blob/main/GAD-7.cthon.2026-07.pacio.integer-total.json).
 export async function extractResourcesFromQuestionnaireResponse(questionnaireResponse, token=undefined) {
     let headers = {
         'Content-Type': 'application/json+fhir',
