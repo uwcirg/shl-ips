@@ -6,5 +6,6 @@
   Welcome to {INSTANCE_CONFIG.title},a patient-centered platform for securely creating and sharing your personalized health summaries. To access the system you must create an account, then read and agree to the terms of use.
 </p>
 <p class="info-paragraph">
-  {INSTANCE_CONFIG.title} lets people gather their health information and personally control sharing of their health information with health care providers, family members or others, using a simple, secure web link or QR code.
+  {INSTANCE_CONFIG.title} lets you gather and organize your health information, and share any or all of that information with health care providers, family members, or others, using a simple, secure web link or QR code. You remain in full control of anything you choose to share.
+  
 </p>
