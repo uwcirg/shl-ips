@@ -172,7 +172,7 @@
 {/if}
 {#if !$authenticated}
   <Row class="d-flex justify-content-center my-3">
-    <span class="text-white centered-text">New here? <a href="/register" class="text-white">Create an account</a></span>
+    <span class="text-white centered-text">New here? <a on:click={() => authService.login()} class="text-white" style="cursor: pointer">Create an account</a></span>
   </Row>
 {/if}
 
