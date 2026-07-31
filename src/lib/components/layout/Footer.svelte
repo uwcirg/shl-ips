@@ -7,7 +7,7 @@
   let mode: Writable<string> = getContext('mode');
 </script>
 
-<Row>
+<Row class="bg-light">
   <Col style="padding: 20px; border-top: 1px solid rgb(204, 204, 204);" >
     <footer>
       <p>
