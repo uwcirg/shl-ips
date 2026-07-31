@@ -175,7 +175,7 @@
 <canvas id="header-image" class="img-fluid" style="display: none;"/>
 
 <div bind:this={navbarEl}>
-  <Navbar class="px-3" color="light" light expand="md" style="border-bottom: 1px solid rgb(204, 204, 204);">
+  <Navbar class="px-3" color="white" light expand="md" style="border-bottom: 0px solid rgb(204, 204, 204);">
     <div class="d-flex top-row-nav align-items-center justify-content-between">
       {#await createHeaderImage()}
       <!-- <NavbarBrand class="flex-shrink-1"> <img id="nav-image" src={`${INSTANCE_CONFIG.imgPath}/company-logo.png`} alt="Site Logo" style="width: fit-content; height: 60px;" /> </NavbarBrand> -->
@@ -280,7 +280,7 @@
     <TabNav class="rounded-4" activeItem={activeItem} />
   </div>
 {/if}
-{#if DEMO_WARNING}
+{#if false && DEMO_WARNING}
   <Alert color="warning" dismissible class="mt-2 mb-0">
     <span class="text-danger">{ SYSTEM_NAME ?? 'Demonstration/test system'} - do not use with real health information</span>
   </Alert>
