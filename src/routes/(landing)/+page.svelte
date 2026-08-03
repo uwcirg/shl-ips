@@ -109,7 +109,7 @@
 {#if $authenticated}
 <Row class="d-flex justify-content-center m-3 mt-5 ">
   <h2 class="text-primary">Welcome, {get(fhirDataService.demographics)?.firstName ?? $user.profile.given_name ?? $user.profile.preferred_username}.</h2>
-  <p class="text-primary">You're ready to gather, organize, and securely share your health information. Click below to start your Health Summary.</p>
+  <p class="text-primary">You're ready to securely gather, organize, and share your health information. Click below to start building your Health Summary.</p>
 </Row>
 <Row class="d-flex justify-content-center m-3">
   <Col class="col-sm-12 col-md-8 col-lg-6">
