@@ -99,11 +99,11 @@
 </script>
 
 <Row class="my-0 d-flex justify-content-center">
-<Col class="col-sm-12 col-md-8">
-  <div class="subtitle-text centered-text d-flex flex-column flex-sm-row justify-content-center align-items-center">
-    A service from the Washington State Department of Health
-  </div>
-</Col>
+  <Col class="col-sm-12 col-md-8">
+    <div class="subtitle-text centered-text d-flex flex-column flex-sm-row justify-content-center align-items-center">
+      An initiative by the University of Washington & Washington State Department of Health
+    </div>
+  </Col>
 </Row>
 
 {#if $authenticated}
@@ -172,12 +172,22 @@
 {/if}
 {#if !$authenticated}
   <Row class="d-flex justify-content-center my-3">
-    <span class="text-white centered-text">New here? <a on:click={() => authService.login()} class="text-white" style="cursor: pointer">Create an account</a></span>
+    <span class="text-white centered-text">
+      New here?
+      <a on:click={() => authService.login()} class="text-white" style="cursor: pointer">
+        Create an account
+      </a>
+    </span>
   </Row>
 {/if}
 
 <Row class="d-flex justify-content-center align-items-center my-3">
-  <div class="centered-text"><Icon name="lock" class="text-light"/> <span class="text-light centered-text">Your data is private — you choose when to share it with those you trust. <a href="/info" class="text-light">More Information</a></span></div>
+  <div class="centered-text"><Icon name="lock" class="text-light"/>
+    <span class="text-light centered-text">
+      Your data is yours — you choose who you trust, and when you share.
+      <a href="/info" class="text-light">More Information</a>
+    </span>
+  </div>
 </Row>
 
 <style>
