@@ -21,6 +21,12 @@ export function copyOf(a: any) {
   return JSON.parse(JSON.stringify(a));
 }
 
+export function getUniqueResourceObject(template: Resource) {
+  const resource = JSON.parse(JSON.stringify(template));
+  resource.id = crypto.randomUUID();
+  return resource;
+}
+
 const DATE_PRECISION = {
   "time": 4,
   "day": 3,
