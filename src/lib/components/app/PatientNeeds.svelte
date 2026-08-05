@@ -14,7 +14,7 @@
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
   import { ResourceHelper } from '$lib/utils/ResourceHelper';
-  import { copyOf } from '$lib/utils/util';
+  import { copyOf, getUniqueResourceObject } from '$lib/utils/util';
   
   export let disabled = false;
   export let formData: IResourceCollection | undefined;
@@ -291,7 +291,7 @@
   }
 
   function prepareConditionResource(conditionOption: ConditionOption) {
-    let condition = JSON.parse(JSON.stringify(conditionTemplate));
+    let condition = getUniqueResourceObject(conditionTemplate);
     condition.code.coding.push(conditionOption.code);
     condition.recordedDate = new Date().toISOString().slice(0, 10);
     return condition;
@@ -300,7 +300,7 @@
   function prepareIps() {
     const resources = Object.values(conditions).filter(c => c.checked).map(prepareConditionResource);
     if (additionalInfo.trim() !== '') {
-      let infoCondition = JSON.parse(JSON.stringify(conditionTemplate));
+      let infoCondition = getUniqueResourceObject(conditionTemplate);
       infoCondition.code.text = additionalInfo;
       infoCondition.recordedDate = new Date().toISOString().slice(0, 10);
       resources.push(infoCondition);

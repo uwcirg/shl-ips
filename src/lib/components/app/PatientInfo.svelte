@@ -9,7 +9,7 @@
     Spinner
   } from '@sveltestrap/sveltestrap';
   import { createEventDispatcher } from 'svelte';
-  import { constructPatientResource } from '$lib/utils/util';
+  import { constructPatientResource, copyOf } from '$lib/utils/util';
   import GenderInput from '$lib/components/form/GenderInput.svelte';
   import CountryInput from '$lib/components/form/CountryInput.svelte';
   import ReligionCodeInput from '$lib/components/form/ReligionCodeInput.svelte';
@@ -34,7 +34,7 @@
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let myPatient;
-  $: myPatient = JSON.parse(JSON.stringify(patient));
+  $: myPatient = copyOf(patient);
   $: {
     if (myPatient) {
       first = myPatient.name?.[0].given?.[0] ?? '';

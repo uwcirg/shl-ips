@@ -7,7 +7,7 @@
   import { METHODS, CATEGORIES } from '$lib/config/tags';
   import { ResourceHelper } from '$lib/utils/ResourceHelper';
   import type { Observation } from 'fhir/r4';
-  import { copyOf } from '$lib/utils/util';
+  import { copyOf, getUniqueResourceObject } from '$lib/utils/util';
 
   export let formData: IResourceCollection | undefined;
   export let processing: boolean = false;
@@ -503,7 +503,7 @@
     if (!values.isWorking) { return currentJobResources; } // Don't add current job data if not working
     const uniqueJobs = deduplicateObjectList(values.currentWork);
     for (const [i, jobValue] of uniqueJobs.entries()) {
-      const currentJobResource = JSON.parse(JSON.stringify(currentJobTemplate));
+      const currentJobResource = getUniqueResourceObject(currentJobTemplate);
       currentJobResource.id = `odh-current-job-${i}`;
       if (jobValue.start) {
         let period: any = { start: jobValue.start };
@@ -532,7 +532,7 @@
     const pastJobResources: Observation[] = [];
     const uniqueJobs = deduplicateObjectList(values.pastWork);
     for (const [i, jobValue] of uniqueJobs.entries()) {
-      const pastJobResource = JSON.parse(JSON.stringify(pastJobTemplate));
+      const pastJobResource = getUniqueResourceObject(pastJobTemplate);
       pastJobResource.id = `odh-past-job-${i}`;
       if (jobValue.start || jobValue.end) {
         let period: any = {};
@@ -568,7 +568,7 @@
     const uniqueRetirementDates = deduplicateObjectList(values.retirementDates);
     const validRetirementDates = uniqueRetirementDates.filter((retirementDate: any) => retirementDate.start);
     for (const [i, retirementDate] of validRetirementDates.entries()) {
-      const retirementDateResource = JSON.parse(JSON.stringify(retirementDateTemplate));
+      const retirementDateResource = getUniqueResourceObject(retirementDateTemplate);
       retirementDateResource.id = `odh-retirement-date-${i}`;
       if (retirementDate.start) {
         retirementDateResource.valueDateTime = retirementDate.start;
@@ -583,7 +583,7 @@
     const uniqueCombatPeriods = deduplicateObjectList(values.combatPeriods);
     const validCombatPeriods = uniqueCombatPeriods.filter((combatPeriod: any) => combatPeriod.start || combatPeriod.end);
     for (const [i, combatPeriod] of validCombatPeriods.entries()) {
-      const combatPeriodResource = JSON.parse(JSON.stringify(combatPeriodTemplate));
+      const combatPeriodResource = getUniqueResourceObject(combatPeriodTemplate);
       combatPeriodResource.id = `odh-combat-period-${i}`;
       if (combatPeriod.start || combatPeriod.end) {
         let period: any = {};
@@ -601,7 +601,7 @@
   }
 
   function generateEmploymentStatusResources(): Observation[] {
-    const employmentStatusResource = JSON.parse(JSON.stringify(employmentStatusTemplate));
+    const employmentStatusResource = getUniqueResourceObject(employmentStatusTemplate);
     employmentStatusResource.id = `odh-employment-status`;
     employmentStatusResource.valueCodeableConcept.coding[0].code = statuses[values.status];
     employmentStatusResource.valueCodeableConcept.coding[0].display = values.status;
