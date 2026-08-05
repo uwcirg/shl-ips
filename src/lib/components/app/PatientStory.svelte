@@ -15,7 +15,7 @@
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
   import { ResourceHelper } from '$lib/utils/ResourceHelper';
-  import { copyOf } from '$lib/utils/util';
+  import { copyOf, getUniqueResourceObject } from '$lib/utils/util';
 
   export let disabled = false;
   export let formData: IResourceCollection | undefined;
@@ -168,7 +168,7 @@
     if (!goal.value) {
       return;
     }
-    let goalResource = JSON.parse(JSON.stringify(goalResourceTemplate));
+    let goalResource = getUniqueResourceObject(goalResourceTemplate);
     goalResource.statusDate = new Date().toISOString().slice(0, 10);
     goalResource.description.text = goal.value;
     goalResource.achievementStatus.coding[0] = progressCodings[goal.checked ? "in-progress" : "not-achieved"];
@@ -179,7 +179,7 @@
     if (!values.story) {
       return;
     }
-    let observationResource = JSON.parse(JSON.stringify(observationResourceTemplate));
+    let observationResource = getUniqueResourceObject(observationResourceTemplate);
     observationResource.valueString = values.story;
     return observationResource;
   }
