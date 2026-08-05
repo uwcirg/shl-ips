@@ -4,6 +4,10 @@ import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
 export async function uploadResources(resources, token=undefined) {
     let entries = [];
     resources.forEach(resource => {
+        if (!resource.id) {
+            resource.id = crypto.randomUUID();
+            console.warn("Resource has no id, generated random uuid for upload", resource);
+        }
         let entry = {
             request: {
                 // method: resource.resourceType === "Patient" ? "PUT" : "POST",
