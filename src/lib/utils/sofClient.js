@@ -19,7 +19,7 @@ const config = {
 
 let client;
 
-async function authorize(inputFhirUrl, clientId, options={scope: "", pkceMode: ""}) {
+async function authorize(inputFhirUrl, clientId, options={}) {
     if (!inputFhirUrl) {
         throw Error('No FHIR server URL provided');
     }
