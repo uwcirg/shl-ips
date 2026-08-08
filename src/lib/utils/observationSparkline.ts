@@ -1,6 +1,5 @@
-import type { Observation } from 'fhir/r4';
+import type { Observation, Resource } from 'fhir/r4';
 import { getFHIRDateAndPrecision } from '$lib/utils/util';
-import type { CategorizedResource } from '$lib/stores/categorizedResources';
 
 const ORDINAL_VALUE_URL = 'http://hl7.org/fhir/StructureDefinition/ordinalValue';
 
@@ -59,7 +58,7 @@ export interface SparklinePoint {
 // Build a map from code-key to a date-sorted series of numeric points, across
 // all the given (Observation) resources.
 export function buildObservationSeriesMap(
-  resources: Observation[]
+  resources: Resource[]
 ): Map<string, SparklinePoint[]> {
   const groups = new Map<string, SparklinePoint[]>();
   for (const resource of resources) {
