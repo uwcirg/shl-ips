@@ -6,7 +6,7 @@
   import { hasChoiceDTField, choiceDTFields } from '$lib/utils/util';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
   import Date from '$lib/components/resource-templates/Date.svelte';
-  import { buildObservationSeriesMap, SparklinePoint, sparklineSeriesFor } from '$lib/utils/observationSparkline';
+  import { buildObservationSeriesMap, type SparklinePoint, sparklineSeriesFor } from '$lib/utils/observationSparkline';
   import ObservationSparkline from '$lib/components/app/ObservationSparkline.svelte';
   
   export let content: ResourceTemplateParams<Observation>; // Define a prop to pass the data to the component
@@ -66,7 +66,8 @@
 
   $: {
     if (content.entries) {
-      const observationSeriesMap = buildObservationSeriesMap(content.entries);
+      const resources = content.entries.map((r) => Object.values(r)).flat().map(r => r.rh.resource);
+      const observationSeriesMap = buildObservationSeriesMap(resources);
       sparklineSeries = sparklineSeriesFor(resource, observationSeriesMap);
     }
   }
