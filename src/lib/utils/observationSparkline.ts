@@ -59,11 +59,10 @@ export interface SparklinePoint {
 // Build a map from code-key to a date-sorted series of numeric points, across
 // all the given (Observation) resources.
 export function buildObservationSeriesMap(
-  resources: CategorizedResource[]
+  resources: Observation[]
 ): Map<string, SparklinePoint[]> {
   const groups = new Map<string, SparklinePoint[]>();
-  for (const cr of resources) {
-    const resource = cr.rh.resource as Observation;
+  for (const resource of resources) {
     if (resource.resourceType !== 'Observation') continue;
     const key = getObservationCodeKey(resource);
     if (!key) continue;
@@ -72,7 +71,7 @@ export function buildObservationSeriesMap(
     const date = getFHIRDateAndPrecision(resource, 'effective');
     const time = date ? date.date.getTime() : 0;
     if (!groups.has(key)) groups.set(key, []);
-    groups.get(key)!.push({ id: cr.rh.tempId, y, time });
+    groups.get(key)!.push({ id: resource.id, y, time });
   }
   for (const series of groups.values()) {
     series.sort((a, b) => a.time - b.time);
@@ -83,10 +82,9 @@ export function buildObservationSeriesMap(
 // The date-sorted series for a single value, or undefined when there aren't
 // enough shared-code points to draw a meaningful sparkline.
 export function sparklineSeriesFor(
-  value: CategorizedResource,
+  resource: Observation,
   seriesMap: Map<string, SparklinePoint[]>
 ): SparklinePoint[] | undefined {
-  const resource = value.rh.resource as Observation;
   if (resource.resourceType !== 'Observation') return undefined;
   const key = getObservationCodeKey(resource);
   if (!key) return undefined;
