@@ -6,16 +6,19 @@ export async function uploadResources(resources, token=undefined) {
     let entries = [];
     const ids = new Set(resources.map(r => r.id));
     resources.forEach(resource => {
+        
         if (!resource.id) {
             resource.id = crypto.randomUUID();
             console.warn("Resource has no id, generated random uuid for upload", resource);
         }
+
         const paths = findFhirReferencePaths(resource);
         for (const path of paths) {
             if (ids.has(getReferenceIdAtPath(resource, path))) {
                 convertToFullUrlReference(resource, path);
             }
         }
+        
         let entry = {
             request: {
                 // method: resource.resourceType === "Patient" ? "PUT" : "POST",
