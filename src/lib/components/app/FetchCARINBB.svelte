@@ -67,7 +67,7 @@
             const resourceScope = patientResourceScope.join(" ");
             scope = `openid fhirUser launch/patient ${resourceScope}`;
           }
-          authorize(sofHost.url, sofHost.clientId, {scope, pkceMode: "disabled"});
+          authorize(sofHost.url, sofHost.clientId, { scope });
           authDispatch('sof-auth-init', { data: true });
         } catch (e) {
           authDispatch('sof-auth-fail', { data: false });
