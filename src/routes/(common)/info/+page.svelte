@@ -1,68 +1,10 @@
 <script lang="ts">
-  import { Accordion, AccordionItem, Button, Card, CardBody, Col, Row } from '@sveltestrap/sveltestrap';
-  import { getContext } from 'svelte';
-  import { get } from 'svelte/store';
-  import { goto } from '$app/navigation';
+  import { Accordion, AccordionItem, Row } from '@sveltestrap/sveltestrap';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
-  import type { IAuthService } from '$lib/utils/types';
-
-  let authService: IAuthService = getContext('authService');
-  let authenticated = authService.authenticated;
-
-  function checkAuth() {
-    if (!get(authService.authenticated)) {
-      authService.login();
-    }
-  }
-
-  function myData() {
-    checkAuth();
-    goto('/data');
-  }
-
-  function mySummaries() {
-    checkAuth();
-    goto('/summaries');
-  }
 </script>
 
-<svelte:component this={INSTANCE_CONFIG.pages?.home?.introComponent} />
-
-<Row class="mt-3 mb-5 d-flex justify-content-center">
-  <Row class="d-flex justify-content-center gy-3">
-    {#if $authenticated}
-      <Col class="d-flex align-items-center px-2">
-        <Card color="light" class="flex-fill">
-          <CardBody>
-            <Button color="primary" size="lg" on:click={() => myData()} class="w-100 text-nowrap justify-content-center"
-              >My Health Data</Button
-            >
-          </CardBody>
-        </Card>
-      </Col>
-      <Col class="d-flex align-items-center px-2">
-        <Card color="light" class="flex-fill">
-          <CardBody>
-            <Button color="primary" size="lg" on:click={() => mySummaries()} class="w-100 text-nowrap justify-content-center"
-              >My Summaries</Button
-            >
-          </CardBody>
-        </Card>
-      </Col>
-    {:else}
-      <Col class="col-sm-12 col-md-8">
-        <Card color="light">
-          <CardBody>
-            <Row class="d-flex justify-content-center align-items-center px-3">
-              <Button color="primary" size="lg" on:click={() => checkAuth()}
-                >Sign Up or Sign In</Button
-              >
-            </Row>
-          </CardBody>
-        </Card>
-      </Col>
-    {/if}
-  </Row>
+<Row class="mb-5 d-flex justify-content-center">
+  <svelte:component this={INSTANCE_CONFIG.pages?.home?.introComponent} />
 </Row>
 
 {#if INSTANCE_CONFIG.pages?.home?.logoComponent}

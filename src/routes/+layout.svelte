@@ -110,57 +110,14 @@
     <link rel="preload" as="image" href={`${INSTANCE_CONFIG.imgPath}/divider.png`} />
 </svelte:head>
 
-<!-- Error testing -->
-<!-- <Button on:click={() => { throw new Error('Test Error'); }}>Error</Button>
-<Button on:click={() => { let a; a.b.c.d.e.f.g.h.i.j.k.l.m.n.o.p.q.r.s.t.u.v.w.x.y.z; }}>Error</Button> -->
-
-
-<Container class="main" fluid>
-  <Header />
-  <div class="main-content">
-    <slot />
-  </div>
-  <div class="sticky-bottom-nav">
-    <ToastContainer />
-    <StickyNav
-      {...$navConfig}
-    />
-  </div>
-  <Footer />
-</Container>
+<slot />
 
 <style>
-  :global(div.container-fluid.main) {
-    /* Handle scroll gutter */
-    position: relative;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    scrollbar-gutter: stable;
-  }
-  .main-content {
-    max-width: 1200px;
-    width: 100%;
-    margin-right: auto;
-    margin-left: auto;
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    margin-top: 1.5rem;
-  }
-  :global(html, body) {
-    height: 100%;
-  }
   /* Body font */
   /* :global(body) {
     font-family: 'Open Sans', sans-serif !important;
   } */
   :global(.navbar .container-fluid) {
     padding: 0px;
-  }
-
-  :global(.sticky-bottom-nav, .navbar) {
-    margin-left: calc(-1 * var(--bs-gutter-x, 1.5rem) / 2);
-    margin-right: calc(-1 * var(--bs-gutter-x, 1.5rem) / 2);
   }
 </style>
