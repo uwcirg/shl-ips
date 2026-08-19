@@ -1,3 +1,5 @@
+import GenericResource from '$lib/components/resource-templates/GenericResource.svelte';
+
 import AdvanceDirective from '$lib/components/resource-templates/AdvanceDirective.svelte';
 import AllergyIntolerance from '$lib/components/resource-templates/AllergyIntolerance.svelte';
 import Condition from '$lib/components/resource-templates/Condition.svelte';
@@ -20,7 +22,13 @@ import Practitioner from '$lib/components/resource-templates/Practitioner.svelte
 import Procedure from '$lib/components/resource-templates/Procedure.svelte';
 import QuestionnaireResponse from '$lib/components/resource-templates/QuestionnaireResponse.svelte';
 
+export const RESOURCE_TYPE_FALLBACK_KEY = 'Other';
+
 export const RESOURCE_CONFIG: Record<string, any> = {
+    [RESOURCE_TYPE_FALLBACK_KEY]: {
+      category: 'Other',
+      component: GenericResource,
+    },
     'AllergyIntolerance': {
       category: 'Allergies and Intolerances',
       component: AllergyIntolerance,
