@@ -32,7 +32,7 @@ import type { ComponentType } from 'svelte';
 import { type Readable, derived } from 'svelte/store';
 import type { Resource } from 'fhir/r4';
 import type { ResourceHelper } from '$lib/utils/ResourceHelper';
-import { RESOURCE_CONFIG as defaultResourceConfig } from '$lib/config/resource_config';
+import { RESOURCE_CONFIG as defaultResourceConfig, RESOURCE_TYPE_FALLBACK_KEY } from '$lib/config/resource_config';
 import { getFHIRDateAndPrecision } from '$lib/utils/util';
 
 export type ResourceInput = Array<{ source: string, resources: ResourceHelper[] }>;
@@ -119,10 +119,18 @@ export function getResourceRenderInfo(
   categorize: CategorizeFn = defaultCategorize
 ): ResourceRenderInfo {
   const key = resource.resourceType;  // same lookup the store uses
-  const entry = config[key];
-  if (entry?.component) return { mode: 'component', component: entry.component };
-  if (resource.text?.div) return { mode: 'text' };
-  return { mode: 'raw' };
+  const entry = config[key] ?? config[RESOURCE_TYPE_FALLBACK_KEY];
+  const renderInfo: ResourceRenderInfo = {
+    mode: 'component'
+  };
+  if (entry?.component) {
+    renderInfo.component = entry.component;
+  } else if (resource.text?.div) {
+    renderInfo.mode = 'text';
+  } else {
+    renderInfo.mode = 'raw';
+  }
+  return renderInfo;
 }
 
 function lastUpdatedSort(a, b) {
