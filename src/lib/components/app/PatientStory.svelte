@@ -88,7 +88,7 @@
     },
     text: {
       status: "generated",
-      div: "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p></p><p></p></div>"
+      div: "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p></p></div>"
     }
   };
 
@@ -172,6 +172,7 @@
     goalResource.statusDate = new Date().toISOString().slice(0, 10);
     goalResource.description.text = goal.value;
     goalResource.achievementStatus.coding[0] = progressCodings[goal.checked ? "in-progress" : "not-achieved"];
+    goalResource.text.div = `<div xmlns="http://www.w3.org/1999/xhtml"><p>${goal.value} (${goal.date}${goal.checked ? ", Making Progress" : ""})</p></div>`;
     return goalResource;
   }
 
@@ -181,6 +182,7 @@
     }
     let observationResource = getUniqueResourceObject(observationResourceTemplate);
     observationResource.valueString = values.story;
+    observationResource.text.div = `<div xmlns="http://www.w3.org/1999/xhtml"><p>${values.story}</p></div>`;
     return observationResource;
   }
 
