@@ -15,7 +15,7 @@
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
   import { ResourceHelper } from '$lib/utils/ResourceHelper';
-  import { copyOf } from '$lib/utils/util';
+  import { copyOf, getUniqueResourceObject } from '$lib/utils/util';
 
   export let disabled = false;
   export let formData: IResourceCollection | undefined;
@@ -466,7 +466,7 @@
 
   function prepareConditionResource(entry: BodyConcernEntry) {
     if (entry.bodyPart === '' && entry.concern === '') return;
-    let currentCondition = JSON.parse(JSON.stringify(conditionTemplate));
+    let currentCondition = getUniqueResourceObject(conditionTemplate);
     currentCondition.code.text = entry.concern;
     currentCondition.bodySite.coding.push(bodyPartOptions[entry.bodyPart][entry.side]);
     currentCondition.recordedDate = new Date().toISOString().slice(0, 10);;

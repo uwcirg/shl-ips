@@ -14,7 +14,7 @@
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
   import { ResourceHelper } from '$lib/utils/ResourceHelper';
-  import { copyOf } from '$lib/utils/util';
+  import { copyOf, getUniqueResourceObject } from '$lib/utils/util';
 
   export let disabled = false;
   export let formData: IResourceCollection | undefined;
@@ -226,7 +226,7 @@
 
   function prepareProblemResource(entry: HealthHistoryEntry) {
     if (entry.name === '' && entry.detail === '') return;
-    let currentCondition = JSON.parse(JSON.stringify(currentConditionTemplate));
+    let currentCondition = getUniqueResourceObject(currentConditionTemplate);
     currentCondition.code.text = entry.name;
     currentCondition.severity.coding.push(issueSeverityOptions[entry.detail]);
     currentCondition.severity.text = entry.detail;
@@ -236,7 +236,7 @@
 
   function prepareMedicationResource(entry: HealthHistoryEntry) {
     if (entry.name === '' && entry.detail === '') return;
-    let medication = JSON.parse(JSON.stringify(medicationTemplate));
+    let medication = getUniqueResourceObject(medicationTemplate);
     medication.medicationCodeableConcept.text = entry.name;
     medication.dosage[0].text = entry.detail;
     medication.effectiveDateTime = new Date().toISOString().slice(0, 10);
@@ -245,7 +245,7 @@
 
   function prepareHistoryResource(entry: HealthHistoryEntry) {
     if (entry.name === '' && entry.detail === '') return;
-    let pastCondition = JSON.parse(JSON.stringify(pastConditionTemplate));
+    let pastCondition = getUniqueResourceObject(pastConditionTemplate);
     pastCondition.code.text = entry.name;
     pastCondition.onsetString = entry.detail;
     pastCondition.recordedDate = new Date().toISOString().slice(0, 10);
