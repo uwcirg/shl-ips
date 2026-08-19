@@ -74,6 +74,40 @@
       sparklineSeries = sparklineSeriesFor(resource, observationSeriesMap);
     }
   }
+
+  // Find the value[x] field on an Observation (or Observation.component) and
+  // return a display string appropriate to its FHIR data type.
+  function getValueString(obj: any): string | undefined {
+    if (!obj) return undefined;
+    const valueKey = Object.keys(obj).find(k => k.startsWith('value') && k !== 'value');
+    if (!valueKey) return undefined;
+    const value = obj[valueKey];
+    if (value === undefined || value === null) return undefined;
+
+    switch (valueKey) {
+      case 'valueQuantity':
+        return `${value.value ?? ''} ${value.unit ?? ''}`.trim();
+      case 'valueCodeableConcept':
+        return value.coding?.[0]?.display ?? value.text;
+      case 'valueRange':
+        return `${value.low?.value ?? '?'} ${value.low?.unit ?? ''} - ${value.high?.value ?? '?'} ${value.high?.unit ?? ''}`.trim();
+      case 'valueRatio':
+        return `${value.numerator?.value ?? ''} ${value.numerator?.unit ?? ''} / ${value.denominator?.value ?? ''} ${value.denominator?.unit ?? ''}`.trim();
+      case 'valuePeriod':
+        return `${value.start ?? ''} - ${value.end ?? ''}`;
+      case 'valueString':
+      case 'valueBoolean':
+      case 'valueInteger':
+      case 'valueDecimal':
+      case 'valueTime':
+      case 'valueDateTime':
+      case 'valueUri':
+      case 'valueCode':
+        return String(value);
+      default:
+        return typeof value === 'object' ? JSON.stringify(value) : String(value);
+    }
+  }
 </script>
 
 <div class="d-flex justify-content-between align-items-center">
@@ -84,14 +118,16 @@
       {#if resource.code}
         <CodeableConcept codeableConcept={resource.code} />
       {/if}
-      {#if resource.valueCodeableConcept?.coding?.[0].display}
-        {resource.valueCodeableConcept.coding[0].display}<br>
+      {#if getValueString(resource)}
+        {getValueString(resource)}<br>
       {/if}
-      {#if resource.valueQuantity}
-        {resource.valueQuantity.value ?? ""} {resource.valueQuantity.unit ?? ""}<br>
-      {/if}
-      {#if resource.valueString}
-        {resource.valueString ?? ""}<br>
+      {#if resource.component}
+        {#each resource.component as component}
+          <CodeableConcept codeableConcept={component.code} badge={false}/>
+          {#if getValueString(component)}
+            {getValueString(component)}<br>
+          {/if}
+        {/each}
       {/if}
       {#if resource.note}
       {#each resource.note as note}
@@ -99,9 +135,6 @@
           Note: {note.text}<br>
         {/if}
       {/each}
-      {/if}
-      {#if !(resource.valueCodeableConcept || resource.valueQuantity || resource.valueString)}
-        <br>
       {/if}
       {#if members.length > 0}
         <Button
