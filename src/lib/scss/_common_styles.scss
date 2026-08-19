@@ -113,7 +113,7 @@ h6.info-header {
       th {
         border: 1px solid lightgray;
         padding: 0 7px;
-        text-align: center;
+        text-align: left;
 
         /* Sticky table header */
         background: var(--bs-primary);
@@ -124,10 +124,6 @@ h6.info-header {
 
       td {
         margin-left: 2em;
-      }
-
-      td:first-child {
-        font-weight: bold;
       }
 
       thead {

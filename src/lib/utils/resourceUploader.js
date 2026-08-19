@@ -1,9 +1,11 @@
 import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
+import { convertToFullUrlReference, findFhirReferencePaths, getReferenceIdAtPath} from '$lib/utils/util';
 import { extractResourcesFromQuestionnaireResponse } from '$lib/utils/sdcClient';
 
 // Create Bundle and POST
 export async function uploadResources(resources, token=undefined) {
     let entries = [];
+    const ids = new Set(resources.map(r => r.id));
 
     // Before POSTing, try running $extract on each QuestionnaireResponse (which isn't in
     // the FHIR server yet) and fold the extracted resources into the bundle.
@@ -18,10 +20,19 @@ export async function uploadResources(resources, token=undefined) {
     }
 
     resources.forEach(resource => {
+        
         if (!resource.id) {
             resource.id = crypto.randomUUID();
             console.warn("Resource has no id, generated random uuid for upload", resource);
         }
+
+        const paths = findFhirReferencePaths(resource);
+        for (const path of paths) {
+            if (ids.has(getReferenceIdAtPath(resource, path))) {
+                convertToFullUrlReference(resource, path);
+            }
+        }
+        
         let entry = {
             request: {
                 // method: resource.resourceType === "Patient" ? "PUT" : "POST",
@@ -29,7 +40,7 @@ export async function uploadResources(resources, token=undefined) {
                 url: `${resource.resourceType}`
             },
             fullUrl: `urn:uuid:${resource.id}`,
-            resource: resource
+            resource
         };
         entries.push(entry);
     });

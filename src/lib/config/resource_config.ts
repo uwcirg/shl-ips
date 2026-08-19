@@ -128,5 +128,5 @@ export const RESOURCE_CONFIG: Record<string, any> = {
     'RelatedPerson': {
       category: 'Family Members',
       component: Patient,
-    }
+    },
   };
