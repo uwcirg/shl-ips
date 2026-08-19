@@ -1,12 +1,9 @@
 <script lang="ts">
   import DataSummary from '$lib/components/app/DataSummary.svelte';
-  import ManageData from '$lib/components/app/ManageData.svelte';
   import SourceSummary from '$lib/components/app/SourceSummary.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
-  import {
-    TabContent,
-    TabPane
-  } from '@sveltestrap/sveltestrap';
+  import { goto } from '$app/navigation';
+  import { Row, Col, Button, Icon } from '@sveltestrap/sveltestrap';
 
   import { page } from '$app/stores';
 
@@ -16,8 +13,12 @@
 <svelte:head>
   <title>Review - {INSTANCE_CONFIG.title}</title> 
 </svelte:head>
-
-<h4>Review {category} Data</h4>
+<Row class="mb-3">
+  <Col>
+    <Button size="sm" color="secondary" outline on:click={() => goto(`/data/manage#${category}`)}><Icon name="chevron-left" /> Back to all data</Button>
+  </Col>
+</Row>
+<h4>Review {category}</h4>
 <h6>Your Sources:</h6>
 <SourceSummary class="mb-3"/>
 <DataSummary categories={[category]}/>
