@@ -66,7 +66,7 @@
 
   $: {
     if (content.entries) {
-      const resources = content.entries.map((r) => Object.values(r)).flat().map(r => r.rh.resource);
+      const resources = content.entries.map((r) => r.resource as Observation);
       const observationSeriesMap = buildObservationSeriesMap(resources);
       sparklineSeries = sparklineSeriesFor(resource, observationSeriesMap);
     }
