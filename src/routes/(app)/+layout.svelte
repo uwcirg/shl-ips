@@ -59,9 +59,15 @@
         // User is valid but cookie was missing/invalid — sync current token
         const token = await authService.getAccessToken();
         if (token) {
-          await syncTokenToServer(token);
-          await invalidateAll();
+          const synced = await syncTokenToServer(token);
+          if (synced) {
+            await invalidateAll();
+            return;
+          }
         }
+        // Couldn't recover a usable token/cookie — force a fresh login
+        // rather than leaving the page stuck on data.unauthenticated.
+        await authService.login();
         return;
       }
       let now = Date.now() / 1000;
