@@ -104,6 +104,8 @@
     {#if $categoryDataToDisplay[category] && Object.keys($categoryDataToDisplay[category]).length > 0}
       {@const values = Object.values($categoryDataToDisplay[category]).sort((a, b) => sortResources(a, b))}
       {@const valuesToDisplay = summary ? values.slice(0, 3) : values}
+      {@const valuesAsBundleEntries = values.map((value) => ({ resource: value.rh.resource}))}
+      <div id={`${category}`}></div>
       <CategoryView
         class="mb-4"
         title={category}
@@ -123,8 +125,8 @@
               >
                 <div class="p-0 m-0 rounded h-100" style="max-width: 0px; border: .2rem solid {$colorMap.get(sourceName)}"></div>
               </div>
-              <Col class="ps-0 overflow-auto justify-content-center align-items-center">
-                <ResourceDisplay resource={value} entries={Object.values(values)} />
+              <Col class="ps-0 resource-content overflow-auto justify-content-center align-items-center">
+                <ResourceDisplay resource={value.rh.resource} renderInfo={value.renderInfo} entries={valuesAsBundleEntries} />
               </Col>
               <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
                 {#if $mode === 'advanced'}
