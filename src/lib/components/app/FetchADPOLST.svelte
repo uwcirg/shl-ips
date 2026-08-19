@@ -57,13 +57,13 @@
       selected: false,
       url: "https://qa-rr-fhir.maxmddirect.com",
       patient: writable({
-        last: "Mosley",
-        //last: "Smith-Johnson",
-        first: "Jenny",
-        //first: "Betsy",
+        //last: "Mosley",
+        last: "Smith-Johnson",
+        //first: "Jenny",
+        first: "Betsy",
         gender: "female",
-        dob: "1955-10-03",
-        //dob: "1950-11-15",
+        //dob: "1955-10-03",
+        dob: "1950-11-15",
       })
     },
   };

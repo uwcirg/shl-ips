@@ -6,6 +6,8 @@
   import { hasChoiceDTField, choiceDTFields } from '$lib/utils/util';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
   import Date from '$lib/components/resource-templates/Date.svelte';
+  import { buildObservationSeriesMap, type SparklinePoint, sparklineSeriesFor } from '$lib/utils/observationSparkline';
+  import ObservationSparkline from '$lib/components/app/ObservationSparkline.svelte';
   
   export let content: ResourceTemplateParams<Observation>; // Define a prop to pass the data to the component
   export let contained: Boolean = false;
@@ -59,59 +61,78 @@
       members = [];
     }
   }
+
+  let sparklineSeries: Array<SparklinePoint> | undefined;
+
+  $: {
+    if (content.entries) {
+      const resources = content.entries.map((r) => Object.values(r)).flat().map(r => r.rh.resource);
+      const observationSeriesMap = buildObservationSeriesMap(resources);
+      sparklineSeries = sparklineSeriesFor(resource, observationSeriesMap);
+    }
+  }
 </script>
 
-{#if odhResourceCodes.includes(resource.code?.coding?.[0].code ?? "")}
-  <OccupationalData {content} />
-{:else}
-  {#if resource.code}
-    <CodeableConcept codeableConcept={resource.code} />
-  {/if}
-  {#if resource.valueCodeableConcept?.coding?.[0].display}
-    {resource.valueCodeableConcept.coding[0].display}<br>
-  {/if}
-  {#if resource.valueQuantity}
-    {resource.valueQuantity.value ?? ""} {resource.valueQuantity.unit ?? ""}<br>
-  {/if}
-  {#if resource.valueString}
-    {resource.valueString ?? ""}<br>
-  {/if}
-  {#if resource.note}
-  {#each resource.note as note}
-    {#if note.text}
-      Note: {note.text}<br>
+<div class="d-flex justify-content-between align-items-center">
+  <div>
+    {#if odhResourceCodes.includes(resource.code?.coding?.[0].code ?? "")}
+      <OccupationalData {content} />
+    {:else}
+      {#if resource.code}
+        <CodeableConcept codeableConcept={resource.code} />
+      {/if}
+      {#if resource.valueCodeableConcept?.coding?.[0].display}
+        {resource.valueCodeableConcept.coding[0].display}<br>
+      {/if}
+      {#if resource.valueQuantity}
+        {resource.valueQuantity.value ?? ""} {resource.valueQuantity.unit ?? ""}<br>
+      {/if}
+      {#if resource.valueString}
+        {resource.valueString ?? ""}<br>
+      {/if}
+      {#if resource.note}
+      {#each resource.note as note}
+        {#if note.text}
+          Note: {note.text}<br>
+        {/if}
+      {/each}
+      {/if}
+      {#if !(resource.valueCodeableConcept || resource.valueQuantity || resource.valueString)}
+        <br>
+      {/if}
+      {#if members.length > 0}
+      <table class="table table-bordered table-sm">
+        <thead>
+          <tr><th>Result(s)</th></tr>
+        </thead>
+        <tbody>
+        {#each members as member}
+          <tr>
+            <td>
+              <div class="mx-4">
+                {#if member.resource}
+                  <svelte:self
+                    content={{ resource: member.resource, entries: content.entries }}
+                    contained={hasChoiceDTField("effective", member.resource)}
+                  />
+                {:else if member.display}
+                  <strong>{member.display}</strong>
+                {/if}
+              </div>
+            </td>
+          </tr>
+        {/each}
+        </tbody>
+      </table>
+      {/if}
+      {#if !contained && hasChoiceDTField("effective", resource)}
+        Date: <Date fields={choiceDTFields("effective", resource)} />
+      {/if}
     {/if}
-  {/each}
+  </div>
+  {#if sparklineSeries}
+    <div class="d-flex justify-content-center align-items-center" style="flex: 0 0 auto; max-width: fit-content">
+      <ObservationSparkline series={sparklineSeries} currentId={resource.id} />
+    </div>
   {/if}
-  {#if !(resource.valueCodeableConcept || resource.valueQuantity || resource.valueString)}
-    <br>
-  {/if}
-  {#if members.length > 0}
-  <table class="table table-bordered table-sm">
-    <thead>
-      <tr><th>Result(s)</th></tr>
-    </thead>
-    <tbody>
-    {#each members as member}
-      <tr>
-        <td>
-          <div class="mx-4">
-            {#if member.resource}
-              <svelte:self
-                content={{ resource: member.resource, entries: content.entries }}
-                contained={hasChoiceDTField("effective", member.resource)}
-              />
-            {:else if member.display}
-              <strong>{member.display}</strong>
-            {/if}
-          </div>
-        </td>
-      </tr>
-    {/each}
-    </tbody>
-  </table>
-  {/if}
-  {#if !contained && hasChoiceDTField("effective", resource)}
-    Date: <Date fields={choiceDTFields("effective", resource)} />
-  {/if}
-{/if}
+</div>

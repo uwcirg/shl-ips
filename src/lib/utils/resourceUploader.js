@@ -1,8 +1,22 @@
 import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
+import { extractResourcesFromQuestionnaireResponse } from '$lib/utils/sdcClient';
 
 // Create Bundle and POST
 export async function uploadResources(resources, token=undefined) {
     let entries = [];
+
+    // Before POSTing, try running $extract on each QuestionnaireResponse (which isn't in
+    // the FHIR server yet) and fold the extracted resources into the bundle.
+    try {
+        let questionnaireResponses = resources.filter(resource => resource.resourceType === "QuestionnaireResponse");
+        let extractedResources = (await Promise.all(
+            questionnaireResponses.map(qr => extractResourcesFromQuestionnaireResponse(qr, token))
+        )).flat();
+        resources = [...resources, ...extractedResources];
+    } catch (error) {
+        console.error(error);
+    }
+
     resources.forEach(resource => {
         if (!resource.id) {
             resource.id = crypto.randomUUID();
