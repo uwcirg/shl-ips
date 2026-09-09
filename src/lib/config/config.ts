@@ -272,6 +272,17 @@ if (env('VITE_CAREFIRST_CLIENT_ID')) {
   });
 }
 
+if (env('VITE_MEDITECH_CLIENT_ID')) {
+  CARIN_HOSTS.push({
+    id: "meditech",
+    name: "MEDITECH Test System",
+    url: "https://greenfield-prod-apis.meditech.com/v2/uscore/R4",
+    clientId: env('VITE_MEDITECH_CLIENT_ID'),
+    scope: "openid fhirUser launch/patient patient/*.read",
+    note: "Patient1 / password"
+  });
+}
+
 // Connectathon Testing Servers //////////////////////////////////////////////////////////////////////////////
 if (env('VITE_CPCDS_CLIENT_ID')) {
   CARIN_HOSTS.push({
