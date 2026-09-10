@@ -317,7 +317,7 @@ function confidenceFromExtension(extension: Extension, path?: string): AiConfide
   return undefined;
 }
 
-function isAiDevice(resource: Resource | undefined): resource is Device {
+export function isAiDevice(resource: Resource | undefined): resource is Device {
   if (!resource || resource.resourceType !== 'Device') return false;
   const device = resource as Device;
   if (device.meta?.profile?.includes(AI_DEVICE_PROFILE)) return true;
@@ -325,13 +325,13 @@ function isAiDevice(resource: Resource | undefined): resource is Device {
   return extensionsOf(device).some((e) => e.url === AI_KIND_EXTENSION);
 }
 
-function isModelCardDocument(resource: Resource | undefined): resource is DocumentReference {
+export function isModelCardDocument(resource: Resource | undefined): resource is DocumentReference {
   if (!resource || resource.resourceType !== 'DocumentReference') return false;
   const doc = resource as DocumentReference;
   return doc.meta?.profile?.includes(AI_MODEL_CARD_PROFILE) || hasCoding(doc.type, AI_INPUTS_CS, 'AIModelCard');
 }
 
-function isInputPromptDocument(resource: Resource | undefined): resource is DocumentReference {
+export function isInputPromptDocument(resource: Resource | undefined): resource is DocumentReference {
   if (!resource || resource.resourceType !== 'DocumentReference') return false;
   const doc = resource as DocumentReference;
   return doc.meta?.profile?.includes(AI_INPUT_PROMPT_PROFILE) || hasCoding(doc.type, AI_INPUTS_CS, 'AIInputPrompt');
@@ -421,12 +421,47 @@ function resolveReference(
   return undefined;
 }
 
-type Resolver = (reference: Reference | undefined, container?: Resource) => Resource | undefined;
+export type Resolver = (reference: Reference | undefined, container?: Resource) => Resource | undefined;
 
-function isAiProvenance(provenance: Provenance, resolve: Resolver): boolean {
+export function isAiProvenance(provenance: Provenance, resolve: Resolver): boolean {
   if (provenance.meta?.profile?.includes(AI_PROVENANCE_PROFILE)) return true;
   if (provenance.reason?.some((reason) => hasCoding(reason, OBSERVATION_VALUE_CS, AIAST_CODE))) return true;
   return (provenance.agent ?? []).some((agent) => isAiDevice(resolve(agent.who, provenance)));
+}
+
+/**
+ * Whether a Provenance is worth resolving as AI provenance, judged from the
+ * Provenance alone. Used at import time, before the agents' Devices have been
+ * fetched: a conformant AI Provenance carries the profile or the AIAST reason,
+ * and anything else with a Device agent is a maybe worth one read to settle.
+ */
+export function isAiProvenanceCandidate(provenance: Provenance): boolean {
+  if (provenance.meta?.profile?.includes(AI_PROVENANCE_PROFILE)) return true;
+  if (provenance.reason?.some((reason) => hasCoding(reason, OBSERVATION_VALUE_CS, AIAST_CODE))) return true;
+  return (provenance.agent ?? []).some((agent) => agent.who?.reference?.includes('Device/'));
+}
+
+/**
+ * Resources that exist only to describe AI involvement in *other* resources.
+ * They are kept in the collection because the badge reads them, but they are
+ * metadata rather than health data, so the resource lists leave them out.
+ */
+export function isAiTransparencySupportResource(resource: Resource | undefined): boolean {
+  if (!resource) return false;
+  switch (resource.resourceType) {
+    case 'Provenance':
+      return isAiProvenanceCandidate(resource as Provenance);
+    case 'Device':
+      return isAiDevice(resource);
+    case 'DocumentReference':
+      return isModelCardDocument(resource) || isInputPromptDocument(resource);
+    case 'Binary':
+      // Only ever pulled in as the body of a Model-Card attachment, and there is
+      // no template that could render one.
+      return true;
+    default:
+      return false;
+  }
 }
 
 /**
@@ -505,14 +540,25 @@ function findConfidenceLabels(resource: Resource): FoundConfidence[] {
 function modelCardFromDocument(
   doc: DocumentReference,
   source: AiModelCard['source'],
-  sourceLabel: string
+  sourceLabel: string,
+  resolve: Resolver
 ): AiModelCard {
   const links: AiModelCard['links'] = [];
   let text: string | undefined;
   for (const content of doc.content ?? []) {
     const attachment = content.attachment;
-    if (attachment?.url) links.push({ url: attachment.url, contentType: attachment.contentType });
     text = text ?? decodeTextAttachment(attachment);
+    if (!attachment?.url) continue;
+    // A Model-Card body can sit in a Binary rather than inline. Render it if we
+    // hold it; a relative reference we cannot resolve would only be a dead link.
+    const binary = resolve({ reference: attachment.url }, doc);
+    if (binary?.resourceType === 'Binary') {
+      text = text ?? decodeTextAttachment(binary as Attachment);
+      continue;
+    }
+    if (/^https?:\/\//i.test(attachment.url)) {
+      links.push({ url: attachment.url, contentType: attachment.contentType });
+    }
   }
   return {
     source,
@@ -537,7 +583,7 @@ function modelCardsFromDevice(device: Device, resolve: Resolver): AiModelCard[] 
     if (extension.url !== MODEL_CARD_EXTENSION) continue;
     const resolved = resolve(extension.valueReference, device);
     if (isModelCardDocument(resolved)) {
-      cards.push(modelCardFromDocument(resolved, 'device-extension', 'Attached to the AI Device'));
+      cards.push(modelCardFromDocument(resolved, 'device-extension', 'Attached to the AI Device', resolve));
     } else if (extension.valueReference?.display || extension.valueReference?.reference) {
       cards.push({
         source: 'device-extension',
@@ -741,7 +787,7 @@ export function getAiProvenance(
     for (const entity of provenance.entity ?? []) {
       const what = resolve(entity.what, provenance);
       if (isModelCardDocument(what)) {
-        provenanceModelCards.push(modelCardFromDocument(what, 'provenance-entity', 'Referenced by the AI Provenance'));
+        provenanceModelCards.push(modelCardFromDocument(what, 'provenance-entity', 'Referenced by the AI Provenance', resolve));
       } else if (isInputPromptDocument(what)) {
         const doc = what as DocumentReference;
         inputPrompts.push({

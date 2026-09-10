@@ -22,7 +22,7 @@
   import { PLACEHOLDER_SYSTEM } from '$lib/config/config';
   import { ResourceHelper } from '$lib/utils/ResourceHelper.js';
   import type { ResourceCollection } from '$lib/utils/ResourceCollection.js';
-  import { createCategorizedStore, type ResourceInput, type CategorizedResource } from '$lib/stores/categorizedResources';
+  import { AI_SUPPORT_CATEGORY, createCategorizedStore, type ResourceInput, type CategorizedResource } from '$lib/stores/categorizedResources';
   import ResourceDisplay from '$lib/components/app/ResourceDisplay.svelte';
   import { buildAiProvenanceIndex } from '$lib/utils/aiProvenance';
 
@@ -127,7 +127,8 @@
   <Accordion stayOpen class="w-100">
     {#if Object.keys($categorizedResourceStore).length > 0}
       {#each Object.keys($categorizedResourceStore) as category}
-        {#if Object.keys($categorizedResourceStore[category]).length > 0}
+        <!-- AI Transparency records are metadata read by the badge, not list items -->
+        {#if category !== AI_SUPPORT_CATEGORY && Object.keys($categorizedResourceStore[category]).length > 0}
           <AccordionItem class="resource-content {scroll ? 'scroll' : ''} resource-list-accordion" active={Object.keys($categorizedResourceStore[category]).length <= 3}>
             <span slot="header">
               {category}

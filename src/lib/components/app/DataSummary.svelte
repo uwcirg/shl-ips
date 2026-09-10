@@ -13,7 +13,7 @@
   import { ResourceHelper } from '$lib/utils/ResourceHelper.js';
   import CategoryView from '$lib/components/app/CategoryView.svelte';
   import {getFriendlySourceNameBySource} from '$lib/utils/resourceCollectionUtils';
-  import { createCategorizedStore, type CategoryMap, defaultResourceConfig } from '$lib/stores/categorizedResources';
+  import { AI_SUPPORT_CATEGORY, createCategorizedStore, type CategoryMap, defaultResourceConfig } from '$lib/stores/categorizedResources';
   import ResourceDisplay from '$lib/components/app/ResourceDisplay.svelte';
   import { buildAiProvenanceIndex } from '$lib/utils/aiProvenance';
   import { derived, type Readable } from 'svelte/store';
@@ -31,13 +31,16 @@
   let categoryDataToDisplay: Readable<CategoryMap> = derived(
     categorizedResourceStore,
     ($categorizedResourceStore) => {
+      // The AI Transparency records are metadata for the resources below, not
+      // list items of their own; the badge reads them straight from the store.
+      const { [AI_SUPPORT_CATEGORY]: _aiSupport, ...displayable } = $categorizedResourceStore;
       if (categories.length === 0) {
-        return $categorizedResourceStore;
+        return displayable;
       }
       let result: CategoryMap = {};
       categories.forEach(category => {
-        if ($categorizedResourceStore[category]) {
-          result[category] = $categorizedResourceStore[category];
+        if (displayable[category]) {
+          result[category] = displayable[category];
         }
       });
       return result;

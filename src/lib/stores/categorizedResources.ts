@@ -34,6 +34,7 @@ import type { Resource } from 'fhir/r4';
 import type { ResourceHelper } from '$lib/utils/ResourceHelper';
 import { RESOURCE_CONFIG as defaultResourceConfig, RESOURCE_TYPE_FALLBACK_KEY } from '$lib/config/resource_config';
 import { getFHIRDateAndPrecision } from '$lib/utils/util';
+import { isAiTransparencySupportResource } from '$lib/utils/aiProvenance';
 
 export type ResourceInput = Array<{ source: string, resources: ResourceHelper[] }>;
 
@@ -98,9 +99,20 @@ export function createCategorizedStore(
   return { store, getRenderInfo, sortResources };
 }
 
+/**
+ * Category for resources that describe AI involvement in other resources rather
+ * than being health data themselves — AI Provenance, the AI Device, Model-Cards.
+ * They stay in the store so the AI provenance badge can read them, and the
+ * resource lists skip this category so they add no clutter of their own.
+ */
+export const AI_SUPPORT_CATEGORY = 'AI Transparency Records';
+
 // Exported so callers can compose their own sort/categorize fns from these primitives
 // Default: categorize by resourceConfig.category or default to resourceType
 export function defaultCategorize(resource: Resource, resourceConfig: ResourceConfig): string {
+  if (isAiTransparencySupportResource(resource)) {
+    return AI_SUPPORT_CATEGORY;
+  }
   let type = resourceConfig[resource.resourceType]?.category;
   if (!type) {
     type = resource.resourceType;

@@ -46,7 +46,7 @@
   import OccupationalData from '$lib/components/resource-templates/OccupationalData.svelte';
   import QuestionnaireResponse from '$lib/components/resource-templates/QuestionnaireResponse.svelte';
   import AiProvenanceBadge from '$lib/components/app/AiProvenanceBadge.svelte';
-  import { buildAiProvenanceIndex } from '$lib/utils/aiProvenance';
+  import { buildAiProvenanceIndex, isAiTransparencySupportResource } from '$lib/utils/aiProvenance';
 
   export let submitting: boolean;
   export let resourceCollection: IPSResourceCollection;
@@ -100,6 +100,20 @@
   $: aiIndex = buildAiProvenanceIndex(
     resourceCollection.flattenResources($resourcesByTypeStore ?? {}).map((rh) => rh.resource)
   );
+
+  // AI Transparency records ride along so the badge can read them, but they are
+  // metadata about the resources below rather than something to pick from.
+  $: selectableResourcesByType = Object.fromEntries(
+    Object.entries($resourcesByTypeStore ?? {})
+      .map(([resourceType, byId]) => [
+        resourceType,
+        Object.fromEntries(
+          Object.entries(byId).filter(([, rh]) => !isAiTransparencySupportResource(rh.resource))
+        )
+      ])
+      .filter(([, byId]) => Object.keys(byId as object).length > 0)
+  ) as Record<string, Record<string, ResourceHelper>>;
+  $: selectableTypes = Object.keys(selectableResourcesByType);
 
   let patientBadgeColor: string = 'danger';
   let patientCount: number = 0;
@@ -240,9 +254,9 @@
 
 {#if $resourcesByTypeStore}
   <Accordion>
-    {#if Object.keys($resourcesByTypeStore).length > 0}
-      {#each Object.keys($resourcesByTypeStore) as resourceType}
-        {#if Object.keys($resourcesByTypeStore[resourceType]).length > 0}
+    {#if selectableTypes.length > 0}
+      {#each selectableTypes as resourceType}
+        {#if Object.keys(selectableResourcesByType[resourceType]).length > 0}
           <AccordionItem on:toggle={() => updateBadge(resourceType)}>
             <span slot="header">
               {#if resourceType === 'Patient'}
@@ -251,27 +265,27 @@
                 {`${resourceType}s`}
                 <Badge
                   class="mx-1"
-                  color={Object.values($resourcesByTypeStore[resourceType]).filter(
+                  color={Object.values(selectableResourcesByType[resourceType]).filter(
                     (resource) => resource.include
-                  ).length == Object.keys($resourcesByTypeStore[resourceType]).length
+                  ).length == Object.keys(selectableResourcesByType[resourceType]).length
                     ? 'primary'
-                    : Object.values($resourcesByTypeStore[resourceType]).filter(
+                    : Object.values(selectableResourcesByType[resourceType]).filter(
                           (resource) => resource.include
-                        ).length == Object.keys($resourcesByTypeStore[resourceType]).length
+                        ).length == Object.keys(selectableResourcesByType[resourceType]).length
                       ? 'primary'
-                      : Object.values($resourcesByTypeStore[resourceType]).filter(
+                      : Object.values(selectableResourcesByType[resourceType]).filter(
                             (resource) => resource.include
                           ).length > 0
                         ? 'info'
                         : 'secondary'}
                 >
-                  {Object.values($resourcesByTypeStore[resourceType]).filter(
+                  {Object.values(selectableResourcesByType[resourceType]).filter(
                     (resource) => resource.include
                   ).length}
                 </Badge>
               {/if}
             </span>
-            {#each Object.keys($resourcesByTypeStore[resourceType]) as key, index}
+            {#each Object.keys(selectableResourcesByType[resourceType]) as key, index}
               {#if resourceType !== 'Patient' || resourceType === 'Patient' && index === 0}
                 <Label style="width: 100%">
                   <Row class={index > 0 ? "border-top pt-2 mt-2" : ""} style="overflow:hidden">
@@ -280,10 +294,10 @@
                         <Input
                           id={key}
                           type="checkbox"
-                          checked={$resourcesByTypeStore[resourceType][key].include}
+                          checked={selectableResourcesByType[resourceType][key].include}
                           value={key}
                           on:change={(e) => {
-                            let rh = { ...$resourcesByTypeStore[resourceType][key] };
+                            let rh = { ...selectableResourcesByType[resourceType][key] };
                             rh.include = e.target.checked;
                             resourceCollection.updateResource(rh);
                           }}
@@ -295,19 +309,19 @@
                         <svelte:component
                           this={components[resourceType]}
                           content={{
-                            resource: $resourcesByTypeStore[resourceType][key].resource,
+                            resource: selectableResourcesByType[resourceType][key].resource,
                             entries: resourceCollection.flattenResources($resourcesByTypeStore)
                           }}
                         />
                         <!-- ResourceType: {resourceType}
-                          Resource: {JSON.stringify($resourcesByTypeStore[resourceType][key].resource)} -->
-                      {:else if $resourcesByTypeStore[resourceType][key].resource.text?.div}
-                        {@html $resourcesByTypeStore[resourceType][key].resource.text?.div}
+                          Resource: {JSON.stringify(selectableResourcesByType[resourceType][key].resource)} -->
+                      {:else if selectableResourcesByType[resourceType][key].resource.text?.div}
+                        {@html selectableResourcesByType[resourceType][key].resource.text?.div}
                       {:else}
-                        {$resourcesByTypeStore[resourceType][key].tempId}
+                        {selectableResourcesByType[resourceType][key].tempId}
                       {/if}
                       <AiProvenanceBadge
-                        resource={$resourcesByTypeStore[resourceType][key].resource}
+                        resource={selectableResourcesByType[resourceType][key].resource}
                         index={aiIndex}
                       />
                     </Col>
@@ -319,7 +333,7 @@
                           outline
                           on:click={(event) => {
                             event.stopPropagation();
-                            setJson($resourcesByTypeStore[resourceType][key])
+                            setJson(selectableResourcesByType[resourceType][key])
                           }}
                         >
                           View
