@@ -45,6 +45,8 @@
   import Procedure from '$lib/components/resource-templates/Procedure.svelte';
   import OccupationalData from '$lib/components/resource-templates/OccupationalData.svelte';
   import QuestionnaireResponse from '$lib/components/resource-templates/QuestionnaireResponse.svelte';
+  import AiProvenanceBadge from '$lib/components/app/AiProvenanceBadge.svelte';
+  import { buildAiProvenanceIndex } from '$lib/utils/aiProvenance';
 
   export let submitting: boolean;
   export let resourceCollection: IPSResourceCollection;
@@ -94,6 +96,11 @@
       patientStore = $resourcesByTypeStore['Patient'];
     }
   }
+  // Spans every resource type: the AI Provenance for a resource is a resource of its own.
+  $: aiIndex = buildAiProvenanceIndex(
+    resourceCollection.flattenResources($resourcesByTypeStore ?? {}).map((rh) => rh.resource)
+  );
+
   let patientBadgeColor: string = 'danger';
   let patientCount: number = 0;
   $: {
@@ -299,6 +306,10 @@
                       {:else}
                         {$resourcesByTypeStore[resourceType][key].tempId}
                       {/if}
+                      <AiProvenanceBadge
+                        resource={$resourcesByTypeStore[resourceType][key].resource}
+                        index={aiIndex}
+                      />
                     </Col>
                     <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
                       {#if $mode === 'advanced'}

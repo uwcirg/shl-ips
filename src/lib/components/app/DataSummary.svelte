@@ -15,6 +15,7 @@
   import {getFriendlySourceNameBySource} from '$lib/utils/resourceCollectionUtils';
   import { createCategorizedStore, type CategoryMap, defaultResourceConfig } from '$lib/stores/categorizedResources';
   import ResourceDisplay from '$lib/components/app/ResourceDisplay.svelte';
+  import { buildAiProvenanceIndex } from '$lib/utils/aiProvenance';
   import { derived, type Readable } from 'svelte/store';
   import { goto } from '$app/navigation';
 
@@ -48,6 +49,15 @@
   const errorDispatch = createEventDispatcher<{ error: string }>();
 
   let mode: Writable<string> = getContext('mode');
+
+  // AI provenance is recorded on separate Provenance resources, which live in
+  // their own category, so the index has to span every category rather than the
+  // ones currently on screen.
+  $: aiIndex = buildAiProvenanceIndex(
+    Object.values($categorizedResourceStore)
+      .flatMap((types) => Object.values(types))
+      .map((cr) => cr.rh.resource)
+  );
 
   let json = '';
   let resourceType = '';
@@ -126,7 +136,7 @@
                 <div class="p-0 m-0 rounded h-100" style="max-width: 0px; border: .2rem solid {$colorMap.get(sourceName)}"></div>
               </div>
               <Col class="ps-0 resource-content overflow-auto justify-content-center align-items-center">
-                <ResourceDisplay resource={value.rh.resource} renderInfo={value.renderInfo} entries={valuesAsBundleEntries} />
+                <ResourceDisplay resource={value.rh.resource} renderInfo={value.renderInfo} entries={valuesAsBundleEntries} {aiIndex} />
               </Col>
               <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
                 {#if $mode === 'advanced'}

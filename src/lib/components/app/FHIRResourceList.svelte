@@ -24,6 +24,7 @@
   import type { ResourceCollection } from '$lib/utils/ResourceCollection.js';
   import { createCategorizedStore, type ResourceInput, type CategorizedResource } from '$lib/stores/categorizedResources';
   import ResourceDisplay from '$lib/components/app/ResourceDisplay.svelte';
+  import { buildAiProvenanceIndex } from '$lib/utils/aiProvenance';
 
   export let resourceCollection: ResourceCollection;
   export let scroll: boolean = true;
@@ -56,6 +57,13 @@
   );
   
   const { store: categorizedResourceStore, getRenderInfo, sortResources } = createCategorizedStore(categorizerInput);
+
+  // Spans every category: the AI Provenance for a resource is a resource of its own.
+  $: aiIndex = buildAiProvenanceIndex(
+    Object.values($categorizedResourceStore ?? {})
+      .flatMap((types) => Object.values(types))
+      .map((cr) => cr.rh.resource)
+  );
 
   let patientStore: Record<string, CategorizedResource>;
   let patientBadgeColor: string = 'danger';
@@ -156,7 +164,7 @@
             }) as value, index}
                 <Row class={index > 0 ? "border-top pt-2 mt-2" : ""} style="overflow: hidden">
                   <Col class="overflow-auto justify-content-center align-items-center">
-                    <ResourceDisplay resource={value.rh.resource} renderInfo={value.renderInfo} entries={allDataAsBundleEntries} />
+                    <ResourceDisplay resource={value.rh.resource} renderInfo={value.renderInfo} entries={allDataAsBundleEntries} {aiIndex} />
                   </Col>
                   <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
                     {#if $mode === 'advanced'}

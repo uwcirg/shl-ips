@@ -44,6 +44,8 @@
   import OccupationalData from '$lib/components/resource-templates/OccupationalData.svelte';
   import QuestionnaireResponse from '$lib/components/resource-templates/QuestionnaireResponse.svelte';
   import SectionExtension from '$lib/components/resource-templates/SectionExtension.svelte';
+  import AiProvenanceBadge from '$lib/components/app/AiProvenanceBadge.svelte';
+  import { buildAiProvenanceIndex } from '$lib/utils/aiProvenance';
 
   const components: Record<string, any> = {
     "AllergyIntolerance": AllergyIntolerance,
@@ -82,6 +84,10 @@
       ipsContent = getIpsContent(bundle);
     }
   }
+
+  // Provenance resources are carried in the bundle but not referenced from any
+  // Composition section, so index the whole bundle rather than the sections.
+  $: aiIndex = buildAiProvenanceIndex(bundle?.entry);
 
   function getIpsContent(ips: Bundle) {
     let content: Record<string, IpsContent> = {};
@@ -277,6 +283,7 @@
                           {showInfoMessage(`Unsupported sections displayed using composition narratives`)};
                         {/if}
                       {/if}
+                      <AiProvenanceBadge {resource} index={aiIndex} />
                     </Col>
                     <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
                       <Button
