@@ -341,58 +341,14 @@ export function getReferences(resourceContent: any, references: any[] | undefine
   return references;
 }
 
-export function findFhirReferencePaths(resource: Resource): string[] {
-  const results: string[] = [];
+export const PATIENT_REFERENCE_FIELDS = ["subject", "patient", "beneficiary", "policyHolder"] as const;
 
-  function traverse(obj: any, path: string) {
-    if (!obj || typeof obj !== 'object') return;
-
-    if (typeof obj.reference === 'string') {
-      const finalPath = `${path}.reference`;
-      results.push(finalPath);
-      return;
-    }
-
-    for (const [key, value] of Object.entries(obj)) {
-      if (key === 'subject' || key === 'patient') continue;
-      const nextPath = path ? `${path}.${key}` : key;
-      if (Array.isArray(value)) {
-        value.forEach((item, i) => traverse(item, `${nextPath}[${i}]`));
-      } else {
-        traverse(value, nextPath);
-      }
+export function assignPatientReference(resource: Resource, patientReference: string) {
+  for (const field of PATIENT_REFERENCE_FIELDS) {
+    if (field in resource) {
+      (resource as any)[field] = { reference: patientReference };
     }
   }
-
-  traverse(resource, '');
-  return results;
-}
-
-export function getReferenceIdAtPath(obj: any, path: string) {
-  const parts = path.replace(/\[(\d+)\]/g, '.$1').split('.').filter(Boolean);
-  const last = parts.pop()!;
-  const target = parts.reduce((o, k) => o[k], obj);
-  const current: string = target[last];
-  const id = current.split('/').pop()?.split(':').pop() ?? '';
-  return id;
-}
-
-export function convertToFullUrlReference(obj: any, path: string) {
-  const parts = path.replace(/\[(\d+)\]/g, '.$1').split('.').filter(Boolean);
-  const last = parts.pop()!;
-  const target = parts.reduce((o, k) => o[k], obj);
-  const current: string = target[last];
-  if (!current.startsWith('urn:uuid:')) {
-    target[last] = `urn:uuid:${current.split('/').pop()}`;
-  }
-}
-
-export function convertToFullUrlReferences(resource: Resource) {
-  const paths = findFhirReferencePaths(resource);
-  for (const path of paths) {
-    convertToFullUrlReference(resource, path);
-  }
-  return resource;
 }
 
 export function isIPSBundle(bundle: Bundle): boolean {
@@ -508,7 +464,7 @@ export function getDemographicsFromPatient(patient: Patient): UserDemographics {
     sexCharacteristics: patient.extension?.find((e) => e.url === 'http://hl7.org.au/fhir/StructureDefinition/sex-characteristic-variation')?.valueCodeableConcept?.coding?.[0],
     religion: patient.extension?.find((e) => e.url === 'http://hl7.org/fhir/StructureDefinition/patient-religion')?.valueCodeableConcept?.coding?.[0],
     preferredLanguage: patient.communication?.find((e) => e.preferred)?.language?.text,
-    spokenLanguages: patient.communication?.filter((e) => !e.preferred).map((e) => e.language.text).join(', '),
+    languages: patient.communication?.filter((e) => !e.preferred).map((e) => e.language.text).join(', '),
   };
   return Object.fromEntries(Object.entries(demographics).filter(([_, v]) => v)); // don't return empty fields
 }

@@ -20,6 +20,7 @@ export const CATEGORY_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSyst
 export const METHOD_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-method';
 export const PLACEHOLDER_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-placeholder';
 export const SOURCE_NAME_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-source-name';
+export const SOURCE_NAMESPACE = 'urn:wahealthsummary:source';
 
 export const DATA_CATEGORY_NAMES = {
   [CATEGORIES.OCCUPATIONAL_DATA_FOR_HEALTH]: {

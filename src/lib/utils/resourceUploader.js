@@ -1,48 +1,18 @@
 import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
-import { convertToFullUrlReference, findFhirReferencePaths, getReferenceIdAtPath} from '$lib/utils/util';
 import { extractResourcesFromQuestionnaireResponse } from '$lib/utils/sdcClient';
 
 // Create Bundle and POST
 export async function uploadResources(resources, token=undefined) {
-    let entries = [];
-    const ids = new Set(resources.map(r => r.id));
-
-    // Before POSTing, try running $extract on each QuestionnaireResponse (which isn't in
-    // the FHIR server yet) and fold the extracted resources into the bundle.
-    try {
-        let questionnaireResponses = resources.filter(resource => resource.resourceType === "QuestionnaireResponse");
-        let extractedResources = (await Promise.all(
-            questionnaireResponses.map(qr => extractResourcesFromQuestionnaireResponse(qr, token))
-        )).flat();
-        resources = [...resources, ...extractedResources];
-    } catch (error) {
-        console.error(error);
-    }
-
-    resources.forEach(resource => {
-        
-        if (!resource.id) {
-            resource.id = crypto.randomUUID();
-            console.warn("Resource has no id, generated random uuid for upload", resource);
-        }
-
-        const paths = findFhirReferencePaths(resource);
-        for (const path of paths) {
-            if (ids.has(getReferenceIdAtPath(resource, path))) {
-                convertToFullUrlReference(resource, path);
-            }
-        }
-        
+    let entries = resources.map(r => {
         let entry = {
             request: {
-                // method: resource.resourceType === "Patient" ? "PUT" : "POST",
+                // method: r.resourceType === "Patient" ? "PUT" : "POST",
                 method: "POST",
-                url: `${resource.resourceType}`
+                url: `${r.resourceType}`
             },
-            fullUrl: `urn:uuid:${resource.id}`,
-            resource
+            resource: r
         };
-        entries.push(entry);
+        return entry;
     });
     let bundle = {
         resourceType: "Bundle",
@@ -50,6 +20,31 @@ export async function uploadResources(resources, token=undefined) {
         entry: entries
     };
 
+    return await postBundle(bundle, token);
+}
+
+export async function uploadBundleEntries(entries, token=undefined) {
+    entries = entries.map(e => {
+        let entry = {
+            request: {
+                // method: entry.resource.resourceType === "Patient" ? "PUT" : "POST",
+                method: "POST",
+                url: `${e.resource.resourceType}`
+            },
+            fullUrl: e.fullUrl,
+            resource: e.resource,
+        };
+        return entry;
+    });
+    let bundle = {
+        resourceType: "Bundle",
+        type: "transaction",
+        entry: entries
+    };
+    return await postBundle(bundle, token);
+}
+
+async function postBundle(bundle, token=undefined) {
     let headers = {
         'Content-Type': 'application/json+fhir',
     };

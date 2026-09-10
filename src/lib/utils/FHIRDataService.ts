@@ -23,10 +23,13 @@ import {
 } from "$lib/config/config";
 import type { IAuthService, ResourceRetrieveEvent, UserDemographics } from "$lib/utils/types";
 import { ResourceHelper } from "$lib/utils/ResourceHelper";
-import type { Patient, Resource } from "fhir/r4";
+import type { Bundle, BundleEntry, Patient, Resource } from "fhir/r4";
 import { constructPatientResource, getDemographicsFromPatient, fetchEverything } from "$lib/utils/util";
-import { uploadResources, getPatientReferenceFromTransactionResponse } from "$lib/utils/resourceUploader";
+import { uploadBundleEntries, getPatientReferenceFromTransactionResponse } from "$lib/utils/resourceUploader";
 import { StateManager } from "$lib/utils/StateManager";
+import { prepareImportedResources, entriesToResources, reconcileResourcesWithOriginalEntries, finalizeForUpload } from "$lib/utils/importNormalization";
+import type { NormalizedBundleEntry, NormalizedIdEntry } from "$lib/utils/importNormalization";
+import { extractResourcesFromQuestionnaireResponse } from "./sdcClient";
 
 export class FHIRServiceError extends Error {
   constructor(
@@ -372,23 +375,6 @@ export class FHIRDataService {
     }
   }
 
-  generateCategoryPlaceholderPatient(): Resource {
-    const masterPatientResource = get(this.masterPatient).resource;
-    let patient = constructPatientResource({
-      first: masterPatientResource.name?.[0].given?.[0],
-      last: masterPatientResource.name?.[0].family,
-    });
-    patient.id = "placeholder-patient";
-    patient.meta = patient.meta ?? {};
-    patient.meta.lastUpdated = new Date().toISOString();
-    patient.meta.tag = patient.meta.tag ?? [];
-    patient.meta.tag.push({
-      system: PLACEHOLDER_SYSTEM,
-      code: 'placeholder-patient'
-    });
-    return patient;
-  }
-
   datasetExists(category: string, method: string, source: string): boolean {
     let datasetsInCategoryWithSource = get(this.userResources)?.[category]?.[method]?.[source];
     return datasetsInCategoryWithSource !== undefined;
@@ -475,10 +461,8 @@ export class FHIRDataService {
     });
   }
 
-  async createDatasetOnServer(resources: Resource[]): Promise<string> {
-    let datasetCollection = new ResourceCollection(resources);
-    let updatedResources = datasetCollection.getFHIRResources();
-    let transactionResponse = await uploadResources(updatedResources, await this.auth.getAccessToken());
+  async createDatasetOnServer(entries: NormalizedBundleEntry[]): Promise<string> {
+    let transactionResponse = await uploadBundleEntries(entries, await this.auth.getAccessToken());
     if (transactionResponse.resourceType === "OperationOutcome") {
       throw new FHIRServiceError('Failed to upload dataset', 'createDatasetOnServer', transactionResponse.issue);
     }
@@ -564,12 +548,41 @@ export class FHIRDataService {
   }
 
   async addOrReplaceDataset(dataset: ResourceRetrieveEvent) {
-    let resourcesWithUpdatedPatient = this.updateDatasetPatient(dataset);
+    // The following should be moved to the upload handler, to allow for import confirmation prior to upload.
+    // The output should be a ResourceRetrieveEvent with the updated resource set.
+    let normalizedImportEntries: NormalizedIdEntry[] = prepareImportedResources(dataset, get(this.masterPatient).resource);
+    let resources: Resource[] = entriesToResources(normalizedImportEntries);
+
+    // Handle questionnaire responses (if moved to upload handler, maybe move extract function?)
+    if (resources.some((resource) => resource.resourceType === "QuestionnaireResponse")) {
+      // Before adding the dataset, try running $extract on each QuestionnaireResponse (which isn't in
+      // the FHIR server yet) and fold the extracted resources into the bundle.
+      let extractedResources = await this.extractResourcesFromQuestionnaireResponses(resources);
+      if (extractedResources) {
+        resources = [...resources, ...extractedResources];
+      }
+    }
+    
+    // User input happens, adds/removes/updates resources, confirms dataset...
+
+    // Re-normalize dataset and pass along as fresh ResourceRetrieveEvent
+    let renormalizedConfirmedImportEntries = prepareImportedResources({
+      category: dataset.category,
+      method: dataset.method,
+      source: dataset.source,
+      sourceName: dataset.sourceName,
+      resources: reconcileResourcesWithOriginalEntries(normalizedImportEntries, resources) as BundleEntry[],
+    }, get(this.masterPatient).resource);
+    // End pre-user-review setup process
+
+    // Finish pre-upload normalization (add consistent fullUrls and use them to update all references)
+    const finalEntries = finalizeForUpload(renormalizedConfirmedImportEntries);
+
     let newDataset;
     let status;
     let existingDataset = get(this.userResources)?.[dataset.category]?.[dataset.method]?.[dataset.source];
     if (!existingDataset) {
-      let patient = resourcesWithUpdatedPatient.find((resource) => resource.resourceType === "Patient");
+      let patient = resources.find((resource) => resource.resourceType === "Patient");
       let seedCollection = new ResourceCollection(patient);
       newDataset = this.addDatasetToUserResources(seedCollection);
       status = newDataset.status;
@@ -580,7 +593,8 @@ export class FHIRDataService {
 
     let patientReference: string;
     try {
-      patientReference = await this.createDatasetOnServer(resourcesWithUpdatedPatient);
+
+      patientReference = await this.createDatasetOnServer(finalEntries);
     } catch(error) {
       status.set({ state: StateManager.State.ERROR });
       throw new FHIRServiceError(`Failed to upload ${dataset.source} dataset`, 'addOrReplaceDataset', error);
@@ -620,24 +634,20 @@ export class FHIRDataService {
     this.addDatasetToUserResources(newDataset);
     status.set({ state: StateManager.State.IDLE });
   }
-
-  updateDatasetPatient(datasetInfo: ResourceRetrieveEvent): Resource {
-    let { resources, category, method, source, sourceName } = datasetInfo;
-    let resourcesWithUpdatedPatient = resources;
-    let patient = resources?.find((resource) => resource.resourceType === "Patient");
-    if (!patient) {
-      patient = this.generateCategoryPlaceholderPatient();
-      resourcesWithUpdatedPatient = [ patient, ...(resources ?? []) ];
+  
+  async extractResourcesFromQuestionnaireResponses(questionnaireResponses: Resource[]): Promise<Resource[] | undefined> {
+    try {
+      const accessToken = await this.auth.getAccessToken();
+      if (!accessToken) {
+        return undefined;
+      }
+      let extractedResources = (await Promise.all(
+          questionnaireResponses.map(async (qr) => extractResourcesFromQuestionnaireResponse(qr, accessToken))
+      )).flat();
+      return extractedResources;
+    } catch (error) {
+        console.error(error);
     }
-    patient.meta = patient.meta ?? {};
-    patient.meta.tag = patient.meta.tag ?? [];
-    patient.meta.tag.push({ system: CATEGORY_SYSTEM, code: category });
-    patient.meta.tag.push({ system: METHOD_SYSTEM, code: method });
-    if (sourceName) {
-      patient.meta.tag.push({ system: SOURCE_NAME_SYSTEM, code: sourceName });
-    }
-    patient.meta.source = source;
-    return resourcesWithUpdatedPatient;
   }
 }
 
