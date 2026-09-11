@@ -26,6 +26,7 @@ import { ResourceHelper } from "$lib/utils/ResourceHelper";
 import type { Patient, Resource } from "fhir/r4";
 import { constructPatientResource, getDemographicsFromPatient, fetchEverything } from "$lib/utils/util";
 import { uploadResources, getPatientReferenceFromTransactionResponse } from "$lib/utils/resourceUploader";
+import { fetchAiProvenanceResources } from "$lib/utils/aiProvenanceFetch";
 import { StateManager } from "$lib/utils/StateManager";
 
 export class FHIRServiceError extends Error {
@@ -245,7 +246,32 @@ export class FHIRDataService {
         return data.entry.map((entry) => entry.resource).filter((resource) => !(resource.resourceType === 'Patient' && resource.id === get(this.masterPatient).resource.id));
       }
     })
+    .then(async (data) => data ? [...data, ...(await this.fetchAiProvenance(data))] : data)
     .then((data) => new ResourceCollection(data));
+  }
+
+  // $everything returns neither the AI Provenance that targets a dataset's
+  // resources (it points at them, not at the Patient) nor the Devices it names,
+  // so reverse-lookup them. Failure never fails the load.
+  async fetchAiProvenance(resources: Resource[]): Promise<Resource[]> {
+    try {
+      const headers = {
+        accept: 'application/fhir+json',
+        Authorization: `Bearer ${await this.auth.getAccessToken()}`
+      };
+      return await fetchAiProvenanceResources(resources, async (relativeUrl) => {
+        const response = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/${relativeUrl}`, { cache: "no-store", headers });
+        if (!response.ok) throw new Error(`FHIR request failed: ${response.status}`);
+        const body = await response.json();
+        if (body?.resourceType === 'Bundle') {
+          return (body.entry ?? []).map((entry: any) => entry.resource).filter(Boolean);
+        }
+        return body ? [body] : [];
+      });
+    } catch (e) {
+      console.warn('Unable to retrieve AI provenance', e);
+      return [];
+    }
   }
 
   async fetchAuthUserPatient(): Promise<ResourceHelper | undefined> {
