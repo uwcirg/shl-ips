@@ -86,7 +86,7 @@
             }
             if (!resources) { throw Error("Error: file contains no FHIR resources."); }
             resourceResult.resources = resources;
-            resourceResult.source = source;
+            resourceResult.source = filename;
             resourceResult.sourceName = filename;
             resourceDispatch('update-resources', resourceResult);
         } catch (e) {

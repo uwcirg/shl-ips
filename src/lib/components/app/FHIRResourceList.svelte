@@ -22,8 +22,9 @@
   import { PLACEHOLDER_SYSTEM } from '$lib/config/config';
   import { ResourceHelper } from '$lib/utils/ResourceHelper.js';
   import type { ResourceCollection } from '$lib/utils/ResourceCollection.js';
-  import { createCategorizedStore, type ResourceInput, type CategorizedResource } from '$lib/stores/categorizedResources';
+  import { AI_SUPPORT_CATEGORY, createCategorizedStore, type ResourceInput, type CategorizedResource } from '$lib/stores/categorizedResources';
   import ResourceDisplay from '$lib/components/app/ResourceDisplay.svelte';
+  import { buildAiProvenanceIndex } from '$lib/utils/aiProvenance';
 
   export let resourceCollection: ResourceCollection;
   export let scroll: boolean = true;
@@ -56,6 +57,13 @@
   );
   
   const { store: categorizedResourceStore, getRenderInfo, sortResources } = createCategorizedStore(categorizerInput);
+
+  // Spans every category: the AI Provenance for a resource is a resource of its own.
+  $: aiIndex = buildAiProvenanceIndex(
+    Object.values($categorizedResourceStore ?? {})
+      .flatMap((types) => Object.values(types))
+      .map((cr) => cr.rh.resource)
+  );
 
   let patientStore: Record<string, CategorizedResource>;
   let patientBadgeColor: string = 'danger';
@@ -119,7 +127,8 @@
   <Accordion stayOpen class="w-100">
     {#if Object.keys($categorizedResourceStore).length > 0}
       {#each Object.keys($categorizedResourceStore) as category}
-        {#if Object.keys($categorizedResourceStore[category]).length > 0}
+        <!-- AI Transparency records are metadata read by the badge, not list items -->
+        {#if category !== AI_SUPPORT_CATEGORY && Object.keys($categorizedResourceStore[category]).length > 0}
           <AccordionItem class="resource-content {scroll ? 'scroll' : ''} resource-list-accordion" active={Object.keys($categorizedResourceStore[category]).length <= 3}>
             <span slot="header">
               {category}
@@ -156,7 +165,7 @@
             }) as value, index}
                 <Row class={index > 0 ? "border-top pt-2 mt-2" : ""} style="overflow: hidden">
                   <Col class="overflow-auto justify-content-center align-items-center">
-                    <ResourceDisplay resource={value.rh.resource} renderInfo={value.renderInfo} entries={allDataAsBundleEntries} />
+                    <ResourceDisplay resource={value.rh.resource} renderInfo={value.renderInfo} entries={allDataAsBundleEntries} {aiIndex} />
                   </Col>
                   <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
                     {#if $mode === 'advanced'}

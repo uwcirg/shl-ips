@@ -40,6 +40,7 @@ const allowableResourceTypes = [
     'Practitioner',
     'PractitionerRole',
     'Procedure',
+    'Provenance', // Not IPS content itself; carries the AI Transparency labelling for the resources above
     'QuestionnaireResponse', // FIXME this is not part of IPS, should get a carve-out elsewhere...
     'Specimen',
     

@@ -35,6 +35,11 @@ export class ResourceHelper {
         delete simpleResource.id;
         delete simpleResource.meta;
         delete simpleResource.text;
+        // A Provenance is defined by what it points at: stripped of references, every
+        // Provenance from the same agents looks identical and all but one are dropped.
+        if (simpleResource.resourceType === 'Provenance') {
+            return simpleResource;
+        }
         // delete simpleResource.patient;
         // delete simpleResource.subject;
         // delete simpleResource.encounter;
