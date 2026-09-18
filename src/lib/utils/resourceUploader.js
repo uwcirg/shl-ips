@@ -86,7 +86,7 @@ export function generateIpsUrlFromPatientReference(patientReference) {
 }
 
 export function uploadResourcesAndGetReference(resources, token=undefined) {
-    return uploadResources(resources, token).then(transactionResponse => {
+    return uploadBundleEntries(resources, token).then(transactionResponse => {
         let patientReference = getPatientReferenceFromTransactionResponse(transactionResponse);
         return generateIpsUrlFromPatientReference(patientReference);
         // return fetch(ipsUrl).then(response => response.json());

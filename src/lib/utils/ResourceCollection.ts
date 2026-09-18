@@ -42,7 +42,7 @@ export class ResourceCollection implements IResourceCollection {
         });
         this.patientReference = derived(this.patient, ($patient) => {
             if ($patient) {
-                return `urn:uuid:${$patient.id}`;
+                return `Patient/${$patient.id}`;
             } else {
                 return '';
             }

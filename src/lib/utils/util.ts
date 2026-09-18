@@ -363,10 +363,10 @@ export function isIPSBundle(bundle: Bundle): boolean {
   );
 }
 
-export function getResourcesFromIPS(ips: Bundle): Resource[] | undefined {
+export function getEntriesFromIPS(ips: Bundle): BundleEntry[] | undefined {
   let entries = ips.entry;
   if (!entries) return;
-  let resources = [] as Resource[];
+  let newEntries = [] as BundleEntry[];
   entries.forEach((entry: BundleEntry) => {
       if (!entry.resource) return;
       if (entry.resource.resourceType == 'Composition') return;
@@ -376,12 +376,9 @@ export function getResourcesFromIPS(ips: Bundle): Resource[] | undefined {
               return item.url !== "http://hl7.org/fhir/StructureDefinition/narrativeLink";
           })
       }
-      if (!entry.resource.id && entry.fullUrl) {
-        entry.resource.id = entry.fullUrl.split('/').pop().split(':').pop();
-      }
-      resources.push(entry.resource);
+      newEntries.push(entry.resource);
   });
-  return resources;
+  return newEntries;
 }
 
 export function isSHCFile(object: any): object is SHCFile {

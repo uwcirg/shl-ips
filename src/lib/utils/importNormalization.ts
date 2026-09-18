@@ -113,7 +113,7 @@ function isResourceArray(data: BundleEntry[] | Resource[]): data is Resource[] {
   return data.length === 0 || data.some(entry => "resourceType" in entry);
 }
 
-function getEntries(data: BundleEntry[] | Resource[]): BundleEntry[] {
+export function getEntries(data: BundleEntry[] | Resource[]): BundleEntry[] {
   if (isBundleEntryArray(data)) {
     return data
     .filter(d => d.resource)
@@ -266,8 +266,17 @@ function convertToFullUrlReference(obj: any, path: string, referenceMap: Referen
   const target = parts.reduce((o, k) => o[k], obj);
   const current: string = target[last];
   const newReference = referenceMap.resolve(current);
-  if (!newReference) return;
-  target[last] = newReference;
+  if (newReference) {
+    target[last] = newReference;
+    return;
+  }
+  // A urn:uuid:/urn:oid: reference must resolve to a fullUrl within this same transaction bundle,
+  // or the FHIR server will reject the whole transaction. Since we can't resolve it (the target
+  // resource isn't part of this upload), drop the reference rather than send a broken placeholder.
+  if (current.startsWith('urn:')) {
+    console.warn(`convertToFullUrlReference: dropping unresolvable reference "${current}" at ${obj.resourceType}/${obj.id}.${path}`);
+    delete target[last];
+  }
 }
 
 function convertToFullUrlReferences(entry: NormalizedBundleEntry, referenceMap: ReferenceMap) {

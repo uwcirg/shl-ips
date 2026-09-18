@@ -17,7 +17,8 @@
   import { PATIENT_IPS, EXAMPLE_IPS, IPS_DEFAULT, BEARER_AUTHORIZATION } from '$lib/config/config';
   import type { SHCRetrieveEvent, IAuthService, IPSRetrieveEvent, ResourceRetrieveEvent } from '$lib/utils/types';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
-  import { getResourcesFromIPS, isIPSBundle } from '$lib/utils/util';
+  import { getEntriesFromIPS, isIPSBundle } from '$lib/utils/util';
+  import { getEntries } from '$lib/utils/importNormalization';
   //import { normalizeGad7QuestionnaireResponses } from '$lib/utils/sdcClient';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
 
@@ -158,10 +159,19 @@
         return shcDispatch('shc-retrieved', shcResult);
       }
 
+      let resources;
+      if (isIPSBundle(content)) {
+        resources = getEntriesFromIPS(content);
+      } else if (content.resourceType === "Bundle") {
+        resources = getEntries(content.entry);
+      } else {
+        throw Error("Error: file must contain a FHIR Bundle.");
+      }
+
       let result = {
         // Normalize GAD7 QuestionnaireResponses so they're ready for $extract on upload.
-        resources: getResourcesFromIPS(content),
-        //resources: normalizeGad7QuestionnaireResponses(getResourcesFromIPS(content)),
+        resources: resources,
+        //resources: normalizeGad7QuestionnaireResponses(getEntriesFromIPS(content).map(entry => entry.resource)),
         category: CATEGORY,
         method: METHOD,
         source: hostname,
