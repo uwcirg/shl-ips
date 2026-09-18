@@ -203,6 +203,7 @@ export interface IAuthService {
   renewToken(): Promise<User | null>;
   logout(): Promise<void>;
   isAuthenticated(): Promise<boolean | undefined>;
+  syncTokenToServer(token: string): Promise<boolean>;
 }
 
 export interface IResourceCollection {
