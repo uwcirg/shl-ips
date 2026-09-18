@@ -106,6 +106,7 @@ export interface SOFHost {
   clientId: string;
   note: string | undefined;
   scope?: string | undefined;
+  type?: string | undefined;
 }
 
 export interface DataFormConfig {
