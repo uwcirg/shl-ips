@@ -42,6 +42,17 @@ export class FHIRServiceError extends Error {
   }
 }
 
+// Thrown when a write to the master patient may or may not have been applied
+// server-side (e.g. the server accepted the write but the response body
+// couldn't be read, or the connection dropped before a response arrived).
+// Callers must not treat this the same as a confirmed failed write.
+export class MasterPatientWriteUncertainError extends FHIRServiceError {
+  constructor(userMessage: string, operation: string, cause?: unknown) {
+    super(userMessage, operation, cause);
+    this.name = 'MasterPatientWriteUncertainError';
+  }
+}
+
 export class FHIRDataService {
   auth: IAuthService;
 
@@ -275,69 +286,77 @@ export class FHIRDataService {
   }
   
   async createOrUpdateMasterPatient(patient: Resource): Promise<ResourceHelper> {
-    let savedPatient: Patient;
     if (get(this.masterPatient) === null) {
       this.setMasterPatient(patient);
     }
+
+    let savedPatient: Patient;
     if (get(this.masterPatient).resource.id) {
       patient.id = get(this.masterPatient).resource.id;
-      let updatedPatient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient/${patient.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/fhir+json',
-          'Authorization': `Bearer ${await this.auth.getAccessToken()}`
-        },
-        body: JSON.stringify(patient)
-      })
-      .then((response) => {
-        if (response.ok) return response.text();
-        return Promise.reject(response);
-      })
-      .then((data) => JSON.parse(data))
-      .catch((response) => {
-        response.text().then((text: any) => {
-          try {
-            console.log(JSON.parse(text));
-          } catch (err) {
-            console.log(text);
-          }
-        });
-        throw new FHIRServiceError('Failed to save patient', 'createOrUpdateMasterPatient', response);
-      });
-      savedPatient = updatedPatient;
+      savedPatient = await this.saveMasterPatientResource(
+        'PUT',
+        `${INTERMEDIATE_FHIR_SERVER_BASE}/Patient/${patient.id}`,
+        patient
+      );
     } else {
       if (patient.id) {
         delete patient.id;
       }
-      let newPatient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient`, {
-        method: 'POST',
+      savedPatient = await this.saveMasterPatientResource(
+        'POST',
+        `${INTERMEDIATE_FHIR_SERVER_BASE}/Patient`,
+        patient
+      );
+    }
+    return this.setMasterPatient(savedPatient);
+  }
+
+  // Sends the master patient write and reports back precisely what is known about it:
+  // - response not ok            -> the write was rejected; it was not applied (FHIRServiceError)
+  // - request/response unusable  -> whether it was applied server-side is unknown (MasterPatientWriteUncertainError)
+  // - response ok and parsed     -> the write was applied; returns the saved resource
+  private async saveMasterPatientResource(method: 'PUT' | 'POST', url: string, patient: Resource): Promise<Patient> {
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/fhir+json',
           'Authorization': `Bearer ${await this.auth.getAccessToken()}`
         },
         body: JSON.stringify(patient)
-      })
-      .then((response) => {
-        if (response.ok) return response.text();
-        return Promise.reject(response);
-      })
-      .then((data) => JSON.parse(data))
-      .catch((response) => {
-        response.text().then((text: any) => {
-          try {
-            console.log(JSON.parse(text));
-          } catch (err) {
-            console.log(text);
-          }
-        });
-        throw new FHIRServiceError('Failed to save patient', 'createOrUpdateMasterPatient', response);
-      })
-      savedPatient = newPatient;
+      });
+    } catch (networkError) {
+      // The response was never received, so whether the server applied the write is unknown.
+      throw new MasterPatientWriteUncertainError(
+        'Failed to save patient: no response received',
+        'createOrUpdateMasterPatient',
+        networkError
+      );
     }
-    if (savedPatient === undefined) {
-      throw new FHIRServiceError('Failed to save patient', 'createOrUpdateMasterPatient');
+
+    if (!response.ok) {
+      // The server explicitly rejected the write: it was not applied.
+      const text = await response.text().catch(() => '');
+      try {
+        console.log(JSON.parse(text));
+      } catch (err) {
+        console.log(text);
+      }
+      throw new FHIRServiceError('Failed to save patient', 'createOrUpdateMasterPatient', response);
     }
-    return this.setMasterPatient(savedPatient);
+
+    // The server confirmed the write was applied; only reading the confirmation can still fail.
+    try {
+      const text = await response.text();
+      return JSON.parse(text);
+    } catch (parseError) {
+      throw new MasterPatientWriteUncertainError(
+        'Patient was saved but the response could not be read',
+        'createOrUpdateMasterPatient',
+        parseError
+      );
+    }
   }
 
   // make a temporary patient to pre-fill demographic forms when one doesn't exist on the server
@@ -609,6 +628,24 @@ export class FHIRDataService {
       if (!existingDataset) {
         this.removeDatasetFromUserResources(dataset.category, dataset.method, dataset.source);
       }
+
+      // The link-add write above may have actually reached the server even though it
+      // errored client-side (a proxy/gateway hop between us and the FHIR server can drop
+      // or mangle a response after the write already committed). If it did, the master
+      // patient now references patientReference, and cascade-deleting patientReference
+      // would also delete the master patient. Defensively strip the link before deleting,
+      // regardless of which failure we saw — it's a cheap, idempotent no-op when the link
+      // was never added.
+      try {
+        await this.removeLinkFromMasterPatient(patientReference);
+      } catch (cleanupError) {
+        console.warn(
+          `Could not confirm master patient link state for ${patientReference}; aborting rollback delete to avoid risking the master patient`,
+          cleanupError
+        );
+        throw new FHIRServiceError('Failed to link dataset to your account', 'addOrReplaceDataset', error);
+      }
+
       const rollback = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/${patientReference}?_cascade=delete`, {
         method: 'DELETE',
         headers: {
