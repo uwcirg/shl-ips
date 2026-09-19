@@ -3,8 +3,9 @@ import {
     SOF_HOSTS,
     SOF_REDIRECT_URI,
     SOF_PATIENT_RESOURCES } from '$lib/config/config';
-import { getReferences } from '$lib/utils/util';
+import { getReferences, isIPSBundle } from '$lib/utils/util';
 import type { BundleEntry, Resource } from 'fhir/r4';
+import { getEntries } from './importNormalization';
 
 export { authorize, endSession, getResources, getResourceReferences, activePatient, constructResourceUrl };
 
@@ -108,7 +109,9 @@ async function getResources() {
             return requestResources(client, resourceType);
         }))).filter(x => x.status == "fulfilled").map(x => x.value);
     } else if ((client.state.serverUrl === "https://ihe-nimbus.epic.com/Interconnect-FHIR/api/FHIR/R4")
-        || (client.state.serverUrl === "https://connectathon.epic.com/Interconnect-Fhir-OAuth/api/FHIR/R4")){
+        || (client.state.serverUrl === "https://connectathon.epic.com/Interconnect-Fhir-OAuth/api/FHIR/R4"
+        || (client.state.serverUrl === "https://ihe.epic.com/Interconnect-FHIR/api/FHIR/R4")
+        )){
         resources = await client.request(`Patient/${pid}/$summary`).then((result: Resource | Resource[]) => {
             let resourcesToPass = [];
             if (Array.isArray(result)) {
@@ -153,35 +156,45 @@ export async function completeConfidentialClientAuth(host: string, resourceList:
     const accessToken = tokenResult.access_token;
     const patientId = tokenResult.patient;
     console.log('Access Token:', accessToken);
-    
-    let patient = await fetch(`${sofToken.serverUrl}/Patient/${patientId}`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    })
-      .then(response => response.json())
-      .then(patientData => {
-        console.log('Patient Data:', patientData);
-        return patientData;
-      });
+    let resources;
+    if (sofToken.serverUrl === "https://greenfield-prod-apis.meditech.com/v2/uscore/R4") {
+        resources = await fetch(`${sofToken.serverUrl}/Patient/${patientId}/$summary`)
+            .then(response => response.json())
+            .then((result: Resource | Resource[]) => {
+                if (isIPSBundle(result)) {
+                    return getEntries(result.entry);
+                }
+            });
+    } else {
+        let patient = await fetch(`${sofToken.serverUrl}/Patient/${patientId}`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        })
+          .then(response => response.json())
+          .then(patientData => {
+            console.log('Patient Data:', patientData);
+            return patientData;
+          });
+            
+        resources = (await Promise.allSettled(resourceList.map((resourceType: string) => {
+          return fetch(`${sofToken.serverUrl}/${resourceType}?patient=${patientId}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          })
+          .then(response => response.json())
+          .then(data => {
+            console.log(`${resourceType} Data:`, data);
+            if (data.resourceType === 'Bundle') {
+              return data.entry.map((e: BundleEntry) => e.resource).filter((r: Resource) => r.resourceType === resourceType);
+            } else if (resourceList.includes(data.resourceType)) {
+              return [data];
+            }
+            throw Error (`Unexpected resource type ${data.resourceType}`);
+          });
+        }))).filter(x => x.status == "fulfilled").map(x => x.value);
         
-    let resources = (await Promise.allSettled(resourceList.map((resourceType: string) => {
-      return fetch(`${sofToken.serverUrl}/${resourceType}?patient=${patientId}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      })
-      .then(response => response.json())
-      .then(data => {
-        console.log(`${resourceType} Data:`, data);
-        if (data.resourceType === 'Bundle') {
-          return data.entry.map((e: BundleEntry) => e.resource).filter((r: Resource) => r.resourceType === resourceType);
-        } else if (resourceList.includes(data.resourceType)) {
-          return [data];
-        }
-        throw Error (`Unexpected resource type ${data.resourceType}`);
-      });
-    }))).filter(x => x.status == "fulfilled").map(x => x.value);
-    
-    resources = resources.flat();
-    resources = [patient, ...resources];
-    return resources;
+        resources = resources.flat();
+        resources = [patient, ...resources];
+        return resources;
+    }
 }
 
 async function getResourceReferences(resources: Resource[], allowedResourceTypes: string[], depth = 1, token:string|undefined = undefined, url:string|undefined = undefined) {

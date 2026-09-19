@@ -124,6 +124,13 @@
         resources = await getResources();
       }
 
+      if (resources === undefined) {
+        throw Error('Import failed');
+      }
+      if (resources.length === 0) {
+        throw Error('No resources found');
+      }
+
       let retrievedResources = await getResourceReferences(resources, SOF_RESOURCES, 1, token, token ? sofHost.url : undefined);
       const isIps = (e) => e.resourceType === 'Bundle' && e.type === 'document'; 
       let ipsBundles = retrievedResources.filter(e => isIps(e));
