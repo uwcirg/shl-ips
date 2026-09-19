@@ -90,6 +90,7 @@ export const AUTH_REDIRECT_URI = env('VITE_AUTH_REDIRECT_URI');
 export const AUTH_SILENT_REDIRECT_URI = env('VITE_AUTH_SILENT_REDIRECT_URI');
 export const AUTH_POST_LOGOUT_URI = env('VITE_AUTH_POST_LOGOUT_URI');
 
+// For searches based on patient id
 export const SOF_PATIENT_RESOURCES = [
   'Patient',
   'AllergyIntolerance',
@@ -344,10 +345,12 @@ export const BEARER_AUTHORIZATION = {
   'EpicHIMSS': env('VITE_EPIC_CLIENT_ID')
 }
 export const SOF_REDIRECT_URI = '/data';
-export const SOF_RESOURCES = [
+
+// For direct read operations (not search)
+export const USCDI_RESOURCES = [
   'Patient',
   'AllergyIntolerance',
-  // 'MedicationStatement', // Not in EPIC USCDI R4
+  'MedicationStatement', // Not in EPIC USCDI R4
   'MedicationRequest',
   'Medication', // can't search by patient; "Only an _ID search is allowed."
   'Condition',

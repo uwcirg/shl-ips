@@ -13,7 +13,7 @@
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import type { IAuthService, ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from '$lib/utils/types';
   import { clearURLOfParams, getReferences } from '$lib/utils/util';
-  import { authorize, completeConfidentialClientAuth, endSession, getResourceReferences } from '$lib/utils/sofClient';
+  import { authorize, completeConfidentialClientAuth, endSession } from '$lib/utils/sofClient';
   import { createEventDispatcher, onMount } from 'svelte';
   import type { BundleEntry, Resource } from 'fhir/r4';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
@@ -117,7 +117,7 @@
         let resources = await completeConfidentialClientAuth(sofHost.id, CARIN_RESOURCES, token, authToken!, code);
         if (resources) {
           let result = {
-            resources: await getResourceReferences(resources, CARIN_RESOURCES, 1, token, sofHost.url),
+            resources,
             category: CATEGORY,
             method: METHOD,
             source: sofHost?.url,

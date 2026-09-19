@@ -2,12 +2,13 @@ import FHIR from 'fhirclient';
 import {
     SOF_HOSTS,
     SOF_REDIRECT_URI,
-    SOF_PATIENT_RESOURCES } from '$lib/config/config';
+    SOF_PATIENT_RESOURCES, 
+    USCDI_RESOURCES} from '$lib/config/config';
 import { getReferences, isIPSBundle } from '$lib/utils/util';
 import type { BundleEntry, Resource } from 'fhir/r4';
 import { getEntries } from './importNormalization';
 
-export { authorize, endSession, getResources, getResourceReferences, activePatient, constructResourceUrl };
+export { authorize, endSession, getResources, activePatient, constructResourceUrl };
 
 const patientResourceScope = SOF_PATIENT_RESOURCES.map(resourceType => `patient/${resourceType}.read`);
 const resourceScope = patientResourceScope.join(" ");
@@ -130,7 +131,8 @@ async function getResources() {
         }))).filter(x => x.status == "fulfilled").map(x => x.value);
     }
     resources = resources.flat();
-    return resources;
+    let resourcesWithReferences = await getResourceReferences(resources, USCDI_RESOURCES, 1);
+    return resourcesWithReferences;
 }
 
 export async function completeConfidentialClientAuth(host: string, resourceList: string[], sofToken: any, authToken: string, code: string) {
@@ -158,7 +160,9 @@ export async function completeConfidentialClientAuth(host: string, resourceList:
     console.log('Access Token:', accessToken);
     let resources;
     if (sofToken.serverUrl === "https://greenfield-prod-apis.meditech.com/v2/uscore/R4") {
-        resources = await fetch(`${sofToken.serverUrl}/Patient/${patientId}/$summary`)
+        resources = await fetch(`${sofToken.serverUrl}/Patient/${patientId}/$summary`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        })
             .then(response => response.json())
             .then((result: Resource | Resource[]) => {
                 if (isIPSBundle(result)) {
@@ -192,7 +196,8 @@ export async function completeConfidentialClientAuth(host: string, resourceList:
         }))).filter(x => x.status == "fulfilled").map(x => x.value);
         
         resources = resources.flat();
-        resources = [patient, ...resources];
+        let resourcesWithReferences = await getResourceReferences(resources, USCDI_RESOURCES, 1, accessToken, sofToken.serverUrl);
+        resources = [patient, ...resourcesWithReferences];
         return resources;
     }
 }

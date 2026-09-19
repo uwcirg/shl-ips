@@ -9,15 +9,14 @@
     Spinner } from '@sveltestrap/sveltestrap';
   import { getContext } from 'svelte';
   import { page } from '$app/stores';
-  import { SOF_HOSTS, SOF_RESOURCES } from '$lib/config/config';
+  import { SOF_HOSTS, SOF_PATIENT_RESOURCES, USCDI_RESOURCES } from '$lib/config/config';
   import type { IAuthService, ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from '$lib/utils/types';
   import type { Resource } from 'fhir/r4';
   import {
     authorize,
     completeConfidentialClientAuth,
     endSession,
-    getResources,
-    getResourceReferences
+    getResources
   } from '$lib/utils/sofClient';
   import { createEventDispatcher, onMount } from 'svelte';
   import { clearURLOfParams, getEntriesFromIPS } from '$lib/utils/util';
@@ -119,7 +118,7 @@
           throw Error('No code found in authentication response url');
         }
         const authToken = await authService.getAccessToken();
-        resources = await completeConfidentialClientAuth(sofHost.id, SOF_RESOURCES, token, authToken!, code);
+        resources = await completeConfidentialClientAuth(sofHost.id, SOF_PATIENT_RESOURCES, token, authToken!, code);
       } else {
         resources = await getResources();
       }
@@ -131,10 +130,9 @@
         throw Error('No resources found');
       }
 
-      let retrievedResources = await getResourceReferences(resources, SOF_RESOURCES, 1, token, token ? sofHost.url : undefined);
       const isIps = (e) => e.resourceType === 'Bundle' && e.type === 'document'; 
-      let ipsBundles = retrievedResources.filter(e => isIps(e));
-      let nonIpsResources = retrievedResources.filter(e => !isIps(e));
+      let ipsBundles = resources.filter(e => isIps(e));
+      let nonIpsResources = resources.filter(e => !isIps(e));
       let allResources: Resource[] = nonIpsResources;
       for (const ips of ipsBundles) {
         allResources.concat(await getEntriesFromIPS(ips));
@@ -157,40 +155,6 @@
       endSession();
     }
   });
-
-  async function fetchData() {
-    try {
-      processing = true;
-      if (!sofHost) {
-        throw Error("Please select a provider.");
-      }
-      let resources = await getResources();
-      let retrievedResources = await getResourceReferences(resources, SOF_RESOURCES, 1);
-      const isIps = (e) => e.resourceType === 'Bundle' && e.type === 'document'; 
-      let ipsBundles = retrievedResources.filter(e => isIps(e));
-      let nonIpsResources = retrievedResources.filter(e => !isIps(e));
-      let allResources: Resource[] = nonIpsResources;
-      for (const ips of ipsBundles) {
-        allResources.concat(await getEntriesFromIPS(ips));
-      }
-      result = {
-        resources: allResources,
-        category: CATEGORY,
-        method: METHOD,
-        source: sofHost?.url,
-        sourceName: sofHost?.name
-      };
-      resourceDispatch('update-resources', result);
-      return;
-    } catch (e: any) {
-      console.log(e.message);
-      fetchError = e.message;
-      processing = false;
-    } finally {
-      window.history.replaceState(null, "", clearURLOfParams($page.url));
-      endSession();
-    }
-  }
 
   async function quickLoad() {
     fetchError = "";
