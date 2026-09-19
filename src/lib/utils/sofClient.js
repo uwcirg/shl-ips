@@ -5,6 +5,7 @@ import {
     SOF_PATIENT_RESOURCES,
     SOF_RESOURCES } from '$lib/config/config';
 import { getReferences } from '$lib/utils/util';
+import { fetchAiProvenanceResources } from '$lib/utils/aiProvenanceFetch';
 
 export { authorize, endSession, getResources, getResourcesWithReferences, activePatient, constructResourceUrl };
 
@@ -149,5 +150,25 @@ async function getResourcesWithReferences(depth=1) {
         referenceMap = {};
         depth--;
     }
+
+    // AI provenance points at the resources rather than being referenced by them,
+    // so it needs its own reverse lookup once everything else is in hand.
+    allResources = allResources.concat(await fetchAiProvenance(allResources));
+
     return allResources;
+}
+
+// Reverse-lookup of AI Transparency resources over the SMART client. Never lets
+// a failure break the import: the health data is already retrieved by this point.
+async function fetchAiProvenance(resources) {
+    try {
+        return await fetchAiProvenanceResources(resources, async (relativeUrl) => {
+            const result = await client.request(relativeUrl, { flat: true, pageLimit: 3 });
+            if (result === undefined) return [];
+            return Array.isArray(result) ? result : [result];
+        });
+    } catch (e) {
+        console.warn('Unable to retrieve AI provenance', e);
+        return [];
+    }
 }

@@ -15,9 +15,11 @@
     Spinner } from '@sveltestrap/sveltestrap';
   import { getContext, onMount, onDestroy, createEventDispatcher } from 'svelte';
   import { PATIENT_IPS, EXAMPLE_IPS, IPS_DEFAULT, BEARER_AUTHORIZATION } from '$lib/config/config';
+  import type { Resource } from 'fhir/r4';
   import type { SHCRetrieveEvent, IAuthService, IPSRetrieveEvent, ResourceRetrieveEvent } from '$lib/utils/types';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { getResourcesFromIPS, isIPSBundle } from '$lib/utils/util';
+  import { deriveFhirBaseUrl, fetchAiProvenanceResources } from '$lib/utils/aiProvenanceFetch';
   //import { normalizeGad7QuestionnaireResponses } from '$lib/utils/sdcClient';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
 
@@ -112,29 +114,63 @@
     return selectedUrl;
   }
 
+  // How a request to `targetUrl` has to be made for this host: some go through a
+  // server-side proxy that adds a bearer token, the rest go direct.
+  // NOTE: preserves the existing behaviour of leaving `url` undefined for
+  // 'openfhir' hosts, which looks like a bug but is not this change's to fix.
+  async function buildRequest(targetUrl: string) {
+    const headers: any = { accept: 'application/fhir+json' };
+    let url;
+    if (targetUrl.includes('meditech')) {
+      url = "/api/url_bearer/meditech?url=" + encodeURIComponent(targetUrl);
+      headers["Authorization"] = `Bearer ${await authService.getAccessToken()}`;
+    } else if (targetUrl.includes('Interconnect-Fhir-Oauth')) {
+      url = "/api/url_bearer/epic?url=" + encodeURIComponent(targetUrl);
+      headers["Authorization"] = `Bearer ${await authService.getAccessToken()}`;
+    } else if (targetUrl.includes('Interconnect-connectathon-ca/api/FHIR/R4')) {
+      // Dynamic bearer token
+      url = "/api/url_bearer/epicihe?url=" + encodeURIComponent(targetUrl);
+      headers["Authorization"] = `Bearer ${await authService.getAccessToken()}`;
+    } else if (targetUrl.includes('openfhir')) {
+      headers['epic-client-id'] = `${BEARER_AUTHORIZATION['EpicHIMSS']}`;
+    } else {
+      url = targetUrl;
+    }
+    return { url, headers };
+  }
+
+  // AI provenance references the imported resources rather than the other way
+  // round, so it takes a reverse lookup against the same server. Failure here
+  // never fails the import — the health data is already in hand.
+  async function addAiProvenance(resources: Resource[] | undefined, sourceUrl: string | undefined) {
+    const base = deriveFhirBaseUrl(sourceUrl);
+    if (!resources?.length || !base) return resources;
+    try {
+      const extra = await fetchAiProvenanceResources(resources, async (relativeUrl) => {
+        const { url, headers } = await buildRequest(`${base}/${relativeUrl}`);
+        if (!url) return [];
+        const response = await fetch(url, { headers });
+        if (!response.ok) throw new Error(`FHIR request failed: ${response.status}`);
+        const body = await response.json();
+        if (body?.resourceType === 'Bundle') {
+          return (body.entry ?? []).map((entry: any) => entry.resource).filter(Boolean);
+        }
+        return body ? [body] : [];
+      });
+      return extra.length > 0 ? [...resources, ...extra] : resources;
+    } catch (e) {
+      console.warn('Unable to retrieve AI provenance', e);
+      return resources;
+    }
+  }
+
   async function prepareIps() {
     fetchError = "";
     processing = true;
     try {
       let content;
       let hostname;
-      let headers: any = { accept: 'application/fhir+json' };
-      let url;
-      if (summaryUrlValidated?.toString().includes('meditech')) {
-        url = "/api/url_bearer/meditech?url=" + encodeURIComponent(summaryUrlValidated.toString());
-        headers["Authorization"] = `Bearer ${await authService.getAccessToken()}`;
-      } else if (summaryUrlValidated?.toString().includes('Interconnect-Fhir-Oauth')) {
-        url = "/api/url_bearer/epic?url=" + encodeURIComponent(summaryUrlValidated.toString());
-        headers["Authorization"] = `Bearer ${await authService.getAccessToken()}`;
-      } else if (summaryUrlValidated?.toString().includes('Interconnect-connectathon-ca/api/FHIR/R4')) {
-        // Dynamic bearer token
-        url = "/api/url_bearer/epicihe?url=" + encodeURIComponent(summaryUrlValidated.toString());
-        headers["Authorization"] = `Bearer ${await authService.getAccessToken()}`;
-      } else if (summaryUrlValidated?.toString().includes('openfhir')) {
-        headers['epic-client-id'] = `${BEARER_AUTHORIZATION['EpicHIMSS']}`;
-      } else {
-        url = summaryUrlValidated;
-      }
+      const { url, headers } = await buildRequest(summaryUrlValidated?.toString() ?? "");
 
       const contentResponse = await fetch(url!, {
         headers: headers
@@ -160,7 +196,7 @@
 
       let result = {
         // Normalize GAD7 QuestionnaireResponses so they're ready for $extract on upload.
-        resources: getResourcesFromIPS(content),
+        resources: await addAiProvenance(getResourcesFromIPS(content), summaryUrlValidated?.toString()),
         //resources: normalizeGad7QuestionnaireResponses(getResourcesFromIPS(content)),
         category: CATEGORY,
         method: METHOD,
