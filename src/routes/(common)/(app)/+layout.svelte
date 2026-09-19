@@ -42,24 +42,17 @@
     })();
   }
 
-  async function syncTokenToServer(token: string): Promise<boolean> {
-    const response = await fetch('/auth/settoken', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token })
-    });
-    return response.ok;
-  }
-
   async function checkUser() {
     await authService.isAuthenticated();
     user = authService.user;
     if ($user) {
       if (data.unauthenticated) {
-        // User is valid but cookie was missing/invalid — sync current token
+        // User is valid but cookie was missing/invalid — sync current token.
+        // No renewal happens here, so AuthService's own event-driven sync
+        // (see addUserLoaded) never fires; sync explicitly.
         const token = await authService.getAccessToken();
         if (token) {
-          const synced = await syncTokenToServer(token);
+          const synced = await authService.syncTokenToServer(token);
           if (synced) {
             await invalidateAll();
             return;
@@ -72,15 +65,8 @@
       }
       let now = Date.now() / 1000;
       if (($user.expires_at ?? 0) < now) {
-        const renewedUser = await authService.renewToken();
-        if (renewedUser?.access_token) {
-          const synced = await syncTokenToServer(renewedUser.access_token);
-          if (synced) {
-            await invalidateAll(); // now safe — cookie is confirmed set on server
-          } else {
-            await authService.login();
-          }
-        }
+        await authService.renewToken();
+        await invalidateAll();
       }
     } else {
       await authService.login();

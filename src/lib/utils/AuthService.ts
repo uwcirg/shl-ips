@@ -33,8 +33,35 @@ export class AuthService implements IAuthService {
       post_logout_redirect_uri: AUTH_POST_LOGOUT_URI,
       // iframeScriptOrigin: "http://localhost:3000",
       scope: "openid profile online_access",
+      automaticSilentRenew: true,
     };
     this.userManager = new UserManager(settings);
+
+    // Background renewal fires no lifecycle hook in the app's Svelte layout,
+    // so the renewed token must be pushed to the server cookie here.
+    this.userManager.events.addUserLoaded(async (user: User) => {
+      this.storeUser(user);
+      if (user.access_token) {
+        await this.syncTokenToServer(user.access_token);
+      }
+    });
+    this.userManager.events.addSilentRenewError((error: Error) => {
+      console.error('Silent renew failed', error);
+      this.login();
+    });
+    this.userManager.events.addAccessTokenExpired(() => {
+      // Safety net in case automaticSilentRenew's own retry didn't recover in time.
+      this.login();
+    });
+  }
+
+  async syncTokenToServer(token: string): Promise<boolean> {
+    const response = await fetch('/auth/settoken', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token })
+    });
+    return response.ok;
   }
 
   private handleError(error: unknown) {
@@ -136,6 +163,14 @@ export class AuthService implements IAuthService {
       const user = await this.userManager.signinSilent();
       if (user) {
         this.storeUser(user);
+        if (user.access_token) {
+          // Awaited here (rather than left to addUserLoaded) so callers that
+          // depend on the cookie being set, like invalidateAll(), don't race it.
+          const synced = await this.syncTokenToServer(user.access_token);
+          if (!synced) {
+            await this.login();
+          }
+        }
         return user;
       } else {
         throw Error('Unable to authenticate user in background');

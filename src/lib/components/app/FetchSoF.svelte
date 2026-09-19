@@ -7,14 +7,20 @@
     Label,
     Row,
     Spinner } from '@sveltestrap/sveltestrap';
-
-  import { SOF_HOSTS } from '$lib/config/config';
-  import type { ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from '$lib/utils/types';
-  import type { Resource } from 'fhir/r4';
-  import { authorize, endSession, getResourcesWithReferences } from '$lib/utils/sofClient.js';
-  import { createEventDispatcher, onMount } from 'svelte';
-  import { clearURLOfParams, getResourcesFromIPS } from '$lib/utils/util';
+  import { getContext } from 'svelte';
   import { page } from '$app/stores';
+  import { SOF_HOSTS, SOF_RESOURCES } from '$lib/config/config';
+  import type { IAuthService, ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from '$lib/utils/types';
+  import type { Resource } from 'fhir/r4';
+  import {
+    authorize,
+    completeConfidentialClientAuth,
+    endSession,
+    getResources,
+    getResourceReferences
+  } from '$lib/utils/sofClient';
+  import { createEventDispatcher, onMount } from 'svelte';
+  import { clearURLOfParams, getEntriesFromIPS } from '$lib/utils/util';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
 
@@ -29,6 +35,8 @@
 
   // Demo quick sample loader
   let defaultUrl = EXAMPLE_IPS[IPS_DEFAULT];
+
+  let authService: IAuthService = getContext('authService');
   
   const authDispatch = createEventDispatcher<{'sof-auth-init': SOFAuthEvent; 'sof-auth-fail': SOFAuthEvent}>();
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
@@ -61,7 +69,10 @@
       if (sofHost) {
         try {
           sessionStorage.setItem('AUTH_METHOD', 'sof');
-          authorize(sofHost.url, sofHost.clientId, sofHost.scope);
+          authorize(sofHost.url, sofHost.clientId, {
+            scope: sofHost.scope,
+            pkceMode: sofHost.type == 'confidential' ? "disabled" : "ifSupported"
+          });
           authDispatch('sof-auth-init', { data: true });
         } catch (e) {
           authDispatch('sof-auth-fail', { data: false });
@@ -80,19 +91,63 @@
     }
     sessionStorage.removeItem('AUTH_METHOD');
     let key = sessionStorage.getItem('SMART_KEY');
-    if (key) {
-      let token = sessionStorage.getItem(JSON.parse(key));
-      if (token) {
-        let url = JSON.parse(token).serverUrl;
-        let sofHostAuthd = SOF_HOSTS.find(e => e.url == url);
-        if (sofHostAuthd) {
-          sofHost = sofHostAuthd;
-          sofHostSelection = sofHost.id;
-          await fetchData();
-        } else {
-          fetchError = `No registered SMART host found matching ${url}`;
+    if (!key) {
+      return;
+    }
+    let tokenString = sessionStorage.getItem(JSON.parse(key));
+    if (!tokenString) {
+      return;
+    }
+    let token = JSON.parse(tokenString);
+    let sofHostAuthd = SOF_HOSTS.find(e => e.url == token.serverUrl);
+    if (!sofHostAuthd) {
+      throw Error(`No registered SMART host found matching ${token.serverUrl}`);
+    }
+    sofHost = sofHostAuthd;
+    if (!sofHost) {
+      throw Error("Please select a provider.");
+    }
+
+    sofHostSelection = sofHost.id;
+
+    try {
+      processing = true;
+      let resources;
+      if (sofHost.type == 'confidential') {
+        const code = $page.url.searchParams.get('code');
+        if (!code) {
+          throw Error('No code found in authentication response url');
         }
+        const authToken = await authService.getAccessToken();
+        resources = await completeConfidentialClientAuth(sofHost.id, SOF_RESOURCES, token, authToken!, code);
+      } else {
+        resources = await getResources();
       }
+
+      let retrievedResources = await getResourceReferences(resources, SOF_RESOURCES, 1, token, token ? sofHost.url : undefined);
+      const isIps = (e) => e.resourceType === 'Bundle' && e.type === 'document'; 
+      let ipsBundles = retrievedResources.filter(e => isIps(e));
+      let nonIpsResources = retrievedResources.filter(e => !isIps(e));
+      let allResources: Resource[] = nonIpsResources;
+      for (const ips of ipsBundles) {
+        allResources.concat(await getEntriesFromIPS(ips));
+      }
+      result = {
+        resources: allResources,
+        category: CATEGORY,
+        method: METHOD,
+        source: sofHost?.url,
+        sourceName: sofHost?.name
+      };
+      resourceDispatch('update-resources', result);
+      return;
+    }catch (e: any) {
+      console.log(e.message);
+      fetchError = e.message;
+      processing = false;
+    } finally {
+      window.history.replaceState(null, "", clearURLOfParams($page.url));
+      endSession();
     }
   });
 
@@ -102,13 +157,14 @@
       if (!sofHost) {
         throw Error("Please select a provider.");
       }
-      let retrievedResources = await getResourcesWithReferences(1);
+      let resources = await getResources();
+      let retrievedResources = await getResourceReferences(resources, SOF_RESOURCES, 1);
       const isIps = (e) => e.resourceType === 'Bundle' && e.type === 'document'; 
       let ipsBundles = retrievedResources.filter(e => isIps(e));
       let nonIpsResources = retrievedResources.filter(e => !isIps(e));
       let allResources: Resource[] = nonIpsResources;
       for (const ips of ipsBundles) {
-        allResources.concat(await getResourcesFromIPS(ips));
+        allResources.concat(await getEntriesFromIPS(ips));
       }
       result = {
         resources: allResources,
@@ -145,7 +201,7 @@
         }
       });
       content = await contentResponse.json();
-      let resources = await getResourcesFromIPS(content);
+      let resources = await getEntriesFromIPS(content);
       result = {
         resources,
         category: CATEGORY,

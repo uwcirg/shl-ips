@@ -82,6 +82,10 @@ interface ImportMetaEnv {
     readonly VITE_UNITED_CLIENT_ID: string
     readonly UNITED_CLIENT_SECRET: string
     readonly UNITED_TOKEN_ENDPOINT: string
+
+    readonly VITE_MEDITECH_CLIENT_ID: string
+    readonly MEDITECH_CLIENT_SECRET: string
+    readonly MEDITECH_TOKEN_ENDPOINT: string
 }
   
 interface ImportMeta {

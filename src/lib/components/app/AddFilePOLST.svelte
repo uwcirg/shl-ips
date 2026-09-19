@@ -25,7 +25,7 @@
   import AdvancedDirectiveSearch from '$lib/components/app/AdvancedDirectiveSearch.svelte';
   import ResourceSelector from '$lib/components/app/ResourceSelector.svelte';
   import {
-    getResourcesFromIPS,
+    getEntriesFromIPS,
     isSHCFile,
     packageSHC,
   } from '$lib/utils/util';
@@ -258,7 +258,7 @@
         throw Error("Empty IPS content: " + JSON.stringify(details));
       }
 
-      let ipsResources = getResourcesFromIPS(ipsResult.ips);
+      let ipsResources = getEntriesFromIPS(ipsResult.ips);
       handleNewResources({ resources: ipsResources });
     } catch (e) {
       console.log('Failed', e);

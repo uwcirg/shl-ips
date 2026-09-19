@@ -123,7 +123,7 @@
         showSuccessMessage();
       }
     } catch (e) {
-      console.log('Failed', e);
+      console.error('Import failed', e);
       fetchError = "Error preparing IPS";
     }
   }
