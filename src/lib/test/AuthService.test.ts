@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { get } from 'svelte/store';
-import { AuthService } from './AuthService';
+import { AuthService } from '../utils/AuthService';
 
 // vi.mock factories are hoisted above imports, so anything they reference
 // must be created through vi.hoisted rather than a plain top-level const.
