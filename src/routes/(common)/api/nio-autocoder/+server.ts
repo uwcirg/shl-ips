@@ -7,7 +7,8 @@ import {
 export const GET = async ({ request, url }: { request: Request; url: URL; }) => {
   let occupation = url.searchParams.get("o");
   let industry = url.searchParams.get("i");
-  let api = "https://wwwn.cdc.gov/nioccs/iocode?n=6";
+  // let api = "https://wwwn.cdc.gov/nioccs/iocode?n=6";
+  let api = "https://apistg.cdc.gov/nioautocoder/1.1.0/code?n=6"; // Staging NIOCCS API instance
   let endpoint = `${api}${occupation ? "&o="+occupation : ""}${industry ? "&i="+industry : ""}`;
 
   let response = await fetch(endpoint, {
