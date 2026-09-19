@@ -24,6 +24,7 @@
   import type { IPSResourceCollection } from '$lib/utils/IPSResourceCollection.js';
   import type { IAuthService, IPSRetrieveEvent } from '$lib/utils/types.ts';
   import type { CompositionSection, BundleEntry } from 'fhir/r4';
+  import { finalizeForUpload, getEntries } from '$lib/utils/importNormalization';
 
   import AdvanceDirective from '$lib/components/resource-templates/AdvanceDirective.svelte';
   import AllergyIntolerance from '$lib/components/resource-templates/AllergyIntolerance.svelte';
@@ -128,7 +129,7 @@
         .map((rh: ResourceHelper) => {
           return rh.resource;
         });
-      reference = await uploadResourcesAndGetReference(selectedIPSResources, await authService.getAccessToken());
+      reference = await uploadResourcesAndGetReference(finalizeForUpload(getEntries(selectedIPSResources)), await authService.getAccessToken());
     } catch (e: any) {
       throw new Error('Unable to upload resources', { cause: e });
     }

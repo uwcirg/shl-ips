@@ -15,12 +15,12 @@
     Portal,
     Row,
     Spinner } from '@sveltestrap/sveltestrap';
-  import { EPIC_CLIENT_ID, CERNER_CLIENT_ID, SOF_ENDPOINTS } from '$lib/config/config';
+  import { EPIC_CLIENT_ID, CERNER_CLIENT_ID, SOF_ENDPOINTS, USCDI_RESOURCES } from '$lib/config/config';
   import type { ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from '$lib/utils/types';
   import type { Resource } from 'fhir/r4';
-  import { authorize, endSession, getResourcesWithReferences } from '$lib/utils/sofClient.js';
+  import { authorize, endSession, getResources } from '$lib/utils/sofClient';
   import { createEventDispatcher, onMount, onDestroy } from 'svelte';
-  import { clearURLOfParams, getResourcesFromIPS } from '$lib/utils/util';
+  import { clearURLOfParams, getEntriesFromIPS } from '$lib/utils/util';
   import { page } from '$app/stores';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
@@ -138,13 +138,13 @@
     }
     processing = true;
     try {
-      let retrievedResources = await getResourcesWithReferences(1);
+      let resources = await getResources();
       const isIps = (e) => e.resourceType === 'Bundle' && e.type === 'document' && e.entry?.[0]?.resource?.resourceType === 'Composition' && e.entry?.[0]?.resource?.type?.coding?.some(e => e.code == '60591-5' && e.system == 'http://loinc.org');
-      let ipsBundles = retrievedResources.filter(e => isIps(e));
-      let nonIpsResources = retrievedResources.filter(e => !isIps(e));
+      let ipsBundles = resources.filter(e => isIps(e));
+      let nonIpsResources = resources.filter(e => !isIps(e));
       let allResources: Resource[] = nonIpsResources;
       for (const ips of ipsBundles) {
-        allResources.concat(await getResourcesFromIPS(ips));
+        allResources.concat(await getEntriesFromIPS(ips));
       }
       result = {
         resources: allResources,

@@ -8,12 +8,13 @@
         Row,
         Spinner } from '@sveltestrap/sveltestrap';
     import type { ResourceRetrieveEvent, SHCFile } from '$lib/utils/types';
-    import { getResourcesFromIPS, isSHCFile } from '$lib/utils/util';
+    import { getEntriesFromIPS, isIPSBundle, isSHCFile } from '$lib/utils/util';
     import { verify } from '$lib/utils/shcDecoder.js';
     import { createEventDispatcher } from 'svelte';
     import type { Composition } from 'fhir/r4';
     import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
     import { METHODS, CATEGORIES } from '$lib/config/tags';
+    import { getEntries } from '$lib/utils/importNormalization';
 
     export let disabled = false;
     export let processing = false;
@@ -74,19 +75,20 @@
                 bundle = await decodeSHC(content);
             } else if (content.resourceType === "Bundle") {
                 bundle = content;
-            } else {
+            } 
+            if (!bundle || bundle.resourceType !== "Bundle") {
                 throw Error("Error: file must contain a FHIR Bundle.");
             }
+
             let resources;
-            let composition = bundle.entry.find(entry => entry.resource.resourceType === "Composition")?.resource as Composition;
-            if (composition && composition.type?.coding?.[0].system === "http://loinc.org" && composition.type?.coding?.[0].code === "60591-5") {
-                resources = getResourcesFromIPS(bundle);
+            if (isIPSBundle(bundle)) {
+              resources = getEntriesFromIPS(bundle);
             } else {
-                resources = bundle.entry.map(entry => entry.resource);
+              (resources) = getEntries(bundle.entry);
             }
-            if (!resources) { throw Error("Error: file contains no FHIR resources."); }
+            if (!resources || resources.length === 0) { throw Error("Error: file contains no FHIR resources."); }
             resourceResult.resources = resources;
-            resourceResult.source = source;
+            resourceResult.source = filename;
             resourceResult.sourceName = filename;
             resourceDispatch('update-resources', resourceResult);
         } catch (e) {

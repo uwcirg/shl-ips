@@ -13,6 +13,7 @@ import { writable, derived, get, type Writable, type Readable } from "svelte/sto
 import type { ResourceHelperMap, IResourceCollection } from "$lib/utils/types";
 import type { SerializedResourceHelper } from "$lib/utils/ResourceHelper";
 import { CATEGORY_SYSTEM, METHOD_SYSTEM, SOURCE_NAME_SYSTEM, PLACEHOLDER_SYSTEM } from "$lib/config/config";
+import { assignPatientReference } from "$lib/utils/util";
 
 export interface SerializedResourceCollection {
     resources: SerializedResourceHelper[];
@@ -41,7 +42,7 @@ export class ResourceCollection implements IResourceCollection {
         });
         this.patientReference = derived(this.patient, ($patient) => {
             if ($patient) {
-                return `urn:uuid:${$patient.id}`;
+                return `Patient/${$patient.id}`;
             } else {
                 return '';
             }
@@ -57,11 +58,7 @@ export class ResourceCollection implements IResourceCollection {
 
     _updatePatientRef(rh: ResourceHelper) {
         const newPatientRef = get(this.patientReference);
-        if (rh.resource.subject) {
-            rh.resource.subject.reference = newPatientRef;
-        } else if (rh.resource.patient) {
-            rh.resource.patient.reference = newPatientRef;
-        }
+        assignPatientReference(rh.resource, newPatientRef);
         return rh;
     }
 
