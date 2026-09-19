@@ -210,15 +210,15 @@
         {#if details.inputPrompts.length > 0}
           <section>
             <h6 class="ai-heading">Input prompt</h6>
-            {#each details.inputPrompts as prompt}
-              <div class="ai-card">
-                {#if prompt.title}<div class="ai-card-head"><strong>{prompt.title}</strong></div>{/if}
-                {#if prompt.description}<p class="ai-card-text">{prompt.description}</p>{/if}
-                {#if prompt.text && prompt.text !== prompt.description}
-                  <pre class="ai-card-pre">{prompt.text}</pre>
-                {/if}
-              </div>
-            {/each}
+            <div class="ai-prompt-scroll">
+              {#each details.inputPrompts as prompt}
+                <div class="ai-card">
+                  {#if prompt.title}<div class="ai-card-head"><strong>{prompt.title}</strong></div>{/if}
+                  {#if prompt.description}<p class="ai-card-text">{prompt.description}</p>{/if}
+                  {#if prompt.text}<pre class="ai-card-pre">{prompt.text}</pre>{/if}
+                </div>
+              {/each}
+            </div>
           </section>
         {/if}
 
@@ -389,6 +389,8 @@
   }
 
   .ai-card-text {
+    max-height: 16rem;
+    overflow: auto;
     font-size: 0.9rem;
     margin: 0.35rem 0;
     white-space: pre-wrap;
@@ -403,6 +405,19 @@
     font-size: 0.78rem;
     white-space: pre-wrap;
     margin-bottom: 0.35rem;
+  }
+
+  /* One scroll box for the whole Input prompt section; the cards inside it
+     don't scroll on their own. */
+  .ai-prompt-scroll {
+    max-height: 20rem;
+    overflow: auto;
+  }
+
+  .ai-prompt-scroll .ai-card-text,
+  .ai-prompt-scroll .ai-card-pre {
+    max-height: none;
+    overflow: visible;
   }
 
   .ai-footnote {

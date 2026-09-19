@@ -537,6 +537,16 @@ function findConfidenceLabels(resource: Resource): FoundConfidence[] {
 
 // --- model cards ------------------------------------------------------------
 
+/**
+ * DocumentReference.description, unless it merely repeats the decoded
+ * attachment — some producers put the whole Model-Card/prompt in both.
+ */
+function distinctDescription(description: string | undefined, text: string | undefined): string | undefined {
+  if (!description || !text) return description;
+  const normalize = (value: string) => value.replace(/\s+/g, ' ').trim();
+  return normalize(description) === normalize(text) ? undefined : description;
+}
+
 function modelCardFromDocument(
   doc: DocumentReference,
   source: AiModelCard['source'],
@@ -565,7 +575,7 @@ function modelCardFromDocument(
     sourceLabel,
     title: doc.identifier?.[0]?.value,
     format: doc.category?.map((c) => conceptDisplay(c)).find((d) => !!d),
-    description: doc.description,
+    description: distinctDescription(doc.description, text),
     text,
     links
   };
@@ -790,10 +800,11 @@ export function getAiProvenance(
         provenanceModelCards.push(modelCardFromDocument(what, 'provenance-entity', 'Referenced by the AI Provenance', resolve));
       } else if (isInputPromptDocument(what)) {
         const doc = what as DocumentReference;
+        const text = doc.content?.map((c) => decodeTextAttachment(c.attachment)).find((t) => !!t);
         inputPrompts.push({
           title: doc.identifier?.[0]?.value,
-          description: doc.description,
-          text: doc.content?.map((c) => decodeTextAttachment(c.attachment)).find((t) => !!t)
+          description: distinctDescription(doc.description, text),
+          text
         });
       }
     }
