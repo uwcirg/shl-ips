@@ -159,7 +159,8 @@ export async function completeConfidentialClientAuth(host: string, resourceList:
     const patientId = tokenResult.patient;
     console.log('Access Token:', accessToken);
     let resources;
-    if (sofToken.serverUrl === "https://greenfield-prod-apis.meditech.com/v2/uscore/R4") {
+    // Meditech hasn't pushed this to greenfield yet.
+    if (false && sofToken.serverUrl === "https://greenfield-prod-apis.meditech.com/v2/uscore/R4") {
         resources = await fetch(`${sofToken.serverUrl}/Patient/${patientId}/$summary`, {
             headers: { Authorization: `Bearer ${accessToken}` },
         })
