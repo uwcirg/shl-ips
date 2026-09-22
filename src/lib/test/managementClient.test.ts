@@ -1,3 +1,10 @@
+// jsdom simulates the browser globals in its own separate realm, so a Uint8Array produced by
+// TextEncoder().encode() there isn't `instanceof` the Uint8Array jose's strict runtime checks
+// resolve against — jose's CompactEncrypt then rejects it with "plaintext must be an instance
+// of Uint8Array" even though the bytes are perfectly valid. This file doesn't touch any DOM
+// APIs (SHLClient is just fetch + jose), so running it in the plain Node environment sidesteps
+// the realm mismatch entirely instead of trying to patch around it.
+// @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { writable } from 'svelte/store';
 import * as jose from 'jose';
