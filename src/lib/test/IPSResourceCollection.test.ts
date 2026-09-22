@@ -26,7 +26,10 @@ vi.mock('$lib/config/config', () => ({
 }));
 
 function patient(id: string, overrides: Record<string, unknown> = {}): any {
-  return { resourceType: 'Patient', id, ...overrides };
+  // ResourceHelper strips id/meta/text before hashing for dedup, so `id` alone doesn't make
+  // two patients distinct — bake it into `name` too, or two different-id patients collapse
+  // into the same tempId and only one of them ever actually gets stored.
+  return { resourceType: 'Patient', id, name: [{ family: id }], ...overrides };
 }
 
 function observation(id: string, overrides: Record<string, unknown> = {}): any {
