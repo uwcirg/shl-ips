@@ -13,6 +13,12 @@ WORKDIR /opt/app
 
 CMD ["npm", "run", "test"]
 
+FROM deps AS test-e2e
+
+WORKDIR /opt/app
+
+CMD ["npm", "run", "test:e2e"]
+
 FROM deps AS build
 
 WORKDIR /opt/app
