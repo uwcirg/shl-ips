@@ -9,3 +9,14 @@ import { cleanup } from '@testing-library/svelte';
 afterEach(() => {
   cleanup();
 });
+
+// jsdom doesn't implement ResizeObserver. Several components (SourceSummary.svelte among
+// them) construct one as soon as they mount, which throws "ResizeObserver is not defined"
+// with no jsdom polyfill in place.
+if (!('ResizeObserver' in globalThis)) {
+  (globalThis as any).ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
