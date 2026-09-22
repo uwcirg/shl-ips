@@ -137,12 +137,15 @@ class PatientStorySectionExtender extends SectionExtender {
     let existingDivContent = currentDiv;
     if (currentDiv) {
       existingDivContent = existingDivContent.replace(/^<div xmlns=\"http:\/\/www.w3.org\/1999\/xhtml\">/g, "");
-      existingDivContent = existingDivContent.replace(/<div>$/g, "");
+      existingDivContent = existingDivContent.replace(/<\/div>\s*$/, "");
     }
-  
-    let story = resources.filter(r => r.resourceType == 'Observation')[0].valueString;
-    section.extension[0].valueString = story;
-    let patientStoryHTML = story ? `<p>${story}</p>`: "";
+
+    let story = resources.find(r => r.resourceType == 'Observation')?.valueString;
+    let patientStoryHTML = "";
+    if (story) {
+      section.extension[0].valueString = story;
+      patientStoryHTML = `<p>${story}</p>`;
+    }
   
     let goalResources = resources.filter(r => r.resourceType == 'Goal');
     let patientGoalsHTML = goalResources.length > 0
