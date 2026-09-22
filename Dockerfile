@@ -7,6 +7,12 @@ RUN npm clean-install
 
 COPY . .
 
+FROM deps AS test
+
+WORKDIR /opt/app
+
+CMD ["npm", "run", "test"]
+
 FROM deps AS build
 
 WORKDIR /opt/app
