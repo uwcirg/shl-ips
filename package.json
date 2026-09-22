@@ -16,6 +16,8 @@
 		"test:watch": "vitest"
 	},
 	"devDependencies": {
+		"@testing-library/jest-dom": "^7.0.1",
+		"@testing-library/svelte": "^5.4.2",
 		"@types/fhir": "^0.0.41",
 		"@types/node": "^24.2.0",
 		"@types/pako": "^2.0.0",
