@@ -1,22 +1,11 @@
-# create-svelte
+# My Health Summary
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
-
-## Creating a project
-
-If you're seeing this, you've probably already done this step. Congrats!
-
-```bash
-# create a new project in the current directory
-npm create svelte@latest
-
-# create a new project in my-app
-npm create svelte@latest my-app
-```
+Public client component for the My Health Summary/WA Health Summary architecture.
 
 ## Developing
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+Install dependencies with `npm install` (or `pnpm install` or `yarn`)
+Start the development server:
 
 ```bash
 npm run dev
@@ -35,18 +24,40 @@ npm run build
 
 You can preview the production build with `npm run preview`.
 
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
-
 ## Docker
 
-Environment
+Copy the default env file:
 
 ```bash
 cp default.env .env
 ```
 
+Modify the `.env` file as necessary. Lines that are not commented-out are required, commented lines are optional.
+
 Starting the docker container
 
 ```bash
 docker-compose build && docker-compose up --detach
+```
+
+## Develop
+
+Some configuration can be overridden by copying the development environment file:
+
+```bash
+cp default.env.development .env.development
+```
+
+### Testing
+
+To run unit and component tests via vitest, run
+
+```bash
+npm run test
+```
+
+To run e2e tests via playwright, run
+
+```bash
+npm run test:e2e
 ```
