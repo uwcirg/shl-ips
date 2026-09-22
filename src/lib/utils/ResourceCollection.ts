@@ -11,12 +11,14 @@ import { ResourceHelper } from "$lib/utils/ResourceHelper";
 import type { Patient, Resource } from "fhir/r4";
 import { writable, derived, get, type Writable, type Readable } from "svelte/store";
 import type { ResourceHelperMap, IResourceCollection } from "$lib/utils/types";
-import type { SerializedResourceHelper } from "$lib/utils/ResourceHelper";
 import { CATEGORY_SYSTEM, METHOD_SYSTEM, SOURCE_NAME_SYSTEM, PLACEHOLDER_SYSTEM } from "$lib/config/config";
 import { assignPatientReference } from "$lib/utils/util";
 
 export interface SerializedResourceCollection {
-    resources: SerializedResourceHelper[];
+    // Each entry is a JSON string (ResourceHelper.toJSON()/fromJSON() operate on strings,
+    // not the plain SerializedResourceHelper object), so this whole collection is re-encoded
+    // through JSON.stringify(output) in toJSON() below.
+    resources: string[];
     selectedPatient: string;
 }
 
@@ -184,20 +186,26 @@ export class ResourceCollection implements IResourceCollection {
         }
     }
 
-    toJson(): string {
+    toJSON(): string {
         let resources = get(this.resources);
+        let resourceHelpers = Object.values(resources);
         let output:SerializedResourceCollection = {
-            resources: resources.map(rh => rh.toJson()),
+            resources: resourceHelpers.map(rh => rh.toJSON()),
             selectedPatient: get(this.selectedPatient),
         }
         return JSON.stringify(output);
     }
 
-    static fromJson(json:string) {
+    static fromJSON(json:string) {
         let data:SerializedResourceCollection = JSON.parse(json);
         let newCollection = new this();
         if (data.resources) {
-            newCollection.resources.set(data.resources);
+            const resourceMap: ResourceHelperMap = {};
+            for (const serializedResource of data.resources) {
+                const rh = ResourceHelper.fromJSON(serializedResource);
+                resourceMap[rh.tempId] = rh;
+            }
+            newCollection.resources.set(resourceMap);
         }
         if (data.selectedPatient) {
             newCollection.setSelectedPatient(data.selectedPatient);

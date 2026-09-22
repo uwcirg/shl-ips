@@ -168,7 +168,7 @@
   
   async function preAuthRedirectHandler(details: SOFAuthEvent|undefined) {
     sessionStorage.setItem('URL', window.location.href);
-    sessionStorage.setItem('RESOURCES', resourceCollection.toJson());
+    sessionStorage.setItem('RESOURCES', resourceCollection.toJSON());
     sessionStorage.setItem('PATIENT', JSON.stringify(patient ?? ""));
     sessionStorage.setItem('TAB', String(currentTab ?? ""));
     sessionStorage.setItem('LABEL', label ?? "");

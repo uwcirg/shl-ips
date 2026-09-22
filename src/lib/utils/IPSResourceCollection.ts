@@ -110,7 +110,7 @@ export class IPSResourceCollection extends ResourceCollection {
         return super.addResource(resource);
     }
 
-    addResources(resources:Resource[]) {
+    addResources(resources:Resource[]): ResourceHelper[] {
         const datasetPatient = resources.find(r => r.resourceType === 'Patient' && r.meta?.tag?.find(t => t.system === METHOD_SYSTEM));
         resources = resources.filter(r => {
             if (!this._validateResource(r)) {
@@ -125,8 +125,8 @@ export class IPSResourceCollection extends ResourceCollection {
         const datasetMethod = datasetPatient?.meta?.tag?.find(t => t.system === METHOD_SYSTEM)?.code;
         let sectionExtenderForMethod = this.sectionExtenderRegistry.register(datasetMethod);
         let extendedSectionTitle = sectionExtenderForMethod?.getSectionTitle();
-        resources.forEach(r => {
-            const rh = this.addResource(r);
+        let result = super.addResources(resources);
+        result.forEach(rh => {
             if (datasetPatient && datasetMethod && sectionExtenderForMethod && extendedSectionTitle) {
                 // Add resource ids to extended section list
                 this.sectionExtensionResources.update((curr) => {
@@ -136,6 +136,7 @@ export class IPSResourceCollection extends ResourceCollection {
                 });
             }
         });
+        return result;
     }
 
     extendIPS(ips: Bundle) {
@@ -198,7 +199,7 @@ export class IPSResourceCollection extends ResourceCollection {
         return selectedIPSResources;
     }
 
-    flattenResources(resourcesByType: Record<string, Record<string, ResourceHelper>>) {
+    flattenResources(resourcesByType: ResourceHelperMap) {
         return Object.values(resourcesByType).flatMap(types => Object.values(types))
     }
 
