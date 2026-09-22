@@ -3,11 +3,18 @@ import { get } from 'svelte/store';
 import { IPSResourceCollection } from '$lib/utils/IPSResourceCollection';
 import { METHODS } from '$lib/config/tags';
 
-const CATEGORY_SYSTEM = 'http://test.example.com/category';
-const METHOD_SYSTEM = 'http://test.example.com/method';
-const SOURCE_NAME_SYSTEM = 'http://test.example.com/source-name';
-const PLACEHOLDER_SYSTEM = 'http://test.example.com/placeholder';
-const IDENTIFIER_SYSTEM = 'http://keycloak.example.com';
+// vi.mock factories are hoisted above this file's own top-level const declarations, so
+// anything they reference must come from vi.hoisted() rather than a plain const, or the
+// factory sees it in its temporal dead zone ("Cannot access '...' before initialization").
+const { CATEGORY_SYSTEM, METHOD_SYSTEM, SOURCE_NAME_SYSTEM, PLACEHOLDER_SYSTEM, IDENTIFIER_SYSTEM } = vi.hoisted(
+  () => ({
+    CATEGORY_SYSTEM: 'http://test.example.com/category',
+    METHOD_SYSTEM: 'http://test.example.com/method',
+    SOURCE_NAME_SYSTEM: 'http://test.example.com/source-name',
+    PLACEHOLDER_SYSTEM: 'http://test.example.com/placeholder',
+    IDENTIFIER_SYSTEM: 'http://keycloak.example.com'
+  })
+);
 
 vi.mock('$lib/config/config', () => ({
   CATEGORY_SYSTEM,

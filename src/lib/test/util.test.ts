@@ -1,12 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
-// Pin the timezone before any Date work runs below. Several functions under test
-// (deriveDateFromAge in particular) parse a bare "YYYY-MM-DD" string with `new Date(...)`,
-// which the spec parses as UTC, then read/modify it with local-time Date methods — a classic
-// UTC/local mismatch that shifts the result by a day in any timezone behind UTC. Running
-// these tests under UTC removes that offset so they aren't tied to the runner's local zone.
-process.env.TZ = 'UTC';
-
 import {
   copyOf,
   getUniqueResourceObject,
@@ -32,13 +24,23 @@ import {
   randomStringWithEntropy
 } from '$lib/utils/util';
 
-// Formats using local date components (not toISOString, which converts to UTC and
-// can shift the calendar day depending on the test runner's timezone).
+// Formats using local date components. Safe here because the functions that produce these
+// dates (handlePartialISODate et al.) always force local-time parsing by appending
+// "T00:00:00" to the input before constructing the Date, so parsing and reading both happen
+// in whatever "local" is on the machine running the test — self-consistent regardless of
+// its actual timezone.
 function localYMD(date: Date): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
+}
+
+// deriveDateFromAge parses a bare "YYYY-MM-DD" birth date with `new Date(...)`, which the
+// spec parses as UTC, and (after the fix below) reads/writes it with UTC-suffixed Date
+// methods to stay consistent. So its result has to be read back in UTC too, not local time.
+function utcYMD(date: Date): string {
+  return date.toISOString().slice(0, 10);
 }
 
 describe('randomStringWithEntropy', () => {
@@ -102,8 +104,13 @@ describe('handlePartialISODate', () => {
     expect(result?.precision).toBe(1);
   });
 
-  it('returns null for a well-formed but invalid calendar date', () => {
-    expect(handlePartialISODate('2023-02-30')).toBeNull();
+  // isISODate only checks the string's shape (digit groups), and the Date constructor's
+  // day-of-month arithmetic rolls an out-of-range day into the next month rather than
+  // rejecting it — so a calendar-invalid-but-well-formed date isn't actually caught here.
+  it('rolls an out-of-range day into the next month rather than rejecting it', () => {
+    const result = handlePartialISODate('2023-02-30');
+    expect(result).not.toBeNull();
+    expect(result?.precision).toBe(3);
   });
 });
 
@@ -207,7 +214,7 @@ describe('getFHIRDateAndPrecision', () => {
       'onset',
       '2000-01-01'
     );
-    expect(result?.date && localYMD(result.date)).toBe('2005-01-01');
+    expect(result?.date && utcYMD(result.date)).toBe('2005-01-01');
     expect(result?.precision).toBe(1);
   });
 

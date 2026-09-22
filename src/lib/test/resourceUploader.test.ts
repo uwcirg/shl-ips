@@ -7,7 +7,10 @@ import {
   uploadResourcesAndGetReference
 } from '$lib/utils/resourceUploader';
 
-const BASE = 'https://fhir.example.com';
+// vi.mock factories are hoisted above this file's own top-level const declarations, so BASE
+// must come from vi.hoisted() rather than a plain const, or the factory below sees it in its
+// temporal dead zone ("Cannot access 'BASE' before initialization").
+const { BASE } = vi.hoisted(() => ({ BASE: 'https://fhir.example.com' }));
 
 vi.mock('$lib/config/config', () => ({
   INTERMEDIATE_FHIR_SERVER_BASE: BASE

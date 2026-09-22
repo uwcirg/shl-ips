@@ -9,11 +9,27 @@ import {
 import { StateManager } from '$lib/utils/StateManager';
 import { ResourceCollection } from '$lib/utils/ResourceCollection';
 
-const BASE = 'https://fhir.example.com';
-const CATEGORY_SYSTEM = 'http://test.example.com/category';
-const METHOD_SYSTEM = 'http://test.example.com/method';
-const SOURCE_NAME_SYSTEM = 'http://test.example.com/source-name';
-const PLACEHOLDER_SYSTEM = 'http://test.example.com/placeholder';
+// vi.mock factories are hoisted above this file's own top-level const declarations, so
+// anything they reference (including plain string constants) must come from vi.hoisted()
+// rather than a plain const, or the factory sees it in its temporal dead zone
+// ("Cannot access 'BASE' before initialization").
+const {
+  BASE,
+  CATEGORY_SYSTEM,
+  METHOD_SYSTEM,
+  SOURCE_NAME_SYSTEM,
+  PLACEHOLDER_SYSTEM,
+  uploadBundleEntriesMock,
+  getPatientReferenceFromTransactionResponseMock
+} = vi.hoisted(() => ({
+  BASE: 'https://fhir.example.com',
+  CATEGORY_SYSTEM: 'http://test.example.com/category',
+  METHOD_SYSTEM: 'http://test.example.com/method',
+  SOURCE_NAME_SYSTEM: 'http://test.example.com/source-name',
+  PLACEHOLDER_SYSTEM: 'http://test.example.com/placeholder',
+  uploadBundleEntriesMock: vi.fn(),
+  getPatientReferenceFromTransactionResponseMock: vi.fn()
+}));
 
 vi.mock('$lib/config/config', () => ({
   SOURCE_NAMESPACE: 'urn:test:source',
@@ -23,11 +39,6 @@ vi.mock('$lib/config/config', () => ({
   METHOD_SYSTEM,
   SOURCE_NAME_SYSTEM,
   PLACEHOLDER_SYSTEM
-}));
-
-const { uploadBundleEntriesMock, getPatientReferenceFromTransactionResponseMock } = vi.hoisted(() => ({
-  uploadBundleEntriesMock: vi.fn(),
-  getPatientReferenceFromTransactionResponseMock: vi.fn()
 }));
 
 vi.mock('$lib/utils/resourceUploader', () => ({
