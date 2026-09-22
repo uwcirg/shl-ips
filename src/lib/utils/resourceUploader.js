@@ -1,7 +1,12 @@
 import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
 import { extractResourcesFromQuestionnaireResponse } from '$lib/utils/sdcClient';
 
-// Create Bundle and POST
+/**
+ * Create a transaction Bundle from the given resources and POST it.
+ * @param {import('fhir/r4').Resource[]} resources
+ * @param {string} [token]
+ * @returns {Promise<any>} the parsed transaction-response Bundle
+ */
 export async function uploadResources(resources, token=undefined) {
     let entries = resources.map(r => {
         let entry = {
@@ -23,6 +28,11 @@ export async function uploadResources(resources, token=undefined) {
     return await postBundle(bundle, token);
 }
 
+/**
+ * @param {{ resource: import('fhir/r4').Resource, fullUrl?: string }[]} entries
+ * @param {string} [token]
+ * @returns {Promise<any>} the parsed transaction-response Bundle
+ */
 export async function uploadBundleEntries(entries, token=undefined) {
     entries = entries.map(e => {
         let entry = {
@@ -44,6 +54,11 @@ export async function uploadBundleEntries(entries, token=undefined) {
     return await postBundle(bundle, token);
 }
 
+/**
+ * @param {any} bundle
+ * @param {string} [token]
+ * @returns {Promise<any>} the parsed transaction-response Bundle
+ */
 async function postBundle(bundle, token=undefined) {
     let headers = {
         'Content-Type': 'application/json+fhir',
@@ -65,8 +80,8 @@ async function postBundle(bundle, token=undefined) {
             console.log(error);
             console.log("Response body:", body);
         }
-        if (!response.ok) {
-            for (const entry in parsedBody.entry) {
+        if (!response.ok && parsedBody?.entry) {
+            for (const entry of parsedBody.entry) {
                 if (entry.response?.outcome?.issue?.[0]?.diagnostics) {
                     console.error(entry.response.outcome.issue[0].diagnostics);
                 }
@@ -76,15 +91,31 @@ async function postBundle(bundle, token=undefined) {
     });
 }
 
+/**
+ * @param {any} transactionResponse
+ * @returns {string} the created Patient's reference, e.g. "Patient/123"
+ */
 export function getPatientReferenceFromTransactionResponse(transactionResponse) {
-    let createdPatientReference = transactionResponse.entry.find(entry => entry.response.location.startsWith('Patient')).response.location.split('/_history')[0];
-    return createdPatientReference;
+    const patientEntry = transactionResponse.entry.find(entry => entry.response?.location?.startsWith('Patient'));
+    if (!patientEntry) {
+        throw new Error('No created Patient found in transaction response');
+    }
+    return patientEntry.response.location.split('/_history')[0];
 }
 
+/**
+ * @param {string} patientReference
+ * @returns {string}
+ */
 export function generateIpsUrlFromPatientReference(patientReference) {
     return `${INTERMEDIATE_FHIR_SERVER_BASE}/${patientReference}/$summary`;
 }
 
+/**
+ * @param {{ resource: import('fhir/r4').Resource, fullUrl?: string }[]} resources
+ * @param {string} [token]
+ * @returns {Promise<string>} the IPS $summary URL for the newly created Patient
+ */
 export function uploadResourcesAndGetReference(resources, token=undefined) {
     return uploadBundleEntries(resources, token).then(transactionResponse => {
         let patientReference = getPatientReferenceFromTransactionResponse(transactionResponse);
