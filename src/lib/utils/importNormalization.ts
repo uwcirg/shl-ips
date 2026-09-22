@@ -319,7 +319,7 @@ export function reconcileResourcesWithOriginalEntries(
   }));
 }
 
-export function prepareImportedResources(importEvent: ResourceRetrieveEvent, masterPatient: Patient): Bundle {
+export function prepareImportedResources(importEvent: ResourceRetrieveEvent, masterPatient: Patient): NormalizedIdEntry[] {
   if (!importEvent.resources) {
     return [];
   }
