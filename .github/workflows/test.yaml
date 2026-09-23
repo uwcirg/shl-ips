@@ -39,4 +39,7 @@ jobs:
       - name: Run e2e tests
         # --ipc=host: Docker's default /dev/shm (64MB) is too small for headless Chromium and
         # causes it to crash mid-run; Playwright's own docs recommend this flag for CI containers.
-        run: docker run --rm --ipc=host shl-ips-test-e2e:latest
+        # -e CI=true: the runner has CI=true in its own shell, but `docker run` doesn't forward
+        # host env vars into the container by default - playwright.config.ts's CI-only timeout
+        # bump and retries never actually activate without this.
+        run: docker run --rm --ipc=host -e CI=true shl-ips-test-e2e:latest
