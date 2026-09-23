@@ -34,17 +34,8 @@ async function buildManifest() {
   return { shl, manifestUrl, manifest };
 }
 
-function logBrowserErrors(page: import('@playwright/test').Page) {
-  // Temporary diagnostics: see landing.spec.ts for why this matters here specifically.
-  page.on('pageerror', (err) => console.log('[pageerror]', err.message));
-  page.on('console', (msg) => {
-    if (msg.type() === 'error') console.log('[console.error]', msg.text());
-  });
-}
-
 test.describe('/ips page', () => {
   test('loads a SHL from the server and renders the retrieved bundle', async ({ page }) => {
-    logBrowserErrors(page);
     const { shl, manifestUrl, manifest } = await buildManifest();
 
     // The page makes two POSTs to this URL: an initial passcode-probe, then shlClient.retrieve()'s
@@ -56,11 +47,12 @@ test.describe('/ips page', () => {
     await page.goto('/ips#' + shl);
 
     await expect(page.getByText(/does not exist or has been deactivated/i)).not.toBeVisible();
-    await expect(page.getByText('Jane Doe')).toBeVisible();
+    // The real Patient.svelte template renders the name more than once (e.g. a heading plus a
+    // detail row) - this only needs to confirm the retrieved bundle made it to the viewer.
+    await expect(page.getByText('Jane Doe').first()).toBeVisible();
   });
 
   test('shows an error message when the server reports the SHL cannot be found', async ({ page }) => {
-    logBrowserErrors(page);
     const { shl, manifestUrl } = await buildManifest();
 
     await page.route(manifestUrl, (route) =>

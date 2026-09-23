@@ -2,18 +2,12 @@ import { test, expect } from '@playwright/test';
 
 test.describe('landing page', () => {
   test('loads the base content for an anonymous visitor', async ({ page }) => {
-    // Temporary diagnostics: the app is CSR-only, so a JS error during the real root layout's
-    // mount (constructing AuthService/FHIRDataService for real, unlike the mocked component
-    // tests) would leave the page blank with no other signal. Surface it instead of guessing.
-    page.on('pageerror', (err) => console.log('[pageerror]', err.message));
-    page.on('console', (msg) => {
-      if (msg.type() === 'error') console.log('[console.error]', msg.text());
-    });
-
     await page.goto('/');
 
     await expect(page.getByText('Tell your health story')).toBeVisible();
     await expect(page.getByText(/An initiative by the University of Washington/i)).toBeVisible();
-    await expect(page.getByText('Sign In')).toBeVisible();
+    // Both the header nav link and the page's own CTA say "Sign In" - the CTA button is the one
+    // that's actually conditional on auth state, so it's the meaningful assertion here.
+    await expect(page.getByRole('button', { name: 'Sign In' })).toBeVisible();
   });
 });
