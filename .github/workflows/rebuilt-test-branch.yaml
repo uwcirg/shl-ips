@@ -1,0 +1,70 @@
+name: Rebuild test branch
+
+on:
+  push:
+    branches:
+      - 'feature/**'   # adjust to match your feature branch naming
+      - main            # in case the manifest itself changed
+  schedule:
+    - cron: '0 */3 * * *'   # safety net in case a push-triggered run is missed
+  workflow_dispatch: {}       # manual "rebuild now" button
+
+permissions:
+  contents: write
+  pull-requests: write   # needed to comment on skipped branches' PRs
+
+concurrency:
+  group: rebuild-test-branch
+  cancel-in-progress: true   # a newer push supersedes an in-flight rebuild
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0   # need full history for merges + rerere to work well
+
+      # NOTE: actions/cache is best-effort and can be evicted. For a cache
+      # you can't afford to lose, replace this with pushing .git/rr-cache to
+      # a dedicated orphan branch (e.g. refs/heads/rerere-cache) instead.
+      - name: Restore rerere cache
+        uses: actions/cache@v6
+        with:
+          path: .git/rr-cache
+          key: rerere-cache-${{ github.repository }}
+          restore-keys: |
+            rerere-cache-${{ github.repository }}
+
+      - name: Rebuild test branch
+        run: |
+          chmod +x rebuild-test-branch.sh
+          ./rebuild-test-branch.sh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Save rerere cache
+        if: always()
+        uses: actions/cache@v6
+        with:
+          path: .git/rr-cache
+          key: rerere-cache-${{ github.repository }}
+
+      - name: Comment on skipped branches' PRs
+        if: always()
+        run: |
+          if [ ! -s skipped.txt ]; then
+            echo "Nothing skipped, nothing to comment."
+            exit 0
+          fi
+          while IFS= read -r line; do
+            branch="${line%%:*}"
+            reason="${line#*: }"
+            pr_number=$(gh pr list --head "$branch" --json number --jq '.[0].number' || true)
+            if [ -n "${pr_number:-}" ] && [ "$pr_number" != "null" ]; then
+              gh pr comment "$pr_number" --body "⚠️ Skipped from the latest \`test\` branch rebuild: ${reason}. This branch still needs a rebase against the conflicting branch(es), or a manual resolution once, to be picked up automatically next time (via rerere)."
+            fi
+          done < skipped.txt
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
