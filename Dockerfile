@@ -1,9 +1,13 @@
-FROM node:24 AS deps
+FROM node:24 AS base-deps
 
 WORKDIR /opt/app
 
 COPY package*.json .
 RUN npm clean-install
+
+FROM base-deps AS deps
+
+WORKDIR /opt/app
 
 COPY . .
 
@@ -13,11 +17,16 @@ WORKDIR /opt/app
 
 CMD ["npm", "run", "test"]
 
-FROM deps AS test-e2e
+# Branches off base-deps (before the full source COPY below) so this layer's cache key only
+# depends on package*.json - an unrelated source change elsewhere in the repo won't bust it and
+# force Chromium to reinstall on every push, only an actual @playwright/test version bump will.
+FROM base-deps AS test-e2e
 
 WORKDIR /opt/app
 
 RUN npx playwright install --with-deps chromium
+
+COPY . .
 
 CMD ["npm", "run", "test:e2e"]
 
