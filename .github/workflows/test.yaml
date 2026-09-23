@@ -19,10 +19,10 @@ jobs:
           target: test
           load: true
           tags: shl-ips-test:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=unit-test
+          cache-to: type=gha,mode=max,scope=unit-test
 
-      - name: Run tests
+      - name: Run unit tests
         run: docker run --rm shl-ips-test:latest
 
       - name: Build e2e test image
@@ -32,9 +32,11 @@ jobs:
           file: Dockerfile
           target: test-e2e
           load: true
-          tags: shl-ips-test:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-      
-      - name: Run tests
-        run: docker run --rm shl-ips-test:latest
+          tags: shl-ips-test-e2e:latest
+          cache-from: type=gha,scope=e2e-test
+          cache-to: type=gha,mode=max,scope=e2e-test
+
+      - name: Run e2e tests
+        # --ipc=host: Docker's default /dev/shm (64MB) is too small for headless Chromium and
+        # causes it to crash mid-run; Playwright's own docs recommend this flag for CI containers.
+        run: docker run --rm --ipc=host shl-ips-test-e2e:latest

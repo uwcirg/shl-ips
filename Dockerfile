@@ -17,6 +17,8 @@ FROM deps AS test-e2e
 
 WORKDIR /opt/app
 
+RUN npx playwright install --with-deps chromium
+
 CMD ["npm", "run", "test:e2e"]
 
 FROM deps AS build
