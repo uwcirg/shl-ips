@@ -23,10 +23,13 @@ import {
 } from "$lib/config/config";
 import type { IAuthService, ResourceRetrieveEvent, UserDemographics } from "$lib/utils/types";
 import { ResourceHelper } from "$lib/utils/ResourceHelper";
-import type { Patient, Resource } from "fhir/r4";
+import type { Bundle, BundleEntry, Patient, Resource } from "fhir/r4";
 import { constructPatientResource, getDemographicsFromPatient, fetchEverything } from "$lib/utils/util";
-import { uploadResources, getPatientReferenceFromTransactionResponse } from "$lib/utils/resourceUploader";
+import { uploadBundleEntries, getPatientReferenceFromTransactionResponse } from "$lib/utils/resourceUploader";
 import { StateManager } from "$lib/utils/StateManager";
+import { prepareImportedResources, entriesToResources, reconcileResourcesWithOriginalEntries, finalizeForUpload } from "$lib/utils/importNormalization";
+import type { NormalizedBundleEntry, NormalizedIdEntry } from "$lib/utils/importNormalization";
+import { extractResourcesFromQuestionnaireResponse } from "./sdcClient";
 
 export class FHIRServiceError extends Error {
   constructor(
@@ -36,6 +39,17 @@ export class FHIRServiceError extends Error {
   ) {
     super(userMessage);
     this.name = 'FHIRServiceError';
+  }
+}
+
+// Thrown when a write to the master patient may or may not have been applied
+// server-side (e.g. the server accepted the write but the response body
+// couldn't be read, or the connection dropped before a response arrived).
+// Callers must not treat this the same as a confirmed failed write.
+export class MasterPatientWriteUncertainError extends FHIRServiceError {
+  constructor(userMessage: string, operation: string, cause?: unknown) {
+    super(userMessage, operation, cause);
+    this.name = 'MasterPatientWriteUncertainError';
   }
 }
 
@@ -272,69 +286,77 @@ export class FHIRDataService {
   }
   
   async createOrUpdateMasterPatient(patient: Resource): Promise<ResourceHelper> {
-    let savedPatient: Patient;
     if (get(this.masterPatient) === null) {
       this.setMasterPatient(patient);
     }
+
+    let savedPatient: Patient;
     if (get(this.masterPatient).resource.id) {
       patient.id = get(this.masterPatient).resource.id;
-      let updatedPatient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient/${patient.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/fhir+json',
-          'Authorization': `Bearer ${await this.auth.getAccessToken()}`
-        },
-        body: JSON.stringify(patient)
-      })
-      .then((response) => {
-        if (response.ok) return response.text();
-        return Promise.reject(response);
-      })
-      .then((data) => JSON.parse(data))
-      .catch((response) => {
-        response.text().then((text: any) => {
-          try {
-            console.log(JSON.parse(text));
-          } catch (err) {
-            console.log(text);
-          }
-        });
-        throw new FHIRServiceError('Failed to save patient', 'createOrUpdateMasterPatient', response);
-      });
-      savedPatient = updatedPatient;
+      savedPatient = await this.saveMasterPatientResource(
+        'PUT',
+        `${INTERMEDIATE_FHIR_SERVER_BASE}/Patient/${patient.id}`,
+        patient
+      );
     } else {
       if (patient.id) {
         delete patient.id;
       }
-      let newPatient = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient`, {
-        method: 'POST',
+      savedPatient = await this.saveMasterPatientResource(
+        'POST',
+        `${INTERMEDIATE_FHIR_SERVER_BASE}/Patient`,
+        patient
+      );
+    }
+    return this.setMasterPatient(savedPatient);
+  }
+
+  // Sends the master patient write and reports back precisely what is known about it:
+  // - response not ok            -> the write was rejected; it was not applied (FHIRServiceError)
+  // - request/response unusable  -> whether it was applied server-side is unknown (MasterPatientWriteUncertainError)
+  // - response ok and parsed     -> the write was applied; returns the saved resource
+  private async saveMasterPatientResource(method: 'PUT' | 'POST', url: string, patient: Resource): Promise<Patient> {
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/fhir+json',
           'Authorization': `Bearer ${await this.auth.getAccessToken()}`
         },
         body: JSON.stringify(patient)
-      })
-      .then((response) => {
-        if (response.ok) return response.text();
-        return Promise.reject(response);
-      })
-      .then((data) => JSON.parse(data))
-      .catch((response) => {
-        response.text().then((text: any) => {
-          try {
-            console.log(JSON.parse(text));
-          } catch (err) {
-            console.log(text);
-          }
-        });
-        throw new FHIRServiceError('Failed to save patient', 'createOrUpdateMasterPatient', response);
-      })
-      savedPatient = newPatient;
+      });
+    } catch (networkError) {
+      // The response was never received, so whether the server applied the write is unknown.
+      throw new MasterPatientWriteUncertainError(
+        'Failed to save patient: no response received',
+        'createOrUpdateMasterPatient',
+        networkError
+      );
     }
-    if (savedPatient === undefined) {
-      throw new FHIRServiceError('Failed to save patient', 'createOrUpdateMasterPatient');
+
+    if (!response.ok) {
+      // The server explicitly rejected the write: it was not applied.
+      const text = await response.text().catch(() => '');
+      try {
+        console.log(JSON.parse(text));
+      } catch (err) {
+        console.log(text);
+      }
+      throw new FHIRServiceError('Failed to save patient', 'createOrUpdateMasterPatient', response);
     }
-    return this.setMasterPatient(savedPatient);
+
+    // The server confirmed the write was applied; only reading the confirmation can still fail.
+    try {
+      const text = await response.text();
+      return JSON.parse(text);
+    } catch (parseError) {
+      throw new MasterPatientWriteUncertainError(
+        'Patient was saved but the response could not be read',
+        'createOrUpdateMasterPatient',
+        parseError
+      );
+    }
   }
 
   // make a temporary patient to pre-fill demographic forms when one doesn't exist on the server
@@ -370,23 +392,6 @@ export class FHIRDataService {
     } catch (err) {
       throw new FHIRServiceError('Failed to save changes', 'saveDemographicsToPatient', err);
     }
-  }
-
-  generateCategoryPlaceholderPatient(): Resource {
-    const masterPatientResource = get(this.masterPatient).resource;
-    let patient = constructPatientResource({
-      first: masterPatientResource.name?.[0].given?.[0],
-      last: masterPatientResource.name?.[0].family,
-    });
-    patient.id = "placeholder-patient";
-    patient.meta = patient.meta ?? {};
-    patient.meta.lastUpdated = new Date().toISOString();
-    patient.meta.tag = patient.meta.tag ?? [];
-    patient.meta.tag.push({
-      system: PLACEHOLDER_SYSTEM,
-      code: 'placeholder-patient'
-    });
-    return patient;
   }
 
   datasetExists(category: string, method: string, source: string): boolean {
@@ -475,10 +480,8 @@ export class FHIRDataService {
     });
   }
 
-  async createDatasetOnServer(resources: Resource[]): Promise<string> {
-    let datasetCollection = new ResourceCollection(resources);
-    let updatedResources = datasetCollection.getFHIRResources();
-    let transactionResponse = await uploadResources(updatedResources, await this.auth.getAccessToken());
+  async createDatasetOnServer(entries: NormalizedBundleEntry[]): Promise<string> {
+    let transactionResponse = await uploadBundleEntries(entries, await this.auth.getAccessToken());
     if (transactionResponse.resourceType === "OperationOutcome") {
       throw new FHIRServiceError('Failed to upload dataset', 'createDatasetOnServer', transactionResponse.issue);
     }
@@ -564,12 +567,41 @@ export class FHIRDataService {
   }
 
   async addOrReplaceDataset(dataset: ResourceRetrieveEvent) {
-    let resourcesWithUpdatedPatient = this.updateDatasetPatient(dataset);
+    // The following should be moved to the upload handler, to allow for import confirmation prior to upload.
+    // The output should be a ResourceRetrieveEvent with the updated resource set.
+    let normalizedImportEntries: NormalizedIdEntry[] = prepareImportedResources(dataset, get(this.masterPatient).resource);
+    let resources: Resource[] = entriesToResources(normalizedImportEntries);
+
+    // Handle questionnaire responses (if moved to upload handler, maybe move extract function?)
+    if (resources.some((resource) => resource.resourceType === "QuestionnaireResponse")) {
+      // Before adding the dataset, try running $extract on each QuestionnaireResponse (which isn't in
+      // the FHIR server yet) and fold the extracted resources into the bundle.
+      let extractedResources = await this.extractResourcesFromQuestionnaireResponses(resources);
+      if (extractedResources) {
+        resources = [...resources, ...extractedResources];
+      }
+    }
+    
+    // User input happens, adds/removes/updates resources, confirms dataset...
+
+    // Re-normalize dataset and pass along as fresh ResourceRetrieveEvent
+    let renormalizedConfirmedImportEntries = prepareImportedResources({
+      category: dataset.category,
+      method: dataset.method,
+      source: dataset.source,
+      sourceName: dataset.sourceName,
+      resources: reconcileResourcesWithOriginalEntries(normalizedImportEntries, resources) as BundleEntry[],
+    }, get(this.masterPatient).resource);
+    // End pre-user-review setup process
+
+    // Finish pre-upload normalization (add consistent fullUrls and use them to update all references)
+    const finalEntries = finalizeForUpload(renormalizedConfirmedImportEntries);
+
     let newDataset;
     let status;
     let existingDataset = get(this.userResources)?.[dataset.category]?.[dataset.method]?.[dataset.source];
     if (!existingDataset) {
-      let patient = resourcesWithUpdatedPatient.find((resource) => resource.resourceType === "Patient");
+      let patient = resources.find((resource) => resource.resourceType === "Patient");
       let seedCollection = new ResourceCollection(patient);
       newDataset = this.addDatasetToUserResources(seedCollection);
       status = newDataset.status;
@@ -580,7 +612,8 @@ export class FHIRDataService {
 
     let patientReference: string;
     try {
-      patientReference = await this.createDatasetOnServer(resourcesWithUpdatedPatient);
+
+      patientReference = await this.createDatasetOnServer(finalEntries);
     } catch(error) {
       status.set({ state: StateManager.State.ERROR });
       throw new FHIRServiceError(`Failed to upload ${dataset.source} dataset`, 'addOrReplaceDataset', error);
@@ -595,6 +628,24 @@ export class FHIRDataService {
       if (!existingDataset) {
         this.removeDatasetFromUserResources(dataset.category, dataset.method, dataset.source);
       }
+
+      // The link-add write above may have actually reached the server even though it
+      // errored client-side (a proxy/gateway hop between us and the FHIR server can drop
+      // or mangle a response after the write already committed). If it did, the master
+      // patient now references patientReference, and cascade-deleting patientReference
+      // would also delete the master patient. Defensively strip the link before deleting,
+      // regardless of which failure we saw — it's a cheap, idempotent no-op when the link
+      // was never added.
+      try {
+        await this.removeLinkFromMasterPatient(patientReference);
+      } catch (cleanupError) {
+        console.warn(
+          `Could not confirm master patient link state for ${patientReference}; aborting rollback delete to avoid risking the master patient`,
+          cleanupError
+        );
+        throw new FHIRServiceError('Failed to link dataset to your account', 'addOrReplaceDataset', error);
+      }
+
       const rollback = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/${patientReference}?_cascade=delete`, {
         method: 'DELETE',
         headers: {
@@ -620,24 +671,20 @@ export class FHIRDataService {
     this.addDatasetToUserResources(newDataset);
     status.set({ state: StateManager.State.IDLE });
   }
-
-  updateDatasetPatient(datasetInfo: ResourceRetrieveEvent): Resource {
-    let { resources, category, method, source, sourceName } = datasetInfo;
-    let resourcesWithUpdatedPatient = resources;
-    let patient = resources?.find((resource) => resource.resourceType === "Patient");
-    if (!patient) {
-      patient = this.generateCategoryPlaceholderPatient();
-      resourcesWithUpdatedPatient = [ patient, ...(resources ?? []) ];
+  
+  async extractResourcesFromQuestionnaireResponses(questionnaireResponses: Resource[]): Promise<Resource[] | undefined> {
+    try {
+      const accessToken = await this.auth.getAccessToken();
+      if (!accessToken) {
+        return undefined;
+      }
+      let extractedResources = (await Promise.all(
+          questionnaireResponses.map(async (qr) => extractResourcesFromQuestionnaireResponse(qr, accessToken))
+      )).flat();
+      return extractedResources;
+    } catch (error) {
+        console.error(error);
     }
-    patient.meta = patient.meta ?? {};
-    patient.meta.tag = patient.meta.tag ?? [];
-    patient.meta.tag.push({ system: CATEGORY_SYSTEM, code: category });
-    patient.meta.tag.push({ system: METHOD_SYSTEM, code: method });
-    if (sourceName) {
-      patient.meta.tag.push({ system: SOURCE_NAME_SYSTEM, code: sourceName });
-    }
-    patient.meta.source = source;
-    return resourcesWithUpdatedPatient;
   }
 }
 

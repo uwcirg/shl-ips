@@ -9,6 +9,7 @@ import type {
   Patient,
   Period,
   Range,
+  Resource
 } from "fhir/r4";
 import type { Readable, Writable } from "svelte/store";
 import type { User } from "oidc-client-ts";
@@ -74,13 +75,13 @@ export interface NIOAutoCoderResponse {
 }
 
 export interface ResourceRetrieveEvent {
-  resources: Array<any> | undefined;
-  sectionKey?: string;
-  sectionTemplate?: CompositionSection;
+  resources: Resource[] | BundleEntry[] | undefined;
   category: string;
   method: string;
   source: string;
   sourceName: string;
+  sectionKey?: string; // deprecated
+  sectionTemplate?: CompositionSection; // deprecated
 }
 export interface SHCRetrieveEvent {
   shc: SHCFile | undefined;
@@ -105,6 +106,7 @@ export interface SOFHost {
   clientId: string;
   note: string | undefined;
   scope?: string | undefined;
+  type?: string | undefined;
 }
 
 export interface DataFormConfig {
@@ -202,6 +204,7 @@ export interface IAuthService {
   renewToken(): Promise<User | null>;
   logout(): Promise<void>;
   isAuthenticated(): Promise<boolean | undefined>;
+  syncTokenToServer(token: string): Promise<boolean>;
 }
 
 export interface IResourceCollection {

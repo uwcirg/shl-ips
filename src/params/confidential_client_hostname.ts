@@ -12,6 +12,7 @@ export const ALLOWED = <const> [
 	'deloitte',
 	'smilecarinbb',
 	'united',
+	'meditech'
 ];
 
 export const match = ((param: string): param is typeof ALLOWED[number] => {

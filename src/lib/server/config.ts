@@ -6,7 +6,7 @@ export const REDIRECT_URI = process.env.REDIRECT_URI;
 
 export const SERVER_API_BASE = process.env.VITE_API_BASE;
 
-export const CARIN_HOSTS: Record<string, any> = {
+export const CONFIDENTIAL_HOSTS: Record<string, any> = {
   aetna: {
     tokenEndpoint: process.env.AETNA_TOKEN_ENDPOINT,
     clientId: process.env.VITE_AETNA_CLIENT_ID,
@@ -67,6 +67,11 @@ export const CARIN_HOSTS: Record<string, any> = {
     clientId: process.env.VITE_UNITED_CLIENT_ID,
     clientSecret: process.env.UNITED_CLIENT_SECRET,
   },
+  meditech: {
+      tokenEndpoint: process.env.MEDITECH_TOKEN_ENDPOINT,
+      clientId: process.env.VITE_MEDITECH_CLIENT_ID,
+      clientSecret: process.env.MEDITECH_CLIENT_SECRET,
+    },
 }
 
 export const URL_BEARER_HOSTS: Record<string, any> = {

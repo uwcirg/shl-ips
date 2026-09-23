@@ -13,7 +13,7 @@
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import type { IAuthService, ResourceRetrieveEvent, SOFAuthEvent, SOFHost } from '$lib/utils/types';
   import { clearURLOfParams, getReferences } from '$lib/utils/util';
-  import { authorize, endSession } from '$lib/utils/sofClient.js';
+  import { authorize, completeConfidentialClientAuth, endSession } from '$lib/utils/sofClient';
   import { createEventDispatcher, onMount } from 'svelte';
   import type { BundleEntry, Resource } from 'fhir/r4';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
@@ -79,39 +79,6 @@
     }
   }
 
-  async function getResourcesWithReferences(resources: Resource[], depth=1, token=undefined) {
-    let allResources = JSON.parse(JSON.stringify(resources));
-    let referenceMap = {} as {[key: string]: boolean};
-    let retrievedResources = {} as {[key: string]: boolean};
-    while (resources.length > 0 && depth > 0) {
-      for (let resource of resources) {
-        let retrieved = `${resource.resourceType}/${resource.id}`;
-        retrievedResources[retrieved] = true;
-        let refs = getReferences(resource);
-        for (let i=0; i<refs.length; i++) {
-          referenceMap[refs[i]] = true;
-        }
-      }
-      let referencedResources = Object.keys(referenceMap);
-      let referencedResourcesToFetch = referencedResources.filter(x => {
-        return (!(x in retrievedResources) && CARIN_RESOURCES.indexOf(x.split('/')[0]) >= 0);
-      });
-      let headers: HeadersInit = {};
-      if (token) {
-        headers.authorization = `Bearer ${token}`;
-      }
-      resources = (await Promise.allSettled(referencedResourcesToFetch.map(reference => {
-        return fetch(`${sofHost!.url}/${reference}`, {
-          headers: headers
-        }).then(response => response.json());
-      }))).filter(x => x.status == "fulfilled" && x.value.resourceType && x.value.resourceType !== "OperationOutcome").map(x => x.value);
-      allResources = allResources.concat(...resources);
-      referenceMap = {};
-      depth--;
-    }
-    return allResources;
-  }
-
   onMount(async function() {
     let method = sessionStorage.getItem('AUTH_METHOD');
     if (method) {
@@ -136,7 +103,6 @@
           throw Error('No SMART token found in storage');
         }
         const token = JSON.parse(tokenString);
-        const code_verifier = token.codeVerifier;
 
         const url = token.serverUrl;
         let sofHostAuthd = CARIN_HOSTS.find(e => e.url == url);
@@ -147,60 +113,11 @@
         sofHost = sofHostAuthd;
         sofHostSelection = sofHost.id;
 
-        // Send the code to the server for token exchange
-        let tokenResult = await fetch(`/api/carin/${sofHostSelection}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${await authService.getAccessToken()}`,
-            },
-            body: JSON.stringify({ code, code_verifier }),
-          })
-          .then(response => {
-            if (!response.ok) {
-              throw Error('Token exchange failed');
-            }
-            return response.text();
-          })
-          .then(response => JSON.parse(response));
-        
-        if (!tokenResult) {
-          throw Error('Token exchange failed');
-        }
-        const accessToken = tokenResult.access_token;
-        const patientId = tokenResult.patient;
-        console.log('Access Token:', accessToken);
-
-        let patient = await fetch(`${url}/Patient/${patientId}`, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        })
-          .then(response => response.json())
-          .then(patientData => {
-            console.log('Patient Data:', patientData);
-            return patientData;
-          });
-            
-        let resources = (await Promise.allSettled(CARIN_RESOURCES.map((resourceType: string) => {
-          return fetch(`${url}/${resourceType}?patient=${patientId}`, {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          })
-          .then(response => response.json())
-          .then(data => {
-            console.log(`${resourceType} Data:`, data);
-            if (data.resourceType === 'Bundle') {
-              return data.entry.map((e: BundleEntry) => e.resource).filter((r: Resource) => r.resourceType === resourceType);
-            } else if (CARIN_RESOURCES.includes(data.resourceType)) {
-              return [data];
-            }
-            throw Error (`Unexpected resource type ${data.resourceType}`);
-          });
-        }))).filter(x => x.status == "fulfilled").map(x => x.value);
-
-        resources = resources.flat();
-        resources = [patient, ...resources];
+        let authToken = await authService.getAccessToken();
+        let resources = await completeConfidentialClientAuth(sofHost.id, CARIN_RESOURCES, token, authToken!, code);
         if (resources) {
           let result = {
-            resources: await getResourcesWithReferences(resources, 1, accessToken),
+            resources,
             category: CATEGORY,
             method: METHOD,
             source: sofHost?.url,

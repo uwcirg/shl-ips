@@ -1,7 +1,7 @@
 // import fetch from 'node-fetch';
 import { json, text, error } from '@sveltejs/kit';
 import {
-  CARIN_HOSTS,
+  CONFIDENTIAL_HOSTS,
   REDIRECT_URI
 } from '$lib/server/config';
 
@@ -10,9 +10,9 @@ export const POST = async ({ params, request }: { params: { host: string }; requ
   const restPath = params.host;
   const { code, code_verifier } = await request.json();
 
-  let clientId = CARIN_HOSTS[restPath].clientId;
-  let clientSecret = CARIN_HOSTS[restPath].clientSecret;
-  let tokenEndpoint = CARIN_HOSTS[restPath].tokenEndpoint;
+  let clientId = CONFIDENTIAL_HOSTS[restPath].clientId;
+  let clientSecret = CONFIDENTIAL_HOSTS[restPath].clientSecret;
+  let tokenEndpoint = CONFIDENTIAL_HOSTS[restPath].tokenEndpoint;
 
   // console.log({clientId, clientSecret, tokenEndpoint, REDIRECT_URI});
 
