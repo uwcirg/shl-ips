@@ -5,8 +5,6 @@ on:
     branches:
       - 'feature/**'   # adjust to match your feature branch naming
       - main            # in case the manifest itself changed
-  schedule:
-    - cron: '0 */3 * * *'   # safety net in case a push-triggered run is missed
   workflow_dispatch: {}       # manual "rebuild now" button
 
 permissions:
