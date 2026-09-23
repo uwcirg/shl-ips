@@ -1,0 +1,45 @@
+# run the test suite in the "test" Docker stage on every push
+name: Test
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout git commit
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build unit test image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Dockerfile
+          target: test
+          load: true
+          tags: shl-ips-test:latest
+          cache-from: type=gha,scope=unit-test
+          cache-to: type=gha,mode=max,scope=unit-test
+
+      - name: Run unit tests
+        run: docker run --rm shl-ips-test:latest
+
+      - name: Build e2e test image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Dockerfile
+          target: test-e2e
+          load: true
+          tags: shl-ips-test-e2e:latest
+          cache-from: type=gha,scope=e2e-test
+          cache-to: type=gha,mode=max,scope=e2e-test
+
+      - name: Run e2e tests
+        # --ipc=host: Docker's default /dev/shm (64MB) is too small for headless Chromium and
+        # causes it to crash mid-run; Playwright's own docs recommend this flag for CI containers.
+        # -e CI=true: the runner has CI=true in its own shell, but `docker run` doesn't forward
+        # host env vars into the container by default - playwright.config.ts's CI-only timeout
+        # bump and retries never actually activate without this.
+        run: docker run --rm --ipc=host -e CI=true shl-ips-test-e2e:latest

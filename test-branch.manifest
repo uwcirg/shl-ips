@@ -1,0 +1,13 @@
+# Branches to merge into "test", one per line, in order.
+# Order matters: earlier branches merge first, so put whichever branch is
+# conceptually "upstream" (touches more core/shared logic) earlier in the
+# list - later branches then merge on top of it, same as a stacked PR.
+#
+# Blank lines and lines starting with # are ignored.
+#
+# Copy this file to test-branch.manifest (on main) and list your branches:
+#
+# feature/some-feature
+# feature/another-feature
+
+feature/meditech-integration

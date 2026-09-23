@@ -114,20 +114,23 @@ function deriveDateFromAge(ageObj: { value: number, unit: any}, birthDateStr: st
 
   let result = new Date(birth);
 
+  // A bare "YYYY-MM-DD" birthDateStr is parsed above as UTC midnight (per the Date Time
+  // String spec), so the offset/set calls below must stay in UTC too — mixing in local-time
+  // getFullYear()/setMonth()/etc. would shift the result by a day in timezones behind UTC.
   if (unit.toLowerCase().startsWith("year") || unit.toLowerCase() === "a") {
-    result.setFullYear(result.getFullYear() + numeric);
+    result.setUTCFullYear(result.getUTCFullYear() + numeric);
     return { date: result, precision: DATE_PRECISION.year };
   }
   if (unit.toLowerCase().startsWith("month") || unit.toLowerCase() === "mo") {
-    result.setMonth(result.getMonth() + numeric);
+    result.setUTCMonth(result.getUTCMonth() + numeric);
     return { date: result, precision: DATE_PRECISION.month };
   }
   if (unit.toLowerCase().startsWith("week") || unit.toLowerCase() === "wk") {
-    result.setDate(result.getDate() + numeric * 7);
+    result.setUTCDate(result.getUTCDate() + numeric * 7);
     return { date: result, precision: DATE_PRECISION.day };
   }
   if (unit.toLowerCase().startsWith("day") || unit.toLowerCase() === "d") {
-    result.setDate(result.getDate() + numeric);
+    result.setUTCDate(result.getUTCDate() + numeric);
     return { date: result, precision: DATE_PRECISION.day };
   }
 
@@ -225,7 +228,7 @@ export function getFHIRDateAndPrecision(resource: Resource, prefix: string, pati
     if (result) return result;
   }
   if (val.end) {
-    const result = normalizeDateString(val);
+    const result = normalizeDateString(val.end);
     if (result) return result;
   }
   // Case: Age → convert if birth date known
@@ -352,7 +355,7 @@ export function assignPatientReference(resource: Resource, patientReference: str
 }
 
 export function isIPSBundle(bundle: Bundle): boolean {
-  let composition = bundle?.entry?.find(entry => entry.resource?.resourceType === "Composition").resource as Composition;
+  let composition = bundle?.entry?.find(entry => entry.resource?.resourceType === "Composition")?.resource as Composition;
   return (
     bundle !== undefined
     && bundle.resourceType === "Bundle"
@@ -533,7 +536,7 @@ export function constructPatientResource (
   }
 
   if (props.customIdentifiers) {
-    let identifiersToUpdate = patient.identifiers ?? [];
+    let identifiersToUpdate = patient.identifier ?? [];
     let newIdentifiers = [...props.customIdentifiers, ...identifiers];
     for (const newIdentifier of newIdentifiers) {
       identifiersToUpdate = identifiersToUpdate.filter((i) => i.system !== newIdentifier.system);

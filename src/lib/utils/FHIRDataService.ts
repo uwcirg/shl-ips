@@ -15,11 +15,7 @@ import { get, writable, derived, type Readable, type Writable } from "svelte/sto
 import { ResourceCollection } from "$lib/utils/ResourceCollection";
 import {
   INTERMEDIATE_FHIR_SERVER_BASE,
-  IDENTIFIER_SYSTEM,
-  CATEGORY_SYSTEM,
-  METHOD_SYSTEM,
-  PLACEHOLDER_SYSTEM,
-  SOURCE_NAME_SYSTEM
+  IDENTIFIER_SYSTEM
 } from "$lib/config/config";
 import type { IAuthService, ResourceRetrieveEvent, UserDemographics } from "$lib/utils/types";
 import { ResourceHelper } from "$lib/utils/ResourceHelper";
@@ -514,7 +510,7 @@ export class FHIRDataService {
     if (!dataset) {
       return;
     }
-    if (dataset.status.state === StateManager.State.LOADING) {
+    if (get(dataset.status).state === StateManager.State.LOADING) {
       throw new FHIRServiceError('Cannot delete a dataset that is currently loading', 'deleteDatasetFromServer');
     }
 
