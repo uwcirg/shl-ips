@@ -61,7 +61,7 @@ jobs:
             reason="${line#*: }"
             pr_number=$(gh pr list --head "$branch" --json number --jq '.[0].number' || true)
             if [ -n "${pr_number:-}" ] && [ "$pr_number" != "null" ]; then
-              gh pr comment "$pr_number" --body "⚠️ Skipped from the latest \`test\` branch rebuild: ${reason}. This branch still needs a rebase against the conflicting branch(es), or a manual resolution once, to be picked up automatically next time (via rerere)."
+              gh pr comment "$pr_number" --body "⚠️ Skipped from the latest \`test/auto\` branch rebuild: ${reason}. This branch still needs a rebase against the conflicting branch(es), or a manual resolution once, to be picked up automatically next time (via rerere)."
             fi
           done < skipped.txt
         env:

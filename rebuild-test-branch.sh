@@ -10,7 +10,7 @@
 set -euo pipefail
 
 MANIFEST_FILE="test-branch.manifest"
-TEST_BRANCH="test"
+TEST_BRANCH="test/auto"
 BASE_BRANCH="main"
 SKIPPED_FILE="skipped.txt"   # consumed by the workflow to post PR comments
 
