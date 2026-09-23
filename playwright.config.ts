@@ -8,7 +8,8 @@ export default defineConfig({
   reporter: 'list',
   use: {
     baseURL: 'http://localhost:3000',
-    trace: 'on-first-retry'
+    trace: 'retain-on-failure',
+    screenshot: 'only-on-failure'
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } }
@@ -20,6 +21,11 @@ export default defineConfig({
     command: 'npm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    timeout: 60_000
+    timeout: 60_000,
+    // Playwright suppresses the dev server's own output by default, so a slow or stuck boot
+    // (first-run Vite dep pre-bundling, a port conflict, etc.) looks like a silent hang instead
+    // of showing what's actually happening.
+    stdout: 'pipe',
+    stderr: 'pipe'
   }
 });
