@@ -22,7 +22,7 @@
       </NavLink>
     </NavItem>
     <NavItem class="mx-1">
-      <NavLink href="/data/manage" active={activeItem === "manage"} class="d-flex flex-column flex-sm-row justify-content-center align-items-center rounded-5 text-nowrap">
+      <NavLink href="/data/review" active={activeItem === "review"} class="d-flex flex-column flex-sm-row justify-content-center align-items-center rounded-5 text-nowrap">
         <Icon class="d-sm-none fs-6" name="heart-pulse"/>
         <span class="d-none d-sm-inline">My Health</span>
         <small class="d-sm-none" style="font-size: 0.6rem; line-height: 1.2">My Health</small>
