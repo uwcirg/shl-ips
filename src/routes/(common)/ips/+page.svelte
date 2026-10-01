@@ -1,14 +1,26 @@
 <script lang="ts">
-  import { writable } from 'svelte/store';
+  import { getContext, onMount } from 'svelte';
+  import { writable, type Readable } from 'svelte/store';
+  import { slide } from 'svelte/transition';
   import { page } from "$app/stores";
+  import type { User } from 'oidc-client-ts';
+  import type { IAuthService } from '$lib/utils/types';
   import {
+    Button,
     Col,
     Dropdown,
     DropdownItem,
     DropdownMenu,
     DropdownToggle,
+    Form,
+    FormGroup,
     Icon,
+    Input,
     Label,
+    Modal,
+    ModalBody,
+    ModalFooter,
+    ModalHeader,
     TabContent,
     TabPane,
     Row,
@@ -26,19 +38,55 @@
 
   let shlContents: Bundle[] = [];
 
-  let loading: boolean;
   const shl = $page.url.hash.match(/shlink:\/.*/)?.[0];
-  $: {
-    if (shl) {
-      try {
-        loading = true;
-        retrieve().then(() => loading = false);
-      } catch (e) {
-        console.error(e);
-        setError("There was a problem loading this SMART Health Link. Please ensure the link is active before trying again.");
-      }
-    }
+
+  const authService: IAuthService = getContext('authService');
+  const user: Readable<User | null> = authService.user;
+
+  let loading = !!shl;
+  let loaded = !shl;
+
+  // Access dialogue state
+  let modalOpen = false;
+  let recipientInput = "";
+  let passcode = "";
+  let showPasscode = false;
+  let passcodeIncorrect = false;
+  let incorrectFeedback = "";
+  let feedback = "Incorrect passcode.";
+  let submitting = false;
+  let authenticated = false;
+  let authedRecipient = "";
+
+  function getUserDisplayName(profile: User['profile'] | undefined): string {
+    if (!profile) return "";
+    const full = [profile.given_name, profile.family_name].filter(Boolean).join(" ");
+    return (profile.name as string) || full || (profile.preferred_username as string) || (profile.email as string) || "";
   }
+
+  onMount(async () => {
+    if (!shl) {
+      loading = false;
+      return;
+    }
+    try {
+      authenticated = !!(await authService.isAuthenticated());
+    } catch (e) {
+      authenticated = false;
+    }
+    authedRecipient = authenticated ? getUserDisplayName($user?.profile) : "";
+    if (authedRecipient) {
+      await attempt();
+    } else {
+      // Need a self-attested recipient name before the first request
+      authenticated = false;
+      loading = false;
+      modalOpen = true;
+    }
+  });
+
+  $: recipient = authedRecipient || recipientInput.trim();
+  $: canSubmit = !!recipient && (!showPasscode || passcode !== "") && !submitting;
 
   // Display mode logic
   interface DisplayMode {
@@ -95,121 +143,102 @@
   // End error display and handling logic
 
   // Retrieving SHL
-  async function retrieve(){
-    const recipient = `${INSTANCE_CONFIG.title} Viewer`;
-
-    let retrieveResult;
-    let needPasscode;
-    let passcode;
+  async function attempt() {
+    submitting = true;
+    if (!modalOpen) loading = true;
     try {
-        retrieveResult = await shlClient.retrieve({
-            shl: shl ?? "",
-            recipient
-        });
-      if (retrieveResult.error && (retrieveResult.status === 401 && retrieveResult.error.message === "Passcode required" || retrieveResult.status === 400)) {
-        // Failed the empty password request, try password requirement
-        needPasscode = shlClient.flag({ shl: shl ?? "" })?.includes('P');
-        if (needPasscode) {
-          passcode = prompt(`${INSTANCE_CONFIG.title} Viewer\n----------------------------------------\nEnter a passcode to access this SMART Health Link`);
-        }
-      }
-    } catch (e) {
-      let message = "Error retrieving SMART Health Link Manifest";
-      console.log(`${message}: ${e}`);
-      setError(message);
-      return;
+      await retrieve();
+    } finally {
+      submitting = false;
+      loading = false;
     }
+  }
 
-    if (!retrieveResult || needPasscode) {
-      try {
-        retrieveResult = await shlClient.retrieve({
-          shl: shl ?? "",
-          passcode: passcode ?? "",
-          recipient
-        });
-      } catch (e) {
-        if (retrieveResult === undefined) {
-          setError(e.message);
-        }
-      }
+  async function retrieve() {
+    let retrieveResult;
+    try {
+      retrieveResult = await shlClient.retrieve({
+        shl: shl ?? "",
+        passcode: passcode ?? "",
+        recipient
+      });
+    } catch (e) {
+      console.log(e);
+      modalOpen = false;
+      setError(e.message);
+      return;
     }
 
     if (retrieveResult === undefined) {
+      modalOpen = false;
       setError("Unable to retrieve SMART Health Link.");
       return;
     }
- 
+
     if (retrieveResult.error) {
-        let errorMsg = "";
-        if (retrieveResult.status) {
-            if (retrieveResult.status === 404) {
-                // Couldn't find the shl, or it's been deactivated
-                const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl: shl ?? "" })}">Manage or reactivate it here</a>`;
-                errorMsg = `<p>This SMART Health Link does not exist or has been deactivated.</p><p>Are you the owner of this link? ${managerLink}</p>`;
-            } else if (retrieveResult.status === 401) {
-                // Failed the password requirement
-                while (retrieveResult.status === 401) {
-                  const attempts = retrieveResult.error.details?.remainingAttempts;
-                  let attemptsMsg = "";
-                  if (attempts && attempts <= 3) {
-                    attemptsMsg = ` You have ${attempts} attempt${attempts === 1 ? "" : "s"} remaining.`;
-                  }
-                  passcode = prompt(`${INSTANCE_CONFIG.title} Viewer\n----------------------------------------\nIncorrect passcode.${attemptsMsg}\nEnter a passcode to access this SMART Health Link`);
-                    try {
-                        retrieveResult = await shlClient.retrieve({
-                            shl: shl ?? "",
-                            passcode: passcode ?? "",
-                            recipient
-                        });
-                    } catch (e) {
-                        // Retrieval succeeded, but there was an error parsing files etc.
-                        console.log(e);
-                        throw Error("Content parsing error");
-                    }
-                }
-                if (retrieveResult.error) {
-                    const lockout = retrieveResult.error.details?.retryAfterSeconds;
-                    let lockoutMsg = "";
-                    if (lockout) {
-                        const minutes = Math.ceil(lockout / 60);
-                        const hours = Math.floor(minutes / 60);
-                        const amt = hours >= 1 ? `${hours} hour${hours === 1 ? "" : "s"}` : `${minutes} minute${minutes === 1 ? "" : "s"}`;
-                        lockoutMsg = ` You may try again in ${amt}.`;
-                    }
-                    const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl: shl ?? "" })}">Manage it here</a>`;
-                    errorMsg = `<p>You have been locked from accessing this SMART Health Link from this device due to too many failed password attempts.${lockoutMsg}</p><p>Are you the owner of this link? ${managerLink}</p>`;
-                }
-            } else if (retrieveResult.status === 403) {
-                const lockout = retrieveResult.error.details?.retryAfterSeconds;
-                let lockoutMsg = "";
-                if (lockout) {
-                    const minutes = Math.ceil(lockout / 60);
-                    const hours = Math.floor(minutes / 60);
-                    const amt = hours >= 1 ? `${hours} hour${hours === 1 ? "" : "s"}` : `${minutes} minute${minutes === 1 ? "" : "s"}`;
-                    lockoutMsg = ` You may try again in ${amt}.`;
-                }
-                const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl: shl ?? "" })}">Manage it here</a>`;
-                errorMsg = `<p>You have been locked from accessing this SMART Health Link from this device due to too many failed password attempts.${lockoutMsg}</p><p>Are you the owner of this link? ${managerLink}</p>`;
-            } else if (retrieveResult.status === 429) {
-              errorMsg = `<p>Unable to retrieve SMART Health Link due to too many requests. Please wait before trying again.</p>`;
-            } else {
-                errorMsg = retrieveResult.error;
-            }
+      const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl: shl ?? "" })}">Manage or reactivate it here</a>`;
+      const needPasscode = shlClient.flag({ shl: shl ?? "" })?.includes('P');
+      if (retrieveResult.status === 401 || (retrieveResult.status === 400 && needPasscode)) {
+        // Passcode missing or incorrect: ask for it in the dialogue
+        passcodeIncorrect = showPasscode && passcode !== "";
+        const attempts = retrieveResult.error.details?.remainingAttempts;
+        let attemptsMsg = "";
+        if (attempts && attempts <= 3) {
+          attemptsMsg = ` You have ${attempts} attempt${attempts === 1 ? "" : "s"} remaining.`;
         }
-        if (errorMsg !== "") {
-          setError(errorMsg);
-          return;
+        incorrectFeedback = `${feedback}${attemptsMsg}`;
+        passcode = "";
+        showPasscode = true;
+        modalOpen = true;
+        return;
+      }
+      modalOpen = false;
+      if (retrieveResult.status === 404) {
+        // Couldn't find the shl, or it's been deactivated
+        setError(`<p>This SMART Health Link does not exist or has been deactivated.</p><p>Are you the owner of this link? ${managerLink}</p>`);
+      } else if (retrieveResult.status === 403) {
+        const lockout = retrieveResult.error.details?.retryAfterSeconds;
+        let lockoutMsg = "";
+        if (lockout) {
+            const minutes = Math.ceil(lockout / 60);
+            const hours = Math.floor(minutes / 60);
+            const amt = hours >= 1 ? `${hours} hour${hours === 1 ? "" : "s"}` : `${minutes} minute${minutes === 1 ? "" : "s"}`;
+            lockoutMsg = ` You may try again in ${amt}.`;
         }
+        const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl: shl ?? "" })}">Log in to view it here</a>`;
+        setError(`<p>You have been locked from accessing this SMART Health Link from this device due to too many failed password attempts.${lockoutMsg}</p><p>Are you the owner of this link? ${managerLink}</p>`);
+      } else if (retrieveResult.status === 429) {
+        setError(`<p>Unable to retrieve SMART Health Link due to too many requests. Please wait before trying again.</p>`);
+      } else if (showPasscode) {
+        setError(`<p>You have been locked from accessing this SMART Health Link due to too many failed password attempts.</p><p>Are you the owner of this link? ${managerLink}</p>`);
+      } else {
+        setError(typeof retrieveResult.error === "string" ? retrieveResult.error : "Unable to retrieve SMART Health Link.");
+      }
+      return;
     }
-    if (retrieveResult.shcs) {
-      const decoded = await Promise.all(retrieveResult.shcs.map(verify));
-      const data = decoded.map((e) => e.fhirBundle);
-      shlContents = data;
+
+    try {
+      if (retrieveResult.shcs) {
+        const decoded = await Promise.all(retrieveResult.shcs.map(verify));
+        shlContents = decoded.map((e) => e.fhirBundle);
+      }
+      if (retrieveResult.jsons) {
+        shlContents = [...shlContents, ...retrieveResult.jsons];
+      }
+    } catch (e) {
+      console.log(e);
+      modalOpen = false;
+      setError("Content parsing error");
+      return;
     }
-    if (retrieveResult.jsons) {
-      shlContents = [...shlContents, ...retrieveResult.jsons];
-    }
-}
+    modalOpen = false;
+    loaded = true;
+  }
+
+  function onSubmit(event: Event) {
+    event.preventDefault();
+    if (canSubmit) attempt();
+  }
   // End retrieving SHL
 
   function getTabLabel(ipsContent: Bundle) {
@@ -244,6 +273,45 @@
   let decisionSupportContent = shlContents[0];
 </script>
 
+<Modal isOpen={modalOpen} backdrop="static" keyboard={false} centered>
+  <Form on:submit={onSubmit}>
+    <ModalHeader>{INSTANCE_CONFIG.title} Viewer</ModalHeader>
+    <ModalBody>
+      {#if !authenticated}
+        <FormGroup>
+          <Label for="recipient">Who are you?</Label>
+          <Input
+            id="recipient"
+            type="text"
+            placeholder="Your name or organization"
+            bind:value={recipientInput}
+            disabled={showPasscode && submitting} />
+        </FormGroup>
+      {/if}
+      {#if showPasscode}
+        <div transition:slide>
+          <FormGroup>
+            <Label for="passcode">Enter a passcode to access this SMART Health Link</Label>
+            <Input
+              id="passcode"
+              type="password"
+              bind:value={passcode}
+              invalid={passcodeIncorrect}
+              feedback={incorrectFeedback}
+              autofocus />
+          </FormGroup>
+        </div>
+      {/if}
+    </ModalBody>
+    <ModalFooter>
+      <Button type="submit" color="primary" disabled={!canSubmit}>
+        {submitting ? "Retrieving..." : "Continue"}
+      </Button>
+    </ModalFooter>
+  </Form>
+</Modal>
+
+{#if loaded || showError}
 <Row class="d-flex justify-content-start mx-0 pb-4">
   <Col class="d-flex justify-content-start align-items-center">
     Displaying FHIR Resources Using:
@@ -274,13 +342,6 @@
 {#if showError}
   <Row class="text-danger">
     {@html errorMessage}
-  </Row>
-{:else if loading}
-  <Row id="ips-loader" class="mx-2">
-    <Row>
-      {@html status}
-    </Row>
-    <span class="loader"></span>
   </Row>
 {:else if shlContents.length > 1 || SHOW_VIEWER_DEMO}
   <!-- Multiple tab/demo view -->
@@ -322,4 +383,12 @@
 {:else}
   <!-- Single tab view -->
   <IPSContent bundle={shlContents[0]} mode={$displayMode} />
+{/if}
+{:else if loading}
+  <Row id="ips-loader" class="mx-2">
+    <Row>
+      {@html status}
+    </Row>
+    <span class="loader"></span>
+  </Row>
 {/if}
