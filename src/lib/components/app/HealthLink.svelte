@@ -22,11 +22,13 @@
     ModalBody,
     ModalHeader,
     ModalFooter,
-    Row
+    Row,
+    Table
   } from '@sveltestrap/sveltestrap';
   import { goto } from '$app/navigation';
   import type { Writable } from 'svelte/store';
-  import type { SHLAdminParams, SHLClient } from '$lib/utils/managementClient';
+  import type { SHLClient } from '$lib/utils/managementClient';
+  import type { SHLAdminParams, AccessLogEntry, EventLogEntry } from '$lib/utils/types';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import { generate } from "text-to-image";
   import type { ToastStore } from '$lib/stores/toast';
@@ -66,7 +68,56 @@
   let showActive: boolean;
   let linkNotFound: boolean = false;
 
+  type ActivityEntry = { timestamp: string; description: string; kind: 'access' | 'change' };
+
+  function describeHistory(action: string = '', details: string = ''): string {
+    const withDetails = (text: string, suffix = '') => (details ? `${text}: ${details}` : `${text}${suffix}`);
+    switch (action) {
+      case 'created': return 'Link created';
+      case 'updated_passcode': return 'Passcode changed';
+      case 'updated_expiration': return details ? `Expiration changed to ${details}` : 'Expiration changed';
+      case 'updated_label': return details ? `Label changed to "${details}"` : 'Label changed';
+      case 'expired': return 'Link expired';
+      case 'deactivated': return 'Link deactivated';
+      case 'reactivated': return 'Link reactivated';
+      case 'file_added': return withDetails('Summary added');
+      case 'file_deleted': return withDetails('Summary deleted');
+      case 'file_updated': return withDetails('Summary updated');
+      case 'endpoint_added': return withDetails('Endpoint added');
+      case 'endpoint_deleted': return withDetails('Endpoint deleted');
+      case 'endpoint_updated': return withDetails('Endpoint updated');
+      default: return withDetails(action.replace(/_/g, ' ') || 'Activity');
+    }
+  }
+  const ACTIVITY_LIMIT = 10;
+  let activity: ActivityEntry[] = [];
+  let activityError = false;
+
+  async function loadActivity() {
+    try {
+      const accessLog: AccessLogEntry[] = await shlClient.getAccessLog(shl.id, ACTIVITY_LIMIT);
+      const history: EventLogEntry[] = await shlClient.getHistory(shl.id, ACTIVITY_LIMIT);
+      activity = [
+        ...accessLog.map((e) => ({
+          timestamp: e.accessTime,
+          kind: 'access' as const,
+          description: e.recipient ? `Accessed by ${e.recipient}` : 'Accessed'
+        })),
+        ...history.map((e) => ({
+          timestamp: e.time,
+          kind: 'change' as const,
+          description: describeHistory(e.eventType, e.detail)
+        }))
+      ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      activityError = false;
+    } catch (e) {
+      console.error(e);
+      activityError = true;
+    }
+  }
+
   onMount(async () => {
+    loadActivity();
     try {
       linkIsActive = await shlClient.isActive(shl.id);
     } catch (e) {
@@ -229,6 +280,7 @@
   async function deleteFile(fileContent:string) {
     shl = await shlClient.deleteFile(shl, fileContent);
     $shlStore = await shlClient.getUserShls();
+    loadActivity();
     toast.add({
       message: `Deleted file from ${shl.label}`,
       type: 'success'
@@ -326,6 +378,7 @@
               on:click={async () => {
                 await shlClient.reactivate(shl).then(async () => {
                   linkIsActive = await shlClient.isActive(shl.id);
+                  loadActivity();
                   showActive = linkIsActive;
                   setTimeout(() => {
                     showActive = false;
@@ -358,6 +411,7 @@
           on:click={async () => {
             await shlClient.resetShl({ ...shl, label: shlControlled.label });
             $shlStore = await shlClient.getUserShls();
+            loadActivity();
             toast.add({
               message: `Renamed summary to ${shlControlled.label}`,
               type: 'success'
@@ -392,6 +446,7 @@
           on:click={async () => {
             await shlClient.resetShl({ ...shl, passcode: shlControlled.passcode });
             $shlStore = await shlClient.getUserShls();
+            loadActivity();
             toast.add({ message: "Passcode updated", type: "success" });
           }}><Icon name="lock" /> Update Passcode</Button>
         <Button size="sm" on:click={toggle} color="danger"><Icon name="trash3" /> Delete Summary Link</Button>
@@ -451,7 +506,78 @@
   {/if}
 </Row>
 
+<Row class="mt-3">
+  <Col>
+    <div style="border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 1em"><h3>Recent Activity</h3></div>
+    {#if activityError}
+      <Alert color="warning" fade={false}>
+        <Icon name="exclamation-triangle-fill" />&nbsp;Could not load activity.
+      </Alert>
+    {:else if activity.length === 0}
+      <p><em>No activity found</em></p>
+    {:else}
+      <Card class="activity-card shadow-sm">
+        <Table responsive hover borderless class="activity-table mb-0">
+          <tbody>
+            {#each activity as entry}
+              <tr>
+                <td class="activity-icon">
+                  <span class="activity-badge {entry.kind}">
+                    <Icon name={entry.kind === 'access' ? 'eye' : 'pencil'} />
+                  </span>
+                </td>
+                <td class="activity-description">{entry.description}</td>
+                <td class="activity-date text-muted">
+                  {new Date(entry.timestamp).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                </td>
+              </tr>
+            {/each}
+          </tbody>
+        </Table>
+      </Card>
+    {/if}
+  </Col>
+</Row>
+
 <style>
+  :global(.activity-card) {
+    border: 0;
+    border-radius: 0.75rem;
+    overflow: hidden;
+  }
+  :global(.activity-table td) {
+    vertical-align: middle;
+    padding: 0.75rem 1rem;
+  }
+  :global(.activity-table tr + tr td) {
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+  }
+  :global(.activity-icon) {
+    width: 1%;
+    padding-right: 0 !important;
+  }
+  :global(.activity-badge) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    font-size: 0.9rem;
+  }
+  :global(.activity-badge.access) {
+    background: rgba(13, 110, 253, 0.12);
+    color: #0d6efd;
+  }
+  :global(.activity-badge.change) {
+    background: rgba(25, 135, 84, 0.12);
+    color: #198754;
+  }
+  :global(.activity-date) {
+    white-space: nowrap;
+    text-align: right;
+    font-size: 0.85rem;
+  }
   :global(.shlbutton) {
     width: 300px !important;
   }
