@@ -99,22 +99,16 @@
     const recipient = `${INSTANCE_CONFIG.title} Viewer`;
 
     let retrieveResult;
+    let needPasscode;
     let passcode;
     try {
-        retrieveResult = await fetch(shlClient.url({ shl: shl ?? "" }), {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-          },
-          body: JSON.stringify({
-            recipient: recipient,
-          }),
+        retrieveResult = await shlClient.retrieve({
+            shl: shl ?? "",
+            recipient
         });
-      let message = await retrieveResult.text();
-      message = JSON.parse(message)?.message;
-      if (!retrieveResult.ok && (retrieveResult.status === 401 && message === "Passcode required" || retrieveResult.status === 400)) {
+      if (retrieveResult.error && (retrieveResult.status === 401 && retrieveResult.error.message === "Passcode required" || retrieveResult.status === 400)) {
         // Failed the empty password request, try password requirement
-        const needPasscode = shlClient.flag({ shl: shl ?? "" })?.includes('P');
+        needPasscode = shlClient.flag({ shl: shl ?? "" })?.includes('P');
         if (needPasscode) {
           passcode = prompt(`${INSTANCE_CONFIG.title} Viewer\n----------------------------------------\nEnter a passcode to access this SMART Health Link`);
         }
@@ -125,16 +119,18 @@
       setError(message);
       return;
     }
-    
-    try {
-      retrieveResult = await shlClient.retrieve({
+
+    if (!retrieveResult || needPasscode) {
+      try {
+        retrieveResult = await shlClient.retrieve({
           shl: shl ?? "",
           passcode: passcode ?? "",
           recipient
-      });
-    } catch (e) {
-      if (retrieveResult === undefined) {
-        setError(e.message);
+        });
+      } catch (e) {
+        if (retrieveResult === undefined) {
+          setError(e.message);
+        }
       }
     }
 
