@@ -386,7 +386,7 @@
       {#each shlContents as contents, index}
         <TabPane class={`ips${index}`} tabId={`ips${index}`} active={index === 0} style="padding-top:10px">
           <span slot="tab">{getTabLabel(contents)}</span>
-          <IPSContent bundle={contents} mode={$displayMode} />
+          <IPSContent bundle={contents} displayMode={$displayMode} codeBadges="advanced"/>
         </TabPane>
       {/each}
       <TabPane class="decision-support-tab" tabId="decision-support" style="padding-top:10px">
@@ -412,13 +412,13 @@
     {#if SHOW_VIEWER_DEMO}
       <TabPane tabId="demo" active={shlContents.length === 0} style="padding-top:10px">
         <span class="demo-tab" slot="tab">IPS Sandbox</span>
-        <Demo bundle={shlContents[0]} mode={$displayMode} />
+        <Demo bundle={shlContents[0]} displayMode={$displayMode} />
       </TabPane>
     {/if}
   </TabContent>
 {:else}
   <!-- Single tab view -->
-  <IPSContent bundle={shlContents[0]} mode={$displayMode} />
+  <IPSContent bundle={shlContents[0]} displayMode={$displayMode} />
 {/if}
 {:else if loading}
   <Row id="ips-loader" class="mx-2">
