@@ -60,7 +60,7 @@
           </td>
           <td>
             {#if recommendation.forecastStatus}
-              <CodeableConcept codeableConcept={recommendation.forecastStatus} badge={false} bold={false} />
+              <CodeableConcept codeableConcept={recommendation.forecastStatus} bold={false} />
             {/if}
           </td>
           <td>

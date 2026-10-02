@@ -123,7 +123,7 @@
       {/if}
       {#if resource.component}
         {#each resource.component as component}
-          <CodeableConcept codeableConcept={component.code} badge={false}/>
+          <CodeableConcept codeableConcept={component.code} />
           {#if getValueString(component)}
             {getValueString(component)}<br>
           {/if}
