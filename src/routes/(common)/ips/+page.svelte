@@ -99,22 +99,16 @@
     const recipient = `${INSTANCE_CONFIG.title} Viewer`;
 
     let retrieveResult;
+    let needPasscode;
     let passcode;
     try {
-        retrieveResult = await fetch(shlClient.url({ shl: shl ?? "" }), {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-          },
-          body: JSON.stringify({
-            recipient: recipient,
-          }),
+        retrieveResult = await shlClient.retrieve({
+            shl: shl ?? "",
+            recipient
         });
-      let message = await retrieveResult.text();
-      message = JSON.parse(message)?.message;
-      if (!retrieveResult.ok && (retrieveResult.status === 401 && message === "Passcode required" || retrieveResult.status === 400)) {
+      if (retrieveResult.error && (retrieveResult.status === 401 && retrieveResult.error.message === "Passcode required" || retrieveResult.status === 400)) {
         // Failed the empty password request, try password requirement
-        const needPasscode = shlClient.flag({ shl: shl ?? "" })?.includes('P');
+        needPasscode = shlClient.flag({ shl: shl ?? "" })?.includes('P');
         if (needPasscode) {
           passcode = prompt(`${INSTANCE_CONFIG.title} Viewer\n----------------------------------------\nEnter a passcode to access this SMART Health Link`);
         }
@@ -125,17 +119,19 @@
       setError(message);
       return;
     }
-    
-    try {
-      retrieveResult = await shlClient.retrieve({
+
+    if (!retrieveResult || needPasscode) {
+      try {
+        retrieveResult = await shlClient.retrieve({
           shl: shl ?? "",
           passcode: passcode ?? "",
           recipient
-      });
-    } catch (e) {
-      console.log(e);
-      setError(e.message);
-      return;
+        });
+      } catch (e) {
+        if (retrieveResult === undefined) {
+          setError(e.message);
+        }
+      }
     }
 
     if (retrieveResult === undefined) {
@@ -153,7 +149,12 @@
             } else if (retrieveResult.status === 401) {
                 // Failed the password requirement
                 while (retrieveResult.status === 401) {
-                  passcode = prompt(`${INSTANCE_CONFIG.title} Viewer\n----------------------------------------\nIncorrect passcode.\nEnter a passcode to access this SMART Health Link`);
+                  const attempts = retrieveResult.error.details?.remainingAttempts;
+                  let attemptsMsg = "";
+                  if (attempts && attempts <= 3) {
+                    attemptsMsg = ` You have ${attempts} attempt${attempts === 1 ? "" : "s"} remaining.`;
+                  }
+                  passcode = prompt(`${INSTANCE_CONFIG.title} Viewer\n----------------------------------------\nIncorrect passcode.${attemptsMsg}\nEnter a passcode to access this SMART Health Link`);
                     try {
                         retrieveResult = await shlClient.retrieve({
                             shl: shl ?? "",
@@ -167,9 +168,30 @@
                     }
                 }
                 if (retrieveResult.error) {
-                    const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl: shl ?? "" })}">Manage or reactivate it here</a>`;
-                    errorMsg = `<p>You have been locked from accessing this SMART Health Link due to too many failed password attempts.</p><p>Are you the owner of this link? ${managerLink}</p>`;
+                    const lockout = retrieveResult.error.details?.retryAfterSeconds;
+                    let lockoutMsg = "";
+                    if (lockout) {
+                        const minutes = Math.ceil(lockout / 60);
+                        const hours = Math.floor(minutes / 60);
+                        const amt = hours >= 1 ? `${hours} hour${hours === 1 ? "" : "s"}` : `${minutes} minute${minutes === 1 ? "" : "s"}`;
+                        lockoutMsg = ` You may try again in ${amt}.`;
+                    }
+                    const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl: shl ?? "" })}">Manage it here</a>`;
+                    errorMsg = `<p>You have been locked from accessing this SMART Health Link from this device due to too many failed password attempts.${lockoutMsg}</p><p>Are you the owner of this link? ${managerLink}</p>`;
                 }
+            } else if (retrieveResult.status === 403) {
+                const lockout = retrieveResult.error.details?.retryAfterSeconds;
+                let lockoutMsg = "";
+                if (lockout) {
+                    const minutes = Math.ceil(lockout / 60);
+                    const hours = Math.floor(minutes / 60);
+                    const amt = hours >= 1 ? `${hours} hour${hours === 1 ? "" : "s"}` : `${minutes} minute${minutes === 1 ? "" : "s"}`;
+                    lockoutMsg = ` You may try again in ${amt}.`;
+                }
+                const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl: shl ?? "" })}">Manage it here</a>`;
+                errorMsg = `<p>You have been locked from accessing this SMART Health Link from this device due to too many failed password attempts.${lockoutMsg}</p><p>Are you the owner of this link? ${managerLink}</p>`;
+            } else if (retrieveResult.status === 429) {
+              errorMsg = `<p>Unable to retrieve SMART Health Link due to too many requests. Please wait before trying again.</p>`;
             } else {
                 errorMsg = retrieveResult.error;
             }
