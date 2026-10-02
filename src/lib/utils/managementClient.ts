@@ -2,7 +2,13 @@ import { base64url } from '$lib/utils/util';
 import { API_BASE } from '$lib/config/config';
 import * as jose from 'jose';
 import { get } from 'svelte/store';
-import type { ConfigForServer, IAuthService, SHLAdminParams } from '$lib/utils/types';
+import type {
+  ConfigForServer,
+  IAuthService,
+  AccessLogEntry,
+  SHLAdminParams,
+  EventLogEntry
+} from '$lib/utils/types';
 import { VIEWER_BASE } from '$lib/config/config';
 import { getUserShls } from '$lib/utils/shlServerUtils';
 
@@ -160,5 +166,27 @@ export class SHLClient {
     });
     const updatedShl = await res.json();
     return updatedShl;
+  }
+
+  private async getShlList<T>(shlId: string, path: string, limit?: number): Promise<T[]> {
+    const query = limit !== undefined ? `?limit=${encodeURIComponent(limit)}` : '';
+    const res = await fetch(`${API_BASE}/shl/${shlId}/${path}${query}`, {
+      method: 'GET',
+      headers: {
+        "Authorization": `Bearer ${await this.auth.getAccessToken()}`
+      }
+    });
+    if (!res.ok) {
+      throw new Error(`Failed to fetch ${path} for SHL ${shlId}: ${res.status}`);
+    }
+    return await res.json();
+  }
+
+  async getAccessLog(shlId: string, limit?: number): Promise<AccessLogEntry[]> {
+    return this.getShlList<AccessLogEntry>(shlId, 'access-log', limit);
+  }
+
+  async getHistory(shlId: string, limit?: number): Promise<EventLogEntry[]> {
+    return this.getShlList<EventLogEntry>(shlId, 'history', limit);
   }
 }

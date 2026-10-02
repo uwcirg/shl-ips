@@ -29,6 +29,18 @@ export interface SHLAdminParams {
   active?: boolean;
 }
 
+export interface AccessLogEntry {
+  recipient: string;
+  accessTime: string;
+  ipAddress?: string;
+}
+
+export interface EventLogEntry {
+  eventType: string;
+  time: string;
+  detail: string | undefined;
+}
+
 export interface SHLFile {
   contentType: string;
   contentHash: string;
