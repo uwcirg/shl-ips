@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getContext, onMount } from 'svelte';
+  import { getContext, onMount, tick } from 'svelte';
   import { writable, type Readable } from 'svelte/store';
   import { slide } from 'svelte/transition';
   import { page } from "$app/stores";
@@ -57,6 +57,32 @@
   let submitting = false;
   let authenticated = false;
   let authedRecipient = "";
+  let passcodeInput: HTMLInputElement | undefined;
+
+  const RECIPIENT_STORAGE_KEY = "shl-viewer-recipient";
+  const RECIPIENT_MAX_AGE_MS = 12 * 60 * 60 * 1000; // 12 hours
+  function loadSavedRecipient(): string {
+    try {
+      const raw = localStorage.getItem(RECIPIENT_STORAGE_KEY);
+      if (!raw) return "";
+      const saved = JSON.parse(raw);
+      if (typeof saved?.name === "string" && Date.now() - saved.savedAt < RECIPIENT_MAX_AGE_MS) {
+        return saved.name;
+      }
+      // Expired or in an unrecognized format
+      localStorage.removeItem(RECIPIENT_STORAGE_KEY);
+    } catch (e) {
+      // Storage unavailable or unparseable value
+    }
+    return "";
+  }
+  function saveRecipient(value: string) {
+    try {
+      localStorage.setItem(RECIPIENT_STORAGE_KEY, JSON.stringify({ name: value, savedAt: Date.now() }));
+    } catch (e) {
+      // Storage unavailable; the name just won't be remembered
+    }
+  }
 
   function getUserDisplayName(profile: User['profile'] | undefined): string {
     if (!profile) return "";
@@ -70,7 +96,7 @@
       return;
     }
     try {
-      authenticated = !!(await authService.isAuthenticated());
+      authenticated = !!(await authService.isAuthenticated()) || await authService.restoreSession();
     } catch (e) {
       authenticated = false;
     }
@@ -80,6 +106,7 @@
     } else {
       // Need a self-attested recipient name before the first request
       authenticated = false;
+      recipientInput = loadSavedRecipient();
       loading = false;
       modalOpen = true;
     }
@@ -155,6 +182,9 @@
   }
 
   async function retrieve() {
+    // Computed here rather than read from the reactive `recipient`, which hasn't
+    // updated yet when the first attempt runs right after authedRecipient is set
+    const recipient = authedRecipient || recipientInput.trim();
     let retrieveResult;
     try {
       retrieveResult = await shlClient.retrieve({
@@ -177,6 +207,7 @@
 
     if (retrieveResult.error) {
       const managerLink = `<a href="${new URL(import.meta.url).origin}/view/${shlClient.id({ shl: shl ?? "" })}">Manage or reactivate it here</a>`;
+      console.warn("SHL retrieval failed", retrieveResult.status, retrieveResult.error);
       const needPasscode = shlClient.flag({ shl: shl ?? "" })?.includes('P');
       if (retrieveResult.status === 401 || (retrieveResult.status === 400 && needPasscode)) {
         // Passcode missing or incorrect: ask for it in the dialogue
@@ -190,6 +221,8 @@
         passcode = "";
         showPasscode = true;
         modalOpen = true;
+        await tick();
+        passcodeInput?.focus();
         return;
       }
       modalOpen = false;
@@ -237,7 +270,9 @@
 
   function onSubmit(event: Event) {
     event.preventDefault();
-    if (canSubmit) attempt();
+    if (!canSubmit) return;
+    if (!authedRecipient) saveRecipient(recipient);
+    attempt();
   }
   // End retrieving SHL
 
@@ -296,6 +331,7 @@
               id="passcode"
               type="password"
               bind:value={passcode}
+              bind:inner={passcodeInput}
               invalid={passcodeIncorrect}
               feedback={incorrectFeedback}
               autofocus />
