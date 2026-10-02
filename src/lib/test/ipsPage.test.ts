@@ -1,6 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
-import { readable } from 'svelte/store';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen } from '@testing-library/svelte';
+import { readable, writable } from 'svelte/store';
+import { fakeAuth } from '$lib/test/mocks';
 import IpsPage from '../../routes/(common)/ips/+page.svelte';
 
 // vi.mock factories are hoisted above this file's own top-level const declarations, so
@@ -63,38 +64,78 @@ function fakeIpsBundle() {
   };
 }
 
+function renderIpsPage(opts: { user?: { profile: Record<string, unknown> } } = {}) {
+  const auth = fakeAuth({
+    user: writable(opts.user ?? null),
+    authenticated: writable(!!opts.user),
+    isAuthenticated: vi.fn().mockResolvedValue(!!opts.user),
+    restoreSession: vi.fn().mockResolvedValue(false)
+  } as any);
+  return render(IpsPage, { context: new Map([['authService', auth]]) });
+}
+
+const signedInUser = { profile: { name: 'Pat Example' } };
+
 describe('/ips page', () => {
-  let fetchMock: ReturnType<typeof vi.fn>;
-
   beforeEach(() => {
-    // Only used for the page's own passcode-probe request, which this test doesn't need to
-    // trigger a passcode for — a bare ok:true response is enough to skip that branch.
-    fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, text: () => Promise.resolve('{}') });
-    vi.stubGlobal('fetch', fetchMock);
     retrieveMock.mockReset();
+    localStorage.clear();
   });
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it('loads a SHL from the server and hands the retrieved bundle to the viewer', async () => {
+  it('retrieves immediately for a signed-in user, using their name as the recipient', async () => {
     retrieveMock.mockResolvedValue({ state: 'abc', jsons: [fakeIpsBundle()] });
 
-    render(IpsPage);
+    renderIpsPage({ user: signedInUser });
 
     const content = await screen.findByTestId('ips-content-stub');
     expect(content).toHaveTextContent('Jane');
     expect(retrieveMock).toHaveBeenCalledWith(
-      expect.objectContaining({ shl: expect.stringContaining('shlink:/') })
+      expect.objectContaining({
+        shl: expect.stringContaining('shlink:/'),
+        recipient: 'Pat Example'
+      })
     );
+    expect(screen.queryByLabelText(/who are you/i)).not.toBeInTheDocument();
   });
 
   it('shows an error message when the server reports the SHL cannot be found', async () => {
     retrieveMock.mockResolvedValue({ error: 'not found', status: 404 });
 
-    render(IpsPage);
+    renderIpsPage({ user: signedInUser });
 
     expect(await screen.findByText(/does not exist or has been deactivated/i)).toBeInTheDocument();
+  });
+
+  it('asks an anonymous user who they are, then retrieves with that recipient', async () => {
+    retrieveMock.mockResolvedValue({ state: 'abc', jsons: [fakeIpsBundle()] });
+
+    renderIpsPage();
+
+    const input = await screen.findByLabelText(/who are you/i);
+    expect(retrieveMock).not.toHaveBeenCalled();
+    await fireEvent.input(input, { target: { value: 'Dr. Visitor' } });
+    await fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    expect(await screen.findByTestId('ips-content-stub')).toBeInTheDocument();
+    expect(retrieveMock).toHaveBeenCalledWith(expect.objectContaining({ recipient: 'Dr. Visitor' }));
+  });
+
+  it('asks for a passcode when the first request is unauthorized, then loads the content', async () => {
+    retrieveMock
+      .mockResolvedValueOnce({ error: { message: 'Passcode required' }, status: 401 })
+      .mockResolvedValueOnce({ state: 'abc', jsons: [fakeIpsBundle()] });
+
+    renderIpsPage({ user: signedInUser });
+
+    const passcode = await screen.findByLabelText(/passcode/i);
+    expect(retrieveMock).toHaveBeenNthCalledWith(1, expect.objectContaining({ passcode: '' }));
+    await fireEvent.input(passcode, { target: { value: '1234' } });
+    await fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    expect(await screen.findByTestId('ips-content-stub')).toBeInTheDocument();
+    expect(retrieveMock).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ passcode: '1234', recipient: 'Pat Example' })
+    );
   });
 });

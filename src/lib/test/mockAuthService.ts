@@ -53,6 +53,10 @@ export class MockAuthService implements IAuthService {
     this.authenticated.set(false);
   }
 
+  async restoreSession(): Promise<boolean> {
+    return (await this.isAuthenticated()) ?? false;
+  }
+
   async isAuthenticated(): Promise<boolean | undefined> {
     const value = !!this.fakeUser && !this.fakeUser.expired;
     this.authenticated.set(value);

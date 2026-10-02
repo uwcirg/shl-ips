@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import base64url from 'base64url';
 import * as jose from 'jose';
 import { Buffer } from 'buffer';
@@ -26,30 +26,38 @@ async function buildManifest() {
 
   const manifest = { files: [{ contentType: 'application/fhir+json', embedded }] };
 
-  // No 'P' in the flag: the page's passcode-prompt branch only fires for a flagged link, and
-  // a real `prompt()` dialog would otherwise block the page in a headless browser.
+  // No 'P' in the flag and a successful manifest response, so no passcode field is shown.
   const parsedShl = { url: manifestUrl, key: keyString, flag: '', label: 'Test Summary' };
   const shl = 'shlink:/' + base64url.encode(JSON.stringify(parsedShl));
 
   return { shl, manifestUrl, manifest };
 }
 
+// An anonymous visitor must say who they are before the first request is made.
+async function identifyAsVisitor(page: Page, name = 'E2E Tester') {
+  await page.getByLabel(/who are you/i).fill(name);
+  await page.getByRole('button', { name: /continue/i }).click();
+}
+
 test.describe('/ips page', () => {
   test('loads a SHL from the server and renders the retrieved bundle', async ({ page }) => {
     const { shl, manifestUrl, manifest } = await buildManifest();
 
-    // The page makes two POSTs to this URL: an initial passcode-probe, then shlClient.retrieve()'s
-    // own manifest fetch. Both are satisfied by the same successful response.
-    await page.route(manifestUrl, (route) =>
-      route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(manifest) })
-    );
+    const requestBodies: string[] = [];
+    await page.route(manifestUrl, (route) => {
+      requestBodies.push(route.request().postData() ?? '');
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(manifest) });
+    });
 
     await page.goto('/ips#' + shl);
+    await identifyAsVisitor(page);
 
     await expect(page.getByText(/does not exist or has been deactivated/i)).not.toBeVisible();
     // The real Patient.svelte template renders the name more than once (e.g. a heading plus a
     // detail row) - this only needs to confirm the retrieved bundle made it to the viewer.
     await expect(page.getByText('Jane Doe').first()).toBeVisible();
+    expect(requestBodies).toHaveLength(1);
+    expect(JSON.parse(requestBodies[0]).recipient).toBe('E2E Tester');
   });
 
   test('shows an error message when the server reports the SHL cannot be found', async ({ page }) => {
@@ -60,6 +68,7 @@ test.describe('/ips page', () => {
     );
 
     await page.goto('/ips#' + shl);
+    await identifyAsVisitor(page);
 
     await expect(page.getByText(/does not exist or has been deactivated/i)).toBeVisible();
   });

@@ -216,6 +216,7 @@ export interface IAuthService {
   renewToken(): Promise<User | null>;
   logout(): Promise<void>;
   isAuthenticated(): Promise<boolean | undefined>;
+  restoreSession(timeoutMs?: number): Promise<boolean>;
   syncTokenToServer(token: string): Promise<boolean>;
 }
 

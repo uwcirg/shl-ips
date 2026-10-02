@@ -158,6 +158,38 @@ export class AuthService implements IAuthService {
     }
   }
 
+  /**
+   * For public pages: if this tab has no stored user (oidc-client-ts keeps users in
+   * per-tab sessionStorage), try to pick up the existing identity provider session
+   * through a hidden iframe. Never redirects and never throws; resolves false if
+   * there is no session or it can't be reached in time.
+   */
+  async restoreSession(timeoutMs: number = 4000): Promise<boolean> {
+    try {
+      if (await this.userManager.getUser()) {
+        return await this.isAuthenticated() ?? false;
+      }
+      const user = await Promise.race([
+        this.userManager.signinSilent(),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs))
+      ]);
+      if (!user) {
+        console.warn(`restoreSession: silent sign-in did not complete within ${timeoutMs}ms`);
+        return false;
+      }
+      this.storeUser(user);
+      if (user.access_token) {
+        await this.syncTokenToServer(user.access_token);
+      }
+      return true;
+    } catch (error) {
+      // login_required etc: simply not signed in
+      console.warn('restoreSession: silent sign-in failed', error);
+      this.userManager.clearStaleState();
+      return false;
+    }
+  }
+
   async renewToken(): Promise<User | null> {
     try {
       const user = await this.userManager.signinSilent();
