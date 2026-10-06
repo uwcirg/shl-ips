@@ -69,12 +69,13 @@ function renderIpsPage(opts: { user?: { profile: Record<string, unknown> } } = {
     user: writable(opts.user ?? null),
     authenticated: writable(!!opts.user),
     isAuthenticated: vi.fn().mockResolvedValue(!!opts.user),
+    getUser: vi.fn().mockResolvedValue(opts.user ? { ...opts.user, expired: false } : null),
     restoreSession: vi.fn().mockResolvedValue(false)
   } as any);
   return render(IpsPage, { context: new Map([['authService', auth]]) });
 }
 
-const signedInUser = { profile: { name: 'Pat Example' } };
+const signedInUser = { profile: { name: 'Pat Example' }, access_token: 'token-1' };
 
 describe('/ips page', () => {
   beforeEach(() => {
@@ -93,7 +94,8 @@ describe('/ips page', () => {
       expect.objectContaining({
         shl: expect.stringContaining('shlink:/'),
         recipient: 'Pat Example'
-      })
+      }),
+      { accessToken: 'token-1' }
     );
     expect(screen.queryByLabelText(/who are you/i)).not.toBeInTheDocument();
   });
@@ -117,7 +119,10 @@ describe('/ips page', () => {
     await fireEvent.click(screen.getByRole('button', { name: /continue/i }));
 
     expect(await screen.findByTestId('ips-content-stub')).toBeInTheDocument();
-    expect(retrieveMock).toHaveBeenCalledWith(expect.objectContaining({ recipient: 'Dr. Visitor' }));
+    expect(retrieveMock).toHaveBeenCalledWith(
+      expect.objectContaining({ recipient: 'Dr. Visitor' }),
+      { accessToken: undefined }
+    );
   });
 
   it('asks for a passcode when the first request is unauthorized, then loads the content', async () => {
@@ -128,14 +133,19 @@ describe('/ips page', () => {
     renderIpsPage({ user: signedInUser });
 
     const passcode = await screen.findByLabelText(/passcode/i);
-    expect(retrieveMock).toHaveBeenNthCalledWith(1, expect.objectContaining({ passcode: '' }));
+    expect(retrieveMock).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ passcode: '' }),
+      { accessToken: 'token-1' }
+    );
     await fireEvent.input(passcode, { target: { value: '1234' } });
     await fireEvent.click(screen.getByRole('button', { name: /continue/i }));
 
     expect(await screen.findByTestId('ips-content-stub')).toBeInTheDocument();
     expect(retrieveMock).toHaveBeenNthCalledWith(
       2,
-      expect.objectContaining({ passcode: '1234', recipient: 'Pat Example' })
+      expect.objectContaining({ passcode: '1234', recipient: 'Pat Example' }),
+      { accessToken: 'token-1' }
     );
   });
 });
