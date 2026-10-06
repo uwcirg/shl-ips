@@ -9,8 +9,9 @@
     DataFormConfig,
     SOFAuthEvent
   } from '$lib/utils/types';
-  import FHIRDataService from '$lib/utils/FHIRDataService';
+  import FHIRDataService, { type PreparedImport } from '$lib/utils/FHIRDataService';
   import DataCategoryView from '$lib/components/app/DataCategoryViewAdd.svelte';
+  import ImportConfirmationModal from '$lib/components/app/ImportConfirmationModal.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
@@ -114,17 +115,38 @@
     sessionStorage.removeItem('TAB');
   }
   
+  let pendingImport: PreparedImport | undefined;
+  let processing = false;
+
+  // Normalize the import and hold it for user confirmation before uploading
   async function handleNewResources(details: ResourceRetrieveEvent) {
     try {
       resourceResult = details;
       if (resourceResult.resources?.length) {
-        // Trigger update in ResourceSelector
-        await fhirDataService.addOrReplaceDataset(resourceResult);
-        showSuccessMessage();
+        pendingImport = await fhirDataService.prepareImport(resourceResult);
       }
     } catch (e) {
       console.error('Import failed', e);
       fetchError = "Error preparing IPS";
+    }
+  }
+
+  function cancelImport() {
+    pendingImport = undefined;
+  }
+
+  async function confirmImport(prepared: PreparedImport) {
+    try {
+      processing = true;
+      await fhirDataService.addOrReplaceDataset(prepared.dataset, prepared);
+      pendingImport = undefined;
+      showSuccessMessage();
+    } catch (e) {
+      console.error('Import failed', e);
+      pendingImport = undefined;
+      fetchError = "Error preparing IPS";
+    } finally {
+      processing = false;
     }
   }
 
@@ -142,6 +164,13 @@
   }
 
 </script>
+
+<ImportConfirmationModal
+  prepared={pendingImport}
+  {processing}
+  on:confirm={ ({ detail }) => confirmImport(detail) }
+  on:cancel={ cancelImport }
+/>
 
 <h4>Add Health Data</h4>
 <p>
