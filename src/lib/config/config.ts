@@ -90,6 +90,12 @@ export const AUTH_REDIRECT_URI = env('VITE_AUTH_REDIRECT_URI');
 export const AUTH_SILENT_REDIRECT_URI = env('VITE_AUTH_SILENT_REDIRECT_URI');
 export const AUTH_POST_LOGOUT_URI = env('VITE_AUTH_POST_LOGOUT_URI');
 
+// Sign users out after this many minutes without activity. Set to 0 to disable.
+const idleTimeoutMinutes = Number(env('VITE_IDLE_TIMEOUT_MINUTES', import.meta.env.VITE_IDLE_TIMEOUT_MINUTES ?? 15));
+export const IDLE_TIMEOUT_MS = (Number.isFinite(idleTimeoutMinutes) ? idleTimeoutMinutes : 15) * 60 * 1000;
+// How long the "still there?" warning shows before sign out
+export const IDLE_WARNING_MS = 60 * 1000;
+
 // For searches based on patient id
 export const SOF_PATIENT_RESOURCES = [
   'Patient',

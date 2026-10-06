@@ -14,6 +14,7 @@
   import { invalidateAll } from '$app/navigation';
   import { buildColorMap } from '$lib/utils/colors';
   import { getFriendlySourceNames } from '$lib/utils/resourceCollectionUtils';
+  import IdleTimeout from '$lib/components/layout/IdleTimeout.svelte';
 
   export let data: LayoutData;
 
@@ -83,6 +84,7 @@
 
 </script>
 {#if $user}
+  <IdleTimeout {authService} />
   <Row class="flex-fill">
     <Col class = "d-flex flex-column">
       <slot />

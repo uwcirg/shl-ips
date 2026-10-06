@@ -212,7 +212,22 @@ export class AuthService implements IAuthService {
     }
   }
 
+  async clearServerToken(): Promise<void> {
+    try {
+      await fetch('/auth/clear-token', { method: 'POST', keepalive: true });
+    } catch (error) {
+      // Don't block logout; the cookie is also cleared by hooks.server.ts once its token is invalid.
+      console.warn('Unable to clear server auth cookie', error);
+    }
+  }
+
   async logout(): Promise<void> {
+    // Stop renewal so nothing re-establishes the session while we sign out, and
+    // drop the httpOnly cookie. signoutRedirect removes the stored user itself
+    // (it needs the id_token for Keycloak's id_token_hint first), and ends the
+    // Keycloak SSO session so restoreSession() can't silently sign back in.
+    this.userManager.stopSilentRenew();
+    await this.clearServerToken();
     await this.userManager.signoutRedirect();
   }
 }
