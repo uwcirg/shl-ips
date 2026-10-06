@@ -8,12 +8,13 @@
   import { getContext, onMount } from 'svelte';
   import DatasetStatusLoader from '$lib/components/app/DatasetStatusLoader.svelte';
   import DatasetView from '$lib/components/app/DatasetView.svelte';
-  import FHIRDataService from '$lib/utils/FHIRDataService';
+  import FHIRDataService, { type PreparedImport } from '$lib/utils/FHIRDataService';
   import type { ResourceCollection } from '$lib/utils/ResourceCollection';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import { randomStringWithEntropy } from '$lib/utils/util';
   import type { ToastStore } from '$lib/stores/toast';
   import DatasetOffcanvas from '$lib/components/app/DatasetOffcanvas.svelte';
+  import ImportConfirmationModal from '$lib/components/app/ImportConfirmationModal.svelte';
   import { StateManager } from '$lib/utils/StateManager';
   
   export let data;
@@ -71,17 +72,37 @@
   }
 
   let processing = false;
+  let pendingImport: PreparedImport | undefined;
+
+  // Normalize the import and hold it for user confirmation before uploading
   async function handleNewResources(details: ResourceRetrieveEvent) {
     try {
       processing = true;
       resourceResult = details;
       if (resourceResult.resources?.length) {
-        // Trigger update in ResourceSelector
-        await fhirDataService.addOrReplaceDataset(resourceResult);
-        showSuccessMessage(resourceResult.sourceName);
+        pendingImport = await fhirDataService.prepareImport(resourceResult);
       }
     } catch (e) {
       console.log('Failed', e);
+      fetchError = "Error preparing IPS";
+    } finally {
+      processing = false;
+    }
+  }
+
+  function cancelImport() {
+    pendingImport = undefined;
+  }
+
+  async function confirmImport(prepared: PreparedImport) {
+    try {
+      processing = true;
+      await fhirDataService.addOrReplaceDataset(prepared.dataset, prepared);
+      pendingImport = undefined;
+      showSuccessMessage(prepared.dataset.sourceName);
+    } catch (e) {
+      console.log('Failed', e);
+      pendingImport = undefined;
       fetchError = "Error preparing IPS";
     } finally {
       processing = false;
@@ -125,6 +146,13 @@
   }
 
 </script>
+
+<ImportConfirmationModal
+  prepared={pendingImport}
+  {processing}
+  on:confirm={ ({ detail }) => confirmImport(detail) }
+  on:cancel={ cancelImport }
+/>
 
 <DatasetOffcanvas
   bind:isOpen={isOpen}
