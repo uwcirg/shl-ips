@@ -168,8 +168,14 @@ export class SHLClient {
     return updatedShl;
   }
 
-  private async getShlList<T>(shlId: string, path: string, limit?: number): Promise<T[]> {
-    const query = limit !== undefined ? `?limit=${encodeURIComponent(limit)}` : '';
+  private async getShlList<T>(shlId: string, path: string, params: Record<string, string | number | undefined>={}): Promise<T[]> {
+    const urlParams = Object.entries(params)
+      .map(([key, value]) => {
+        if (value !== undefined) {
+          return `${key}=${encodeURIComponent(value as string)}`;
+        }
+      }).join('&');
+    const query = `?${urlParams}`;
     const res = await fetch(`${API_BASE}/shl/${shlId}/${path}${query}`, {
       method: 'GET',
       headers: {
@@ -182,11 +188,11 @@ export class SHLClient {
     return await res.json();
   }
 
-  async getAccessLog(shlId: string, limit?: number): Promise<AccessLogEntry[]> {
-    return this.getShlList<AccessLogEntry>(shlId, 'access-log', limit);
+  async getAccessLog(shlId: string, viewer?: string, limit?: number): Promise<AccessLogEntry[]> {
+    return this.getShlList<AccessLogEntry>(shlId, 'access-log', { limit, viewer });
   }
 
   async getHistory(shlId: string, limit?: number): Promise<EventLogEntry[]> {
-    return this.getShlList<EventLogEntry>(shlId, 'history', limit);
+    return this.getShlList<EventLogEntry>(shlId, 'history', { limit });
   }
 }

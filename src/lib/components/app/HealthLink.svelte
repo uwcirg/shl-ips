@@ -95,7 +95,7 @@
 
   async function loadActivity() {
     try {
-      const accessLog: AccessLogEntry[] = await shlClient.getAccessLog(shl.id, ACTIVITY_LIMIT);
+      const accessLog: AccessLogEntry[] = await shlClient.getAccessLog(shl.id, 'other', ACTIVITY_LIMIT);
       const history: EventLogEntry[] = await shlClient.getHistory(shl.id, ACTIVITY_LIMIT);
       activity = [
         ...accessLog.map((e) => ({
