@@ -78,7 +78,12 @@ export function id(config: { shl: string }) {
   return new URL(parsedShl?.url).href.split("/").pop();
 }
 
-export async function retrieve(configIncoming: SHLinkConnectRequest | {state: string}) {
+// accessToken is deliberately separate from the config: the config is serialized into the
+// returned `state`, which must never contain a credential.
+export async function retrieve(
+  configIncoming: SHLinkConnectRequest | {state: string},
+  options: { accessToken?: string } = {}
+) {
   const config: SHLinkConnectRequest = configIncoming["state"] ? JSON.parse(base64url.decode(configIncoming["state"])) : configIncoming
   const shlBody = config.shl.split(/^(?:.+:\/.+#)?shlink:\//)[1];
   const parsedShl: SHLDecoded = decodeBase64urlToJson(shlBody);
@@ -86,6 +91,7 @@ export async function retrieve(configIncoming: SHLinkConnectRequest | {state: st
     method: 'POST',
     headers: {
       'content-type': 'application/json',
+      ...(options.accessToken ? { authorization: `Bearer ${options.accessToken}` } : {}),
     },
     body: JSON.stringify({
       passcode: config.passcode,

@@ -181,6 +181,18 @@
     }
   }
 
+  // Only a signed-in viewer with an unexpired token sends one. Uses getUser() rather than
+  // getAccessToken(), which would trigger a renewal or logout redirect on this public page.
+  async function getViewerToken(): Promise<string | undefined> {
+    if (!authenticated) return undefined;
+    try {
+      const current = await authService.getUser();
+      return current && !current.expired ? current.access_token : undefined;
+    } catch (e) {
+      return undefined;
+    }
+  }
+
   async function retrieve() {
     // Computed here rather than read from the reactive `recipient`, which hasn't
     // updated yet when the first attempt runs right after authedRecipient is set
@@ -191,7 +203,7 @@
         shl: shl ?? "",
         passcode: passcode ?? "",
         recipient
-      });
+      }, { accessToken: await getViewerToken() });
     } catch (e) {
       console.log(e);
       modalOpen = false;
