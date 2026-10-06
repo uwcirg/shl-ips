@@ -133,14 +133,19 @@ describe('/ips page', () => {
     renderIpsPage({ user: signedInUser });
 
     const passcode = await screen.findByLabelText(/passcode/i);
-    expect(retrieveMock).toHaveBeenNthCalledWith(1, expect.objectContaining({ passcode: '' }));
+    expect(retrieveMock).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ passcode: '' }),
+      { accessToken: 'token-1' }
+    );
     await fireEvent.input(passcode, { target: { value: '1234' } });
     await fireEvent.click(screen.getByRole('button', { name: /continue/i }));
 
     expect(await screen.findByTestId('ips-content-stub')).toBeInTheDocument();
     expect(retrieveMock).toHaveBeenNthCalledWith(
       2,
-      expect.objectContaining({ passcode: '1234', recipient: 'Pat Example' })
+      expect.objectContaining({ passcode: '1234', recipient: 'Pat Example' }),
+      { accessToken: 'token-1' }
     );
   });
 });
