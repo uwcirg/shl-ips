@@ -22,7 +22,6 @@
   import { createEventDispatcher, onMount, onDestroy } from 'svelte';
   import { clearURLOfParams, getEntriesFromIPS } from '$lib/utils/util';
   import { page } from '$app/stores';
-  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
 
   export let disabled = false;
@@ -36,7 +35,6 @@
 
   const CATEGORY = CATEGORIES.PROVIDER_HEALTH_RECORD;
   const METHOD = METHODS.PROVIDER_HEALTH_RECORD_SOF_SEARCH;
-  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let fetchError = "";
   let result: ResourceRetrieveEvent = {
@@ -166,7 +164,7 @@
 
 </script>
 
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, sofHost?.endpoint ?? "", prepareIps)}>
+<form on:submit|preventDefault={() => prepareIps()}>
   <FormGroup>
     <div style="width: 100%" class="d-inline-block mb-1">
       <div style="position:relative">
@@ -257,7 +255,6 @@
     </Col>
   </Row>
 </form>
-<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 <span class="text-danger">{fetchError}</span>
 
 <style>

@@ -21,7 +21,6 @@
   import StateInput from '$lib/components/form/StateInput.svelte';
   import GenderInput from '$lib/components/form/GenderInput.svelte';
   import CountryInput from '$lib/components/form/CountryInput.svelte';
-  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
 
   export let disabled = false;
@@ -34,7 +33,6 @@
 
   const CATEGORY = CATEGORIES.PROVIDER_HEALTH_RECORD;
   const METHOD = METHODS.PROVIDER_HEALTH_RECORD_TEFCA;
-  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let resourceResult: ResourceRetrieveEvent = {
       resources: undefined,
@@ -383,7 +381,7 @@
   }
 </script>
 
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, resourceResult.source, prepareIps)}>
+<form on:submit|preventDefault={() => prepareIps()}>
   <FormGroup>
     <Row>
       <Col>
@@ -494,6 +492,5 @@
   </Row>
   {/if}
 </form>
-<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 
 <span class="text-danger">{fetchError}</span>
