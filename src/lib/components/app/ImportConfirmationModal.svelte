@@ -22,11 +22,11 @@
 </script>
 
 <Modal isOpen={Boolean(prepared)} backdrop="static" size="lg" scrollable toggle={cancel}>
-  <ModalHeader toggle={cancel}>Confirm Import</ModalHeader>
+  <ModalHeader toggle={cancel}>Confirm Update</ModalHeader>
   <ModalBody>
     {#if prepared && collection}
       <p>
-        Review the data to be imported from {prepared.dataset.sourceName}.
+        Review the data to be added from {prepared.dataset.sourceName}.
         Any existing data from this source will be replaced.
       </p>
       {#key prepared}
@@ -41,7 +41,7 @@
       disabled={processing}
       on:click={() => prepared && dispatch('confirm', prepared)}
     >
-      {#if processing}<Spinner size="sm" />{:else}<Icon name="check-lg" />{/if} Import
+      {#if processing}<Spinner size="sm" />{:else}<Icon name="check-lg" />{/if} Confirm
     </Button>
   </ModalFooter>
 </Modal>
