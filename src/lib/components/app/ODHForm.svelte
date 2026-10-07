@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Accordion, AccordionItem, Button, Col, FormGroup, Icon, Input, Row, Spinner } from '@sveltestrap/sveltestrap';
   import { createEventDispatcher, onMount, getContext } from 'svelte';
+  import MonthInput from '$lib/components/form/MonthInput.svelte';
   import NIOAutoCoderInput from '$lib/components/form/NIOAutoCoderInput.svelte';
   import type { IOResponse, IResourceCollection, ResourceRetrieveEvent } from '$lib/utils/types';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
@@ -32,7 +33,11 @@
   };
   let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
-  let supportsMonthInput = false;
+  // Month inputs hold "YYYY-MM", but stored dates can have any FHIR precision (year, year-month,
+  // date, or dateTime), so fit the stored value to month precision.
+  function toInputValue(value: string | undefined): string {
+    return value?.match(/^\d{4}-\d{2}/)?.[0] ?? "";
+  }
 
   let statuses: Record<string, string> = {
     Employed: 'Employed',
@@ -126,7 +131,7 @@
           Title: resource.component[0].valueCodeableConcept?.coding[0]?.display ?? "Unknown Industry",
           Score: 1
         } : undefined;
-      jobValues.start = resource.effectivePeriod?.start ?? "",
+      jobValues.start = toInputValue(resource.effectivePeriod?.start),
       values.currentWork.push(jobValues);
     }
   }
@@ -150,8 +155,8 @@
           Title: resource.component[0].valueCodeableConcept?.coding[0]?.display ?? "Unknown Industry",
           Score: 1
         } : undefined;
-      jobValues.start = resource.effectivePeriod?.start ?? "",
-      jobValues.end = resource.effectivePeriod?.end ?? "",
+      jobValues.start = toInputValue(resource.effectivePeriod?.start),
+      jobValues.end = toInputValue(resource.effectivePeriod?.end),
       values.pastWork.push(jobValues);
     }
   }
@@ -168,7 +173,7 @@
     values.retirementDates = [];
     for (const resource of retirementDateResources) {
       const retirementDate = {
-        start: resource.valueDateTime ?? ""
+        start: toInputValue(resource.valueDateTime)
       };
       values.retirementDates.push(retirementDate);
     }
@@ -179,8 +184,8 @@
     values.combatPeriods = [];
     for (const resource of combatPeriodResources) {
       const combatPeriod = {
-        start: resource.valuePeriod?.start ?? "",
-        end: resource.valuePeriod?.end ?? "",
+        start: toInputValue(resource.valuePeriod?.start),
+        end: toInputValue(resource.valuePeriod?.end),
       };
       values.combatPeriods.push(combatPeriod)
     }
@@ -648,41 +653,46 @@
 
 <Accordion stayOpen>
   <AccordionItem active class="odh-section" header="Current work">
-    <Row>
-      <Col xs="auto" class="mt-1">I am currently</Col>
-      <Col xs="auto">
-        <Input type="select" bind:value={values.status} style="max-width: 300px">
-          {#each Object.keys(statuses) as stat}
-            <option
-              value={stat}
-              style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"
-            >
-              {stat}
-            </option>
-          {/each}
-        </Input>
+    <Row class="mb-2 gy-2">
+      <Col xs="auto" class="inline-form-group">
+        <span class="inline-label">I am currently:</span>
+        <div class="group-control status-control">
+          <Input type="select" bind:value={values.status}>
+            {#each Object.keys(statuses) as stat}
+              <option
+                value={stat}
+                style="text-overflow: ellipsis; white-space: nowrap; overflow: hidden;"
+              >
+                {stat}
+              </option>
+            {/each}
+          </Input>
+        </div>
       </Col>
     </Row>
     {#if values.isWorking}
-      <br>
       {#each values.currentWork as jobValue, index}
         <FormGroup>
-          <Row class="mb-2">
-            <Col xs="auto" class="mt-1">I work as a(n)</Col>
-            <Col style="flex-grow: 1" xs="auto">
-              <NIOAutoCoderInput bind:value={jobValue.occupation} mode="Occupation" id={`current-occupation-${index}`} />
+          <Row class="mb-2 gy-2">
+            <Col xs="auto" class="inline-form-group grow">
+              <span class="inline-label">I work as a(n):</span>
+              <div class="group-control">
+                <NIOAutoCoderInput bind:value={jobValue.occupation} mode="Occupation" id={`current-occupation-${index}`} />
+              </div>
             </Col>
           </Row>
-          <Row class="mb-2">
-            <Col xs="auto" class="mt-1">My company's primary business activity is</Col>
-            <Col style="flex-grow: 1" xs="auto">
-              <NIOAutoCoderInput bind:value={jobValue.industry} mode="Industry" id={`current-industry-${index}`}/>
+          <Row class="mb-2 gy-2">
+            <Col xs="auto" class="inline-form-group grow">
+              <span class="inline-label">My company's primary business activity is:</span>
+              <div class="group-control">
+                <NIOAutoCoderInput bind:value={jobValue.industry} mode="Industry" id={`current-industry-${index}`}/>
+              </div>
             </Col>
           </Row>
-          <Row class="mb-4 pb-4 border-bottom">
-            <Col xs="auto" class="mt-1">I started this job</Col>
-            <Col xs="auto">
-              <Input type={supportsMonthInput ? 'month' : 'date'} bind:value={jobValue.start} />
+          <Row class="mb-4 pb-4 border-bottom gy-2">
+            <Col xs="auto" class="inline-form-group">
+              <span class="inline-label">I started this job:</span>
+              <MonthInput bind:value={jobValue.start} />
             </Col>
             <Col xs="auto" class="d-flex flex-grow-1 justify-content-end">
               <Button outline color="danger" on:click={() => deleteCurrentJob(index)}>Delete</Button>
@@ -700,26 +710,30 @@
   <AccordionItem active class="odh-section" header="Past work">
     {#each values.pastWork as jobValue, index}
       <FormGroup>
-        <Row class="mb-2">
-          <Col xs="auto" class="mt-1">I used to work as a(n)</Col>
-          <Col style="flex-grow: 1" xs="auto">
-            <NIOAutoCoderInput bind:value={jobValue.occupation} mode="Occupation" id={`past-occupation-${index}`}/>
+        <Row class="mb-2 gy-2">
+          <Col xs="auto" class="inline-form-group grow">
+            <span class="inline-label">I used to work as a(n):</span>
+            <div class="group-control">
+              <NIOAutoCoderInput bind:value={jobValue.occupation} mode="Occupation" id={`past-occupation-${index}`}/>
+            </div>
           </Col>
         </Row>
-        <Row class="mb-2">
-          <Col xs="auto" class="mt-1">My company's primary business activity was</Col>
-          <Col style="flex-grow: 1" xs="auto">
-            <NIOAutoCoderInput bind:value={jobValue.industry} mode="Industry" id={`past-industry-${index}`}/>
+        <Row class="mb-2 gy-2">
+          <Col xs="auto" class="inline-form-group grow">
+            <span class="inline-label">My company's primary business activity was:</span>
+            <div class="group-control">
+              <NIOAutoCoderInput bind:value={jobValue.industry} mode="Industry" id={`past-industry-${index}`}/>
+            </div>
           </Col>
         </Row>
-        <Row class="mb-4 pb-4 border-bottom">
-          <Col xs="auto" class="mt-1">I started this job</Col>
-          <Col xs="auto">
-            <Input type={supportsMonthInput ? 'month' : 'date'} bind:value={jobValue.start} />
+        <Row class="mb-4 pb-4 border-bottom gy-2">
+          <Col xs="auto" class="inline-form-group">
+            <span class="inline-label">I started this job:</span>
+            <MonthInput bind:value={jobValue.start} />
           </Col>
-          <Col xs="auto" class="mt-1">and stopped</Col>
-          <Col xs="auto">
-            <Input type={supportsMonthInput ? 'month' : 'date'} bind:value={jobValue.end} />
+          <Col xs="auto" class="inline-form-group">
+            <span class="inline-label">and stopped:</span>
+            <MonthInput bind:value={jobValue.end} />
           </Col>
           <Col xs="auto" class="d-flex flex-grow-1 justify-content-end">
             <Button outline color="danger" on:click={() => deletePastJob(index)}>Delete</Button>
@@ -736,10 +750,10 @@
   <AccordionItem active class="odh-section" header="Retirement date">
     {#each values.retirementDates as retirementDate, index}
       <FormGroup>
-        <Row class="mb-4 pb-4 border-bottom">
-          <Col xs="auto" class="mt-1">I retired {supportsMonthInput ? 'in' : 'on'}</Col>
-          <Col xs="auto">
-            <Input type={supportsMonthInput ? 'month' : 'date'} bind:value={retirementDate.start} />
+        <Row class="mb-4 pb-4 border-bottom gy-2">
+          <Col xs="auto" class="inline-form-group">
+            <span class="inline-label">I retired in:</span>
+            <MonthInput bind:value={retirementDate.start} />
           </Col>
           <Col xs="auto" class="d-flex flex-grow-1 justify-content-end">
             <Button outline color="danger" on:click={() => deleteRetirementDate(index)}>Delete</Button>
@@ -756,16 +770,16 @@
   <AccordionItem active class="odh-section" header="Combat zone work/hazardous duty">
     {#each values.combatPeriods as combatPeriod, index}
       <FormGroup>
-        <Row class="mb-2">
-          <Col xs="auto" class="mt-1">I started working in a combat zone or other hazardous conditions</Col>
-          <Col xs="auto">
-            <Input type={supportsMonthInput ? 'month' : 'date'} bind:value={combatPeriod.start} />
+        <Row class="mb-2 gy-2">
+          <Col xs="auto" class="inline-form-group">
+            <span class="inline-label">I started working in a combat zone or other hazardous conditions:</span>
+            <MonthInput bind:value={combatPeriod.start} />
           </Col>
         </Row>
-        <Row class="mb-4 pb-4 border-bottom">
-          <Col xs="auto" class="mt-1">and stopped</Col>
-          <Col xs="auto">
-            <Input type={supportsMonthInput ? 'month' : 'date'} bind:value={combatPeriod.end} />
+        <Row class="mb-4 pb-4 border-bottom gy-2">
+          <Col xs="auto" class="inline-form-group">
+            <span class="inline-label">and stopped:</span>
+            <MonthInput bind:value={combatPeriod.end} />
           </Col>
           <Col xs="auto" class="d-flex flex-grow-1 justify-content-end">
             <Button outline color="danger" on:click={() => deleteCombatPeriod(index)}>Delete</Button>
@@ -805,5 +819,39 @@
 <style>
   :global(.odh-section > .accordion-collapse.show) {
     overflow: visible !important;
+  }
+  /* A label and its input stay together; the input drops below the label (or the whole group
+     below the previous one) rather than overflowing on narrow screens */
+  :global(.col-auto.inline-form-group) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 100%;
+  }
+  /* Fields that fill the row (the autocoder inputs): the label stays level with the input itself
+     rather than centering on the taller column (the autocoder has a "Using ..." caption below) */
+  :global(.col-auto.inline-form-group.grow) {
+    flex: 1 1 auto;
+    align-items: flex-start;
+  }
+  .group-control {
+    flex: 1 1 14rem;
+    min-width: 0;
+  }
+  .status-control {
+    flex: 0 1 auto;
+    max-width: 300px;
+  }
+  :global(.grow) > .inline-label {
+    display: flex;
+    align-items: center;
+    /* Height of a single-line form control */
+    min-height: calc(1.5em + 0.75rem + 2px);
+  }
+  .inline-label {
+    flex: 0 1 auto;
   }
 </style>
