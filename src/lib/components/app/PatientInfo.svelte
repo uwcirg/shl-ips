@@ -15,7 +15,6 @@
   import ReligionCodeInput from '$lib/components/form/ReligionCodeInput.svelte';
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
   import type { Coding, Patient } from 'fhir/r4';
-  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
 
   export let patient: Patient | undefined;
@@ -31,7 +30,6 @@
     url: window.location.origin,
     name: 'My Identities'
   };
-  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let myPatient;
   $: myPatient = copyOf(patient);
@@ -192,7 +190,7 @@
 </script>
 
 <!-- <p class="text-secondary"><em>Add or update the personal information that will be shown in this Health Summary.</em></p> -->
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, SOURCE.url, prepareIps)}>
+<form on:submit|preventDefault={() => prepareIps()}>
   <h5>Patient Details</h5>
   <Row>
     <Col>
@@ -321,5 +319,4 @@
     </Col>
   </Row>
 </form>
-<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 <span class="text-danger">{fetchError}</span>

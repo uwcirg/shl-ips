@@ -12,7 +12,6 @@
     import { verify } from '$lib/utils/shcDecoder.js';
     import { createEventDispatcher } from 'svelte';
     import type { Composition } from 'fhir/r4';
-    import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
     import { METHODS, CATEGORIES } from '$lib/config/tags';
     import { getEntries } from '$lib/utils/importNormalization';
 
@@ -26,7 +25,6 @@
 
     const CATEGORY = CATEGORIES.PROVIDER_HEALTH_RECORD;
     const METHOD = METHODS.PROVIDER_HEALTH_RECORD_FILE;
-    let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
     let resourceResult: ResourceRetrieveEvent = {
         resources: undefined,
@@ -99,7 +97,7 @@
     }
 </script>
 
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, uploadFiles?.[0]?.name, retrieveIps)}>
+<form on:submit|preventDefault={() => retrieveIps()}>
     <FormGroup>
         <Label>Upload a FHIR Bundle (<code>.json</code> or signed <code>.smart-health-card</code>)</Label>
         <Input type="file" name="file" bind:files={uploadFiles} />
@@ -120,7 +118,6 @@
       </Col>
     </Row>
 </form>
-<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 
 <span class="text-danger">{fetchError}</span>
 
