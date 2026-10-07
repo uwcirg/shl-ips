@@ -11,7 +11,6 @@
   import { createEventDispatcher } from 'svelte';
   import type { IResourceCollection, ResourceRetrieveEvent } from '$lib/utils/types';
   import type { CodeableConcept, Condition } from 'fhir/r4';
-  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
   import { ResourceHelper } from '$lib/utils/ResourceHelper';
   import { copyOf, getUniqueResourceObject } from '$lib/utils/util';
@@ -37,7 +36,6 @@
     url: window.location.origin,
     name: 'My Care Needs'
   };
-  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
   let fetchError = '';
@@ -315,7 +313,7 @@
     resourceDispatch('update-resources', result);
   }
 </script>
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, SOURCE.url, prepareIps)}>
+<form on:submit|preventDefault={() => prepareIps()}>
   <!-- <p class="text-secondary"><em>Select any identities, functional concerns, or needs you would like your carers to be aware of.</em></p> -->
   <h5>Functional Identities and Concerns</h5>
   <FormGroup>
@@ -375,5 +373,4 @@
     </Col>
   </Row>
 </form>
-<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 <span class="text-danger">{fetchError}</span>

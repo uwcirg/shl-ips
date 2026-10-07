@@ -3,7 +3,6 @@
   import { createEventDispatcher, onMount, getContext } from 'svelte';
   import NIOAutoCoderInput from '$lib/components/form/NIOAutoCoderInput.svelte';
   import type { IOResponse, IResourceCollection, ResourceRetrieveEvent } from '$lib/utils/types';
-  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
   import { ResourceHelper } from '$lib/utils/ResourceHelper';
   import type { Observation } from 'fhir/r4';
@@ -30,7 +29,6 @@
     url: window.location.origin,
     name: 'My Work Info'
   };
-  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let supportsMonthInput = false;
 
@@ -785,7 +783,7 @@
 <br>
 <Row class="justify-content-between align-content-center">
   <Col xs="auto">
-    <Button color="primary" on:click={FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, SOURCE.url, updateOdhSection)} disabled={processing}>
+    <Button color="primary" on:click={() => updateOdhSection()} disabled={processing}>
       {processing ? processingText : buttonText}
     </Button>
   </Col>
@@ -800,7 +798,6 @@
     </Button>
   </Col>
 </Row>
-<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 
 <style>
   :global(.odh-section > .accordion-collapse.show) {
