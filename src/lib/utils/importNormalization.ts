@@ -139,7 +139,13 @@ function preserveSourceIdentifiers(entries: BundleEntry[], source: string) {
       return entry;
     }
     const system = sourceIdSystem(source, entry.resource.resourceType);
-    if (entry.resource.identifier && entry.resource.identifier.find(identifier => identifier.system === system)) {
+    if (entry.resource.identifier
+      && (
+        entry.resource.identifier.length
+        && entry.resource.identifier.find(identifier => identifier.system === system)
+        || !entry.resource.identifier.length
+      )
+    ) {
       return entry;
     }
     entry.resource.identifier = entry.resource.identifier || [];
