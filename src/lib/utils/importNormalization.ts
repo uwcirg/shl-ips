@@ -172,6 +172,13 @@ export interface DatasetDiff {
   updated: Array<{ incoming: Resource; existing: Resource }>; // matched to an existing resource, with different content
   unchanged: Array<{ incoming: Resource; existing: Resource }>; // matched to an existing resource, with the same content
   removed: Resource[]; // existing resources with no match in the incoming set
+  // Set when the import's patient looks like a different person than the existing dataset's patient
+  patientMismatch?: PatientMismatch;
+}
+
+export type PatientMismatchField = 'name' | 'birthDate' | 'identifier';
+export interface PatientMismatch {
+  fields: PatientMismatchField[];
 }
 
 // Pairs incoming resources with the existing resources they correspond to (at most one each)
@@ -204,26 +211,88 @@ export function matchBySourceIdentifier(source: string): ResourceMatcher {
   };
 }
 
+const isPlaceholderPatient = (resource: Resource) =>
+  resource.resourceType === 'Patient'
+  && Boolean(resource.meta?.tag?.some(tag => tag.system === PLACEHOLDER_SYSTEM));
+
+// The patient the dataset was imported for, if the import had one (otherwise a placeholder stands in)
+const realPatient = (resources: Resource[]) =>
+  resources.find((resource): resource is Patient => resource.resourceType === 'Patient' && !isPlaceholderPatient(resource));
+
+// Identifiers from the patient's own system (e.g. an MRN), not the one added during import normalization
+function patientBusinessIdentifiers(patient: Patient): string[] {
+  return (patient.identifier ?? [])
+    .filter(identifier => !identifier.system?.startsWith(SOURCE_NAMESPACE))
+    .map(identifier => `${identifier.system ?? ''}|${identifier.value ?? ''}`);
+}
+
+function patientNameKeys(patient: Patient): string[] {
+  const normalize = (value?: string) => (value ?? '').trim().toLowerCase();
+  return (patient.name ?? [])
+    .map(name => name.family || name.given?.length
+      ? `${normalize(name.family)}|${normalize(name.given?.[0])}`
+      : normalize(name.text))
+    .filter(key => key !== '' && key !== '|');
+}
+
+/**
+ * Compares the identifying details of two patients. A field only counts as a mismatch when both
+ * have a value for it and they share none (e.g. a patient can have several names or identifiers).
+ */
+export function comparePatients(incoming: Patient, existing: Patient): PatientMismatch | undefined {
+  const fields: PatientMismatchField[] = [];
+  const disjoint = (a: string[], b: string[]) => a.length > 0 && b.length > 0 && !a.some(key => b.includes(key));
+  if (disjoint(patientNameKeys(incoming), patientNameKeys(existing))) {
+    fields.push('name');
+  }
+  if (incoming.birthDate && existing.birthDate && incoming.birthDate !== existing.birthDate) {
+    fields.push('birthDate');
+  }
+  if (disjoint(patientBusinessIdentifiers(incoming), patientBusinessIdentifiers(existing))) {
+    fields.push('identifier');
+  }
+  return fields.length ? { fields } : undefined;
+}
+
+function patientChanged(incoming: Patient, existing: Patient): boolean {
+  const identifiers = (patient: Patient) => patientBusinessIdentifiers(patient).sort().join(',');
+  return !ResourceHelper.hasSameCore(incoming, existing) || identifiers(incoming) !== identifiers(existing);
+}
+
 /**
  * Compares an import against the dataset it will replace. Matched resources are split by whether
- * their core content (see ResourceHelper.core) differs. Patient resources describe the dataset
- * itself (and a placeholder is regenerated on every import), so they are left out of the diff.
+ * their core content (see ResourceHelper.core) differs.
+ *
+ * The dataset's patient is compared when both sides have a real one, so changes to details like
+ * an address or phone number show up as an update, and a different name, birth date, or identifier
+ * (see comparePatients) is flagged. A placeholder patient (the import had none) is never compared.
  */
 export function diffDataset(incoming: Resource[], existing: Resource[], matcher: ResourceMatcher): DatasetDiff {
-  const patient = (resource: Resource) => resource.resourceType === 'Patient';
   const notPatient = (resource: Resource) => resource.resourceType !== 'Patient';
-  const patientResource = existing.find(patient);
   const incomingResources = incoming.filter(notPatient);
   const existingResources = existing.filter(notPatient);
   const pairs = matcher(incomingResources, existingResources);
   const matchedIncoming = new Set(pairs.map(([i]) => i));
   const matchedExisting = new Set(pairs.map(([, e]) => e));
   const matches = pairs.map(([incoming, existing]) => ({ incoming, existing }));
+  const updated = matches.filter(({ incoming, existing }) => !ResourceHelper.hasSameCore(incoming, existing));
+  const unchanged = matches.filter(({ incoming, existing }) => ResourceHelper.hasSameCore(incoming, existing));
+
+  let patientMismatch: PatientMismatch | undefined;
+  const incomingPatient = realPatient(incoming);
+  const existingPatient = realPatient(existing);
+  if (incomingPatient && existingPatient) {
+    const patientMatch = { incoming: incomingPatient, existing: existingPatient };
+    (patientChanged(incomingPatient, existingPatient) ? updated : unchanged).unshift(patientMatch);
+    patientMismatch = comparePatients(incomingPatient, existingPatient);
+  }
+
   return {
     added: incomingResources.filter(resource => !matchedIncoming.has(resource)),
-    updated: matches.filter(({ incoming, existing }) => !ResourceHelper.hasSameCore(incoming, existing)),
-    unchanged: matches.filter(({ incoming, existing }) => ResourceHelper.hasSameCore(incoming, existing)),
-    removed: existingResources.filter(resource => !matchedExisting.has(resource))
+    updated,
+    unchanged,
+    removed: existingResources.filter(resource => !matchedExisting.has(resource)),
+    patientMismatch
   };
 }
 

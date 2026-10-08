@@ -1,6 +1,7 @@
+
 <script lang="ts">
   import { download } from '$lib/utils/util.js';
-  import { createEventDispatcher, getContext } from 'svelte';
+  import { createEventDispatcher } from 'svelte';
   import { derived, type Readable, type Writable } from 'svelte/store';
   import {
     Accordion,
@@ -29,11 +30,10 @@
   export let resourceCollection: ResourceCollection;
   export let scroll: boolean = true;
   export let submitting: boolean = false;
+  export let sections: boolean = true;
   
   const statusDispatch = createEventDispatcher<{ 'status-update': string }>();
   const errorDispatch = createEventDispatcher<{ error: string }>();
-
-  let mode: Writable<string> = getContext('mode');
 
   let reference: string;
   let selectedPatient = resourceCollection.selectedPatient;
@@ -125,6 +125,7 @@
 
 {#if $categorizedResourceStore && $unitsStore}
   {@const allDataAsBundleEntries = Object.values($categorizedResourceStore).map(types => Object.values(types)).flat().map(cr => ({ resource: cr.rh.resource }))}
+  {#if sections}
   <Accordion stayOpen class="w-100">
     {#each Object.keys($unitsStore) as category}
       {#if $unitsStore[category].length > 0}
@@ -172,6 +173,22 @@
       {/if}
     {/each}
   </Accordion>
+  {:else}
+    <!-- All resources in one list, regardless of category -->
+    {@const allResources = Object.values($categorizedResourceStore).flatMap((category) => Object.values(category).sort(sortResources))}
+    {#if allResources.length > 0}
+      <div
+        class="resource-content border rounded p-3 w-100"
+        style={scroll ? 'overflow: auto; max-height: 65vh' : ''}
+      >
+        <ResourceRows
+          resources={allResources}
+          entries={allDataAsBundleEntries}
+          on:view={({ detail }) => setJson(detail)}
+        />
+      </div>
+    {/if}
+  {/if}
 {/if}
 
 <style>
