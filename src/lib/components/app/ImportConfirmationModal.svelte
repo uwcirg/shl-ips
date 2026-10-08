@@ -1,10 +1,11 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { Alert, Badge, Button, Icon, Modal, ModalBody, ModalFooter, ModalHeader, Spinner } from '@sveltestrap/sveltestrap';
+  import { Alert, Badge, Button, Col, Icon, Modal, ModalBody, ModalFooter, ModalHeader, Row, Spinner } from '@sveltestrap/sveltestrap';
   import type { Resource } from 'fhir/r4';
   import { PLACEHOLDER_SYSTEM } from '$lib/config/config';
   import { ResourceCollection } from '$lib/utils/ResourceCollection';
   import type { PreparedImport } from '$lib/utils/FHIRDataService';
+  import type { PatientMismatchField } from '$lib/utils/importNormalization';
   import FHIRResourceList from '$lib/components/app/FHIRResourceList.svelte';
 
   export let prepared: PreparedImport | undefined = undefined;
@@ -27,20 +28,43 @@
     return new ResourceCollection([patient, ...structuredClone(resources)]);
   }
 
-  let sections: Array<{ key: string, title: string, collapsed: boolean, count: number, collection: ResourceCollection }> = [];
+  type PatientPair = { incoming: ResourceCollection, existing: ResourceCollection };
+  let sections: Array<{
+    key: string,
+    title: string,
+    collapsed: boolean,
+    count: number,
+    collection?: ResourceCollection, // the section's resources, if there are any besides a patient pair
+    patientPair?: PatientPair // a changed patient, shown as before and after
+  }> = [];
   $: sections = prepared?.diff ? buildSections(prepared) : [];
 
   function buildSections(prepared: PreparedImport) {
     const diff = prepared.diff!;
     const patient = prepared.resources.find((resource) => resource.resourceType === 'Patient');
-    return [
+    const isPatient = ({ incoming }: { incoming: Resource }) => incoming.resourceType === 'Patient';
+    const changedPatient = diff.updated.find(isPatient);
+    const patientCollection = (resource: Resource) => new ResourceCollection([structuredClone(resource)]);
+    const entries: Array<{ key: string, title: string, collapsed: boolean, resources: Resource[], patientPair?: PatientPair }> = [
+      {
+        key: 'updated', title: 'Updated', collapsed: false,
+        resources: diff.updated.filter((pair) => !isPatient(pair)).map(({ incoming }) => incoming),
+        patientPair: changedPatient && {
+          incoming: patientCollection(changedPatient.incoming),
+          existing: patientCollection(changedPatient.existing)
+        }
+      },
       { key: 'added', title: 'New', collapsed: false, resources: diff.added },
-      { key: 'updated', title: 'Updated', collapsed: false, resources: diff.updated.map(({ incoming }) => incoming) },
       { key: 'unchanged', title: 'Unchanged', collapsed: true, resources: diff.unchanged.map(({ incoming }) => incoming) },
       { key: 'removed', title: 'To be deleted (no longer in this source)', collapsed: true, resources: diff.removed }
-    ]
-      .filter((section) => section.resources.length > 0)
-      .map(({ resources, ...section }) => ({ ...section, count: resources.length, collection: buildCollection(resources, patient) }));
+    ];
+    return entries
+      .filter((section) => section.resources.length > 0 || section.patientPair)
+      .map(({ resources, ...section }) => ({
+        ...section,
+        count: resources.length + (section.patientPair ? 1 : 0),
+        collection: resources.length ? buildCollection(resources, patient) : undefined
+      }));
   }
 
   // What is being confirmed, which decides the wording:
@@ -68,6 +92,16 @@
     update: 'Confirm update',
     unchanged: 'No changes'
   };
+
+  const MISMATCH_LABELS: Record<PatientMismatchField, string> = {
+    name: 'name',
+    birthDate: 'date of birth',
+    identifier: 'medical record number'
+  };
+
+  function formatMismatchFields(fields: PatientMismatchField[]) {
+    return new Intl.ListFormat('en', { style: 'long', type: 'conjunction' }).format(fields.map((field) => MISMATCH_LABELS[field]));
+  }
 
   function cancel() {
     if (!processing) {
@@ -100,13 +134,34 @@
         {:else}
           <p>The following information retrieved from {prepared.dataset.sourceName} will be saved to your profile.</p>
         {/if}
+        {#if prepared.diff?.patientMismatch}
+          <Alert color="warning">
+            The patient details in this data don't match your existing data from {prepared.dataset.sourceName}
+            ({formatMismatchFields(prepared.diff.patientMismatch.fields)} {prepared.diff.patientMismatch.fields.length > 1 ? 'are' : 'is'} different).
+            Make sure this is your information before replacing your data.
+          </Alert>
+        {/if}
         {#if sections.length}
           {#each sections as section (section.key)}
             <details class="mb-3" open={!section.collapsed}>
               <summary class="mb-2 fw-bold">
                 {section.title} <Badge color={section.key === 'removed' ? 'danger' : section.key === 'unchanged' ? 'secondary' : 'primary'}>{section.count}</Badge>
               </summary>
-              <FHIRResourceList resourceCollection={section.collection} scroll={false} />
+              {#if section.patientPair}
+                <Row class="mb-3 gy-2">
+                  <Col xs="12" md="6">
+                    <div class="text-secondary mb-1">Existing patient</div>
+                    <FHIRResourceList resourceCollection={section.patientPair.existing} scroll={false} sections={false} />
+                  </Col>
+                  <Col xs="12" md="6">
+                    <div class="text-secondary mb-1">New patient</div>
+                    <FHIRResourceList resourceCollection={section.patientPair.incoming} scroll={false} sections={false} />
+                  </Col>
+                </Row>
+              {/if}
+              {#if section.collection}
+                <FHIRResourceList resourceCollection={section.collection} scroll={false} />
+              {/if}
             </details>
           {/each}
         {:else}

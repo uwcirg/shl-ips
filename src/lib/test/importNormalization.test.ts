@@ -414,10 +414,77 @@ describe('diffDataset', () => {
     expect(diff.added).toEqual([incoming[1]]);
   });
 
-  it('leaves Patient resources out of the diff', () => {
-    const diff = diffDataset([{ resourceType: 'Patient', id: 'p1' } as any], [{ resourceType: 'Patient', id: 'p2' } as any], matcher);
+  describe('patients', () => {
+    const placeholderTag = { system: 'http://test.example.com/placeholder', code: 'placeholder-patient' };
+    const patient = (id: string, overrides: Record<string, unknown> = {}) =>
+      ({ resourceType: 'Patient', id, ...overrides }) as any;
+    const jane = {
+      name: [{ family: 'Doe', given: ['Jane'] }],
+      birthDate: '1980-01-02',
+      identifier: [srcId('Patient', 'src-pat'), { system: 'urn:mrn', value: '123' }]
+    };
 
-    expect(diff).toEqual({ added: [], updated: [], unchanged: [], removed: [] });
+    it('never compares placeholder patients', () => {
+      const placeholder = (id: string) => patient(id, { meta: { tag: [placeholderTag] }, name: [{ family: 'Other' }] });
+
+      const diff = diffDataset([placeholder('p1')], [patient('p2', jane)], matcher);
+      const reverse = diffDataset([patient('p1', jane)], [placeholder('p2')], matcher);
+
+      expect(diff).toEqual({ added: [], updated: [], unchanged: [], removed: [] });
+      expect(reverse).toEqual({ added: [], updated: [], unchanged: [], removed: [] });
+    });
+
+    it('reports an unchanged patient as unchanged, with no mismatch', () => {
+      const incoming = patient('new', { ...jane, meta: { lastUpdated: 'x' } });
+      const existing = patient('old', jane);
+
+      const diff = diffDataset([incoming], [existing], matcher);
+
+      expect(diff.unchanged).toEqual([{ incoming, existing }]);
+      expect(diff.updated).toEqual([]);
+      expect(diff.patientMismatch).toBeUndefined();
+    });
+
+    it('reports address and phone changes as an update without flagging a mismatch', () => {
+      const incoming = patient('new', { ...jane, telecom: [{ system: 'phone', value: '555-0100' }], address: [{ city: 'Seattle' }] });
+      const existing = patient('old', { ...jane, telecom: [{ system: 'phone', value: '555-0199' }], address: [{ city: 'Tacoma' }] });
+
+      const diff = diffDataset([incoming], [existing], matcher);
+
+      expect(diff.updated).toEqual([{ incoming, existing }]);
+      expect(diff.patientMismatch).toBeUndefined();
+    });
+
+    it('flags a different name, birth date, or identifier', () => {
+      const mismatch = (overrides: Record<string, unknown>) =>
+        diffDataset([patient('new', { ...jane, ...overrides })], [patient('old', jane)], matcher);
+
+      expect(mismatch({ name: [{ family: 'Smith', given: ['Jane'] }] }).patientMismatch).toEqual({ fields: ['name'] });
+      expect(mismatch({ birthDate: '1999-09-09' }).patientMismatch).toEqual({ fields: ['birthDate'] });
+      expect(mismatch({ identifier: [srcId('Patient', 'src-pat'), { system: 'urn:mrn', value: '999' }] }).patientMismatch)
+        .toEqual({ fields: ['identifier'] });
+      expect(mismatch({ name: [{ family: 'Smith' }], birthDate: '1999-09-09' }).patientMismatch)
+        .toEqual({ fields: ['name', 'birthDate'] });
+      expect(mismatch({ birthDate: '1999-09-09' }).updated).toHaveLength(1);
+    });
+
+    it('does not flag a field that is only present on one side, or that overlaps', () => {
+      const incoming = patient('new', {
+        name: [{ family: 'Doe', given: ['JANE', 'Q'] }, { family: 'Roe' }],
+        identifier: [{ system: 'urn:mrn', value: '123' }, { system: 'urn:other', value: '7' }]
+      });
+
+      expect(diffDataset([incoming], [patient('old', jane)], matcher).patientMismatch).toBeUndefined();
+      expect(diffDataset([patient('new', { name: jane.name })], [patient('old', { birthDate: '1980-01-02' })], matcher).patientMismatch)
+        .toBeUndefined();
+    });
+
+    it('does not treat the normalization-added source identifier as an MRN', () => {
+      const incoming = patient('new', { ...jane, identifier: [srcId('Patient', 'a')] });
+      const existing = patient('old', { ...jane, identifier: [srcId('Patient', 'b')] });
+
+      expect(diffDataset([incoming], [existing], matcher).patientMismatch).toBeUndefined();
+    });
   });
 
   it('accepts any matcher', () => {
