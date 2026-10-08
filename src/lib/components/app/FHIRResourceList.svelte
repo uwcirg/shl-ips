@@ -28,7 +28,7 @@
   export let resourceCollection: ResourceCollection;
   export let scroll: boolean = true;
   export let submitting: boolean = false;
-  export let sections: boolean = true;
+  export let sections: boolean | undefined = undefined;
   
   const statusDispatch = createEventDispatcher<{ 'status-update': string }>();
   const errorDispatch = createEventDispatcher<{ error: string }>();
@@ -115,57 +115,55 @@
 
 {#if $categorizedResourceStore}
   {@const allDataAsBundleEntries = Object.values($categorizedResourceStore).map(types => Object.values(types)).flat().map(cr => ({ resource: cr.rh.resource }))}
-  {#if sections}
+  {#if sections || sections === undefined && Object.keys($categorizedResourceStore).length > 1}
   <Accordion stayOpen class="w-100">
-    {#if Object.keys($categorizedResourceStore).length > 0}
-      {#each Object.keys($categorizedResourceStore) as category}
-        {#if Object.keys($categorizedResourceStore[category]).length > 0}
-          <AccordionItem class="resource-content {scroll ? 'scroll' : ''} resource-list-accordion" active={Object.keys($categorizedResourceStore[category]).length <= 3}>
-            <span slot="header">
-              {category}
-              {#if category === 'Patients'}
-                <Badge class="mx-1" color={patientBadgeColor}>
-                  {patientCount}
-                </Badge>
-              {:else}
-                <Badge
-                  class="mx-1"
-                  color={Object.values($categorizedResourceStore[category]).filter(
-                    (resource) => resource.rh.include
-                  ).length == Object.keys($categorizedResourceStore[category]).length
+    {#each Object.keys($categorizedResourceStore) as category}
+      {#if Object.keys($categorizedResourceStore[category]).length > 0}
+        <AccordionItem class="resource-content {scroll ? 'scroll' : ''} resource-list-accordion" active={Object.keys($categorizedResourceStore[category]).length <= 3}>
+          <span slot="header">
+            {category}
+            {#if category === 'Patients'}
+              <Badge class="mx-1" color={patientBadgeColor}>
+                {patientCount}
+              </Badge>
+            {:else}
+              <Badge
+                class="mx-1"
+                color={Object.values($categorizedResourceStore[category]).filter(
+                  (resource) => resource.rh.include
+                ).length == Object.keys($categorizedResourceStore[category]).length
+                  ? 'primary'
+                  : Object.values($categorizedResourceStore[category]).filter(
+                        (resource) => resource.rh.include
+                      ).length == Object.keys($categorizedResourceStore[category]).length
                     ? 'primary'
                     : Object.values($categorizedResourceStore[category]).filter(
                           (resource) => resource.rh.include
-                        ).length == Object.keys($categorizedResourceStore[category]).length
-                      ? 'primary'
-                      : Object.values($categorizedResourceStore[category]).filter(
-                            (resource) => resource.rh.include
-                          ).length > 0
-                        ? 'info'
-                        : 'secondary'}
-                >
-                  {Object.values($categorizedResourceStore[category]).filter(
-                    (resource) => resource.rh.include
-                  ).length}
-                </Badge>
-              {/if}
-            </span>
-            <ResourceRows
-              resources={Object.values($categorizedResourceStore[category]).sort(sortResources)}
-              entries={allDataAsBundleEntries}
-              on:view={({ detail }) => setJson(detail)}
-            />
-          </AccordionItem>
-        {/if}
-      {/each}
-    {/if}
+                        ).length > 0
+                      ? 'info'
+                      : 'secondary'}
+              >
+                {Object.values($categorizedResourceStore[category]).filter(
+                  (resource) => resource.rh.include
+                ).length}
+              </Badge>
+            {/if}
+          </span>
+          <ResourceRows
+            resources={Object.values($categorizedResourceStore[category]).sort(sortResources)}
+            entries={allDataAsBundleEntries}
+            on:view={({ detail }) => setJson(detail)}
+          />
+        </AccordionItem>
+      {/if}
+    {/each}
   </Accordion>
   {:else}
     <!-- All resources in one list, regardless of category -->
     {@const allResources = Object.values($categorizedResourceStore).flatMap((category) => Object.values(category).sort(sortResources))}
     {#if allResources.length > 0}
       <div
-        class="resource-content border rounded p-3 w-100"
+        class="resource-content bg-body border rounded p-3 w-100"
         style={scroll ? 'overflow: auto; max-height: 65vh' : ''}
       >
         <ResourceRows
