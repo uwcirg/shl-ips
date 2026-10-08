@@ -31,7 +31,9 @@ export interface PreparedImport {
   dataset: ResourceRetrieveEvent;
   entries: NormalizedIdEntry[];
   resources: Resource[];
-  // Comparison with the dataset this import will replace; undefined for a new dataset
+  // Whether this import replaces an existing dataset, and if so whether it could be loaded to compare against
+  existingDataset: 'none' | 'loaded' | 'failed';
+  // Comparison with the dataset this import will replace; only present when it is 'loaded'
   diff?: DatasetDiff;
 }
 
@@ -635,10 +637,13 @@ export class FHIRDataService {
     // The old dataset is deleted once the new one is uploaded, so resources missing from the import are removed
     const existingDataset = await existingDatasetPromise;
     // A dataset that failed to load only holds its seed, which would make every resource look new
-    const diff = existingDataset && get(existingDataset.status).state !== StateManager.State.ERROR
+    const existingState = !existingDataset ? 'none'
+      : get(existingDataset.status).state === StateManager.State.ERROR ? 'failed'
+      : 'loaded';
+    const diff = existingDataset && existingState === 'loaded'
       ? diffDataset(resources, existingDataset.collection.getFHIRResources(), matchBySourceIdentifier(dataset.source))
       : undefined;
-    return { dataset, entries, resources, diff };
+    return { dataset, entries, resources, existingDataset: existingState, diff };
   }
 
   /**

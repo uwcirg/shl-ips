@@ -611,6 +611,7 @@ describe('FHIRDataService', () => {
       const prepared = await service.prepareImport(event([{ resourceType: 'Observation', id: 'obs-1', subject: { reference: 'Patient/p' } }]));
 
       expect(prepared.diff).toBeUndefined();
+      expect(prepared.existingDataset).toBe('none');
     });
 
     it('diffs against the dataset being replaced, after extraction', async () => {
@@ -634,6 +635,7 @@ describe('FHIRDataService', () => {
         ])
       );
 
+      expect(prepared.existingDataset).toBe('loaded');
       expect(prepared.diff!.updated.map((p) => (p.existing as any).id)).toEqual(['old-kept']);
       expect(prepared.diff!.removed.map((r: any) => r.id)).toEqual(['old-gone']);
       expect(prepared.diff!.added.map((r: any) => r.resourceType).sort()).toEqual(['Observation', 'QuestionnaireResponse']);
@@ -701,6 +703,7 @@ describe('FHIRDataService', () => {
 
         const prepared = await service.prepareImport(event([incoming]));
 
+        expect(prepared.existingDataset).toBe('failed');
         expect(prepared.diff).toBeUndefined();
       });
     });
