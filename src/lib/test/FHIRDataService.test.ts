@@ -577,7 +577,7 @@ describe('FHIRDataService', () => {
       const service = new FHIRDataService(fakeAuth());
       service.setMasterPatient(taggedPatient({ id: 'master-1' }));
 
-      const prepared = await service.prepareImport(event([{ resourceType: 'Observation', id: 'obs-1' }]));
+      const prepared = await service.prepareImport(event([{ resourceType: 'Observation', id: 'obs-1', subject: { reference: 'Patient/p' } }]));
 
       expect(prepared.dataset.source).toBe('src-1');
       expect(prepared.resources.map((r) => r.resourceType).sort()).toEqual(['Observation', 'Patient']);
@@ -587,16 +587,134 @@ describe('FHIRDataService', () => {
       expect(service.datasetExists('labs', 'upload', 'src-1')).toBe(false);
     });
 
+    it('leaves out resources that nothing linked to the patient refers to', async () => {
+      const service = new FHIRDataService(fakeAuth());
+      service.setMasterPatient(taggedPatient({ id: 'master-1' }));
+
+      // e.g. an IPS bundle's Composition (not imported) was the only thing referencing org-2
+      const prepared = await service.prepareImport(
+        event([
+          { resourceType: 'Patient', id: 'pat-1' },
+          { resourceType: 'Observation', id: 'obs-1', subject: { reference: 'Patient/pat-1' }, performer: [{ reference: 'Organization/org-1' }] },
+          { resourceType: 'Organization', id: 'org-1' },
+          { resourceType: 'Organization', id: 'org-2' }
+        ])
+      );
+
+      expect(prepared.resources.map((r: any) => r.id)).toEqual(['pat-1', 'obs-1', 'org-1']);
+    });
+
+    it('has no diff when the dataset is new', async () => {
+      const service = new FHIRDataService(fakeAuth());
+      service.setMasterPatient(taggedPatient({ id: 'master-1' }));
+
+      const prepared = await service.prepareImport(event([{ resourceType: 'Observation', id: 'obs-1', subject: { reference: 'Patient/p' } }]));
+
+      expect(prepared.diff).toBeUndefined();
+    });
+
+    it('diffs against the dataset being replaced, after extraction', async () => {
+      const service = new FHIRDataService(fakeAuth());
+      service.setMasterPatient(taggedPatient({ id: 'master-1' }));
+      const system = (type: string) => `urn:test:source:src-1/${type}`;
+      const existingCollection = new ResourceCollection([
+        datasetPatient('p-old', 'labs', 'upload', 'src-1', 'Src One'),
+        { resourceType: 'Observation', id: 'old-kept', valueString: 'before', identifier: [{ system: system('Observation'), value: 'kept' }] } as any,
+        { resourceType: 'Observation', id: 'old-gone', identifier: [{ system: system('Observation'), value: 'gone' }] } as any
+      ]);
+      service.addDatasetToUserResources(existingCollection);
+      vi.spyOn(service, 'extractResourcesFromQuestionnaireResponses').mockResolvedValue([
+        { resourceType: 'Observation', id: 'x1', subject: { reference: 'Patient/p' }, identifier: [{ system: system('Observation'), value: 'qr-1:Observation:0' }] } as any
+      ]);
+
+      const prepared = await service.prepareImport(
+        event([
+          { resourceType: 'Observation', id: 'kept', subject: { reference: 'Patient/p' }, valueString: 'after' },
+          { resourceType: 'QuestionnaireResponse', id: 'qr-1', status: 'completed', subject: { reference: 'Patient/p' } }
+        ])
+      );
+
+      expect(prepared.diff!.updated.map((p) => (p.existing as any).id)).toEqual(['old-kept']);
+      expect(prepared.diff!.removed.map((r: any) => r.id)).toEqual(['old-gone']);
+      expect(prepared.diff!.added.map((r: any) => r.resourceType).sort()).toEqual(['Observation', 'QuestionnaireResponse']);
+    });
+
+    describe('while existing data is still loading in', () => {
+      const system = 'urn:test:source:src-1/Observation';
+      const existingObservation = () =>
+        ({ resourceType: 'Observation', id: 'old', identifier: [{ system, value: 'kept' }] }) as any;
+      const incoming = { resourceType: 'Observation', id: 'kept', subject: { reference: 'Patient/p' } };
+
+      it('waits for the user data to finish loading before diffing', async () => {
+        const service = new FHIRDataService(fakeAuth());
+        service.setMasterPatient(taggedPatient({ id: 'master-1' }));
+        service.loading.set(true);
+
+        let settled = false;
+        const preparedPromise = service.prepareImport(event([incoming])).then((prepared) => {
+          settled = true;
+          return prepared;
+        });
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        expect(settled).toBe(false);
+
+        service.addDatasetToUserResources(
+          new ResourceCollection([datasetPatient('p-old', 'labs', 'upload', 'src-1', 'Src One'), existingObservation()])
+        );
+        service.loading.set(false);
+
+        const prepared = await preparedPromise;
+        expect(prepared.diff!.added).toEqual([]);
+        expect(prepared.diff!.unchanged).toHaveLength(1);
+      });
+
+      it("waits for the dataset's full contents to replace its seed", async () => {
+        const service = new FHIRDataService(fakeAuth());
+        service.setMasterPatient(taggedPatient({ id: 'master-1' }));
+        const patient = datasetPatient('p-old', 'labs', 'upload', 'src-1', 'Src One');
+        const { status } = service.addDatasetToUserResources(new ResourceCollection([patient]));
+        status.set({ state: StateManager.State.LOADING });
+
+        let settled = false;
+        const preparedPromise = service.prepareImport(event([incoming])).then((prepared) => {
+          settled = true;
+          return prepared;
+        });
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        expect(settled).toBe(false);
+
+        // What syncDataset does when the fetch completes: swap in the loaded dataset
+        service.addDatasetToUserResources(new ResourceCollection([patient, existingObservation()]));
+
+        const prepared = await preparedPromise;
+        expect(prepared.diff!.added).toEqual([]);
+        expect(prepared.diff!.unchanged).toHaveLength(1);
+      });
+
+      it('has no diff when the existing dataset failed to load', async () => {
+        const service = new FHIRDataService(fakeAuth());
+        service.setMasterPatient(taggedPatient({ id: 'master-1' }));
+        const { status } = service.addDatasetToUserResources(
+          new ResourceCollection([datasetPatient('p-old', 'labs', 'upload', 'src-1', 'Src One')])
+        );
+        status.set({ state: StateManager.State.ERROR });
+
+        const prepared = await service.prepareImport(event([incoming]));
+
+        expect(prepared.diff).toBeUndefined();
+      });
+    });
+
     it('folds resources extracted from QuestionnaireResponses into the result', async () => {
       const service = new FHIRDataService(fakeAuth());
       service.setMasterPatient(taggedPatient({ id: 'master-1' }));
-      const extracted = { resourceType: 'Observation', id: 'extracted-1' } as any;
+      const extracted = { resourceType: 'Observation', id: 'extracted-1', subject: { reference: 'Patient/p' } } as any;
       const extractSpy = vi
         .spyOn(service, 'extractResourcesFromQuestionnaireResponses')
         .mockResolvedValue([extracted]);
 
       const prepared = await service.prepareImport(
-        event([{ resourceType: 'QuestionnaireResponse', id: 'qr-1', status: 'completed' }])
+        event([{ resourceType: 'QuestionnaireResponse', id: 'qr-1', status: 'completed', subject: { reference: 'Patient/p' } }])
       );
 
       expect(extractSpy).toHaveBeenCalledTimes(1);
@@ -610,7 +728,7 @@ describe('FHIRDataService', () => {
       vi.spyOn(service, 'extractResourcesFromQuestionnaireResponses').mockResolvedValue(undefined);
 
       const prepared = await service.prepareImport(
-        event([{ resourceType: 'QuestionnaireResponse', id: 'qr-1', status: 'completed' }])
+        event([{ resourceType: 'QuestionnaireResponse', id: 'qr-1', status: 'completed', subject: { reference: 'Patient/p' } }])
       );
 
       expect(prepared.resources.map((r) => r.resourceType).sort()).toEqual(['Patient', 'QuestionnaireResponse']);
@@ -621,7 +739,7 @@ describe('FHIRDataService', () => {
       service.setMasterPatient(taggedPatient({ id: 'master-1' }));
       const extractSpy = vi.spyOn(service, 'extractResourcesFromQuestionnaireResponses');
 
-      await service.prepareImport(event([{ resourceType: 'Observation', id: 'obs-1' }]));
+      await service.prepareImport(event([{ resourceType: 'Observation', id: 'obs-1', subject: { reference: 'Patient/p' } }]));
 
       expect(extractSpy).not.toHaveBeenCalled();
     });
@@ -650,7 +768,7 @@ describe('FHIRDataService', () => {
         ); // $everything pull-back
 
       await service.addOrReplaceDataset({
-        resources: [{ resourceType: 'Observation', id: 'obs-1' } as any],
+        resources: [{ resourceType: 'Observation', id: 'obs-1', subject: { reference: 'Patient/p' } } as any],
         category: 'labs',
         method: 'upload',
         source: 'src-1',
@@ -682,7 +800,7 @@ describe('FHIRDataService', () => {
         ); // $everything pull-back
 
       const dataset = {
-        resources: [{ resourceType: 'Observation', id: 'obs-1' } as any],
+        resources: [{ resourceType: 'Observation', id: 'obs-1', subject: { reference: 'Patient/p' } } as any],
         category: 'labs',
         method: 'upload',
         source: 'src-1',
@@ -710,7 +828,7 @@ describe('FHIRDataService', () => {
 
       await expect(
         service.addOrReplaceDataset({
-          resources: [{ resourceType: 'Observation', id: 'obs-1' } as any],
+          resources: [{ resourceType: 'Observation', id: 'obs-1', subject: { reference: 'Patient/p' } } as any],
           category: 'labs',
           method: 'upload',
           source: 'src-1',
@@ -737,7 +855,7 @@ describe('FHIRDataService', () => {
 
       await expect(
         service.addOrReplaceDataset({
-          resources: [{ resourceType: 'Observation', id: 'obs-1' } as any],
+          resources: [{ resourceType: 'Observation', id: 'obs-1', subject: { reference: 'Patient/p' } } as any],
           category: 'labs',
           method: 'upload',
           source: 'src-1',
@@ -764,7 +882,7 @@ describe('FHIRDataService', () => {
 
       await expect(
         service.addOrReplaceDataset({
-          resources: [{ resourceType: 'Observation', id: 'obs-1' } as any],
+          resources: [{ resourceType: 'Observation', id: 'obs-1', subject: { reference: 'Patient/p' } } as any],
           category: 'labs',
           method: 'upload',
           source: 'src-1',

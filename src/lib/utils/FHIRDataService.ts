@@ -23,14 +23,16 @@ import type { Bundle, BundleEntry, Patient, Resource } from "fhir/r4";
 import { constructPatientResource, getDemographicsFromPatient, fetchEverything } from "$lib/utils/util";
 import { uploadBundleEntries, getPatientReferenceFromTransactionResponse } from "$lib/utils/resourceUploader";
 import { StateManager } from "$lib/utils/StateManager";
-import { prepareImportedResources, entriesToResources, reconcileResourcesWithOriginalEntries, finalizeForUpload } from "$lib/utils/importNormalization";
-import type { NormalizedBundleEntry, NormalizedIdEntry } from "$lib/utils/importNormalization";
+import { prepareImportedResources, entriesToResources, reconcileResourcesWithOriginalEntries, finalizeForUpload, diffDataset, matchBySourceIdentifier, pruneUnlinkedEntries, stampExtractedResources } from "$lib/utils/importNormalization";
+import type { DatasetDiff, NormalizedBundleEntry, NormalizedIdEntry } from "$lib/utils/importNormalization";
 import { extractResourcesFromQuestionnaireResponse } from "./sdcClient";
 
 export interface PreparedImport {
   dataset: ResourceRetrieveEvent;
   entries: NormalizedIdEntry[];
   resources: Resource[];
+  // Comparison with the dataset this import will replace; undefined for a new dataset
+  diff?: DatasetDiff;
 }
 
 export class FHIRServiceError extends Error {
@@ -409,8 +411,8 @@ export class FHIRDataService {
     if (!categoryContent) return [];
     let datasetsWithStatus;
     if (method) {
-    const methodContent = categoryContent[method];
-    if (!methodContent) return [];
+      const methodContent = categoryContent[method];
+      if (!methodContent) return [];
       if (source) {
         const sourceContent = methodContent[source];
         if (!sourceContent) return [];
@@ -571,24 +573,72 @@ export class FHIRDataService {
     }
   }
 
+  // Resolves on the next change to any of the given stores
+  private nextChange(...stores: Array<{ subscribe: Function }>): Promise<void> {
+    return new Promise((resolve) => {
+      let ready = false;
+      const unsubscribers: Array<() => void> = stores.map((store) =>
+        store.subscribe(() => {
+          if (ready) {
+            unsubscribers.forEach((unsubscribe) => unsubscribe());
+            resolve();
+          }
+        })
+      );
+      ready = true;
+    });
+  }
+
+  /**
+   * Gets a dataset once the user's data has finished loading in. Datasets are first seeded with
+   * only their Patient and then replaced (with a new status) by the fully loaded dataset, so
+   * anything reading a dataset's resources straight away may see a partial one.
+   */
+  private async waitForDatasetToLoad(category: string, method: string, source: string) {
+    while (get(this.loading)) {
+      await this.nextChange(this.loading);
+    }
+    for (;;) {
+      const dataset = get(this.userResources)?.[category]?.[method]?.[source];
+      if (!dataset || get(dataset.status).state !== StateManager.State.LOADING) {
+        return dataset;
+      }
+      await this.nextChange(this.userResources, dataset.status);
+    }
+  }
+
   /**
    * First stage of an import: normalizes the imported resources and runs any server-side
    * extraction. Nothing is uploaded, so the result can be shown to the user for confirmation
    * and then passed to addOrReplaceDataset.
    */
   async prepareImport(dataset: ResourceRetrieveEvent): Promise<PreparedImport> {
+    // Existing data may still be loading in; start waiting on it while the rest of the import is prepared
+    const existingDatasetPromise = this.waitForDatasetToLoad(dataset.category, dataset.method, dataset.source);
+
     let entries: NormalizedIdEntry[] = prepareImportedResources(dataset, get(this.masterPatient).resource);
     let resources: Resource[] = entriesToResources(entries);
 
     if (resources.some((resource) => resource.resourceType === "QuestionnaireResponse")) {
       // Before adding the dataset, try running $extract on each QuestionnaireResponse (which isn't in
       // the FHIR server yet) and fold the extracted resources into the bundle.
-      let extractedResources = await this.extractResourcesFromQuestionnaireResponses(resources);
+      let extractedResources = await this.extractResourcesFromQuestionnaireResponses(resources, dataset.source);
       if (extractedResources) {
         resources = [...resources, ...extractedResources];
       }
     }
-    return { dataset, entries, resources };
+
+    // Leave out resources that can't be retrieved with the dataset (e.g. only referenced by a Composition
+    // that was not imported), so the import, diff, and upload all describe what the dataset will contain
+    resources = entriesToResources(pruneUnlinkedEntries(reconcileResourcesWithOriginalEntries(entries, resources)));
+
+    // The old dataset is deleted once the new one is uploaded, so resources missing from the import are removed
+    const existingDataset = await existingDatasetPromise;
+    // A dataset that failed to load only holds its seed, which would make every resource look new
+    const diff = existingDataset && get(existingDataset.status).state !== StateManager.State.ERROR
+      ? diffDataset(resources, existingDataset.collection.getFHIRResources(), matchBySourceIdentifier(dataset.source))
+      : undefined;
+    return { dataset, entries, resources, diff };
   }
 
   /**
@@ -686,14 +736,17 @@ export class FHIRDataService {
     status.set({ state: StateManager.State.IDLE });
   }
   
-  async extractResourcesFromQuestionnaireResponses(questionnaireResponses: Resource[]): Promise<Resource[] | undefined> {
+  async extractResourcesFromQuestionnaireResponses(questionnaireResponses: Resource[], source?: string): Promise<Resource[] | undefined> {
     try {
       const accessToken = await this.auth.getAccessToken();
       if (!accessToken) {
         return undefined;
       }
       let extractedResources = (await Promise.all(
-          questionnaireResponses.map(async (qr) => extractResourcesFromQuestionnaireResponse(qr, accessToken))
+          questionnaireResponses.map(async (qr) => {
+            const extracted = await extractResourcesFromQuestionnaireResponse(qr, accessToken);
+            return source ? stampExtractedResources(source, qr, extracted) : extracted;
+          })
       )).flat();
       return extractedResources;
     } catch (error) {

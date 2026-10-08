@@ -7,6 +7,10 @@ import {
   reconcileResourcesWithOriginalEntries,
   prepareImportedResources,
   finalizeForUpload,
+  stampExtractedResources,
+  pruneUnlinkedEntries,
+  matchBySourceIdentifier,
+  diffDataset,
   type BundleEntry,
   type NormalizedIdEntry
 } from '$lib/utils/importNormalization';
@@ -322,5 +326,196 @@ describe('finalizeForUpload', () => {
     const entries = [patientEntry('patient-1'), observationEntry(undefined)];
 
     expect(() => finalizeForUpload(entries)).toThrow(/missing an id/);
+  });
+});
+
+const srcId = (resourceType: string, value: string) => ({ system: `urn:test:source:source-1/${resourceType}`, value });
+const obs = (id: string, identifier?: any[]) => ({ resourceType: 'Observation', id, identifier } as any);
+
+describe('stampExtractedResources', () => {
+  it('gives extracted resources a deterministic source identifier per type and position', () => {
+    const qr = { resourceType: 'QuestionnaireResponse', id: 'qr-1' } as any;
+    const run = () => stampExtractedResources('source-1', qr, [obs('a'), obs('b'), { resourceType: 'Condition', id: 'c' } as any]);
+
+    const first = run();
+    const second = run();
+
+    expect(first[0].identifier).toEqual([srcId('Observation', 'qr-1:Observation:0')]);
+    expect(first[1].identifier).toEqual([srcId('Observation', 'qr-1:Observation:1')]);
+    expect(first[2].identifier).toEqual([srcId('Condition', 'qr-1:Condition:0')]);
+    expect(second.map((r: any) => r.identifier)).toEqual(first.map((r: any) => r.identifier));
+  });
+
+  it("derives the value from the QuestionnaireResponse's own source identifier when it has one", () => {
+    const qr = { resourceType: 'QuestionnaireResponse', id: 'random-id', identifier: srcId('QuestionnaireResponse', 'original-qr') } as any;
+
+    const [result] = stampExtractedResources('source-1', qr, [obs('a')]);
+
+    expect(result.identifier).toEqual([srcId('Observation', 'original-qr:Observation:0')]);
+  });
+
+  it('keeps other identifiers and does not add a second source identifier', () => {
+    const qr = { resourceType: 'QuestionnaireResponse', id: 'qr-1' } as any;
+    const other = { system: 'urn:other', value: 'x' };
+    const existing = srcId('Observation', 'already');
+
+    const [withOther, withSource] = stampExtractedResources('source-1', qr, [obs('a', [other]), obs('b', [existing])]);
+
+    expect((withOther as any).identifier).toEqual([other, srcId('Observation', 'qr-1:Observation:0')]);
+    expect((withSource as any).identifier).toEqual([existing]);
+  });
+});
+
+describe('diffDataset', () => {
+  const matcher = matchBySourceIdentifier('source-1');
+
+  it('splits resources into added, updated, and removed by source identifier', () => {
+    const incoming = [
+      { ...obs('new-1', [srcId('Observation', 'a')]), valueString: 'changed' },
+      obs('new-2', [srcId('Observation', 'b')])
+    ];
+    const existing = [obs('old-1', [srcId('Observation', 'a')]), obs('old-2', [srcId('Observation', 'gone')])];
+
+    const diff = diffDataset(incoming, existing, matcher);
+
+    expect(diff.added).toEqual([incoming[1]]);
+    expect(diff.updated).toEqual([{ incoming: incoming[0], existing: existing[0] }]);
+    expect(diff.unchanged).toEqual([]);
+    expect(diff.removed).toEqual([existing[1]]);
+  });
+
+  it('does not match the same source id across different resource types', () => {
+    const incoming = [{ resourceType: 'Condition', id: 'c', identifier: [srcId('Condition', 'a')] } as any];
+    const existing = [obs('o', [srcId('Observation', 'a')])];
+
+    const diff = diffDataset(incoming, existing, matcher);
+
+    expect(diff.updated).toEqual([]);
+    expect(diff.unchanged).toEqual([]);
+    expect(diff.added).toHaveLength(1);
+    expect(diff.removed).toHaveLength(1);
+  });
+
+  it('treats resources without a source identifier as unmatched', () => {
+    const diff = diffDataset([obs('a')], [obs('b')], matcher);
+
+    expect(diff.added).toHaveLength(1);
+    expect(diff.removed).toHaveLength(1);
+    expect(diff.updated).toEqual([]);
+  });
+
+  it('matches each existing resource at most once', () => {
+    const incoming = [obs('n1', [srcId('Observation', 'a')]), obs('n2', [srcId('Observation', 'a')])];
+    const existing = [obs('o1', [srcId('Observation', 'a')])];
+
+    const diff = diffDataset(incoming, existing, matcher);
+
+    expect(diff.unchanged).toHaveLength(1);
+    expect(diff.added).toEqual([incoming[1]]);
+  });
+
+  it('leaves Patient resources out of the diff', () => {
+    const diff = diffDataset([{ resourceType: 'Patient', id: 'p1' } as any], [{ resourceType: 'Patient', id: 'p2' } as any], matcher);
+
+    expect(diff).toEqual({ added: [], updated: [], unchanged: [], removed: [] });
+  });
+
+  it('accepts any matcher', () => {
+    const incoming = [obs('a'), obs('b')];
+    const existing = [obs('x')];
+
+    const diff = diffDataset(incoming, existing, (inc, ex) => [[inc[0], ex[0]]]);
+
+    expect(diff.unchanged).toEqual([{ incoming: incoming[0], existing: existing[0] }]);
+    expect(diff.added).toEqual([incoming[1]]);
+    expect(diff.removed).toEqual([]);
+  });
+
+  it('ignores system-specific fields when deciding whether a match changed', () => {
+    const base = { code: { text: 'Weight' }, valueQuantity: { value: 70, unit: 'kg' } };
+    const incoming = [{
+      ...obs('new', [srcId('Observation', 'a')]), ...base,
+      subject: { reference: 'urn:uuid:123', display: 'Jane' },
+      meta: { lastUpdated: '2026-01-01T00:00:00Z' }, text: { status: 'generated', div: '<div>new</div>' }
+    }];
+    const existing = [{
+      ...obs('old', [srcId('Observation', 'a'), { system: 'urn:server', value: 'x' }]),
+      valueQuantity: { unit: 'kg', value: 70 }, code: { text: 'Weight' },
+      subject: { reference: 'Patient/42', display: 'Jane' },
+      meta: { versionId: '3' }
+    }];
+
+    const diff = diffDataset(incoming, existing, matcher);
+
+    expect(diff.unchanged).toHaveLength(1);
+    expect(diff.updated).toEqual([]);
+  });
+
+  it('treats a changed value, display, or nested text as an update', () => {
+    const make = (extra: any) => ({ ...obs('x', [srcId('Observation', 'a')]), code: { text: 'Weight' }, ...extra });
+    const existing = [make({ valueString: 'a', subject: { display: 'Jane' } })];
+
+    expect(diffDataset([make({ valueString: 'b', subject: { display: 'Jane' } })], existing, matcher).updated).toHaveLength(1);
+    expect(diffDataset([make({ valueString: 'a', subject: { display: 'Janet' } })], existing, matcher).updated).toHaveLength(1);
+    expect(diffDataset([make({ valueString: 'a', subject: { display: 'Jane' }, code: { text: 'Height' } })], existing, matcher).updated).toHaveLength(1);
+  });
+});
+
+describe('pruneUnlinkedEntries', () => {
+  const org = (id: string, fullUrl?: string): NormalizedIdEntry =>
+    ({ resource: { resourceType: 'Organization', id } as any, fullUrl });
+  const ids = (entries: NormalizedIdEntry[]) => entries.map(e => (e.resource as any).id);
+
+  it('drops a resource that nothing linked to the Patient refers to', () => {
+    const entries = [
+      patientEntry('patient-1'),
+      observationEntry('obs-1', { subject: { reference: 'Patient/patient-1' } }),
+      org('orphan')
+    ];
+
+    expect(ids(pruneUnlinkedEntries(entries))).toEqual(['patient-1', 'obs-1']);
+  });
+
+  it('keeps resources referenced, directly or indirectly, by a patient-linked resource', () => {
+    const entries = [
+      patientEntry('patient-1'),
+      observationEntry('obs-1', { subject: { reference: 'Patient/patient-1' }, performer: [{ reference: 'Practitioner/pr-1' }] }),
+      { resource: { resourceType: 'Practitioner', id: 'pr-1', qualification: [{ issuer: { reference: 'Organization/org-1' } }] } as any },
+      org('org-1'),
+      org('orphan')
+    ];
+
+    expect(ids(pruneUnlinkedEntries(entries))).toEqual(['patient-1', 'obs-1', 'pr-1', 'org-1']);
+  });
+
+  it('resolves references by the original fullUrl', () => {
+    const entries = [
+      patientEntry('patient-1'),
+      observationEntry('obs-1', { subject: { reference: 'Patient/patient-1' }, performer: [{ reference: 'urn:uuid:org-a' }] }),
+      org('org-1', 'urn:uuid:org-a'),
+      org('org-2', 'urn:uuid:org-b')
+    ];
+
+    expect(ids(pruneUnlinkedEntries(entries))).toEqual(['patient-1', 'obs-1', 'org-1']);
+  });
+
+  it('does not keep a resource that is only referenced by another unlinked resource', () => {
+    const entries = [
+      patientEntry('patient-1'),
+      { resource: { resourceType: 'Practitioner', id: 'pr-1', qualification: [{ issuer: { reference: 'Organization/org-1' } }] } as any },
+      org('org-1')
+    ];
+
+    expect(ids(pruneUnlinkedEntries(entries))).toEqual(['patient-1']);
+  });
+
+  it('handles reference cycles', () => {
+    const entries = [
+      patientEntry('patient-1'),
+      observationEntry('obs-1', { subject: { reference: 'Patient/patient-1' }, hasMember: [{ reference: 'Observation/obs-2' }] }),
+      { resource: { resourceType: 'Observation', id: 'obs-2', status: 'final', code: { text: 'x' }, hasMember: [{ reference: 'Observation/obs-1' }] } as any }
+    ];
+
+    expect(ids(pruneUnlinkedEntries(entries))).toEqual(['patient-1', 'obs-1', 'obs-2']);
   });
 });
