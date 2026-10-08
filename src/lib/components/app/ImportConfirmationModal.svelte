@@ -28,10 +28,13 @@
     return new ResourceCollection([patient, ...structuredClone(resources)]);
   }
 
+  // Bootstrap color for each kind of change
+  type SectionColor = 'success' | 'warning' | 'danger' | 'secondary';
   type PatientPair = { incoming: ResourceCollection, existing: ResourceCollection };
   let sections: Array<{
     key: string,
     title: string,
+    color: SectionColor,
     collapsed: boolean,
     count: number,
     collection?: ResourceCollection, // the section's resources, if there are any besides a patient pair
@@ -45,18 +48,18 @@
     const isPatient = ({ incoming }: { incoming: Resource }) => incoming.resourceType === 'Patient';
     const changedPatient = diff.updated.find(isPatient);
     const patientCollection = (resource: Resource) => new ResourceCollection([structuredClone(resource)]);
-    const entries: Array<{ key: string, title: string, collapsed: boolean, resources: Resource[], patientPair?: PatientPair }> = [
+    const entries: Array<{ key: string, title: string, color: SectionColor, collapsed: boolean, resources: Resource[], patientPair?: PatientPair }> = [
       {
-        key: 'updated', title: 'Updated', collapsed: false,
+        key: 'updated', title: 'Updated', color: 'warning', collapsed: false,
         resources: diff.updated.filter((pair) => !isPatient(pair)).map(({ incoming }) => incoming),
         patientPair: changedPatient && {
           incoming: patientCollection(changedPatient.incoming),
           existing: patientCollection(changedPatient.existing)
         }
       },
-      { key: 'added', title: 'New', collapsed: false, resources: diff.added },
-      { key: 'unchanged', title: 'Unchanged', collapsed: true, resources: diff.unchanged.map(({ incoming }) => incoming) },
-      { key: 'removed', title: 'To be deleted (no longer in this source)', collapsed: true, resources: diff.removed }
+      { key: 'added', title: 'New', color: 'success', collapsed: false, resources: diff.added },
+      { key: 'unchanged', title: 'Unchanged', color: 'secondary', collapsed: true, resources: diff.unchanged.map(({ incoming }) => incoming) },
+      { key: 'removed', title: 'To be deleted (no longer in this source)', color: 'danger', collapsed: true, resources: diff.removed }
     ];
     return entries
       .filter((section) => section.resources.length > 0 || section.patientPair)
@@ -143,25 +146,32 @@
         {/if}
         {#if sections.length}
           {#each sections as section (section.key)}
-            <details class="mb-3" open={!section.collapsed}>
-              <summary class="mb-2 fw-bold">
-                {section.title} <Badge color={section.key === 'removed' ? 'danger' : section.key === 'unchanged' ? 'secondary' : 'primary'}>{section.count}</Badge>
+            <details
+              class="diff-section mb-3"
+              style="--section-border: var(--bs-{section.color}-border-subtle); --section-bg: var(--bs-{section.color}-bg-subtle); --section-text: var(--bs-{section.color}-text-emphasis);"
+              open={!section.collapsed}
+            >
+              <summary class="px-3 py-2 fw-bold">
+                {section.title}
+                <Badge color={section.color} class={section.color === 'warning' ? 'text-dark' : ''}>{section.count}</Badge>
               </summary>
-              {#if section.patientPair}
-                <Row class="mb-3 gy-2">
-                  <Col xs="12" md="6">
-                    <div class="text-secondary mb-1">Existing patient</div>
-                    <FHIRResourceList resourceCollection={section.patientPair.existing} scroll={false} sections={false} />
-                  </Col>
-                  <Col xs="12" md="6">
-                    <div class="text-secondary mb-1">New patient</div>
-                    <FHIRResourceList resourceCollection={section.patientPair.incoming} scroll={false} sections={false} />
-                  </Col>
-                </Row>
-              {/if}
-              {#if section.collection}
-                <FHIRResourceList resourceCollection={section.collection} scroll={false} />
-              {/if}
+              <div class="p-3">
+                {#if section.patientPair}
+                  <Row class="mb-3 gy-2">
+                    <Col xs="12" md="6">
+                      <div class="text-secondary mb-1">Existing patient</div>
+                      <FHIRResourceList resourceCollection={section.patientPair.existing} scroll={false} sections={false} />
+                    </Col>
+                    <Col xs="12" md="6">
+                      <div class="text-secondary mb-1">New patient</div>
+                      <FHIRResourceList resourceCollection={section.patientPair.incoming} scroll={false} sections={false} />
+                    </Col>
+                  </Row>
+                {/if}
+                {#if section.collection}
+                  <FHIRResourceList resourceCollection={section.collection} scroll={false} />
+                {/if}
+              </div>
             </details>
           {/each}
         {:else}
@@ -187,3 +197,17 @@
     {/if}
   </ModalFooter>
 </Modal>
+
+<style>
+  /* Colored by kind of change: a subtle border, a header in the subtle background color, and a body in a fainter tint of it */
+  .diff-section {
+    border: 1px solid var(--section-border);
+    border-radius: var(--bs-border-radius);
+    overflow: hidden;
+    background-color: color-mix(in srgb, var(--section-bg) 35%, var(--bs-body-bg));
+  }
+  .diff-section > summary {
+    background-color: var(--section-bg);
+    color: var(--section-text);
+  }
+</style>

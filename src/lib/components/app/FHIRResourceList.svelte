@@ -1,7 +1,7 @@
 
 <script lang="ts">
   import { download } from '$lib/utils/util.js';
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, getContext } from 'svelte';
   import { derived, type Readable, type Writable } from 'svelte/store';
   import {
     Accordion,
@@ -26,11 +26,14 @@
   import { createCategorizedStore, type ResourceInput, type CategorizedResource } from '$lib/stores/categorizedResources';
   import type { DisplayUnit } from '$lib/stores/displayUnits';
   import UnitDisplay from '$lib/components/app/UnitDisplay.svelte';
+  import ResourceRows from '$lib/components/app/ResourceRows.svelte';
 
   export let resourceCollection: ResourceCollection;
   export let scroll: boolean = true;
   export let submitting: boolean = false;
-  export let sections: boolean = true;
+  export let sections: boolean | undefined = undefined;
+
+  let mode = getContext('mode');
   
   const statusDispatch = createEventDispatcher<{ 'status-update': string }>();
   const errorDispatch = createEventDispatcher<{ error: string }>();
@@ -125,7 +128,7 @@
 
 {#if $categorizedResourceStore && $unitsStore}
   {@const allDataAsBundleEntries = Object.values($categorizedResourceStore).map(types => Object.values(types)).flat().map(cr => ({ resource: cr.rh.resource }))}
-  {#if sections}
+  {#if sections || sections === undefined && Object.keys($categorizedResourceStore).length > 1}
   <Accordion stayOpen class="w-100">
     {#each Object.keys($unitsStore) as category}
       {#if $unitsStore[category].length > 0}
@@ -178,7 +181,7 @@
     {@const allResources = Object.values($categorizedResourceStore).flatMap((category) => Object.values(category).sort(sortResources))}
     {#if allResources.length > 0}
       <div
-        class="resource-content border rounded p-3 w-100"
+        class="resource-content bg-body border rounded p-3 w-100"
         style={scroll ? 'overflow: auto; max-height: 65vh' : ''}
       >
         <ResourceRows
