@@ -1,4 +1,4 @@
-import type { Bundle, Coding, Patient, Resource } from "fhir/r4";
+import type { Bundle, Coding, Identifier, Patient, Resource } from "fhir/r4";
 import { type ResourceRetrieveEvent } from "$lib/utils/types";
 import {
   SOURCE_NAMESPACE,
@@ -7,6 +7,7 @@ import {
   METHOD_SYSTEM,
   SOURCE_NAME_SYSTEM
 } from "$lib/config/config";
+import { ResourceHelper } from "$lib/utils/ResourceHelper";
 import { assignPatientReference, constructPatientResource, PATIENT_REFERENCE_FIELDS } from "$lib/utils/util";
 
 class ReferenceMap {
@@ -131,6 +132,99 @@ export function getEntries(data: BundleEntry[] | Resource[]): BundleEntry[] {
 
 export function sourceIdSystem(source: string, resourceType: string) {
   return `${SOURCE_NAMESPACE}:${source}/${resourceType}`;
+}
+
+const toArray = <T>(value: T | T[] | undefined): T[] => value === undefined ? [] : Array.isArray(value) ? value : [value];
+
+function sourceIdentifierValue(resource: Resource, source: string): string | undefined {
+  const system = sourceIdSystem(source, resource.resourceType);
+  return toArray((resource as any).identifier as Identifier | Identifier[] | undefined)
+    .find(identifier => identifier.system === system)?.value;
+}
+
+/**
+ * Gives resources extracted from a QuestionnaireResponse a deterministic source identifier, so
+ * the same extraction from a later import of the same source matches (instead of looking like a
+ * new resource replacing a removed one). The value is derived from the QuestionnaireResponse's
+ * own source id and the resource's type and position among that type's extracted resources, so
+ * it is only as stable as the QuestionnaireResponse's id.
+ */
+export function stampExtractedResources(source: string, questionnaireResponse: Resource, extracted: Resource[]): Resource[] {
+  const qrKey = sourceIdentifierValue(questionnaireResponse, source) ?? questionnaireResponse.id;
+  const countByType = new Map<string, number>();
+  for (const resource of extracted) {
+    const system = sourceIdSystem(source, resource.resourceType);
+    const index = countByType.get(resource.resourceType) ?? 0;
+    countByType.set(resource.resourceType, index + 1);
+    const identifiers = toArray((resource as any).identifier as Identifier | Identifier[] | undefined);
+    if (!identifiers.some(identifier => identifier.system === system)) {
+      (resource as any).identifier = [
+        ...identifiers,
+        { system, value: `${qrKey}:${resource.resourceType}:${index}` }
+      ];
+    }
+  }
+  return extracted;
+}
+
+export interface DatasetDiff {
+  added: Resource[]; // incoming resources with no match in the existing dataset
+  updated: Array<{ incoming: Resource; existing: Resource }>; // matched to an existing resource, with different content
+  unchanged: Array<{ incoming: Resource; existing: Resource }>; // matched to an existing resource, with the same content
+  removed: Resource[]; // existing resources with no match in the incoming set
+}
+
+// Pairs incoming resources with the existing resources they correspond to (at most one each)
+export type ResourceMatcher = (incoming: Resource[], existing: Resource[]) => Array<[Resource, Resource]>;
+
+// Matches on the source identifier added during import normalization
+export function matchBySourceIdentifier(source: string): ResourceMatcher {
+  return (incoming, existing) => {
+    const key = (resource: Resource) => {
+      const value = sourceIdentifierValue(resource, source);
+      return value === undefined ? undefined : `${resource.resourceType}|${value}`;
+    };
+    const existingByKey = new Map<string, Resource>();
+    for (const resource of existing) {
+      const k = key(resource);
+      if (k !== undefined && !existingByKey.has(k)) {
+        existingByKey.set(k, resource);
+      }
+    }
+    const pairs: Array<[Resource, Resource]> = [];
+    for (const resource of incoming) {
+      const k = key(resource);
+      const match = k === undefined ? undefined : existingByKey.get(k);
+      if (match) {
+        existingByKey.delete(k!); // each existing resource matches once
+        pairs.push([resource, match]);
+      }
+    }
+    return pairs;
+  };
+}
+
+/**
+ * Compares an import against the dataset it will replace. Matched resources are split by whether
+ * their core content (see ResourceHelper.core) differs. Patient resources describe the dataset
+ * itself (and a placeholder is regenerated on every import), so they are left out of the diff.
+ */
+export function diffDataset(incoming: Resource[], existing: Resource[], matcher: ResourceMatcher): DatasetDiff {
+  const patient = (resource: Resource) => resource.resourceType === 'Patient';
+  const notPatient = (resource: Resource) => resource.resourceType !== 'Patient';
+  const patientResource = existing.find(patient);
+  const incomingResources = incoming.filter(notPatient);
+  const existingResources = existing.filter(notPatient);
+  const pairs = matcher(incomingResources, existingResources);
+  const matchedIncoming = new Set(pairs.map(([i]) => i));
+  const matchedExisting = new Set(pairs.map(([, e]) => e));
+  const matches = pairs.map(([incoming, existing]) => ({ incoming, existing }));
+  return {
+    added: incomingResources.filter(resource => !matchedIncoming.has(resource)),
+    updated: matches.filter(({ incoming, existing }) => !ResourceHelper.hasSameCore(incoming, existing)),
+    unchanged: matches.filter(({ incoming, existing }) => ResourceHelper.hasSameCore(incoming, existing)),
+    removed: existingResources.filter(resource => !matchedExisting.has(resource))
+  };
 }
 
 function preserveSourceIdentifiers(entries: BundleEntry[], source: string) {
@@ -388,6 +482,50 @@ export function prepareImportedResources(importEvent: ResourceRetrieveEvent, mas
     importEvent.source,
     importEvent.sourceName);
   return idEntries;
+}
+
+/**
+ * Drops entries that would be uploaded without anything linking them to the dataset's Patient.
+ * A dataset is read back through its Patient (Patient/$everything), so a resource that neither
+ * refers to the Patient nor is referred to by something that does (e.g. an Organization that was
+ * only referenced by a Composition that isn't uploaded) is never retrieved again: it would just
+ * be stored dangling, and look new on every import of the same data.
+ */
+export function pruneUnlinkedEntries<T extends BundleEntry>(entries: T[]): T[] {
+  const referenceMap = new ReferenceMap();
+  entries.forEach((entry, i) => {
+    if (entry.resource.id) {
+      referenceMap.register(entry.resource.resourceType, entry.resource.id, String(i));
+    }
+    if (entry.fullUrl) {
+      referenceMap.registerFullUrl(entry.fullUrl, String(i));
+    }
+  });
+
+  const isPatientLinked = (resource: Resource) =>
+    resource.resourceType === 'Patient' || PATIENT_REFERENCE_FIELDS.some(field => field in resource);
+
+  const linked = new Set<number>();
+  const pending: number[] = [];
+  entries.forEach((entry, i) => {
+    if (isPatientLinked(entry.resource)) {
+      linked.add(i);
+      pending.push(i);
+    }
+  });
+  // Resources referenced (directly or indirectly) by a linked resource are retrieved with it
+  while (pending.length) {
+    const { resource } = entries[pending.pop()!];
+    for (const path of findFhirReferencePaths(resource)) {
+      const { target, last } = locateReference(resource, path);
+      const resolved = referenceMap.resolve(target[last]);
+      if (resolved !== undefined && !linked.has(Number(resolved))) {
+        linked.add(Number(resolved));
+        pending.push(Number(resolved));
+      }
+    }
+  }
+  return entries.filter((_, i) => linked.has(i));
 }
 
 export function finalizeForUpload(entries: NormalizedIdEntry[]): NormalizedBundleEntry[] {
