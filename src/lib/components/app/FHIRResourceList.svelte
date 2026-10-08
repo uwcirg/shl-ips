@@ -82,6 +82,7 @@
   header={resourceType + ' JSON'}
   placement="end"
   title={resourceType + ' JSON'}
+  class="resource-json-offcanvas"
   style="display: flex;  overflow-y:hidden; height: 100dvh; width: fit-content; max-width: 80dvw; min-width: var(--bs-offcanvas-width);"
 >
   <Row class="d-flex" style="height: 100%">
@@ -182,5 +183,13 @@
   }
   :global(div.resource-list-accordion:has(div.accordion-collapse.collapsing) > h2.accordion-header > button.accordion-button) {
     background-color: var(--bs-accordion-active-bg) !important;
+  }
+  /* Bootstrap stacks offcanvases below modals, but this one can be opened from inside one (e.g. the
+     import confirmation), so put it and its backdrop above them */
+  :global(.offcanvas.resource-json-offcanvas) {
+    z-index: 1060;
+  }
+  :global(body:has(.offcanvas.resource-json-offcanvas.show) .offcanvas-backdrop) {
+    z-index: 1059;
   }
 </style>
