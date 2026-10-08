@@ -106,6 +106,7 @@
       {@const values = Object.values($categoryDataToDisplay[category]).sort((a, b) => sortResources(a, b))}
       {@const valuesToDisplay = summary ? values.slice(0, 3) : values}
       {@const valuesAsBundleEntries = values.map((value) => ({ resource: value.rh.resource}))}
+      {@const totalOthers = values.length - valuesToDisplay.length}
       <div id={`${category}`}></div>
       <CategoryView
         class="mb-4"
@@ -116,7 +117,7 @@
       >
         <div slot="resources">
           {#each valuesToDisplay as value, index}
-            {@const sourceName=getFriendlySourceNameBySource(value.source)}
+            {@const sourceName = getFriendlySourceNameBySource(value.source)}
             <Row class={(index > 0 ? "border-top pt-2 mt-2" : "") + " source-row"} style="overflow-x: clip; position: relative; flex-wrap: wrap;">
               <div
                 class="ps-2 pe-4 tooltip-host"
@@ -150,6 +151,13 @@
               </Row>
             </Row>
           {/each}
+          {#if totalOthers > 0}
+            <Row class="border-top pt-2 mt-2" style="overflow-x: clip; position: relative; flex-wrap: wrap;">
+              <Col class="resource-content overflow-auto justify-content-center align-items-center">
+                <span class="text-secondary"><em>and {totalOthers} more...</em></span>
+              </Col>
+            </Row>
+          {/if}
         </div>
       </CategoryView>
     {/if}
