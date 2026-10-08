@@ -413,7 +413,7 @@
           </CardHeader>
           <CardBody>
             <Row class="g-4 d-flex justify-content-start">
-              {#each fhirDataService.getDatasetsForCategory(category) as dataset}
+              {#each fhirDataService.getDatasets(category) as dataset}
                 {@const { status, collection } = dataset}
                 <Col xs="12" sm="6" lg="4" style="">
                   <DatasetView {dataset} {masterPatient}>

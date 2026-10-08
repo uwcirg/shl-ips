@@ -34,7 +34,7 @@
 
   let datasets;
   $: datasets = $userResources?.[category]?.[method]
-    ? fhirDataService.getDatasetsForCategoryAndMethod(category, method)
+    ? fhirDataService.getDatasets(category, method)
     : [];
 
   let resourceResult: ResourceRetrieveEvent;

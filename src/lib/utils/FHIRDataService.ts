@@ -401,23 +401,26 @@ export class FHIRDataService {
     return datasetsInCategoryWithSource !== undefined;
   }
 
-  getDatasetsForCategory(category: string): Array<{ status: StateManager, collection: ResourceCollection}> {
+  getDatasets(category: string, method?: string, source?: string): Array<{ status: StateManager, collection: ResourceCollection}> {
     const userResources = get(this.userResources);
+    if (!userResources) return [];
+    if (!category) return [];
     const categoryContent = userResources?.[category];
     if (!categoryContent) return [];
-    const methodContent = Object.values(categoryContent);
-    const datasetsWithStatus = methodContent.map(methodSource => Object.values(methodSource)).flat();
-    const sortedDatasetsWithStatus = datasetsWithStatus.sort((a, b) => new Date((get(b.collection.patient))?.meta?.lastUpdated).getTime() - new Date((get(a.collection.patient))?.meta?.lastUpdated).getTime());
-    return sortedDatasetsWithStatus as Array<{ status: StateManager, collection: ResourceCollection}>;
-  }
-
-  getDatasetsForCategoryAndMethod(category: string, method: string): Array<{ status: StateManager, collection: ResourceCollection}> {
-    const userResources = get(this.userResources);
-    const categoryContent = userResources?.[category];
-    if (!categoryContent) return [];
+    let datasetsWithStatus;
+    if (method) {
     const methodContent = categoryContent[method];
     if (!methodContent) return [];
-    const datasetsWithStatus = Object.values(methodContent);
+      if (source) {
+        const sourceContent = methodContent[source];
+        if (!sourceContent) return [];
+        datasetsWithStatus = [sourceContent];
+      } else {
+        datasetsWithStatus = Object.values(methodContent);
+      }
+    } else {
+      datasetsWithStatus = Object.values(categoryContent).map(methodSource => Object.values(methodSource)).flat();
+    }
     const sortedDatasetsWithStatus = datasetsWithStatus.sort((a, b) => new Date((get(b.collection.patient))?.meta?.lastUpdated).getTime() - new Date((get(a.collection.patient))?.meta?.lastUpdated).getTime());
     return sortedDatasetsWithStatus as Array<{ status: StateManager, collection: ResourceCollection}>;
   }
