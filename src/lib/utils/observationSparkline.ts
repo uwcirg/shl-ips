@@ -41,27 +41,41 @@ export function getObservationNumericValue(observation: Observation): number | u
   return undefined;
 }
 
-// Key an Observation by its primary code coding (system|code) so that
-// observations sharing a code group together.
+// The unit a numeric value is expressed in. Differing units must not share a
+// series, since the y values wouldn't be comparable.
+function getObservationUnit(observation: Observation): string {
+  const q = observation.valueQuantity;
+  return q?.code ?? q?.unit ?? '';
+}
+
+// Key an Observation by its primary code coding and value unit (system|code|unit)
+// so that observations measuring the same thing in the same units group together.
 export function getObservationCodeKey(observation: Observation): string | undefined {
   const coding = observation.code?.coding?.find(c => c.code);
   if (!coding?.code) return undefined;
-  return `${coding.system ?? ''}|${coding.code}`;
+  return `${coding.system ?? ''}|${coding.code}|${getObservationUnit(observation)}`;
 }
 
 export interface SparklinePoint {
-  id: string;   // ResourceHelper tempId, used to highlight the current observation
-  y: number;    // numeric value
-  time: number; // effective date in ms, for ordering
+  id: string;      // unique id of the point's resource (ResourceHelper tempId when built from the list layer), used to highlight/select it
+  y: number;       // numeric value
+  time: number;    // effective date in ms, for ordering
+  source?: string; // source the observation came from, for per-point marking across merged sources
+}
+
+export interface SeriesItem {
+  id: string;
+  resource: Resource;
+  source?: string;
 }
 
 // Build a map from code-key to a date-sorted series of numeric points, across
-// all the given (Observation) resources.
-export function buildObservationSeriesMap(
-  resources: Resource[]
+// all the given items.
+export function buildObservationSeries(
+  items: SeriesItem[]
 ): Map<string, SparklinePoint[]> {
   const groups = new Map<string, SparklinePoint[]>();
-  for (const resource of resources) {
+  for (const { id, resource, source } of items) {
     if (resource.resourceType !== 'Observation') continue;
     const key = getObservationCodeKey(resource);
     if (!key) continue;
@@ -70,12 +84,19 @@ export function buildObservationSeriesMap(
     const date = getFHIRDateAndPrecision(resource, 'effective');
     const time = date ? date.date.getTime() : 0;
     if (!groups.has(key)) groups.set(key, []);
-    groups.get(key)!.push({ id: resource.id, y, time });
+    groups.get(key)!.push({ id, y, time, source });
   }
   for (const series of groups.values()) {
     series.sort((a, b) => a.time - b.time);
   }
   return groups;
+}
+
+// Convenience for callers that only have bare resources (keys points by resource.id).
+export function buildObservationSeriesMap(
+  resources: Resource[]
+): Map<string, SparklinePoint[]> {
+  return buildObservationSeries(resources.map(resource => ({ id: resource.id, resource })));
 }
 
 // The date-sorted series for a single value, or undefined when there aren't
