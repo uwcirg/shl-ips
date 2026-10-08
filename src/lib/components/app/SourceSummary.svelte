@@ -182,7 +182,7 @@
     padding-right: 0.5rem;
   }
   .see-all-overlay.scrollbar-overlay {
-    height: calc(100% - 0.6rem);
+    height: calc(100% - 0.8rem);
   }
 
 
