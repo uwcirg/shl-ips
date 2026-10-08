@@ -198,7 +198,7 @@ describe('FHIRDataService', () => {
     });
   });
 
-  describe('getDatasetsForCategory / getDatasetsForCategoryAndMethod', () => {
+  describe('getDatasets', () => {
     it('returns datasets sorted newest-first and scoped to category/method', () => {
       const service = new FHIRDataService(fakeAuth());
       const older = new ResourceCollection(datasetPatient('ds-old', 'labs', 'upload', 'src-old'));
@@ -212,16 +212,16 @@ describe('FHIRDataService', () => {
       service.addDatasetToUserResources(newer);
       service.addDatasetToUserResources(otherMethod);
 
-      const byCategory = service.getDatasetsForCategory('labs');
+      const byCategory = service.getDatasets('labs');
       expect(byCategory.map(d => d.collection)).toEqual([newer, otherMethod, older]);
 
-      const byCategoryAndMethod = service.getDatasetsForCategoryAndMethod('labs', 'upload');
+      const byCategoryAndMethod = service.getDatasets('labs', 'upload');
       expect(byCategoryAndMethod).toHaveLength(2);
       expect(byCategoryAndMethod[0].collection).toBe(newer);
       expect(byCategoryAndMethod[1].collection).toBe(older);
 
-      expect(service.getDatasetsForCategory('imaging')).toEqual([]);
-      expect(service.getDatasetsForCategoryAndMethod('labs', 'nonexistent')).toEqual([]);
+      expect(service.getDatasets('imaging')).toEqual([]);
+      expect(service.getDatasets('labs', 'nonexistent')).toEqual([]);
     });
   });
 
