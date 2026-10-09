@@ -49,6 +49,21 @@ describe('ReferenceIndex', () => {
     expect(index.referencedBy('P', 'Observation').map(r => r.rh.tempId)).toEqual(['O1']);
   });
 
+  it('resolves urn:uuid and absolute references through fullUrl', () => {
+    const fullUrlObs = rh({ resourceType: 'Observation', id: 'x' }, 'OX');
+    fullUrlObs.fullUrl = 'urn:uuid:1111';
+    const noIdObs = rh({ resourceType: 'Observation' }, 'ON');
+    noIdObs.fullUrl = 'http://example.org/fhir/Observation/zzz';
+    const referrer = rh({
+      resourceType: 'DiagnosticReport',
+      result: [{ reference: 'urn:uuid:1111' }, { reference: 'http://example.org/fhir/Observation/zzz' }]
+    }, 'REP');
+    const index = new ReferenceIndex([{ source: 'a', resources: [fullUrlObs, noIdObs, referrer] }]);
+    expect(index.resolve('urn:uuid:1111', 'a')?.rh.tempId).toBe('OX');
+    expect(index.referencesOf('REP').map(r => r.rh.tempId)).toEqual(['OX', 'ON']);
+    expect(index.resolve('urn:uuid:1111', 'b')).toBeUndefined();
+  });
+
   it('does not resolve across sources that reuse the same id', () => {
     const otherObs = rh({ resourceType: 'Observation', id: 'o1', valueInteger: 9 }, 'O1b');
     const index = new ReferenceIndex([

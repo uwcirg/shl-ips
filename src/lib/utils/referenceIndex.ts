@@ -50,9 +50,11 @@ export function collectReferences(resource: Resource): string[] {
 // them, and a reference is always written relative to its own source. Resources are
 // identified by ResourceHelper.tempId, the same key the categorized store uses.
 //
-// Note: ResourceHelper does not retain a bundle fullUrl, so urn:uuid references
-// (which only get rewritten at upload time) are not resolvable here.
+// References resolve by fullUrl when the ResourceHelper has one (bundle-local urn:uuid
+// references), and otherwise by their trailing Type/id. Resources collected without a
+// fullUrl can't be reached by urn:uuid references.
 export class ReferenceIndex {
+  #byFullUrl = new Map<string, IndexedResource>();     // `${source}|${fullUrl}` -> resource
   #byTypeId = new Map<string, IndexedResource>();      // `${source}|${type}/${id}` -> resource
   #byTempId = new Map<string, IndexedResource>();      // tempId -> resource
   #referencedBy = new Map<string, Set<string>>();      // target tempId -> tempIds of referrers
@@ -63,6 +65,9 @@ export class ReferenceIndex {
       for (const rh of resources) {
         const indexed = { source, rh };
         this.#byTempId.set(rh.tempId, indexed);
+        if (rh.fullUrl) {
+          this.#byFullUrl.set(`${source}|${rh.fullUrl}`, indexed);
+        }
         if (rh.resource.id) {
           this.#byTypeId.set(this.#key(source, rh.resource.resourceType, rh.resource.id), indexed);
         }
@@ -82,6 +87,8 @@ export class ReferenceIndex {
   }
 
   resolve(reference: string, fromSource: string): IndexedResource | undefined {
+    const byUrl = this.#byFullUrl.get(`${fromSource}|${reference}`);
+    if (byUrl) return byUrl;
     const typeId = parseTypeId(reference);
     if (!typeId) return undefined;
     return this.#byTypeId.get(this.#key(fromSource, ...typeId));
