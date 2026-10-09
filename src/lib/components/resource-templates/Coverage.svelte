@@ -29,7 +29,7 @@
   <br>
 {/if}
 {#if resource.type}
-  <CodeableConcept codeableConcept={resource.type} badge={false} />
+  <CodeableConcept codeableConcept={resource.type} />
 {/if}
 {#if hasChoiceDTField("period", resource)}
   <Date fields={choiceDTFields("period", resource)} /><br>
@@ -49,7 +49,7 @@
           <td>{classItem.name}</td>
           <td>{classItem.value}</td>
           <td>
-            <CodeableConcept codeableConcept={classItem.type} badge={false} bold={false} />
+            <CodeableConcept codeableConcept={classItem.type} bold={false} />
           </td>
         </tr>
       {/each}

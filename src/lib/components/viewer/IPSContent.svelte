@@ -18,57 +18,15 @@
     Resource
   } from "fhir/r4";
   import { download } from '$lib/utils/util.js';
+  import ResourceDisplay from '$lib/components/app/ResourceDisplay.svelte';
+  import SectionExtension from '$lib/components/resource-templates/SectionExtension.svelte';
+  import { RESOURCE_CONFIG } from '$lib/config/resource_config';
+  import { getResourceRenderInfo } from '$lib/stores/categorizedResources';
 
   export let bundle: Bundle;
-  export let mode: string;
+  export let displayMode: string; // 'app' renders resources, 'text' renders section narratives
+  export let codeBadges: 'always' | 'never' | 'advanced' = 'never';
 
-  import AdvanceDirective from '$lib/components/resource-templates/AdvanceDirective.svelte';
-  import AllergyIntolerance from '$lib/components/resource-templates/AllergyIntolerance.svelte';
-  import Condition from '$lib/components/resource-templates/Condition.svelte';
-  import Consent from '$lib/components/resource-templates/Consent.svelte';
-  import Device from '$lib/components/resource-templates/Device.svelte';
-  import DeviceUseStatement from '$lib/components/resource-templates/DeviceUseStatement.svelte';
-  import DiagnosticReport from '$lib/components/resource-templates/DiagnosticReport.svelte';
-  import Encounter from '$lib/components/resource-templates/Encounter.svelte';
-  import Goal from '$lib/components/resource-templates/Goal.svelte';
-  import Immunization from '$lib/components/resource-templates/Immunization.svelte';
-  import Location from '$lib/components/resource-templates/Location.svelte';
-  import Medication from '$lib/components/resource-templates/Medication.svelte';
-  import MedicationRequest from '$lib/components/resource-templates/MedicationRequest.svelte';
-  import MedicationStatement from '$lib/components/resource-templates/MedicationStatement.svelte';
-  import Observation from '$lib/components/resource-templates/Observation.svelte';
-  import Organization from '$lib/components/resource-templates/Organization.svelte';
-  import Patient from '$lib/components/resource-templates/Patient.svelte';
-  import Practitioner from '$lib/components/resource-templates/Practitioner.svelte';
-  import Procedure from '$lib/components/resource-templates/Procedure.svelte';
-  import OccupationalData from '$lib/components/resource-templates/OccupationalData.svelte';
-  import QuestionnaireResponse from '$lib/components/resource-templates/QuestionnaireResponse.svelte';
-  import SectionExtension from '$lib/components/resource-templates/SectionExtension.svelte';
-
-  const components: Record<string, any> = {
-    "AllergyIntolerance": AllergyIntolerance,
-    "Condition": Condition,
-    "Consent": Consent,
-    "Device" : Device,
-    "DeviceUseStatement": DeviceUseStatement,
-    "DiagnosticReport": DiagnosticReport,
-    "DocumentReference": AdvanceDirective,
-    "Encounter": Encounter,
-    "Goal": Goal,
-    "Immunization": Immunization,
-    "Location": Location,
-    "Medication": Medication,
-    "MedicationRequest": MedicationRequest,
-    "MedicationStatement": MedicationStatement,
-    "Observation": Observation,
-    "Organization": Organization,
-    "Patient": Patient,
-    "Practitioner": Practitioner,
-    "Procedure": Procedure,
-    "Occupational Data": OccupationalData,
-    "Advance Directives": AdvanceDirective,
-    "QuestionnaireResponse": QuestionnaireResponse
-  };
 
   interface IpsContent {
     section: CompositionSection;
@@ -116,12 +74,10 @@
             return getEntry(ips, entry.reference) as Resource;
           }
         }).filter((entry) => entry !== undefined) ?? [];
-      let useText = entries.filter((entry) => entry.resourceType in components).length === 0;
-
       let sectionContent = {
         section: section, // Composition.section
         entries: entries, // Resources from Composition.section.entry
-        useText: useText  // True when section contains unsupported resource types
+        useText: false    // True to show the section narrative instead of rendering its resources
       };
       content[title] = sectionContent;
     });
@@ -154,7 +110,6 @@
     });
     if (!result) {
       console.log(`missing reference ${fullUrl}`);
-      result = {};
     }
     return result;
   };
@@ -239,7 +194,7 @@
     <Accordion class="mt-3">
       <AccordionItem active class="resource-content">
         <h6 slot="header" class="my-2">{title}</h6>
-        {#if sectionContent.useText || mode === "text"}
+        {#if sectionContent.useText || displayMode === "text"}
           {#if sectionContent.section.text?.div}
             {@html sectionContent.section.text?.div}
           {:else}
@@ -267,16 +222,12 @@
                 <CardBody class={index > 0 ? "border-top" : ""}>
                   <Row style="overflow:hidden" class="d-flex justify-content-end align-content-center">
                     <Col class="overflow-auto justify-content-center align-items-center">
-                      {#if mode === "app" && resource.resourceType in components}
-                        <svelte:component
-                          this={components[resource.resourceType]}
-                          content={{resource: resource, entries: bundle.entry}}
-                        />
-                      {:else}
-                        {#if mode === "app"}
-                          {showInfoMessage(`Unsupported sections displayed using composition narratives`)};
-                        {/if}
-                      {/if}
+                      <ResourceDisplay
+                        {resource}
+                        renderInfo={getResourceRenderInfo(resource, RESOURCE_CONFIG)}
+                        entries={bundle.entry}
+                        codeBadges="advanced"
+                      />
                     </Col>
                     <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
                       <Button
