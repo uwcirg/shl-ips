@@ -57,7 +57,7 @@
 
   let datasets;
   $: datasets = $userResources?.[category]
-    ? fhirDataService.getDatasetsForCategory(category)
+    ? fhirDataService.getDatasets(category)
     : [];
   
   let methodList: string[];

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { download } from '$lib/utils/util.js';
-  import { createEventDispatcher, getContext } from 'svelte';
+  import { createEventDispatcher } from 'svelte';
   import { derived, type Readable, type Writable } from 'svelte/store';
   import {
     Accordion,
@@ -23,16 +23,15 @@
   import { ResourceHelper } from '$lib/utils/ResourceHelper.js';
   import type { ResourceCollection } from '$lib/utils/ResourceCollection.js';
   import { createCategorizedStore, type ResourceInput, type CategorizedResource } from '$lib/stores/categorizedResources';
-  import ResourceDisplay from '$lib/components/app/ResourceDisplay.svelte';
+  import ResourceRows from '$lib/components/app/ResourceRows.svelte';
 
   export let resourceCollection: ResourceCollection;
   export let scroll: boolean = true;
   export let submitting: boolean = false;
+  export let sections: boolean | undefined = undefined;
   
   const statusDispatch = createEventDispatcher<{ 'status-update': string }>();
   const errorDispatch = createEventDispatcher<{ error: string }>();
-
-  let mode: Writable<string> = getContext('mode');
 
   let reference: string;
   let selectedPatient = resourceCollection.selectedPatient;
@@ -83,6 +82,7 @@
   header={resourceType + ' JSON'}
   placement="end"
   title={resourceType + ' JSON'}
+  class="resource-json-offcanvas"
   style="display: flex;  overflow-y:hidden; height: 100dvh; width: fit-content; max-width: 80dvw; min-width: var(--bs-offcanvas-width);"
 >
   <Row class="d-flex" style="height: 100%">
@@ -116,75 +116,65 @@
 
 {#if $categorizedResourceStore}
   {@const allDataAsBundleEntries = Object.values($categorizedResourceStore).map(types => Object.values(types)).flat().map(cr => ({ resource: cr.rh.resource }))}
+  {#if sections || sections === undefined && Object.keys($categorizedResourceStore).length > 1}
   <Accordion stayOpen class="w-100">
-    {#if Object.keys($categorizedResourceStore).length > 0}
-      {#each Object.keys($categorizedResourceStore) as category}
-        {#if Object.keys($categorizedResourceStore[category]).length > 0}
-          <AccordionItem class="resource-content {scroll ? 'scroll' : ''} resource-list-accordion" active={Object.keys($categorizedResourceStore[category]).length <= 3}>
-            <span slot="header">
-              {category}
-              {#if category === 'Patients'}
-                <Badge class="mx-1" color={patientBadgeColor}>
-                  {patientCount}
-                </Badge>
-              {:else}
-                <Badge
-                  class="mx-1"
-                  color={Object.values($categorizedResourceStore[category]).filter(
-                    (resource) => resource.rh.include
-                  ).length == Object.keys($categorizedResourceStore[category]).length
+    {#each Object.keys($categorizedResourceStore) as category}
+      {#if Object.keys($categorizedResourceStore[category]).length > 0}
+        <AccordionItem class="resource-content {scroll ? 'scroll' : ''} resource-list-accordion" active={Object.keys($categorizedResourceStore[category]).length <= 3}>
+          <span slot="header">
+            {category}
+            {#if category === 'Patients'}
+              <Badge class="mx-1" color={patientBadgeColor}>
+                {patientCount}
+              </Badge>
+            {:else}
+              <Badge
+                class="mx-1"
+                color={Object.values($categorizedResourceStore[category]).filter(
+                  (resource) => resource.rh.include
+                ).length == Object.keys($categorizedResourceStore[category]).length
+                  ? 'primary'
+                  : Object.values($categorizedResourceStore[category]).filter(
+                        (resource) => resource.rh.include
+                      ).length == Object.keys($categorizedResourceStore[category]).length
                     ? 'primary'
                     : Object.values($categorizedResourceStore[category]).filter(
                           (resource) => resource.rh.include
-                        ).length == Object.keys($categorizedResourceStore[category]).length
-                      ? 'primary'
-                      : Object.values($categorizedResourceStore[category]).filter(
-                            (resource) => resource.rh.include
-                          ).length > 0
-                        ? 'info'
-                        : 'secondary'}
-                >
-                  {Object.values($categorizedResourceStore[category]).filter(
-                    (resource) => resource.rh.include
-                  ).length}
-                </Badge>
-              {/if}
-            </span>
-            {#each Object.values($categorizedResourceStore[category]).sort((a, b) => {
-              let value = sortResources(a, b);
-              return value;
-            }) as value, index}
-                <Row class={index > 0 ? "border-top pt-2 mt-2" : ""} style="overflow: hidden">
-                  <Col class="overflow-auto justify-content-center align-items-center">
-                    <ResourceDisplay
-                      resource={value.rh.resource}
-                      renderInfo={value.renderInfo}
-                      entries={allDataAsBundleEntries}
-                      codeBadges="advanced"
-                    />
-                  </Col>
-                  <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
-                    {#if $mode === 'advanced'}
-                      <Button
-                        size="sm"
-                        color="secondary"
-                        outline
-                        on:click={(event) => {
-                          event.stopPropagation();
-                          setJson(value.rh)
-                        }}
-                      >
-                        View
-                      </Button>
-                    {/if}
-                  </Col>
-                </Row>
-            {/each}
-          </AccordionItem>
-        {/if}
-      {/each}
-    {/if}
+                        ).length > 0
+                      ? 'info'
+                      : 'secondary'}
+              >
+                {Object.values($categorizedResourceStore[category]).filter(
+                  (resource) => resource.rh.include
+                ).length}
+              </Badge>
+            {/if}
+          </span>
+          <ResourceRows
+            resources={Object.values($categorizedResourceStore[category]).sort(sortResources)}
+            entries={allDataAsBundleEntries}
+            on:view={({ detail }) => setJson(detail)}
+          />
+        </AccordionItem>
+      {/if}
+    {/each}
   </Accordion>
+  {:else}
+    <!-- All resources in one list, regardless of category -->
+    {@const allResources = Object.values($categorizedResourceStore).flatMap((category) => Object.values(category).sort(sortResources))}
+    {#if allResources.length > 0}
+      <div
+        class="resource-content bg-body border rounded p-3 w-100"
+        style={scroll ? 'overflow: auto; max-height: 65vh' : ''}
+      >
+        <ResourceRows
+          resources={allResources}
+          entries={allDataAsBundleEntries}
+          on:view={({ detail }) => setJson(detail)}
+        />
+      </div>
+    {/if}
+  {/if}
 {/if}
 
 <style>
@@ -193,5 +183,13 @@
   }
   :global(div.resource-list-accordion:has(div.accordion-collapse.collapsing) > h2.accordion-header > button.accordion-button) {
     background-color: var(--bs-accordion-active-bg) !important;
+  }
+  /* Bootstrap stacks offcanvases below modals, but this one can be opened from inside one (e.g. the
+     import confirmation), so put it and its backdrop above them */
+  :global(.offcanvas.resource-json-offcanvas) {
+    z-index: 1060;
+  }
+  :global(body:has(.offcanvas.resource-json-offcanvas.show) .offcanvas-backdrop) {
+    z-index: 1059;
   }
 </style>
