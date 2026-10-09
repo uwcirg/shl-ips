@@ -19,7 +19,7 @@
   import IpsContent from "$lib/components/viewer/IPSContent.svelte";
 
   export let bundle: Bundle | undefined;
-  export let mode: string;
+  export let displayMode: string;
 
   let demoContent: string;
 
@@ -231,7 +231,7 @@
 
 {#if bundle}
 <Row>
-  <IpsContent {bundle} {mode} />
+  <IpsContent {bundle} {displayMode} codeBadges="always" />
 </Row>
 {/if}
 

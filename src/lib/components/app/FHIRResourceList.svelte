@@ -156,7 +156,12 @@
             }) as value, index}
                 <Row class={index > 0 ? "border-top pt-2 mt-2" : ""} style="overflow: hidden">
                   <Col class="overflow-auto justify-content-center align-items-center">
-                    <ResourceDisplay resource={value.rh.resource} renderInfo={value.renderInfo} entries={allDataAsBundleEntries} />
+                    <ResourceDisplay
+                      resource={value.rh.resource}
+                      renderInfo={value.renderInfo}
+                      entries={allDataAsBundleEntries}
+                      codeBadges="advanced"
+                    />
                   </Col>
                   <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
                     {#if $mode === 'advanced'}

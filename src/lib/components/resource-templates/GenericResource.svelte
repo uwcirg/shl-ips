@@ -106,10 +106,10 @@
       <CodeableConcept codeableConcept={title} />
     {/if}
   {:else if titleConcept}
-    <CodeableConcept codeableConcept={titleConcept} badge={false} />
+    <CodeableConcept codeableConcept={titleConcept} />
   {:else if concept?.length > 0}
     {#each concept as c}
-      <CodeableConcept codeableConcept={c} badge={false} />
+      <CodeableConcept codeableConcept={c} />
     {/each}
   {/if}
   {#if dateField}

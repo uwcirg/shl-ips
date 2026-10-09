@@ -112,10 +112,10 @@
             <Date fields={choiceDTFields("date", procedure)} />
           </td>
           <td>
-            <CodeableConcept codeableConcept={procedure.procedureCodeableConcept} badge={true} bold={false} />
+            <CodeableConcept codeableConcept={procedure.procedureCodeableConcept} bold={false} />
           </td>
           <td>
-            <CodeableConcept codeableConcept={procedure.type[0]} badge={false} bold={false} />
+            <CodeableConcept codeableConcept={procedure.type[0]} bold={false} />
           </td>
         </tr>
       {/each}
@@ -152,9 +152,9 @@
           {@const copayValuePieces = copayAmount?.value.toString()?.split('.')}
           {@const copayValueTruncated = `${copayValuePieces?.[0]}.${copayValuePieces?.[1]?.slice(0, 2)}`}
           <tr>
-            <td><CodeableConcept codeableConcept={item.productOrService} badge={false} bold={false} /></td>
+            <td><CodeableConcept codeableConcept={item.productOrService} bold={false} /></td>
             <td><Date fields={choiceDTFields("serviced", item)} /></td>
-            <td><CodeableConcept codeableConcept={item.locationCodeableConcept} badge={false} bold={false} /></td>
+            <td><CodeableConcept codeableConcept={item.locationCodeableConcept} bold={false} /></td>
             <td>
               {#if copayAmount}
                 {!copayAmount || copayAmount.currency == 'USD' ? '$' + copayValueTruncated : copayValueTruncated + ' ' + copayAmount.currency}
@@ -190,7 +190,7 @@
           <td>{classItem.name}</td>
           <td>{classItem.value}</td>
           <td>
-            <CodeableConcept codeableConcept={classItem.type} badge={false} bold={false} />
+            <CodeableConcept codeableConcept={classItem.type} bold={false} />
           </td>
         </tr>
       {/each}
