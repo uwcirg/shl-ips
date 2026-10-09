@@ -12,7 +12,7 @@
 </script>
 
 {#if unit.kind === 'group' && GROUP_COMPONENTS[unit.groupType]}
-  <svelte:component this={GROUP_COMPONENTS[unit.groupType]} {unit} {advanced} {onView} />
+  <svelte:component this={GROUP_COMPONENTS[unit.groupType]} {unit} {entries} {advanced} {onView} />
 {:else if unit.kind === 'single'}
   <ResourceDisplay resource={unit.item.rh.resource} renderInfo={unit.item.renderInfo} {entries} />
 {:else}

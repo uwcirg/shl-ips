@@ -105,9 +105,10 @@ export function createCategorizedStore(
   const getRenderInfo = (resource: Resource) => getResourceRenderInfo(resource, config, categorize);
   const sortResources = (a: CategorizedResource, b: CategorizedResource) => sort(a.rh.resource, b.rh.resource);
 
-  // A unit sorts (and is categorized) by its primary resource: the single resource,
-  // or the first member of a group once the members are sorted.
-  const primaryOf = (unit: DisplayUnit) => unit.kind === 'single' ? unit.item : unit.members[0];
+  // A unit sorts (and is categorized) by its primary resource: the single resource, a group's
+  // anchor if it has one, or else the first member of the group once the members are sorted.
+  const primaryOf = (unit: DisplayUnit) =>
+    unit.kind === 'single' ? unit.item : (unit.anchor ?? unit.members[0]);
   const sortUnits = (a: DisplayUnit, b: DisplayUnit) => sortResources(primaryOf(a), primaryOf(b));
 
   // Group across all categories, then bucket each unit by its primary resource's category

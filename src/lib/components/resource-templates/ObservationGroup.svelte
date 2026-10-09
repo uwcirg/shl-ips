@@ -13,6 +13,9 @@
   import Date from '$lib/components/resource-templates/Date.svelte';
 
   export let unit: GroupUnit<ObservationSeriesData>;
+  // Part of the group template contract; this template resolves everything from the unit itself
+  // svelte-ignore unused-export-let
+  export let entries: unknown[] = [];
   // Called with a member's helper when the "View" button is pressed (advanced mode only)
   export let onView: ((rh: ResourceHelper) => void) | undefined = undefined;
   export let advanced = false;

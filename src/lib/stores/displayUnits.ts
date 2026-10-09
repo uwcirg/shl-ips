@@ -14,7 +14,7 @@ lives on the resource, so every appearance of it stays in sync.
 
 import type { CategorizedResource } from '$lib/stores/categorizedResources';
 import type { ReferenceIndex } from '$lib/utils/referenceIndex';
-import type { Observation } from 'fhir/r4';
+import type { DiagnosticReport, Observation } from 'fhir/r4';
 import {
   buildObservationPanels,
   buildObservationSeries,
@@ -32,7 +32,8 @@ export interface GroupUnit<T = unknown> {
   kind: 'group';
   groupType: string;               // which grouper made it; picks the template to render
   key: string;                     // stable per-group key, unique within a groupType
-  members: CategorizedResource[];  // sorted by the store's sort, so members[0] is the primary
+  members: CategorizedResource[];  // sorted by the store's sort; members[0] is the primary unless there's an anchor
+  anchor?: CategorizedResource;    // resource the group is built around (e.g. a DiagnosticReport); sets category and sort position
   data: T;                         // grouper-specific payload for the template
 }
 
@@ -41,6 +42,7 @@ export type DisplayUnit = SingleUnit | GroupUnit;
 export interface GroupResult<T = unknown> {
   key: string;
   members: CategorizedResource[];
+  anchor?: CategorizedResource;
   data: T;
 }
 
@@ -89,7 +91,50 @@ export const observationSeriesGrouper: Grouper<ObservationSeriesData> = {
   }
 };
 
-export const defaultGroupers: Grouper[] = [observationSeriesGrouper];
+export const DIAGNOSTIC_REPORT = 'diagnosticReport';
+
+export interface DiagnosticReportData {
+  report: CategorizedResource;
+  results: CategorizedResource[]; // the referenced Observations, in the report's own result order
+  unresolved: string[];           // display text of results that couldn't be resolved
+}
+
+// A DiagnosticReport plus the Observations its result[] references. The report is the anchor,
+// so the group sorts and categorizes as the report. An Observation referenced by several
+// reports appears in each. Reports with no resolvable Observation results stay single rows.
+export const diagnosticReportGrouper: Grouper<DiagnosticReportData> = {
+  type: DIAGNOSTIC_REPORT,
+  group(items, index) {
+    const byTempId = new Map(items.map(item => [item.rh.tempId, item]));
+    const results: GroupResult<DiagnosticReportData>[] = [];
+    for (const item of items) {
+      if (item.rh.resource.resourceType !== 'DiagnosticReport') continue;
+      const report = item.rh.resource as DiagnosticReport;
+      const observations = new Map<string, CategorizedResource>();
+      const unresolved: string[] = [];
+      for (const ref of report.result ?? []) {
+        const target = ref.reference ? index.resolve(ref.reference, item.source) : undefined;
+        const resolved = target ? byTempId.get(target.rh.tempId) : undefined;
+        if (resolved?.rh.resource.resourceType === 'Observation') {
+          observations.set(resolved.rh.tempId, resolved);
+        } else if (ref.display) {
+          unresolved.push(ref.display);
+        }
+      }
+      if (observations.size === 0) continue;
+      const resultItems = [...observations.values()];
+      results.push({
+        key: `report:${item.rh.tempId}`,
+        members: [item, ...resultItems],
+        anchor: item,
+        data: { report: item, results: resultItems, unresolved }
+      });
+    }
+    return results;
+  }
+};
+
+export const defaultGroupers: Grouper[] = [diagnosticReportGrouper, observationSeriesGrouper];
 
 export function buildDisplayUnits(
   items: CategorizedResource[],
@@ -109,7 +154,7 @@ export function buildDisplayUnits(
       const members = result.members.filter(m => !seen.has(m.rh.tempId) && seen.add(m.rh.tempId));
       if (members.length < 2) continue;
       members.forEach(m => grouped.add(m.rh.tempId));
-      units.push({ kind: 'group', groupType: grouper.type, key: result.key, members, data: result.data });
+      units.push({ kind: 'group', groupType: grouper.type, key: result.key, members, anchor: result.anchor, data: result.data });
     }
   }
   for (const item of items) {
