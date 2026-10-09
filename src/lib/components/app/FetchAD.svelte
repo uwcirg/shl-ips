@@ -20,7 +20,6 @@
   import DemographicForm from '$lib/components/form/DemographicForm.svelte';
   import type { UserDemographics } from '$lib/utils/types';
   import { writable, type Writable } from 'svelte/store';
-  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import FHIRDataService from '$lib/utils/FHIRDataService';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
@@ -102,7 +101,6 @@
 
   const CATEGORY = CATEGORIES.ADVANCE_DIRECTIVES;
   const METHOD = METHODS.ADVANCE_DIRECTIVES_SEARCH;
-  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let selectedSource = "Current User";
   let fetchError = '';
@@ -456,7 +454,7 @@
   }
 </script>
 
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, sources[selectedSource].url, prepareIps)}>
+<form on:submit|preventDefault={() => prepareIps()}>
   <Label>Select a source to search:</Label>
   <FormGroup>
     <Row>
@@ -490,5 +488,4 @@
     </Row>
   {/if}
 </form>
-<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 <span class="text-danger">{fetchError}</span>

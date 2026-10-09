@@ -7,7 +7,7 @@ import {
   METHOD_SYSTEM,
   SOURCE_NAME_SYSTEM
 } from "$lib/config/config";
-import { assignPatientReference, constructPatientResource } from "$lib/utils/util";
+import { assignPatientReference, constructPatientResource, PATIENT_REFERENCE_FIELDS } from "$lib/utils/util";
 
 class ReferenceMap {
   #map = new Map<string, string>(); // key: JSON.stringify([resourceType, id]) or raw fullUrl string -> new fullUrl
@@ -139,7 +139,13 @@ function preserveSourceIdentifiers(entries: BundleEntry[], source: string) {
       return entry;
     }
     const system = sourceIdSystem(source, entry.resource.resourceType);
-    if (entry.resource.identifier && entry.resource.identifier.find(identifier => identifier.system === system)) {
+    if (entry.resource.identifier
+      && (
+        entry.resource.identifier.length
+        && entry.resource.identifier.find(identifier => identifier.system === system)
+        || !entry.resource.identifier.length
+      )
+    ) {
       return entry;
     }
     entry.resource.identifier = entry.resource.identifier || [];
@@ -260,29 +266,77 @@ function findFhirReferencePaths(resource: Resource): string[] {
   return results;
 }
 
-function convertToFullUrlReference(obj: any, path: string, referenceMap: ReferenceMap) {
+function locateReference(obj: any, path: string): { target: any, last: string } {
   const parts = path.replace(/\[(\d+)\]/g, '.$1').split('.').filter(Boolean);
   const last = parts.pop()!;
   const target = parts.reduce((o, k) => o[k], obj);
+  return { target, last };
+}
+
+// Contained references ("#id") resolve within their own resource, so they are never external
+function isUnresolvedReference(reference: string, referenceMap: ReferenceMap): boolean {
+  return !reference.startsWith('#') && !referenceMap.resolve(reference);
+}
+
+// Patient-linked fields are overwritten with the dataset's Patient by assignEntryPatientReferences
+function isPatientLinkedPath(path: string): boolean {
+  return (PATIENT_REFERENCE_FIELDS as readonly string[]).includes(path.split(/[.[]/)[0]);
+}
+
+// Rewrites a reference to its new fullUrl. A reference whose target isn't part of this upload
+// can't be kept, since the FHIR server rejects external references (and a urn: reference that
+// doesn't resolve within the transaction rejects the whole transaction). Such a reference is
+// dropped, keeping any display/identifier on the Reference. Returns the Reference object if it
+// had its reference dropped, so it can be pruned if nothing else remains in it.
+function convertToFullUrlReference(obj: any, path: string, referenceMap: ReferenceMap): object | undefined {
+  const { target, last } = locateReference(obj, path);
   const current: string = target[last];
   const newReference = referenceMap.resolve(current);
   if (newReference) {
     target[last] = newReference;
     return;
   }
-  // A urn:uuid:/urn:oid: reference must resolve to a fullUrl within this same transaction bundle,
-  // or the FHIR server will reject the whole transaction. Since we can't resolve it (the target
-  // resource isn't part of this upload), drop the reference rather than send a broken placeholder.
-  if (current.startsWith('urn:')) {
-    console.warn(`convertToFullUrlReference: dropping unresolvable reference "${current}" at ${obj.resourceType}/${obj.id}.${path}`);
-    delete target[last];
+  if (!isUnresolvedReference(current, referenceMap) || isPatientLinkedPath(path)) {
+    return;
+  }
+  console.warn(`convertToFullUrlReference: dropping unresolvable reference "${current}" at ${obj.resourceType}/${obj.id}.${path}`);
+  delete target[last];
+  return target;
+}
+
+// Remove Reference objects (and arrays left empty by that) that had nothing but their reference
+function pruneEmptyReferences(node: any, dropped: Set<object>) {
+  if (!node || typeof node !== 'object') return;
+  const isEmptyDropped = (item: any) => dropped.has(item) && Object.keys(item).length === 0;
+  for (const [key, value] of Object.entries(node)) {
+    if (Array.isArray(value)) {
+      value.forEach(item => pruneEmptyReferences(item, dropped));
+      const kept = value.filter(item => !isEmptyDropped(item));
+      if (kept.length === 0 && value.length > 0) {
+        delete node[key];
+      } else if (kept.length !== value.length) {
+        node[key] = kept;
+      }
+    } else {
+      pruneEmptyReferences(value, dropped);
+      if (isEmptyDropped(value)) {
+        delete node[key];
+      }
+    }
   }
 }
 
 function convertToFullUrlReferences(entry: NormalizedBundleEntry, referenceMap: ReferenceMap) {
   const paths = findFhirReferencePaths(entry.resource);
+  const dropped = new Set<object>();
   for (const path of paths) {
-    convertToFullUrlReference(entry.resource, path, referenceMap);
+    const droppedFrom = convertToFullUrlReference(entry.resource, path, referenceMap);
+    if (droppedFrom) {
+      dropped.add(droppedFrom);
+    }
+  }
+  if (dropped.size) {
+    pruneEmptyReferences(entry.resource, dropped);
   }
 }
 

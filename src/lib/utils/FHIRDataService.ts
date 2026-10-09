@@ -27,6 +27,12 @@ import { prepareImportedResources, entriesToResources, reconcileResourcesWithOri
 import type { NormalizedBundleEntry, NormalizedIdEntry } from "$lib/utils/importNormalization";
 import { extractResourcesFromQuestionnaireResponse } from "./sdcClient";
 
+export interface PreparedImport {
+  dataset: ResourceRetrieveEvent;
+  entries: NormalizedIdEntry[];
+  resources: Resource[];
+}
+
 export class FHIRServiceError extends Error {
   constructor(
     userMessage: string,
@@ -562,13 +568,15 @@ export class FHIRDataService {
     }
   }
 
-  async addOrReplaceDataset(dataset: ResourceRetrieveEvent) {
-    // The following should be moved to the upload handler, to allow for import confirmation prior to upload.
-    // The output should be a ResourceRetrieveEvent with the updated resource set.
-    let normalizedImportEntries: NormalizedIdEntry[] = prepareImportedResources(dataset, get(this.masterPatient).resource);
-    let resources: Resource[] = entriesToResources(normalizedImportEntries);
+  /**
+   * First stage of an import: normalizes the imported resources and runs any server-side
+   * extraction. Nothing is uploaded, so the result can be shown to the user for confirmation
+   * and then passed to addOrReplaceDataset.
+   */
+  async prepareImport(dataset: ResourceRetrieveEvent): Promise<PreparedImport> {
+    let entries: NormalizedIdEntry[] = prepareImportedResources(dataset, get(this.masterPatient).resource);
+    let resources: Resource[] = entriesToResources(entries);
 
-    // Handle questionnaire responses (if moved to upload handler, maybe move extract function?)
     if (resources.some((resource) => resource.resourceType === "QuestionnaireResponse")) {
       // Before adding the dataset, try running $extract on each QuestionnaireResponse (which isn't in
       // the FHIR server yet) and fold the extracted resources into the bundle.
@@ -577,10 +585,17 @@ export class FHIRDataService {
         resources = [...resources, ...extractedResources];
       }
     }
-    
-    // User input happens, adds/removes/updates resources, confirms dataset...
+    return { dataset, entries, resources };
+  }
 
-    // Re-normalize dataset and pass along as fresh ResourceRetrieveEvent
+  /**
+   * Second stage of an import: finalizes and uploads the dataset. If the import was not already
+   * prepared (and confirmed) by the caller via prepareImport, it is prepared here.
+   */
+  async addOrReplaceDataset(dataset: ResourceRetrieveEvent, prepared?: PreparedImport) {
+    const { entries: normalizedImportEntries, resources } = prepared ?? await this.prepareImport(dataset);
+
+    // Re-normalize the (possibly user-reviewed) dataset and pass along as fresh ResourceRetrieveEvent
     let renormalizedConfirmedImportEntries = prepareImportedResources({
       category: dataset.category,
       method: dataset.method,
@@ -588,7 +603,6 @@ export class FHIRDataService {
       sourceName: dataset.sourceName,
       resources: reconcileResourcesWithOriginalEntries(normalizedImportEntries, resources) as BundleEntry[],
     }, get(this.masterPatient).resource);
-    // End pre-user-review setup process
 
     // Finish pre-upload normalization (add consistent fullUrls and use them to update all references)
     const finalEntries = finalizeForUpload(renormalizedConfirmedImportEntries);
@@ -656,6 +670,7 @@ export class FHIRDataService {
 
     try {
       if (existingDataset) {
+        existingDataset.status.set({ state: StateManager.State.IDLE });
         await this.deleteDatasetFromServer(dataset.category, dataset.method, dataset.source);
       }
     } catch(error) {

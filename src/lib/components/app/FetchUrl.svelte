@@ -16,7 +16,6 @@
   import { getContext, onMount, onDestroy, createEventDispatcher } from 'svelte';
   import { PATIENT_IPS, EXAMPLE_IPS, IPS_DEFAULT, BEARER_AUTHORIZATION } from '$lib/config/config';
   import type { SHCRetrieveEvent, IAuthService, IPSRetrieveEvent, ResourceRetrieveEvent } from '$lib/utils/types';
-  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { getEntriesFromIPS, isIPSBundle } from '$lib/utils/util';
   import { getEntries } from '$lib/utils/importNormalization';
   //import { normalizeGad7QuestionnaireResponses } from '$lib/utils/sdcClient';
@@ -36,7 +35,6 @@
 
   const CATEGORY = CATEGORIES.PROVIDER_HEALTH_RECORD;
   const METHOD = METHODS.PROVIDER_HEALTH_RECORD_URL;
-  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let summaryUrls = EXAMPLE_IPS;
   let defaultUrl = summaryUrls[IPS_DEFAULT];
@@ -187,7 +185,7 @@
   }
 </script>
 
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, getSourceUrl(summaryUrlValidated), prepareIps)}>
+<form on:submit|preventDefault={() => prepareIps()}>
   <FormGroup>
     <Dropdown {isOpen} toggle={() => {isOpen = !isOpen; updateMenuPosition();}}>
       <DropdownToggle tag="div" class="d-inline-block" style="width:100%">
@@ -242,6 +240,5 @@
     </Col>
   </Row>
 </form>
-<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 <span class="text-danger">{fetchError}</span>
   

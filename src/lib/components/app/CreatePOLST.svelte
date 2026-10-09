@@ -17,7 +17,6 @@
   import { PDFDocument } from 'pdf-lib'
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
   import FHIRDataService from '$lib/utils/FHIRDataService';
-  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
 
   export let disabled = false;
@@ -34,7 +33,6 @@
     url: window.location.origin,
     name: 'Custom POLST'
   };
-  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
   let demographics: UserDemographics = get(fhirDataService.demographics);
@@ -334,7 +332,7 @@
 
 </script>
 
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, SOURCE.url, submit)}>
+<form on:submit|preventDefault={() => submit()}>
   <p>To prepare a new POLST form, specify your preferences below.</p>
   <DemographicForm demographics={userFormDemographics} show={['first', 'last', 'gender', 'dob', 'phone']} />
   <Row>
@@ -507,4 +505,3 @@
     </Row>
   {/if}
 </form>
-<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>

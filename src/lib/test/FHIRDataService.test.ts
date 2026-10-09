@@ -564,6 +564,69 @@ describe('FHIRDataService', () => {
     });
   });
 
+  describe('prepareImport', () => {
+    const event = (resources: any[]) => ({
+      resources,
+      category: 'labs',
+      method: 'upload',
+      source: 'src-1',
+      sourceName: 'Src One'
+    });
+
+    it('normalizes the import without uploading or touching the network', async () => {
+      const service = new FHIRDataService(fakeAuth());
+      service.setMasterPatient(taggedPatient({ id: 'master-1' }));
+
+      const prepared = await service.prepareImport(event([{ resourceType: 'Observation', id: 'obs-1' }]));
+
+      expect(prepared.dataset.source).toBe('src-1');
+      expect(prepared.resources.map((r) => r.resourceType).sort()).toEqual(['Observation', 'Patient']);
+      expect(prepared.entries).toHaveLength(prepared.resources.length);
+      expect(uploadBundleEntriesMock).not.toHaveBeenCalled();
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(service.datasetExists('labs', 'upload', 'src-1')).toBe(false);
+    });
+
+    it('folds resources extracted from QuestionnaireResponses into the result', async () => {
+      const service = new FHIRDataService(fakeAuth());
+      service.setMasterPatient(taggedPatient({ id: 'master-1' }));
+      const extracted = { resourceType: 'Observation', id: 'extracted-1' } as any;
+      const extractSpy = vi
+        .spyOn(service, 'extractResourcesFromQuestionnaireResponses')
+        .mockResolvedValue([extracted]);
+
+      const prepared = await service.prepareImport(
+        event([{ resourceType: 'QuestionnaireResponse', id: 'qr-1', status: 'completed' }])
+      );
+
+      expect(extractSpy).toHaveBeenCalledTimes(1);
+      expect(prepared.resources).toContain(extracted);
+      expect(prepared.resources.some((r) => r.resourceType === 'QuestionnaireResponse')).toBe(true);
+    });
+
+    it('keeps the normalized resources when extraction yields nothing', async () => {
+      const service = new FHIRDataService(fakeAuth());
+      service.setMasterPatient(taggedPatient({ id: 'master-1' }));
+      vi.spyOn(service, 'extractResourcesFromQuestionnaireResponses').mockResolvedValue(undefined);
+
+      const prepared = await service.prepareImport(
+        event([{ resourceType: 'QuestionnaireResponse', id: 'qr-1', status: 'completed' }])
+      );
+
+      expect(prepared.resources.map((r) => r.resourceType).sort()).toEqual(['Patient', 'QuestionnaireResponse']);
+    });
+
+    it('does not attempt extraction when there are no QuestionnaireResponses', async () => {
+      const service = new FHIRDataService(fakeAuth());
+      service.setMasterPatient(taggedPatient({ id: 'master-1' }));
+      const extractSpy = vi.spyOn(service, 'extractResourcesFromQuestionnaireResponses');
+
+      await service.prepareImport(event([{ resourceType: 'Observation', id: 'obs-1' }]));
+
+      expect(extractSpy).not.toHaveBeenCalled();
+    });
+  });
+
   describe('addOrReplaceDataset', () => {
     function transactionResponseFor(patientReference: string) {
       return { resourceType: 'Bundle', entry: [{ response: { location: `${patientReference}/_history/1` } }] };
@@ -604,6 +667,40 @@ describe('FHIRDataService', () => {
         'Observation',
         'Patient'
       ]);
+    });
+
+    it('uploads a previously prepared import, including user changes, without preparing again', async () => {
+      const service = new FHIRDataService(fakeAuth());
+      service.setMasterPatient(taggedPatient({ id: 'master-1' }));
+
+      uploadBundleEntriesMock.mockResolvedValue(transactionResponseFor('Patient/new-1'));
+      getPatientReferenceFromTransactionResponseMock.mockResolvedValue('Patient/new-1');
+      fetchMock
+        .mockResolvedValueOnce(jsonResponse(taggedPatient({ id: 'master-1' }))) // link PUT
+        .mockResolvedValueOnce(
+          jsonResponse({ entry: [{ resource: datasetPatient('new-1', 'labs', 'upload', 'src-1', 'Src One') }] })
+        ); // $everything pull-back
+
+      const dataset = {
+        resources: [{ resourceType: 'Observation', id: 'obs-1' } as any],
+        category: 'labs',
+        method: 'upload',
+        source: 'src-1',
+        sourceName: 'Src One'
+      };
+      const prepared = await service.prepareImport(dataset);
+      const prepareSpy = vi.spyOn(service, 'prepareImport');
+
+      // Simulate the review step changing the resource list
+      prepared.resources = [...prepared.resources, { resourceType: 'Observation', id: 'obs-2' } as any];
+
+      await service.addOrReplaceDataset(dataset, prepared);
+
+      expect(prepareSpy).not.toHaveBeenCalled();
+      const uploadedEntries = uploadBundleEntriesMock.mock.calls[0][0];
+      const uploadedIds = uploadedEntries.map((e: any) => e.resource.id);
+      expect(uploadedIds).toEqual(expect.arrayContaining(['obs-1', 'obs-2']));
+      expect(uploadedEntries.every((e: any) => e.fullUrl?.startsWith('urn:uuid:'))).toBe(true);
     });
 
     it('marks the optimistic dataset as errored (without removing it) when the upload fails', async () => {
