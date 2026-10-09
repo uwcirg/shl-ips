@@ -13,6 +13,8 @@ import type { IAuthService } from '$lib/utils/types';
 export class AuthService implements IAuthService {
   private userManager: UserManager;
   protected redirect_url: string = "";
+  // While true (public pages probing for a session), auth failures must not redirect
+  private quiet: boolean = false;
 
   private _user: Writable<User | null> = writable(null);
   public readonly user: Readable<User | null> = derived(this._user, ($user) => $user);
@@ -47,11 +49,11 @@ export class AuthService implements IAuthService {
     });
     this.userManager.events.addSilentRenewError((error: Error) => {
       console.error('Silent renew failed', error);
-      this.login();
+      if (!this.quiet) this.login();
     });
     this.userManager.events.addAccessTokenExpired(() => {
       // Safety net in case automaticSilentRenew's own retry didn't recover in time.
-      this.login();
+      if (!this.quiet) this.login();
     });
   }
 
@@ -165,9 +167,12 @@ export class AuthService implements IAuthService {
    * there is no session or it can't be reached in time.
    */
   async restoreSession(timeoutMs: number = 4000): Promise<boolean> {
+    this.quiet = true;
     try {
-      if (await this.userManager.getUser()) {
-        return await this.isAuthenticated() ?? false;
+      const stored = await this.userManager.getUser();
+      if (stored && !stored.expired) {
+        this.storeUser(stored);
+        return true;
       }
       const user = await Promise.race([
         this.userManager.signinSilent(),
@@ -175,6 +180,7 @@ export class AuthService implements IAuthService {
       ]);
       if (!user) {
         console.warn(`restoreSession: silent sign-in did not complete within ${timeoutMs}ms`);
+        await this.discardStaleUser();
         return false;
       }
       this.storeUser(user);
@@ -185,9 +191,20 @@ export class AuthService implements IAuthService {
     } catch (error) {
       // login_required etc: simply not signed in
       console.warn('restoreSession: silent sign-in failed', error);
-      this.userManager.clearStaleState();
+      await this.discardStaleUser();
       return false;
+    } finally {
+      this.quiet = false;
     }
+  }
+
+  private async discardStaleUser(): Promise<void> {
+    try {
+      await this.userManager.removeUser();
+    } catch (e) {
+      // nothing to remove
+    }
+    this.storeUser(null as unknown as User);
   }
 
   async renewToken(): Promise<User | null> {
