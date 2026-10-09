@@ -96,7 +96,7 @@
       return;
     }
     try {
-      authenticated = !!(await authService.isAuthenticated()) || await authService.restoreSession();
+      authenticated = await authService.restoreSession();
     } catch (e) {
       authenticated = false;
     }
