@@ -34,6 +34,8 @@ import type { Resource } from 'fhir/r4';
 import type { ResourceHelper } from '$lib/utils/ResourceHelper';
 import { RESOURCE_CONFIG as defaultResourceConfig, RESOURCE_TYPE_FALLBACK_KEY } from '$lib/config/resource_config';
 import { getFHIRDateAndPrecision } from '$lib/utils/util';
+import { ReferenceIndex } from '$lib/utils/referenceIndex';
+import { buildDisplayUnits, defaultGroupers, type DisplayUnit, type Grouper } from '$lib/stores/displayUnits';
 
 export type ResourceInput = Array<{ source: string, resources: ResourceHelper[] }>;
 
@@ -45,6 +47,7 @@ export interface CategorizedStoreOptions {
   config?: ResourceConfig;
   categorize?: CategorizeFn;
   sort?: SortFn;
+  groupers?: Grouper[];
 }
 
 export type RenderMode = 'component' | 'text' | 'raw';
@@ -63,6 +66,7 @@ export interface CategorizedResource {
 }
 
 export type CategoryMap = Record<CategoryName, Record<ResourceHelperId, CategorizedResource>>;
+export type UnitMap = Record<CategoryName, DisplayUnit[]>;
 
 // Returns both the store and a bound getRenderInfo
 export function createCategorizedStore(
@@ -70,12 +74,16 @@ export function createCategorizedStore(
   options: CategorizedStoreOptions = {}):
   {
     store: Readable<CategoryMap>,
+    referenceIndex: Readable<ReferenceIndex>,
+    unitsStore: Readable<UnitMap>,
     getRenderInfo: (resource: Resource) => ResourceRenderInfo
     sortResources: (a: Resource, b: Resource) => number
+    sortUnits: (a: DisplayUnit, b: DisplayUnit) => number
   } {
   const config = options.config ?? defaultResourceConfig;
   const categorize = options.categorize ?? defaultCategorize;
   const sort = options.sort ?? ((a, b) => defaultSort(a, b, config));
+  const groupers = options.groupers ?? defaultGroupers;
 
   const store = derived(input, ($input) => {
     // categorization + sorting using injected fns
@@ -92,10 +100,33 @@ export function createCategorizedStore(
     });
     return categories;
   });
+  // Built once per input change, shared by groupers and templates instead of per-row lookups
+  const referenceIndex = derived(input, ($input) => new ReferenceIndex($input));
   const getRenderInfo = (resource: Resource) => getResourceRenderInfo(resource, config, categorize);
   const sortResources = (a: CategorizedResource, b: CategorizedResource) => sort(a.rh.resource, b.rh.resource);
 
-  return { store, getRenderInfo, sortResources };
+  // A unit sorts (and is categorized) by its primary resource: the single resource,
+  // or the first member of a group once the members are sorted.
+  const primaryOf = (unit: DisplayUnit) => unit.kind === 'single' ? unit.item : unit.members[0];
+  const sortUnits = (a: DisplayUnit, b: DisplayUnit) => sortResources(primaryOf(a), primaryOf(b));
+
+  // Group across all categories, then bucket each unit by its primary resource's category
+  const unitsStore = derived([store, referenceIndex], ([$store, $index]) => {
+    const items = Object.values($store).flatMap(category => Object.values(category));
+    const units = buildDisplayUnits(items, $index, groupers);
+    units.forEach(unit => {
+      if (unit.kind === 'group') unit.members.sort(sortResources);
+    });
+    const unitMap: UnitMap = {};
+    units.forEach(unit => {
+      const category = categorize(primaryOf(unit).rh.resource, config);
+      (unitMap[category] ??= []).push(unit);
+    });
+    Object.values(unitMap).forEach(list => list.sort(sortUnits));
+    return unitMap;
+  });
+
+  return { store, referenceIndex, unitsStore, getRenderInfo, sortResources, sortUnits };
 }
 
 // Exported so callers can compose their own sort/categorize fns from these primitives
