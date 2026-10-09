@@ -520,11 +520,20 @@ describe('diffDataset', () => {
 
   it('treats a changed value, display, or nested text as an update', () => {
     const make = (extra: any) => ({ ...obs('x', [srcId('Observation', 'a')]), code: { text: 'Weight' }, ...extra });
-    const existing = [make({ valueString: 'a', subject: { display: 'Jane' } })];
+    const existing = [make({ valueString: 'a', performer: [{ display: 'Dr. Jane' }] })];
 
-    expect(diffDataset([make({ valueString: 'b', subject: { display: 'Jane' } })], existing, matcher).updated).toHaveLength(1);
-    expect(diffDataset([make({ valueString: 'a', subject: { display: 'Janet' } })], existing, matcher).updated).toHaveLength(1);
-    expect(diffDataset([make({ valueString: 'a', subject: { display: 'Jane' }, code: { text: 'Height' } })], existing, matcher).updated).toHaveLength(1);
+    expect(diffDataset([make({ valueString: 'b', performer: [{ display: 'Dr. Jane' }] })], existing, matcher).updated).toHaveLength(1);
+    expect(diffDataset([make({ valueString: 'a', performer: [{ display: 'Dr. Janet' }] })], existing, matcher).updated).toHaveLength(1);
+    expect(diffDataset([make({ valueString: 'a', performer: [{ display: 'Dr. Jane' }], code: { text: 'Height' } })], existing, matcher).updated).toHaveLength(1);
+  });
+
+  it('ignores a changed patient-linked field, since upload replaces it with a bare reference to the Patient', () => {
+    const make = (subject: any) => ({ ...obs('x', [srcId('Observation', 'a')]), valueString: 'a', subject });
+
+    const diff = diffDataset([make({ reference: 'Patient/1', display: 'Jane' })], [make({ reference: 'Patient/2' })], matcher);
+
+    expect(diff.unchanged).toHaveLength(1);
+    expect(diff.updated).toEqual([]);
   });
 });
 
