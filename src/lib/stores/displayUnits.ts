@@ -14,7 +14,14 @@ lives on the resource, so every appearance of it stays in sync.
 
 import type { CategorizedResource } from '$lib/stores/categorizedResources';
 import type { ReferenceIndex } from '$lib/utils/referenceIndex';
-import { buildObservationSeries, type SparklinePoint } from '$lib/utils/observationSparkline';
+import type { Observation } from 'fhir/r4';
+import {
+  buildObservationPanels,
+  buildObservationSeries,
+  getCodeLabel,
+  getDisplayUnit,
+  type ChartLine
+} from '$lib/utils/observationSparkline';
 
 export interface SingleUnit {
   kind: 'single';
@@ -45,23 +52,38 @@ export interface Grouper<T = unknown> {
 export const OBSERVATION_SERIES = 'observationSeries';
 
 export interface ObservationSeriesData {
-  series: SparklinePoint[]; // date-sorted ascending, ids are ResourceHelper tempIds
+  lines: ChartLine[]; // one line for a plain value series, one per component for a panel
 }
 
-// Observations with a numeric value that share a code and unit with at least one
-// other Observation become a series. Sources are merged; each point carries its source.
+// Observations with a numeric value that share a code and unit with at least one other
+// Observation become a series. Panels (e.g. blood pressure) whose numeric values live in
+// components group by panel code, with one line per component. Sources are merged; each
+// point carries its source.
 export const observationSeriesGrouper: Grouper<ObservationSeriesData> = {
   type: OBSERVATION_SERIES,
   group(items) {
     const byTempId = new Map(items.map(item => [item.rh.tempId, item]));
-    const seriesByKey = buildObservationSeries(
-      items.map(item => ({ id: item.rh.tempId, resource: item.rh.resource, source: item.source }))
-    );
+    const seriesItems = items.map(item => ({ id: item.rh.tempId, resource: item.rh.resource, source: item.source }));
     const results: GroupResult<ObservationSeriesData>[] = [];
-    for (const [key, series] of seriesByKey) {
+
+    for (const [key, series] of buildObservationSeries(seriesItems)) {
       if (series.length < 2) continue;
       const members = series.map(point => byTempId.get(point.id)!);
-      results.push({ key, members, data: { series } });
+      const first = members[0].rh.resource as Observation;
+      const line: ChartLine = {
+        key,
+        label: getCodeLabel(first.code),
+        unit: getDisplayUnit(first.valueQuantity),
+        points: series
+      };
+      results.push({ key, members, data: { lines: [line] } });
+    }
+
+    for (const [key, panel] of buildObservationPanels(seriesItems)) {
+      // Components in different units can't share one axis, so leave those as single rows
+      if (panel.memberIds.size < 2 || panel.unitCodes.size > 1) continue;
+      const members = [...panel.memberIds].map(id => byTempId.get(id)!);
+      results.push({ key: `panel:${key}`, members, data: { lines: panel.lines } });
     }
     return results;
   }
