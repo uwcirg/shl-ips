@@ -44,18 +44,10 @@
 {/if}
 {#if resource.severity?.text}
 <Badge color={severityBadgeColor(resource.severity?.text ?? '')}>
-  severity: {resource.severity?.text}
+  severity: {resource.severity?.text.toLowerCase()}
 </Badge>
 {/if}
-{#if resource.category?.[0]}
-  {#if resource.category[0].coding}
-    <Badge color="primary">
-      {resource.category[0].coding[0].system} : {resource.category[0].coding[0].code}
-    </Badge><br>
-  {/if}
-{:else}
-  <br>
-{/if}
+<br>
 {#if resource.code}
   <CodeableConcept codeableConcept={resource.code} />
 {/if}
