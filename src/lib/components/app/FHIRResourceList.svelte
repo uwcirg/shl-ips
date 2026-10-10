@@ -23,7 +23,8 @@
   import { ResourceHelper } from '$lib/utils/ResourceHelper.js';
   import type { ResourceCollection } from '$lib/utils/ResourceCollection.js';
   import { createCategorizedStore, type ResourceInput, type CategorizedResource } from '$lib/stores/categorizedResources';
-  import ResourceDisplay from '$lib/components/app/ResourceDisplay.svelte';
+  import type { DisplayUnit } from '$lib/stores/displayUnits';
+  import UnitDisplay from '$lib/components/app/UnitDisplay.svelte';
 
   export let resourceCollection: ResourceCollection;
   export let scroll: boolean = true;
@@ -55,7 +56,7 @@
     }
   );
   
-  const { store: categorizedResourceStore, getRenderInfo, sortResources } = createCategorizedStore(categorizerInput);
+  const { store: categorizedResourceStore, unitsStore } = createCategorizedStore(categorizerInput);
 
   let patientStore: Record<string, CategorizedResource>;
   let patientBadgeColor: string = 'danger';
@@ -63,6 +64,14 @@
   $: patientStore = $categorizedResourceStore?.['Patient'];
   $: patientCount = patientStore ? Object.keys(patientStore).length : 0;
   $: patientBadgeColor = patientCount > 1 ? 'danger' : 'secondary';
+
+  const unitItems = (unit: DisplayUnit) => unit.kind === 'single' ? [unit.item] : unit.members;
+  // Unique resources shown in a category; a resource can appear in several groups
+  function categoryItems(units: DisplayUnit[]): CategorizedResource[] {
+    const byId = new Map<string, CategorizedResource>();
+    units.flatMap(unitItems).forEach(item => byId.set(item.rh.tempId, item));
+    return [...byId.values()];
+  }
 
   let json = '';
   let resourceType = '';
@@ -114,76 +123,54 @@
 </Offcanvas>
 
 
-{#if $categorizedResourceStore}
+{#if $categorizedResourceStore && $unitsStore}
   {@const allDataAsBundleEntries = Object.values($categorizedResourceStore).map(types => Object.values(types)).flat().map(cr => ({ resource: cr.rh.resource }))}
   <Accordion stayOpen class="w-100">
-    {#if Object.keys($categorizedResourceStore).length > 0}
-      {#each Object.keys($categorizedResourceStore) as category}
-        {#if Object.keys($categorizedResourceStore[category]).length > 0}
-          <AccordionItem class="resource-content {scroll ? 'scroll' : ''} resource-list-accordion" active={Object.keys($categorizedResourceStore[category]).length <= 3}>
-            <span slot="header">
-              {category}
-              {#if category === 'Patients'}
-                <Badge class="mx-1" color={patientBadgeColor}>
-                  {patientCount}
-                </Badge>
-              {:else}
-                <Badge
-                  class="mx-1"
-                  color={Object.values($categorizedResourceStore[category]).filter(
-                    (resource) => resource.rh.include
-                  ).length == Object.keys($categorizedResourceStore[category]).length
-                    ? 'primary'
-                    : Object.values($categorizedResourceStore[category]).filter(
-                          (resource) => resource.rh.include
-                        ).length == Object.keys($categorizedResourceStore[category]).length
-                      ? 'primary'
-                      : Object.values($categorizedResourceStore[category]).filter(
-                            (resource) => resource.rh.include
-                          ).length > 0
-                        ? 'info'
-                        : 'secondary'}
-                >
-                  {Object.values($categorizedResourceStore[category]).filter(
-                    (resource) => resource.rh.include
-                  ).length}
-                </Badge>
-              {/if}
-            </span>
-            {#each Object.values($categorizedResourceStore[category]).sort((a, b) => {
-              let value = sortResources(a, b);
-              return value;
-            }) as value, index}
-                <Row class={index > 0 ? "border-top pt-2 mt-2" : ""} style="overflow: hidden">
-                  <Col class="overflow-auto justify-content-center align-items-center">
-                    <ResourceDisplay
-                      resource={value.rh.resource}
-                      renderInfo={value.renderInfo}
-                      entries={allDataAsBundleEntries}
-                      codeBadges="advanced"
-                    />
-                  </Col>
-                  <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
-                    {#if $mode === 'advanced'}
-                      <Button
-                        size="sm"
-                        color="secondary"
-                        outline
-                        on:click={(event) => {
-                          event.stopPropagation();
-                          setJson(value.rh)
-                        }}
-                      >
-                        View
-                      </Button>
-                    {/if}
-                  </Col>
-                </Row>
-            {/each}
-          </AccordionItem>
-        {/if}
-      {/each}
-    {/if}
+    {#each Object.keys($unitsStore) as category}
+      {#if $unitsStore[category].length > 0}
+        {@const items = categoryItems($unitsStore[category])}
+        {@const includedCount = items.filter((item) => item.rh.include).length}
+        <AccordionItem class="resource-content {scroll ? 'scroll' : ''} resource-list-accordion" active={$unitsStore[category].length <= 3}>
+          <span slot="header">
+            {category}
+            {#if category === 'Patients'}
+              <Badge class="mx-1" color={patientBadgeColor}>
+                {patientCount}
+              </Badge>
+            {:else}
+              <Badge
+                class="mx-1"
+                color={includedCount === items.length ? 'primary' : includedCount > 0 ? 'info' : 'secondary'}
+              >
+                {includedCount}
+              </Badge>
+            {/if}
+          </span>
+          {#each $unitsStore[category] as unit, index}
+            <Row class={index > 0 ? "border-top pt-2 mt-2" : ""} style="overflow: hidden">
+              <Col class="overflow-auto justify-content-center align-items-center">
+                <UnitDisplay {unit} entries={allDataAsBundleEntries} advanced={$mode === 'advanced'} onView={setJson} />
+              </Col>
+              <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
+                {#if $mode === 'advanced' && unit.kind === 'single'}
+                  <Button
+                    size="sm"
+                    color="secondary"
+                    outline
+                    on:click={(event) => {
+                      event.stopPropagation();
+                      setJson(unit.item.rh)
+                    }}
+                  >
+                    View
+                  </Button>
+                {/if}
+              </Col>
+            </Row>
+          {/each}
+        </AccordionItem>
+      {/if}
+    {/each}
   </Accordion>
 {/if}
 

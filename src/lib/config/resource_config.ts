@@ -1,3 +1,4 @@
+import type { ComponentType } from 'svelte';
 import GenericResource from '$lib/components/resource-templates/GenericResource.svelte';
 
 import AdvanceDirective from '$lib/components/resource-templates/AdvanceDirective.svelte';
@@ -21,6 +22,8 @@ import Patient from '$lib/components/resource-templates/Patient.svelte';
 import Practitioner from '$lib/components/resource-templates/Practitioner.svelte';
 import Procedure from '$lib/components/resource-templates/Procedure.svelte';
 import QuestionnaireResponse from '$lib/components/resource-templates/QuestionnaireResponse.svelte';
+import ObservationGroup from '$lib/components/resource-templates/ObservationGroup.svelte';
+import DiagnosticReportGroup from '$lib/components/resource-templates/DiagnosticReportGroup.svelte';
 
 export const RESOURCE_TYPE_FALLBACK_KEY = 'Other';
 
@@ -138,3 +141,10 @@ export const RESOURCE_CONFIG: Record<string, any> = {
       component: Patient,
     },
   };
+
+// Templates for grouped display units (see $lib/stores/displayUnits), keyed by groupType.
+// Unlike RESOURCE_CONFIG these take `unit` rather than `content`.
+export const GROUP_COMPONENTS: Record<string, ComponentType> = {
+  observationSeries: ObservationGroup,
+  diagnosticReport: DiagnosticReportGroup,
+};

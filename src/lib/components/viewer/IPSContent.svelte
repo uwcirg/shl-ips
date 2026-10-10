@@ -17,42 +17,50 @@
     CompositionSection,
     Resource
   } from "fhir/r4";
+  import { getContext } from 'svelte';
+  import { readable, type Readable } from 'svelte/store';
   import { download } from '$lib/utils/util.js';
-  import ResourceDisplay from '$lib/components/app/ResourceDisplay.svelte';
+  import UnitDisplay from '$lib/components/app/UnitDisplay.svelte';
   import SectionExtension from '$lib/components/resource-templates/SectionExtension.svelte';
-  import { RESOURCE_CONFIG } from '$lib/config/resource_config';
-  import { getResourceRenderInfo } from '$lib/stores/categorizedResources';
+  import { createCategorizedStore, type UnitMap } from '$lib/stores/categorizedResources';
+  import { createIpsCategorizer, type IpsSectionInput } from '$lib/utils/ipsCategorizer';
 
   export let bundle: Bundle;
   export let displayMode: string; // 'app' renders resources, 'text' renders section narratives
   export let codeBadges: 'always' | 'never' | 'advanced' = 'never';
+  // 'advanced' shows View buttons only in advanced mode; 'always' shows them in every mode (e.g. the demo)
+  export let viewButtons: 'always' | 'advanced' = 'advanced';
 
+  const mode: Readable<string> = getContext('mode') ?? readable('');
+  $: showViewButtons = viewButtons === 'always' || $mode === 'advanced';
 
-  interface IpsContent {
-    section: CompositionSection;
-    entries: Resource[];
-    useText: boolean;
+  type IpsSection = IpsSectionInput & { section: CompositionSection };
+
+  // Display units per section title, from the same categorized store the data views use. The
+  // IPS categorizer assigns each resource to the section that lists it, in Composition order.
+  let ipsSections: IpsSection[] = [];
+  let unitsStore: Readable<UnitMap> = readable({});
+  $: if (bundle) {
+    ipsSections = getIpsSections(bundle);
+    const { input, categorize, sort } = createIpsCategorizer(bundle, ipsSections);
+    unitsStore = createCategorizedStore(readable(input), { categorize, sort }).unitsStore;
   }
+  $: ipsContent = Object.fromEntries(ipsSections.map(({ title, section }) => [title, { section }]));
 
-  let ipsContent: Record<string, IpsContent> = {};
-  $: {
-    if (bundle) {
-      ipsContent = getIpsContent(bundle);
-    }
-  }
-
-  function getIpsContent(ips: Bundle) {
-    let content: Record<string, IpsContent> = {};
-    // let entries = Object.fromEntries(ips.entry?.map((entry) => [entry.id, entry.resource]));
+  // The Patient first, then the Composition's sections
+  function getIpsSections(ips: Bundle): IpsSection[] {
+    let sections: IpsSection[] = [];
     let compositions = ips.entry?.filter((entry) => entry.resource?.resourceType === 'Composition');
     if (!compositions || !compositions[0]) {
-      return content;
+      return sections;
     }
     let patient = ips.entry?.filter((entry) => entry.resource?.resourceType === 'Patient').map((entry) => entry.resource);
     if (patient?.[0]) {
       let patientName = patient[0].name?.[0]?.text ??
         `${patient[0].name?.[0]?.prefix ?? ""} ${patient[0].name?.[0]?.given?.join(' ') ?? ""} ${patient[0].name?.[0]?.family ?? ""}`;
-      content["Patient"] = {
+      sections.push({
+        title: "Patient",
+        resources: patient as Resource[],
         section: {
           text: {
             status: 'generated',
@@ -61,65 +69,53 @@
                   Birth Date: ${patient[0].birthDate ?? ""}<br>
                   Gender: ${patient[0].gender ?? ""}`
           }
-        },
-        entries: patient as Resource[],
-        useText: false
-      }
+        }
+      });
     }
     let composition = compositions[0].resource as Composition;
     composition.section?.forEach((section) => {
       let title = (section.title ?? section.code?.coding?.[0].display) ?? "[Untitled section]";
-      let entries = section.entry?.map((entry) => {
-          if (entry.reference) {
-            return getEntry(ips, entry.reference) as Resource;
-          }
-        }).filter((entry) => entry !== undefined) ?? [];
-      let sectionContent = {
-        section: section, // Composition.section
-        entries: entries, // Resources from Composition.section.entry
-        useText: false    // True to show the section narrative instead of rendering its resources
-      };
-      content[title] = sectionContent;
+      sections.push({
+        title,
+        // Composition.section.entry references, resolved against the whole bundle
+        references: section.entry?.map((entry) => entry.reference).filter((reference): reference is string => !!reference) ?? [],
+        section
+      });
     });
-
-    return content;
+    return sections;
   }
 
-  // For machine-readable content, use the reference in the Composition.section.entry to retrieve resource from Bundle
-  function getEntry(ips: Bundle, fullUrl: string) {
-    var result;
-    ips.entry?.forEach(function (entry) {
-      if (entry.fullUrl?.includes(fullUrl)) {
-        console.log(`match ${fullUrl}`);
-        result = entry.resource;
-      } else {
-      // Attempt to match based on resource and uuid
-        let newMatch = fullUrl
-        if (entry.resource && entry.resource.resourceType) {
-          // remove the resource from reference
-          newMatch = newMatch.replace(entry.resource.resourceType, '');
-          // remove slash
-          newMatch = newMatch.replace(/\//g, '');
-          // console.log(newMatch); 
-        }
-        if (entry.fullUrl?.includes(newMatch)) {
-          console.log(`match uuid ${newMatch}`);
-          result = entry.resource;
-        }
-      }
-    });
-    if (!result) {
-      console.log(`missing reference ${fullUrl}`);
-    }
-    return result;
-  };
+  // Sections display in this order, matched by title (ignoring case). Any other section comes
+  // after them, alphabetically, so sections added in the future still appear.
+  const SECTION_ORDER = [
+    "Patient",
+    "Patient Story",
+    "Alerts",
+    "Problem List",
+    "Allergies and Intolerances",
+    "Medication List",
+    "Advance Directives",
+    "History of Immunizations",
+    "Diagnostic Results",
+    "History of Procedures",
+    "Medical Devices",
+    "Plan of Care",
+    "Functional Status",
+    "History of Past Problems",
+    "History of Pregnancy",
+    "Social History",
+    "Vital Signs"
+  ].map((title) => title.toLowerCase());
 
-  function getSections() {
-    return Object.entries(ipsContent).sort((a, b) => {
-      if (a[0] === "Patient") { return -1; }
-      if (b[0] === "Patient") { return 1; }
-      return a[0].localeCompare(b[0]);
-    });
+  function sectionRank(title: string) {
+    const rank = SECTION_ORDER.indexOf(title.trim().toLowerCase());
+    return rank === -1 ? SECTION_ORDER.length : rank;
+  }
+
+  function getSections(content: Record<string, { section: CompositionSection }>) {
+    return Object.entries(content).sort((a, b) =>
+      sectionRank(a[0]) - sectionRank(b[0]) || a[0].localeCompare(b[0])
+    );
   }
 
   let showInfo = false;
@@ -188,13 +184,16 @@
 {#if showInfo}
   <Row class="text-info">{infoMessage}</Row>
 {/if}
-{#each getSections() as [title, sectionContent]}
+{#each getSections(ipsContent) as [title, sectionContent]}
+  {@const units = $unitsStore[title] ?? []}
+  <!-- Fall back to the section narrative when nothing could be rendered (e.g. an empty section) -->
+  {@const showNarrative = displayMode === "text" || (units.length === 0 && !sectionContent.section.extension?.length)}
   <Row class="mx-0">
     <!--wrap in accordion with title-->
     <Accordion class="mt-3">
       <AccordionItem active class="resource-content">
         <h6 slot="header" class="my-2">{title}</h6>
-        {#if sectionContent.useText || displayMode === "text"}
+        {#if showNarrative}
           {#if sectionContent.section.text?.div}
             {@html sectionContent.section.text?.div}
           {:else}
@@ -217,34 +216,37 @@
               </Card>
             {/each}
           {/if}
+          {#if units.length > 0}
           <Card style="width: 100%; max-width: 100%" class="mb-2">
-              {#each sectionContent.entries as resource, index}
+              {#each units as unit, index}
                 <CardBody class={index > 0 ? "border-top" : ""}>
                   <Row style="overflow:hidden" class="d-flex justify-content-end align-content-center">
                     <Col class="overflow-auto justify-content-center align-items-center">
-                      <ResourceDisplay
-                        {resource}
-                        renderInfo={getResourceRenderInfo(resource, RESOURCE_CONFIG)}
+                      <UnitDisplay
+                        {unit}
                         entries={bundle.entry}
-                        codeBadges="advanced"
+                        {codeBadges}
+                        advanced={showViewButtons}
+                        onView={(rh) => setJson(rh.resource)}
                       />
                     </Col>
                     <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
-                      <Button
-                        size="sm"
-                        color="secondary"
-                        outline
-                        on:click={(event) => {
-                          setJson(resource)
-                        }}
-                      >
-                        View
-                      </Button>
+                      {#if showViewButtons && unit.kind === 'single'}
+                        <Button
+                          size="sm"
+                          color="secondary"
+                          outline
+                          on:click={() => setJson(unit.item.rh.resource)}
+                        >
+                          View
+                        </Button>
+                      {/if}
                     </Col>
                   </Row>
                 </CardBody>
               {/each}
             </Card>
+          {/if}
           {/if}
       </AccordionItem>
     </Accordion>
