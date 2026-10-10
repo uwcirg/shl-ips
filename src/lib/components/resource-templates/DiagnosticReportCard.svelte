@@ -8,7 +8,8 @@
   // Shared look for a DiagnosticReport and its results, used by both the grouped display
   // (DiagnosticReportGroup) and the single-resource template (DiagnosticReport).
   // Slots: "actions" (top right of the header) and the default slot for result rows, which
-  // should use the `report-result` / `report-result-content` / `report-show-more` classes.
+  // should use the `report-result` / `report-result-content` / `report-show-more` classes, and
+  // lead with a `report-result-marker` (or the source dot) so results indent under the report.
   export let report: DiagnosticReport;
 
   $: category = report.category?.[0]?.coding?.[0];
@@ -66,6 +67,13 @@
   }
   .report-card :global(.report-result + .report-result) {
     border-top: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, 0.1));
+  }
+  /* Empty marker with the size of the group's source dot, so rows indent the same way without one */
+  .report-card :global(.report-result-marker) {
+    flex: 0 0 auto;
+    width: 0.6rem;
+    height: 0.6rem;
+    margin-top: 0.35rem;
   }
   .report-card :global(.report-result-content) {
     flex: 1 1 auto;

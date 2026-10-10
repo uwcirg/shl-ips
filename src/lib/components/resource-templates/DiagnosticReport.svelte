@@ -70,6 +70,7 @@
 <DiagnosticReportCard report={resource}>
   {#each visibleResults as result}
     <div class="report-result">
+      <span class="report-result-marker"></span>
       <div class="report-result-content">
         {#if result.resource}
           <ObservationTemplate

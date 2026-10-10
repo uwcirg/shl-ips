@@ -22,7 +22,7 @@
   const INITIAL_RESULTS = 5;
 
   // Source colours exist only where the page provides them (not, e.g., on the IPS viewer, which
-  // has a single source); without them the source dot is left out.
+  // has a single source); without them the source dot is left blank rather than coloured.
   const colorMapContext = getContext<Readable<Map<string, string>> | undefined>('colorMap');
   const colorMap: Readable<Map<string, string>> = colorMapContext ?? readable(new Map());
   const showSources = colorMapContext !== undefined;
@@ -66,6 +66,9 @@
           style:background={colorOf(result.source, $colorMap)}
           title={`From ${sourceName(result.source, $colorMap) ?? ''}`}
         ></span>
+      {:else}
+        <!-- Keeps the result indent that tells results apart from the report, with no colours to show -->
+        <span class="source-dot placeholder"></span>
       {/if}
       <div class="report-result-content">
         {#if result.rh.resource.resourceType === 'Observation'}
@@ -84,9 +87,7 @@
   {/each}
   {#each unit.data.unresolved as display}
     <div class="report-result text-muted">
-      {#if showSources}
-        <span class="source-dot placeholder"></span>
-      {/if}
+      <span class="source-dot placeholder"></span>
       <div class="report-result-content">{display}</div>
     </div>
   {/each}
