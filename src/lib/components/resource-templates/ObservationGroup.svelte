@@ -20,8 +20,11 @@
   export let onView: ((rh: ResourceHelper) => void) | undefined = undefined;
   export let advanced = false;
 
-  const colorMap: Readable<Map<string, string>> =
-    getContext<Readable<Map<string, string>> | undefined>('colorMap') ?? readable(new Map());
+  // Source colours exist only where the page provides them (not, e.g., on the IPS viewer, which
+  // has a single source); without them the source dot and name are left out.
+  const colorMapContext = getContext<Readable<Map<string, string>> | undefined>('colorMap');
+  const colorMap: Readable<Map<string, string>> = colorMapContext ?? readable(new Map());
+  const showSources = colorMapContext !== undefined;
 
   // Friendly names come from a memo that fills in alongside colorMap, so everything
   // derived from them is tied to $colorMap and recomputes when it changes.
@@ -91,7 +94,7 @@
         </span>
         <span class="reading-value">{getObservationDisplayValue(resource) ?? ''}</span>
         <span class="reading-source">
-          {#if name}
+          {#if showSources && name}
             <span class="source-dot" style:background={colorFor(member.source) ?? '#6c757d'}></span>
             {name}
           {/if}

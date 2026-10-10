@@ -231,7 +231,7 @@
 
 {#if bundle}
 <Row>
-  <IpsContent {bundle} {displayMode} codeBadges="always" />
+  <IpsContent {bundle} {displayMode} codeBadges="always" viewButtons="always" />
 </Row>
 {/if}
 

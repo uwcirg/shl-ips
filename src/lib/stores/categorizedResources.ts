@@ -39,7 +39,11 @@ import { buildDisplayUnits, defaultGroupers, type DisplayUnit, type Grouper } fr
 
 export type ResourceInput = Array<{ source: string, resources: ResourceHelper[] }>;
 
-export type CategorizeFn = (resource: Resource, resourceConfig: ResourceConfig) => string;
+// Returning undefined leaves a resource out of the units shown to the user: it gets no row of its
+// own, but still takes part in grouping and reference lookups (e.g. a resource that is only
+// there to be referenced). Such resources sit under UNCATEGORIZED in `store`.
+export type CategorizeFn = (resource: Resource, resourceConfig: ResourceConfig) => string | undefined;
+export const UNCATEGORIZED = '\u0000uncategorized';
 export type SortFn = (a: Resource, b: Resource) => number;
 export type ResourceConfig = typeof defaultResourceConfig;
 
@@ -91,7 +95,7 @@ export function createCategorizedStore(
     const categories: CategoryMap = {};
     $input.forEach(({ source, resources }: { source: string, resources: ResourceHelper[] }) => {
       resources.forEach(rh => {
-        let type = categorize(rh.resource, config);
+        let type = categorize(rh.resource, config) ?? UNCATEGORIZED;
         if (!(type in categories)) {
           categories[type] = {};
         }
@@ -105,10 +109,15 @@ export function createCategorizedStore(
   const getRenderInfo = (resource: Resource) => getResourceRenderInfo(resource, config, categorize);
   const sortResources = (a: CategorizedResource, b: CategorizedResource) => sort(a.rh.resource, b.rh.resource);
 
-  // A unit sorts (and is categorized) by its primary resource: the single resource, a group's
-  // anchor if it has one, or else the first member of the group once the members are sorted.
-  const primaryOf = (unit: DisplayUnit) =>
-    unit.kind === 'single' ? unit.item : (unit.anchor ?? unit.members[0]);
+  // A unit sorts (and is categorized) by its primary resource: the single resource, or for a group
+  // its anchor if it has one, else its first member once the members are sorted. Resources the
+  // categorizer leaves out are skipped, so a group is still placed by a resource that has a category.
+  const categoryOf = (item: CategorizedResource) => categorize(item.rh.resource, config);
+  const primaryOf = (unit: DisplayUnit): CategorizedResource => {
+    if (unit.kind === 'single') return unit.item;
+    const candidates = unit.anchor ? [unit.anchor, ...unit.members] : unit.members;
+    return candidates.find(candidate => categoryOf(candidate) !== undefined) ?? candidates[0];
+  };
   const sortUnits = (a: DisplayUnit, b: DisplayUnit) => sortResources(primaryOf(a), primaryOf(b));
 
   // Group across all categories, then bucket each unit by its primary resource's category
@@ -120,7 +129,8 @@ export function createCategorizedStore(
     });
     const unitMap: UnitMap = {};
     units.forEach(unit => {
-      const category = categorize(primaryOf(unit).rh.resource, config);
+      const category = categoryOf(primaryOf(unit));
+      if (category === undefined) return;
       (unitMap[category] ??= []).push(unit);
     });
     Object.values(unitMap).forEach(list => list.sort(sortUnits));

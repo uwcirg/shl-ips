@@ -21,8 +21,11 @@
 
   const INITIAL_RESULTS = 5;
 
-  const colorMap: Readable<Map<string, string>> =
-    getContext<Readable<Map<string, string>> | undefined>('colorMap') ?? readable(new Map());
+  // Source colours exist only where the page provides them (not, e.g., on the IPS viewer, which
+  // has a single source); without them the source dot is left out.
+  const colorMapContext = getContext<Readable<Map<string, string>> | undefined>('colorMap');
+  const colorMap: Readable<Map<string, string>> = colorMapContext ?? readable(new Map());
+  const showSources = colorMapContext !== undefined;
 
   // Friendly names come from a memo that fills in alongside colorMap, so lookups are tied to
   // $colorMap and recompute when it changes.
@@ -57,11 +60,13 @@
 
   {#each visibleResults as result (result.rh.tempId)}
     <div class="report-result">
-      <span
-        class="source-dot"
-        style:background={colorOf(result.source, $colorMap)}
-        title={`From ${sourceName(result.source, $colorMap) ?? ''}`}
-      ></span>
+      {#if showSources}
+        <span
+          class="source-dot"
+          style:background={colorOf(result.source, $colorMap)}
+          title={`From ${sourceName(result.source, $colorMap) ?? ''}`}
+        ></span>
+      {/if}
       <div class="report-result-content">
         {#if result.rh.resource.resourceType === 'Observation'}
           <ObservationTemplate
@@ -79,7 +84,9 @@
   {/each}
   {#each unit.data.unresolved as display}
     <div class="report-result text-muted">
-      <span class="source-dot placeholder"></span>
+      {#if showSources}
+        <span class="source-dot placeholder"></span>
+      {/if}
       <div class="report-result-content">{display}</div>
     </div>
   {/each}
