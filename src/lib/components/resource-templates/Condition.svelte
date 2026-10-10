@@ -43,7 +43,7 @@
   </Badge>
 {/if}
 {#if resource.severity?.text}
-<Badge color={severityBadgeColor(resource.severity?.text ?? '')}>
+<Badge color={severityBadgeColor(resource.severity?.coding?.[0].display ?? '')}>
   severity: {resource.severity?.text.toLowerCase()}
 </Badge>
 {/if}
