@@ -216,6 +216,7 @@
               </Card>
             {/each}
           {/if}
+          {#if units.length > 0}
           <Card style="width: 100%; max-width: 100%" class="mb-2">
               {#each units as unit, index}
                 <CardBody class={index > 0 ? "border-top" : ""}>
@@ -245,6 +246,7 @@
                 </CardBody>
               {/each}
             </Card>
+          {/if}
           {/if}
       </AccordionItem>
     </Accordion>
