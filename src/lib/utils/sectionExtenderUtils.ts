@@ -257,8 +257,8 @@ class HistoryOfIllnessSectionExtender extends SectionExtender {
     }
     let existingDivContent = currentDiv;
 
-    let conditions = existingResources.filter(r => r.resourceType == 'Condition');
-    let conditionCodings = conditions.map(c => c.code.coding[0]);
+    let conditions = [...existingResources, ...newResources].filter(r => r.resourceType == 'Condition');
+    let conditionCodings = conditions.map(c => c.code?.coding?.[0]).filter(coding => !!coding);
     let conditionsHTML = conditions.length > 0
       ? `<h5>${this.getSectionTitle()}</h5><table class="hapiPropertyTable"><thead><tr><th>Condition</th></tr></thead><tbody>${
         conditionCodings.map(coding => `<tr><td>${coding.display ?? coding.code}</td></tr>`).join('')
