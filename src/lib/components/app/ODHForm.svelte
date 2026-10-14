@@ -511,14 +511,16 @@
       }
       if (jobValue.occupation) {
         currentJobResource.valueCodeableConcept.coding = [{
-          system: 'https://terminology.hl7.org/2.0.0/CodeSystem-PHOccupationCDCCensus2010.html',
+          system: jobValue.occupation.Code.indexOf('-') >= 0 ?
+            'http://hl7.org/fhir/us/odh/CodeSystem/PHOccupationalDataForHealthODH' 
+            : 'urn:oid:2.16.840.1.113883.2.9.6.2.7',
           code: jobValue.occupation.Code,
           display: jobValue.occupation.Title
         }];
       }
       if (jobValue.industry) {
         currentJobResource.component[0].valueCodeableConcept.coding = [{
-          system: 'https://terminology.hl7.org/2.0.0/CodeSystem-PHIndustryCDCCensus2010.html',
+          system: 'http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH',
           code: jobValue.industry.Code,
           display: jobValue.industry.Title
         }];
