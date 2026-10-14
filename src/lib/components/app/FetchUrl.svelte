@@ -14,7 +14,7 @@
     Row,
     Spinner } from '@sveltestrap/sveltestrap';
   import { getContext, onMount, onDestroy, createEventDispatcher } from 'svelte';
-  import { PATIENT_IPS, EXAMPLE_IPS, IPS_DEFAULT, BEARER_AUTHORIZATION } from '$lib/config/config';
+  import { PATIENT_IPS, EXAMPLE_IPS, IPS_DEFAULT, BEARER_AUTHORIZATION, SYSTEM_URL } from '$lib/config/config';
   import type { SHCRetrieveEvent, IAuthService, IPSRetrieveEvent, ResourceRetrieveEvent } from '$lib/utils/types';
   import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { getEntriesFromIPS, isIPSBundle } from '$lib/utils/util';
@@ -133,9 +133,11 @@
         headers["Authorization"] = `Bearer ${await authService.getAccessToken()}`;
       } else if (summaryUrlValidated?.toString().includes('openfhir')) {
         headers['epic-client-id'] = `${BEARER_AUTHORIZATION['EpicHIMSS']}`;
-      } else {
-        url = summaryUrlValidated;
+      } else if (summaryUrlValidated?.toString().includes(SYSTEM_URL)) {
+        headers['Authorization'] = `Bearer ${await authService.getAccessToken()}`;
       }
+
+      url = url ?? summaryUrlValidated;
 
       const contentResponse = await fetch(url!, {
         headers: headers
