@@ -71,6 +71,10 @@
     subject: {
       reference: "Patient/pat1"
     },
+    text: {
+      status: "generated",
+      div: "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p></p></div>"
+    }
   }
   
   let goalResourceTemplate: Goal = {
