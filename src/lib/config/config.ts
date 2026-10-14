@@ -342,7 +342,8 @@ if (env('VITE_SMILECARINBB_CLIENT_ID')) {
 // End Connectathon Testing Servers ///////////////////////////////////////////////////////////////////////////
 
 export const BEARER_AUTHORIZATION = {
-  'EpicHIMSS': env('VITE_EPIC_CLIENT_ID')
+  'EpicHIMSS': env('VITE_EPIC_CLIENT_ID'),
+  'EpicIHE': env('VITE_EPIC_HIMSS_CLIENT_ID'),
 }
 export const SOF_REDIRECT_URI = '/data';
 
@@ -370,7 +371,7 @@ export const USCDI_RESOURCES = [
   // 'QuestionnaireResponse',
 ];
 
-const SYSTEM_URL = env('VITE_SYSTEM_URL') || (typeof window !== 'undefined' ? new URL(window.location.href).toString() : undefined);
+export const SYSTEM_URL = env('VITE_SYSTEM_URL') || (typeof window !== 'undefined' ? new URL(window.location.href).toString() : undefined);
 export const VIEWER_BASE = env('VITE_VIEWER_BASE') || ((SYSTEM_URL ?? "") + '/ips#');
 export const SHOW_VIEWER_DEMO = env('VITE_SHOW_VIEWER_DEMO');
 
@@ -379,6 +380,12 @@ export const PATIENT_IPS = {
   'Peter Kieth Jordan': 'https://terminz.azurewebsites.net/fhir/Patient/$summary?profile=http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips&identifier=https://standards.digital.health.nz/ns/nhi-id|NNJ9186&_format=json'
 }
 export const EXAMPLE_IPS = {
+  'Epic IHE 2025 - Marta Villa Summary': `${SYSTEM_URL}/api/epic-ihe-2026/summary?pid=eRHdrDtPMnBqWCyr3lpmwMA3`,
+  'Epic IHE 2025 - Marta Villa Everything': `${SYSTEM_URL}/api/epic-ihe-2026/everything?pid=eRHdrDtPMnBqWCyr3lpmwMA3`,
+  'Epic IHE 2025 - Genny Works Summary': `${SYSTEM_URL}/api/epic-ihe-2026/summary?pid=eufNrX8r16idDdxj5WraIKg3`,
+  'Epic IHE 2025 - Genny Works Everything': `${SYSTEM_URL}/api/epic-ihe-2026/everything?pid=eufNrX8r16idDdxj5WraIKg3`,
+  'Epic IHE 2025 - Lilly Curic Summary': `${SYSTEM_URL}/api/epic-ihe-2026/summary?pid=eFvqTuODmXSrNFBkmTg4UuQ3`,
+  'Epic IHE 2025 - Lilly Curic Everything': `${SYSTEM_URL}/api/epic-ihe-2026/everything?pid=eFvqTuODmXSrNFBkmTg4UuQ3`,
   'Betsy QuestionnaireResponses 2026-07 Connectathon': 'https://gw.interop.community/paciosandbox/open/QuestionnaireResponse?patient=patient-betsysmith-johnson01&questionnaire=https://gw.interop.community/paciosandbox/open/Questionnaire/GAD7Questionnaire',
   'Epic $summary Connectathon 2025-05': 'https://connectathon.epic.com/Interconnect-Fhir-Oauth/api/FHIR/R4/Patient/e5ZHnklVuYuT85PnDVOepOg3/$summary',
   'Epic HIMSS': 'https://ihe-nimbus.epic.com/Interconnect-FHIR-Open/api/FHIR/R4/Patient/e1o-b5iIsAPxRiD2Ct8KekQ3/$summary',
