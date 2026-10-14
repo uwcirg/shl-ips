@@ -147,18 +147,20 @@ export class IPSResourceCollection extends ResourceCollection {
         const composition = ips.entry?.find(entry => entry.resource?.resourceType === "Composition").resource as Composition;
 
         // get the extenders from the registry (they're deduplicated by the registry)
-        const extenders = this.sectionExtenderRegistry.getRegisteredExtenders();
+        const extenders = Array.from(new Set([
+            ...this.sectionExtenderRegistry.getRegisteredExtenders(),
+            ...this.sectionExtenderRegistry.getAlwaysRunExtenders()
+        ]));
         // for each of them, call the extend function using the appropriate resource list
         const updates: { update: SectionUpdates, selector: Function }[] = [];
         for (const extender of extenders) {
             const sectionTitle = extender.getSectionTitle();
-            const resourceIdsForExtension = Array.from(get(this.sectionExtensionResources)[sectionTitle]);
+            const resourceIdsForExtension = Array.from(get(this.sectionExtensionResources)[sectionTitle] ?? []);
             const resourcesForExtension = resourceIdsForExtension
                 .map(resourceTempId => get((this as ResourceCollection).resources)[resourceTempId])
                 .filter(rh => rh.include)
                 .map(rh => rh.resource);
-            const existingSection = composition.section.find(s => extender.sectionSelector(s));
-            const update = extender.extend(resourcesForExtension, existingSection);
+            const update = extender.extend(resourcesForExtension, ips);
             if (update) {
                 updates.push({
                     update: update,
