@@ -15,9 +15,10 @@ const { MockUserManager, mockUserManagerInstances } = vi.hoisted(() => {
     };
     getUser = vi.fn();
     signinSilent = vi.fn();
-    signinRedirect = vi.fn();
+    signinRedirect = vi.fn().mockResolvedValue(undefined);
     signinCallback = vi.fn();
     storeUser = vi.fn();
+    removeUser = vi.fn().mockResolvedValue(undefined);
     signoutRedirect = vi.fn();
     clearStaleState = vi.fn();
 
@@ -69,6 +70,7 @@ describe('AuthService', () => {
 
   beforeEach(() => {
     mockUserManagerInstances.length = 0;
+    sessionStorage.clear();
     fetchMock = vi.fn().mockResolvedValue({ ok: true });
     vi.stubGlobal('fetch', fetchMock);
   });
@@ -118,6 +120,77 @@ describe('AuthService', () => {
     onAccessTokenExpired();
 
     expect(manager.signinRedirect).toHaveBeenCalled();
+  });
+
+  it('ignores token expiry while a sign-in callback is being processed', async () => {
+    const service = new AuthService();
+    const manager = latestManager();
+    const onAccessTokenExpired = manager.events.addAccessTokenExpired.mock.calls[0][0];
+    let finishCallback: (user: any) => void = () => {};
+    manager.signinCallback.mockReturnValue(new Promise((resolve) => { finishCallback = resolve; }));
+
+    const callback = service.signinCallback();
+    onAccessTokenExpired();
+    finishCallback(fakeUser());
+    await callback;
+
+    expect(manager.signinRedirect).not.toHaveBeenCalled();
+  });
+
+  it('starts only one redirect when several logins are requested at once', () => {
+    const service = new AuthService();
+    const manager = latestManager();
+    manager.signinRedirect.mockReturnValue(new Promise(() => {}));
+
+    service.login();
+    service.login();
+    service.login();
+
+    expect(manager.signinRedirect).toHaveBeenCalledTimes(1);
+  });
+
+  describe('signinCallback', () => {
+    it('restarts login rather than signing out when the callback fails', async () => {
+      const service = new AuthService();
+      const manager = latestManager();
+      manager.signinCallback.mockRejectedValue(new Error('No matching state found in storage'));
+
+      await service.signinCallback();
+
+      expect(manager.removeUser).toHaveBeenCalled();
+      expect(manager.signinRedirect).toHaveBeenCalled();
+      expect(manager.signoutRedirect).not.toHaveBeenCalled();
+    });
+
+    it('stops redirecting when the retried callback fails again', async () => {
+      const service = new AuthService();
+      const manager = latestManager();
+      manager.signinCallback.mockRejectedValue(new Error('authentication_expired'));
+
+      await service.signinCallback();
+      manager.signinRedirect.mockClear();
+      const user = await service.signinCallback();
+
+      expect(user).toBeUndefined();
+      expect(manager.signinRedirect).not.toHaveBeenCalled();
+      expect(get(service.error)).toBeTruthy();
+    });
+
+    it('resets the retry guard after a successful callback', async () => {
+      const service = new AuthService();
+      const manager = latestManager();
+      manager.signinCallback.mockRejectedValueOnce(new Error('first failure'));
+      await service.signinCallback();
+
+      manager.signinCallback.mockResolvedValueOnce(fakeUser());
+      await service.signinCallback();
+
+      manager.signinRedirect.mockClear();
+      manager.signinCallback.mockRejectedValueOnce(new Error('later failure'));
+      await service.signinCallback();
+
+      expect(manager.signinRedirect).toHaveBeenCalled();
+    });
   });
 
   describe('renewToken', () => {
@@ -170,6 +243,21 @@ describe('AuthService', () => {
       const token = await service.getAccessToken();
 
       expect(token).toBe('fresh-token');
+    });
+
+    it('signs in again rather than signing out when the session has ended', async () => {
+      const service = new AuthService();
+      const manager = latestManager();
+      manager.getUser.mockResolvedValue(fakeUser({ expired: true }));
+      manager.signinSilent.mockRejectedValue(
+        Object.assign(new Error('Session not active'), { error: 'invalid_grant' })
+      );
+
+      const token = await service.getAccessToken();
+
+      expect(token).toBeUndefined();
+      expect(manager.signinRedirect).toHaveBeenCalled();
+      expect(manager.signoutRedirect).not.toHaveBeenCalled();
     });
   });
 
