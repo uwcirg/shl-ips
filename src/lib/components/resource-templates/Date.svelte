@@ -15,11 +15,14 @@
     let prefix = "";
     let postfix = "";
     let periodStartOnly = period;
+    let sameDay = false;
     if (fields.period) {
       let start = formatDate(fields.period.start);
       let end = formatDate(fields.period.end);
       periodStartOnly = (periodStartOnly || fields.period.start) && !fields.period.end;
-      date = `${start}${fields.period.end ? ' - '+end : ""}`;
+      // A period starting and ending on the same (formatted) date shows just that date
+      sameDay = !!(fields.period.start && fields.period.end && start === end);
+      date = `${start}${fields.period.end && !sameDay ? ' - '+end : ""}`;
     } else if (fields.range) {
       periodStartOnly = periodStartOnly && !fields.range.high;
       date = `${fields.range.low ? fields.range.low.value + fields.range.low.unit : unk}${fields.range.high ? ` - ${fields.range.high+fields.range.high.unit}` : ''}`;
@@ -47,7 +50,7 @@
 
     if (periodStartOnly) {
       prefix = `Since ${prefix}`;
-    } else if (period) {
+    } else if (period && !sameDay) {
       prefix = `From ${prefix}`;
     }
 
