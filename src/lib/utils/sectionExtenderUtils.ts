@@ -1,4 +1,4 @@
-import type { Composition, CompositionSection, Bundle, BundleEntry, Encounter, Flag, Reference, Resource } from 'fhir/r4';
+import type { Composition, CompositionSection, Bundle, BundleEntry, Encounter, Flag, Observation, Reference, Resource } from 'fhir/r4';
 import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
 import { METHODS, type Method } from '$lib/config/tags';
 
@@ -26,6 +26,7 @@ export class SectionExtenderRegistry {
 
   historyOfIllnessSectionExtender = new HistoryOfIllnessSectionExtender();
   encounterSectionExtender = new EncounterSectionExtender();
+  pregnancySectionExtender = new PregnancySectionExtender();
   
 
   registeredExtenders = new Set<SectionExtender>();
@@ -60,6 +61,7 @@ export class SectionExtenderRegistry {
     this.advanceDirectivesSectionExtender,
     this.alertsSectionExtender,
     this.encounterSectionExtender,
+    this.pregnancySectionExtender
   ];
 
   registerForResource(resource: Resource): SectionExtender | undefined {
@@ -433,6 +435,76 @@ class EncounterSectionExtender extends SectionExtender {
     section.text.div = `<div xmlns="http://www.w3.org/1999/xhtml">
       ${existingDivContent}
       ${encountersHTML}
+    </div>`;
+
+    return { resources: newResources, section };
+  }
+}
+
+class PregnancySectionExtender extends SectionExtender {
+  createWhenNoNewResources = false;
+  template = {
+    "code": {
+      "coding": [
+        {
+          "code": "10162-6",
+          "display": "History of pregnancies Narrative",
+          "system": "http://loinc.org"
+        }
+      ]
+    },
+    "entry": [],
+    "text": {
+      "div": "",
+      "status": "generated"
+    },
+    "title": "Pregnancy Information"
+  };
+
+  matchesResource(resource: Resource): boolean {
+    const observationCheck = resource.resourceType === 'Observation';
+    const expectedDeliveryDate = resource.code?.coding?.find(c => (c.code === "11778-8" || c.code === "11779-6") && c.system === "http://loinc.org");
+    return observationCheck && expectedDeliveryDate;
+  }
+
+  sectionSelector(section: CompositionSection): boolean {
+    return (
+      section.code?.coding?.find(
+        (coding) => coding.code === "10162-6" && coding.system === "http://loinc.org"
+      )
+    );
+  }
+
+  computeUpdates(newResources: Resource[], existingResources: Resource[], section: CompositionSection): IntermediateSectionUpdates {
+    const currentDiv = section?.text?.div || '';
+    if (!newResources || newResources.length === 0) {
+      return { resources: newResources, section };
+    }
+    let existingDivContent = currentDiv;
+
+    // With an existing narrative, only add the new observations to avoid repeating the old ones
+    const observations = (existingDivContent ? newResources : [...existingResources, ...newResources])
+      .filter((r): r is Observation => r.resourceType === 'Observation');
+    const observationRows = observations.map(o => {
+      const coding = o.code?.coding?.[0];
+      const name = o.code?.text ?? coding?.display ?? coding?.code ?? 'Observation';
+      const valueCoding = o.valueCodeableConcept?.coding?.[0];
+      const value = o.valueDateTime?.substring(0, 10)
+        ?? o.valueDate
+        ?? o.valueCodeableConcept?.text ?? valueCoding?.display ?? valueCoding?.code
+        ?? (o.valueQuantity?.value !== undefined ? `${o.valueQuantity.value} ${o.valueQuantity.unit ?? ''}`.trim() : undefined)
+        ?? (o.valueInteger !== undefined ? String(o.valueInteger) : undefined)
+        ?? o.valueString
+        ?? '';
+      const date = (o.effectiveDateTime ?? o.effectivePeriod?.start ?? o.issued)?.substring(0, 10) ?? '';
+      return `<tr><td>${escapeHtml(name)}</td><td>${escapeHtml(value)}</td><td>${escapeHtml(date)}</td></tr>`;
+    }).join('');
+    const observationsHTML = observations.length > 0
+      ? `<h5>${this.getSectionTitle()}</h5><table class="hapiPropertyTable"><thead><tr><th>Observation</th><th>Value</th><th>Date</th></tr></thead><tbody>${observationRows}</tbody></table>`
+      : "";
+    section.text.div = `<div xmlns="http://www.w3.org/1999/xhtml">
+      ${existingDivContent}
+      ${observationsHTML}
     </div>`;
 
     return { resources: newResources, section };
