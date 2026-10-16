@@ -10,6 +10,7 @@ export const GET = async ({ request, url }: { request: Request; url: URL; }) => 
     `${base}/Device?patient=${pid}`,
     `${base}/DeviceUseStatement?patient=${pid}`,
     `${base}/DiagnosticReport?patient=${pid}`,
+    `${base}/Encounter?patient=${pid}`,
     `${base}/Procedure?patient=${pid}`,
     `${base}/Observation?patient=${pid}&category=laboratory`,
     `${base}/Observation?patient=${pid}&category=sdoh`,
