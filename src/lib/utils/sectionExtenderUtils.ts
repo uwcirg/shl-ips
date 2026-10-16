@@ -1,4 +1,4 @@
-import type { Composition, CompositionSection, Bundle, BundleEntry, Encounter, Reference, Resource } from 'fhir/r4';
+import type { Composition, CompositionSection, Bundle, BundleEntry, Encounter, Flag, Reference, Resource } from 'fhir/r4';
 import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
 import { METHODS, type Method } from '$lib/config/tags';
 
@@ -12,11 +12,17 @@ interface IntermediateSectionUpdates {
   section: CompositionSection;
 }
 
+// Narrative divs must be valid XHTML, so escape values taken from resources
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 export class SectionExtenderRegistry {
   registry: Record<Method, SectionExtender>;
 
   patientStorySectionExtender = new PatientStorySectionExtender();
   advanceDirectivesSectionExtender = new AdvanceDirectivesSectionExtender();
+  alertsSectionExtender = new AlertsSectionExtender();
 
   historyOfIllnessSectionExtender = new HistoryOfIllnessSectionExtender();
   encounterSectionExtender = new EncounterSectionExtender();
@@ -51,6 +57,8 @@ export class SectionExtenderRegistry {
   // A resource is claimed by at most one extender: the first match in this list wins.
   resourceMatchingExtenders: SectionExtender[] = [
     this.patientStorySectionExtender,
+    this.advanceDirectivesSectionExtender,
+    this.alertsSectionExtender,
     this.encounterSectionExtender,
   ];
 
@@ -248,7 +256,74 @@ class AdvanceDirectivesSectionExtender extends SectionExtender {
     );
   }
 
+  matchesResource(resource: Resource): boolean {
+    return (
+      resource.resourceType === 'DocumentReference' &&
+      !!resource.category?.some(c => c.coding?.some(
+        coding => coding.code === "42348-3" && coding.system === "http://loinc.org"
+      ))
+    );
+  }
+
   computeUpdates(newResources: Resource[], existingResources: Resource[], section: CompositionSection): IntermediateSectionUpdates {
+    return { resources: newResources, section };
+  }
+}
+
+class AlertsSectionExtender extends SectionExtender {
+  createWhenNoNewResources = false;
+  template = {
+    title: "Alerts",
+    code: {
+      coding: [
+        {
+          system: "http://loinc.org",
+          code: "104605-1",
+          display: "Alert"
+        }
+      ]
+    },
+    text: {
+      status: "generated",
+      div: ""
+    },
+    entry: []
+  };
+
+  matchesResource(resource: Resource): boolean {
+    return resource.resourceType === 'Flag';
+  }
+
+  sectionSelector(section: CompositionSection): boolean {
+    return (
+      section.code?.coding?.find(
+        (coding) => coding.code === "104605-1" && coding.system === "http://loinc.org"
+      )
+    );
+  }
+
+  computeUpdates(newResources: Resource[], existingResources: Resource[], section: CompositionSection): IntermediateSectionUpdates {
+    const currentDiv = section?.text?.div || '';
+    if (!newResources || newResources.length === 0) {
+      return { resources: newResources, section };
+    }
+    // With an existing narrative, only add the new flags to avoid repeating the old ones
+    const flags = (currentDiv ? newResources : [...existingResources, ...newResources])
+      .filter((r): r is Flag => r.resourceType === 'Flag');
+    const flagRows = flags.map(f => {
+      const coding = f.code?.coding?.[0];
+      const alert = f.code?.text ?? coding?.display ?? coding?.code ?? 'Alert';
+      const date = f.period?.start?.substring(0, 10) ?? '';
+      return `<tr><td>${escapeHtml(alert)}</td><td>${escapeHtml(f.status ?? '')}</td><td>${escapeHtml(date)}</td></tr>`;
+    }).join('');
+    const flagsHTML = flags.length > 0
+      ? `<h5>${this.getSectionTitle()}</h5><table class="hapiPropertyTable"><thead><tr><th>Alert</th><th>Status</th><th>Date</th></tr></thead><tbody>${flagRows}</tbody></table>`
+      : "";
+    section.text.div = `<div xmlns="http://www.w3.org/1999/xhtml">
+      ${currentDiv}
+      ${flagsHTML}
+    </div>`;
+
     return { resources: newResources, section };
   }
 }
@@ -346,7 +421,6 @@ class EncounterSectionExtender extends SectionExtender {
     // With an existing narrative, only add the new encounters to avoid repeating the old ones
     const encounters = (existingDivContent ? newResources : [...existingResources, ...newResources])
       .filter((r): r is Encounter => r.resourceType === 'Encounter');
-    const escapeHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const encounterRows = encounters.map(e => {
       const typeCoding = e.type?.[0]?.coding?.[0];
       const type = e.type?.[0]?.text ?? typeCoding?.display ?? typeCoding?.code ?? e.class?.display ?? e.class?.code ?? 'Encounter';
