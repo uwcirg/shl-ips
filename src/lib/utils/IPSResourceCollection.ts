@@ -124,19 +124,30 @@ export class IPSResourceCollection extends ResourceCollection {
         });
         const datasetMethod = datasetPatient?.meta?.tag?.find(t => t.system === METHOD_SYSTEM)?.code;
         let sectionExtenderForMethod = this.sectionExtenderRegistry.register(datasetMethod);
-        let extendedSectionTitle = sectionExtenderForMethod?.getSectionTitle();
         let result = super.addResources(resources);
+        if (datasetPatient && datasetMethod && sectionExtenderForMethod) {
+            // The dataset's method decides the section; all its resources go there
+            const extendedSectionTitle = sectionExtenderForMethod.getSectionTitle();
+            result.forEach(rh => this.trackForExtension(extendedSectionTitle, rh));
+            return result;
+        }
+        // Otherwise, individual resources may trigger an extender based on their content
         result.forEach(rh => {
-            if (datasetPatient && datasetMethod && sectionExtenderForMethod && extendedSectionTitle) {
-                // Add resource ids to extended section list
-                this.sectionExtensionResources.update((curr) => {
-                    curr[extendedSectionTitle] = curr[extendedSectionTitle] ?? new Set<string>();
-                    curr[extendedSectionTitle].add(rh.tempId);
-                    return { ...curr };
-                });
+            const extender = this.sectionExtenderRegistry.registerForResource(rh.resource);
+            if (extender) {
+                this.trackForExtension(extender.getSectionTitle(), rh);
             }
         });
         return result;
+    }
+
+    // Add resource id to the extended section list
+    private trackForExtension(sectionTitle: string, rh: ResourceHelper) {
+        this.sectionExtensionResources.update((curr: Record<string, Set<string>>) => {
+            curr[sectionTitle] =curr[sectionTitle] ?? new Set<string>();
+            curr[sectionTitle].add(rh.tempId);
+            return { ...curr };
+        });
     }
 
     extendIPS(ips: Bundle) {

@@ -1,4 +1,4 @@
-import type { Composition, CompositionSection, Bundle, BundleEntry, Reference, Resource } from 'fhir/r4';
+import type { Composition, CompositionSection, Bundle, BundleEntry, Encounter, Reference, Resource } from 'fhir/r4';
 import { INTERMEDIATE_FHIR_SERVER_BASE } from '$lib/config/config';
 import { METHODS, type Method } from '$lib/config/tags';
 
@@ -19,10 +19,14 @@ export class SectionExtenderRegistry {
   advanceDirectivesSectionExtender = new AdvanceDirectivesSectionExtender();
 
   historyOfIllnessSectionExtender = new HistoryOfIllnessSectionExtender();
+  encounterSectionExtender = new EncounterSectionExtender();
+  
 
   registeredExtenders = new Set<SectionExtender>();
   // Extenders that run on every IPS regardless of which methods were used
-  alwaysRunExtenders: SectionExtender[] = [this.historyOfIllnessSectionExtender];
+  alwaysRunExtenders: SectionExtender[] = [
+    this.historyOfIllnessSectionExtender,
+  ];
 
   constructor() {
     this.registry = {
@@ -39,6 +43,22 @@ export class SectionExtenderRegistry {
       return undefined;
     }
     this.registeredExtenders.add(extender);
+    return extender;
+  }
+
+  // Extenders that opt in to being triggered by the content of a resource (via their own
+  // matchesResource) rather than the dataset's method.
+  // A resource is claimed by at most one extender: the first match in this list wins.
+  resourceMatchingExtenders: SectionExtender[] = [
+    this.patientStorySectionExtender,
+    this.encounterSectionExtender,
+  ];
+
+  registerForResource(resource: Resource): SectionExtender | undefined {
+    const extender = this.resourceMatchingExtenders.find(e => e.matchesResource(resource));
+    if (extender) {
+      this.registeredExtenders.add(extender);
+    }
     return extender;
   }
 
@@ -62,6 +82,13 @@ abstract class SectionExtender {
   createWhenNoNewResources = true;
 
   abstract sectionSelector(section: CompositionSection): boolean;
+
+  // Whether a resource should trigger this extender on its own. Only consulted for extenders
+  // listed in the registry's resourceMatchingExtenders; override to opt in.
+  matchesResource(_resource: Resource): boolean {
+    return false;
+  }
+
   abstract computeUpdates(newResources: Resource[], existingResources: Resource[], section: CompositionSection): IntermediateSectionUpdates | undefined;
 
   extend(newResources: Resource[], ips: Bundle): SectionUpdates | undefined {
@@ -145,6 +172,10 @@ class PatientStorySectionExtender extends SectionExtender {
     ],
     entry: []
   };
+
+  matchesResource(resource: Resource): boolean {
+    return resource.resourceType === 'Goal';
+  }
 
   sectionSelector(section: CompositionSection): boolean {
     return (
@@ -269,6 +300,67 @@ class HistoryOfIllnessSectionExtender extends SectionExtender {
       ${conditionsHTML}
     </div>`;
   
+    return { resources: newResources, section };
+  }
+}
+
+class EncounterSectionExtender extends SectionExtender {
+  createWhenNoNewResources = false;
+  template = {
+    "title" : "Encounters",
+    "code" : {
+      "coding" : [
+        {
+          "system": "http://loinc.org",
+          "code": "46240-8",
+          "display": "History of Hospitalizations+Outpatient visits Narrative"
+        }
+      ]
+    },
+    "text" : {
+      "div" : "",
+      "status" : "generated"
+    },
+    "entry" : []
+  };
+
+  matchesResource(resource: Resource): boolean {
+    return resource.resourceType === 'Encounter';
+  }
+
+  sectionSelector(section: CompositionSection): boolean {
+    return (
+      section.code?.coding?.find(
+        (coding) => coding.code === "46240-8" && coding.system === "http://loinc.org"
+      )
+    );
+  }
+
+  computeUpdates(newResources: Resource[], existingResources: Resource[], section: CompositionSection): IntermediateSectionUpdates {
+    const currentDiv = section?.text?.div || '';
+    if (!newResources || newResources.length === 0) {
+      return { resources: newResources, section };
+    }
+    let existingDivContent = currentDiv;
+
+    // With an existing narrative, only add the new encounters to avoid repeating the old ones
+    const encounters = (existingDivContent ? newResources : [...existingResources, ...newResources])
+      .filter((r): r is Encounter => r.resourceType === 'Encounter');
+    const escapeHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const encounterRows = encounters.map(e => {
+      const typeCoding = e.type?.[0]?.coding?.[0];
+      const type = e.type?.[0]?.text ?? typeCoding?.display ?? typeCoding?.code ?? e.class?.display ?? e.class?.code ?? 'Encounter';
+      const date = e.period?.start?.substring(0, 10) ?? '';
+      return `<tr><td>${escapeHtml(type)}</td><td>${escapeHtml(date)}</td><td>${escapeHtml(e.status ?? '')}</td></tr>`;
+    }).join('');
+    const encountersHTML = encounters.length > 0
+      ? `<h5>${this.getSectionTitle()}</h5><table class="hapiPropertyTable"><thead><tr><th>Encounter</th><th>Date</th><th>Status</th></tr></thead><tbody>${encounterRows}</tbody></table>`
+      : "";
+    section.text.div = `<div xmlns="http://www.w3.org/1999/xhtml">
+      ${existingDivContent}
+      ${encountersHTML}
+    </div>`;
+
     return { resources: newResources, section };
   }
 }
