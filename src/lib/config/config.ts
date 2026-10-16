@@ -380,6 +380,15 @@ export const PATIENT_IPS = {
   'Peter Kieth Jordan': 'https://terminz.azurewebsites.net/fhir/Patient/$summary?profile=http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips&identifier=https://standards.digital.health.nz/ns/nhi-id|NNJ9186&_format=json'
 }
 export const EXAMPLE_IPS = {
+  'Lilly Taiwan': 'https://fhir.myhealthsummary.demo.cirg.uw.edu/fhir/Bundle/3d79b501-a171-47a8-8042-53c508dd3b61',
+  'Genny Taiwan': 'https://fhir.myhealthsummary.demo.cirg.uw.edu/fhir/Bundle/029607a9-01f5-4ff8-a046-c5498f3284a5',
+  'Marta Taiwan': 'https://fhir.myhealthsummary.demo.cirg.uw.edu/fhir/Bundle/dbf9baad-db95-438b-8554-b92174e45fd3',
+  'Patricia Taiwan': 'https://fhir.myhealthsummary.demo.cirg.uw.edu/fhir/Bundle/b4536645-6872-479c-ba5d-05420a3ca6d3',
+  'Jennifer Taiwan': 'https://fhir.myhealthsummary.demo.cirg.uw.edu/fhir/Bundle/8a019a33-86d7-4e83-afd6-ae580206a33c',
+  'Marta JP': 'https://fhir.myhealthsummary.demo.cirg.uw.edu/fhir/Bundle/e14a4fe8-9285-45ea-aec1-d13a93237fe3',
+  'José Paraguay': 'https://fhir.dhealth-lab.org/fhir/Bundle/55',
+  'Fabian Peru': 'https://fhir.dhealth-lab.org/fhir/Bundle/54',
+  'Matias Argentina': 'https://fhir.dhealth-lab.org/fhir/Bundle/53',
   'Epic IHE 2025 - Marta Villa Summary': `${SYSTEM_URL}/api/epic-ihe-2026/summary?pid=eRHdrDtPMnBqWCyr3lpmwMA3`,
   'Epic IHE 2025 - Marta Villa Everything': `${SYSTEM_URL}/api/epic-ihe-2026/everything?pid=eRHdrDtPMnBqWCyr3lpmwMA3`,
   'Epic IHE 2025 - Genny Works Summary': `${SYSTEM_URL}/api/epic-ihe-2026/summary?pid=eufNrX8r16idDdxj5WraIKg3`,
