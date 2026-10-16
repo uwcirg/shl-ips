@@ -25,6 +25,7 @@ export const GET = async ({ request, url }: { request: Request; url: URL; }) => 
     `${base}/Flag?patient=${pid}`,
     `${base}/CarePlan?patient=${pid}&category=38717003`,
     `${base}/ClinicalImpression?patient=${pid}`,
+    `${base}/DocumentReference?patient=${pid}`,
   ];
 
   let results = await Promise.allSettled(
@@ -33,7 +34,9 @@ export const GET = async ({ request, url }: { request: Request; url: URL; }) => 
         method: "GET",
         headers: {
           "Epic-Client-ID": "c11e3b86-a849-427a-b661-11fe6cdf5df7",
-          "Accept": "application/fhir+json"
+          "Accept": "application/fhir+json",
+          "Epic-User-ID": "22456",
+          "Epic-User-IDType": "EXTERNAL"
         }
       });
       let textContent = await response.text();
@@ -67,6 +70,51 @@ export const GET = async ({ request, url }: { request: Request; url: URL; }) => 
   .filter((r) => r && r.resourceType !== "OperationOutcome")
   .map((r) => r.resourceType === "Bundle" ? r.entry : r).flat()
   .map((r) => { return { resource: r.resource ?? r } });
+
+  // Inline attachments of advance directive DocumentReferences (LOINC 42348-3) as base64 data
+  let adDocRefs = content.filter((r) =>
+    r.resource.resourceType === "DocumentReference" &&
+    r.resource.category?.some((c: any) => c.coding?.some((cd: any) => cd.code === "42348-3"))
+  );
+  await Promise.allSettled(
+    adDocRefs.flatMap((r) => (r.resource.content ?? []).map(async (c: any) => {
+      let attachment = c.attachment;
+      if (!attachment?.url || attachment.data) return;
+      let attachmentUrl = new URL(attachment.url, `${base}/`).toString();
+      let response = await fetch(attachmentUrl, {
+        method: "GET",
+        headers: {
+          "Epic-Client-ID": "c11e3b86-a849-427a-b661-11fe6cdf5df7",
+          "Accept": "application/fhir+json",
+          "Epic-User-ID": "22456",
+          "Epic-User-IDType": "EXTERNAL"
+        }
+      });
+      if (response.status !== 200) {
+        console.log(`Error fetching attachment: ${attachmentUrl} ${response.status} ${await response.text()}`);
+        return;
+      }
+      let bytes = new Uint8Array(await response.arrayBuffer());
+      let data: string;
+      try {
+        // Epic returns a Binary resource when Accept is fhir+json
+        let binary = JSON.parse(new TextDecoder().decode(bytes));
+        if (binary.resourceType !== "Binary" || !binary.data) throw new Error("not a Binary with data");
+        data = binary.data;
+        attachment.contentType ??= binary.contentType;
+      } catch (e) {
+        // Otherwise the body is the raw document
+        let binaryString = "";
+        for (let i = 0; i < bytes.length; i += 0x8000) {
+          binaryString += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+        }
+        data = btoa(binaryString);
+        attachment.contentType ??= response.headers.get("content-type") ?? undefined;
+      }
+      attachment.data = data;
+      delete attachment.url;
+    }))
+  );
 
   let deviceIds = content.filter((r) => r.resource.resourceType === "Device").map((r) => r.resource.id);
   let deviceTemplate = {
