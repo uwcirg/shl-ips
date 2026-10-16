@@ -8,7 +8,7 @@ export const GET = async ({ request, url }: { request: Request; url: URL; }) => 
   let response = await fetch(`${base}/Patient/${pid}/$summary`, {
     method: "GET",
     headers: {
-      "Epic-Client-ID": "c11e3b86-a849-427a-b661-11fe6cdf5df7",
+      "Epic-Client-ID": "738c9ffd-8f14-4c01-9917-fb6c6610b5eb",
       "Accept": "application/fhir+json"
     }
   });
