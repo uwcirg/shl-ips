@@ -20,6 +20,15 @@ function emptySection(title: string, code: string): any {
   };
 }
 
+// extend() reads existing sections from the Composition in the IPS bundle
+function ipsWithSections(...sections: any[]): any {
+  return {
+    resourceType: 'Bundle',
+    type: 'document',
+    entry: [{ resource: { resourceType: 'Composition', id: 'comp-1', section: sections } }]
+  };
+}
+
 describe('SectionExtenderRegistry', () => {
   it('resolves each configured method to its section extender', () => {
     const registry = new SectionExtenderRegistry();
@@ -102,17 +111,20 @@ describe('PatientStorySectionExtender (via the registry)', () => {
     expect(result?.section.entry).toEqual([{ reference: 'Goal/goal-1' }]);
   });
 
-  it('returns undefined without transforming anything when the existing section does not match', () => {
+  it('ignores a non-matching section in the IPS and builds a new one from the template', () => {
     const registry = new SectionExtenderRegistry();
     const extender = registry.getExtender(METHODS.PATIENT_STORY_FORM)!;
     const wrongSection = emptySection('Something Else', '00000-0');
 
     const result = extender.extend(
       [{ resourceType: 'Observation', id: 'obs-1', valueString: 'x' } as any],
-      wrongSection
+      ipsWithSections(wrongSection)
     );
 
-    expect(result).toBeUndefined();
+    expect(result?.section.title).toBe('Patient Story');
+    expect(result?.section.text.div).toContain('x');
+    expect(wrongSection.text.div).toBe('');
+    expect(wrongSection.entry).toEqual([]);
   });
 
   it('leaves the story untouched instead of throwing when there is no Observation resource', () => {
@@ -138,7 +150,7 @@ describe('PatientStorySectionExtender (via the registry)', () => {
       { resourceType: 'Observation', id: 'obs-1', valueString: 'First story.' } as any
     ]);
     const goal = { resourceType: 'Goal', id: 'goal-1', description: { text: 'Walk unaided' } };
-    const second = extender.extend([goal], first?.section);
+    const second = extender.extend([goal], ipsWithSections(first?.section));
 
     expect(second?.section.extension[0].valueString).toBe('First story.');
     expect(second?.section.text.div).toContain('First story.');
@@ -153,7 +165,7 @@ describe('PatientStorySectionExtender (via the registry)', () => {
     ]);
     const second = extender.extend(
       [{ resourceType: 'Observation', id: 'obs-2', valueString: 'Second story.' } as any],
-      first?.section
+      ipsWithSections(first?.section)
     );
 
     const div = second?.section.text.div ?? '';
@@ -178,11 +190,14 @@ describe('AdvanceDirectivesSectionExtender (via the registry)', () => {
     expect(result?.section.entry).toEqual([{ reference: 'Consent/consent-1' }]);
   });
 
-  it('returns undefined when the existing section does not match', () => {
+  it('ignores a non-matching section in the IPS and builds a new one from the template', () => {
     const registry = new SectionExtenderRegistry();
     const extender = registry.getExtender(METHODS.ADVANCE_DIRECTIVES_CREATE_POLST)!;
     const wrongSection = emptySection('Something Else', '00000-0');
 
-    expect(extender.extend([], wrongSection)).toBeUndefined();
+    const result = extender.extend([], ipsWithSections(wrongSection));
+
+    expect(result?.section.title).toBe('Advance Directives');
+    expect(wrongSection.entry).toEqual([]);
   });
 });

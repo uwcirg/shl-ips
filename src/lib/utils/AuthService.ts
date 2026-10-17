@@ -103,14 +103,12 @@ export class AuthService implements IAuthService {
       if (user && !user.expired && user?.access_token) {
         return user.access_token;
       } else {
+        // renewToken handles its own failures (including signing in again)
         const user = await this.renewToken();
-        if (!user) {
-          throw Error('Unable to renew token');
-        }
-        return user.access_token;
+        return user?.access_token;
       } 
     } catch (error) {
-      this.handleError(error);
+      await this.handleError(error);
     }
   }
 
@@ -193,7 +191,7 @@ export class AuthService implements IAuthService {
         return false;
       }
     } catch (error) {
-      this.handleError(error);
+      await this.handleError(error);
     }
   }
 
@@ -247,7 +245,7 @@ export class AuthService implements IAuthService {
         throw Error('Unable to authenticate user in background');
       }
     } catch (error) {
-      this.handleError(error);
+      await this.handleError(error);
     }
   }
 
