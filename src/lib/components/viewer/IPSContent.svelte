@@ -20,12 +20,12 @@
     CompositionSection,
     Resource
   } from "fhir/r4";
-  import { getContext, onDestroy } from 'svelte';
+  import { getContext } from 'svelte';
   import { readable, type Readable } from 'svelte/store';
   import { download } from '$lib/utils/util.js';
   import UnitDisplay from '$lib/components/app/UnitDisplay.svelte';
   import SectionExtension from '$lib/components/resource-templates/SectionExtension.svelte';
-  import type { IAuthService } from '$lib/utils/types';
+  import SectionNav, { type SectionNavItem } from '$lib/components/layout/SectionNav.svelte';
   import { createCategorizedStore, type UnitMap } from '$lib/stores/categorizedResources';
   import { createIpsCategorizer, type IpsSectionInput } from '$lib/utils/ipsCategorizer';
 
@@ -37,12 +37,6 @@
 
   const mode: Readable<string> = getContext('mode') ?? readable('');
 
-  // When signed in, the app shows a floating tab bar over the top of the page while scrolling
-  // (same condition as in Header), so the sticky menu and section jumps need to clear it.
-  const authService = getContext<IAuthService | undefined>('authService');
-  const authenticated: Readable<boolean> = authService?.authenticated ?? readable(false);
-  const user = authService?.user ?? readable(null);
-  $: signedIn = !!($authenticated && $user);
   $: showViewButtons = viewButtons === 'always' || $mode === 'advanced';
 
   type IpsSection = IpsSectionInput & { section: CompositionSection };
@@ -129,59 +123,20 @@
   }
 
   // --- Section navigation ---------------------------------------------------------------
-  // The URL fragment carries the SHL so the menu uses
-  // buttons and scrollIntoView instead of #anchor links.
+  // Ids tie each heading to its section for assistive technology. Jumping between sections is
+  // the SectionNav's job; it is handed each section's element.
   const uid = `ips${++instanceCounter}`;
   const sectionDomId = (index: number) => `${uid}-section-${index}`;
 
-  let activeTitle: string | undefined;
-  $: if (ipsSections.length > 0 && (activeTitle === undefined || !ipsSections.some(({ title }) => title === activeTitle))) {
-    activeTitle = ipsSections[0].title;
-  }
-
-  // Scroll-spy: the active section is the first (in display order) crossing the top part of the viewport
-  const visibleTitles = new Set<string>();
-  // A jump from the menu keeps its section active while the page scrolls there
-  let lockUntil = 0;
-  const observer = typeof IntersectionObserver === 'undefined'
-    ? undefined
-    : new IntersectionObserver((entries) => {
-        for (const entry of entries) {
-          const title = (entry.target as HTMLElement).dataset.sectionTitle;
-          if (title === undefined) continue;
-          if (entry.isIntersecting) visibleTitles.add(title); else visibleTitles.delete(title);
-        }
-        if (performance.now() < lockUntil) return;
-        const current = ipsSections.find(({ title }) => visibleTitles.has(title));
-        if (current) activeTitle = current.title;
-      }, { rootMargin: '0px 0px -75% 0px' });
-  onDestroy(() => observer?.disconnect());
-
-  function trackSection(node: HTMLElement, title: string) {
-    node.dataset.sectionTitle = title;
-    observer?.observe(node);
+  let sectionEls: Record<string, HTMLElement | undefined> = {};
+  $: navSections = ipsSections.map(({ title }): SectionNavItem => {
+    const count = ($unitsStore[title] ?? []).length;
     return {
-      update(newTitle: string) {
-        visibleTitles.delete(node.dataset.sectionTitle ?? '');
-        node.dataset.sectionTitle = newTitle;
-      },
-      destroy() {
-        observer?.unobserve(node);
-        visibleTitles.delete(node.dataset.sectionTitle ?? '');
-      }
+      title,
+      element: sectionEls[title],
+      count: count > 0 && displayMode !== "text" ? count : undefined
     };
-  }
-
-  function jumpTo(title: string, index: number) {
-    const section = document.getElementById(sectionDomId(index));
-    if (!section) return;
-    activeTitle = title;
-    lockUntil = performance.now() + 800;
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    section.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
-    // Move focus with the view so keyboard and screen reader users land on the section
-    section.querySelector<HTMLElement>('.ips-section-title')?.focus({ preventScroll: true });
-  }
+  });
 
   let showInfo = false;
   let infoMessage = "";
@@ -249,26 +204,8 @@
 {#if showInfo}
   <Row class="text-info">{infoMessage}</Row>
 {/if}
-<div class="ips-layout" class:signed-in={signedIn}>
-  <nav class="ips-nav" aria-label="Sections">
-    <ul class="list-unstyled mb-0">
-      {#each ipsSections as { title }, index}
-        {@const count = ($unitsStore[title] ?? []).length}
-        <li>
-          <button
-            type="button"
-            class="ips-nav-item"
-            class:active={title === activeTitle}
-            aria-current={title === activeTitle ? 'true' : undefined}
-            on:click={() => jumpTo(title, index)}
-          >
-            <span>{title}</span>
-            {#if count > 0 && displayMode !== "text"}<span class="ips-count">{count}</span>{/if}
-          </button>
-        </li>
-      {/each}
-    </ul>
-  </nav>
+<div class="ips-layout">
+  <SectionNav sections={navSections} />
 
   <div class="ips-sections">
     {#each ipsSections as { title, section }, index}
@@ -279,7 +216,7 @@
         id={sectionDomId(index)}
         class="ips-section"
         aria-labelledby={`${sectionDomId(index)}-title`}
-        use:trackSection={title}
+        bind:this={sectionEls[title]}
       >
         <h2 id={`${sectionDomId(index)}-title`} class="ips-section-title" tabindex="-1">
           {title}
@@ -347,72 +284,19 @@
 
 <style>
   .ips-layout {
-    /* Space the floating app tab bar takes at the top of the viewport while scrolling. It only
-       exists when signed in, and from sm up (signed-in phones get a bottom bar instead). */
-    --ips-overlay: 0px;
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: 1.5rem;
     padding-top: 1rem;
   }
-  @media (min-width: 576px) {
-    .ips-layout.signed-in {
-      --ips-overlay: var(--header-height, 64px);
-    }
-  }
-  /* The section menu is shown from md up; a mobile menu is a separate piece */
-  .ips-nav {
-    display: none;
-  }
+  /* The SectionNav column; the nav itself is shown from md up */
   @media (min-width: 768px) {
     .ips-layout {
       grid-template-columns: 13rem minmax(0, 1fr);
     }
-    .ips-nav {
-      display: block;
-      position: sticky;
-      top: calc(var(--ips-overlay) + 1rem);
-      align-self: start;
-      max-height: calc(100vh - var(--ips-overlay) - 2rem);
-      overflow-y: auto;
-    }
-  }
-  .ips-nav-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.5rem;
-    width: 100%;
-    padding: 0.4rem 0.65rem;
-    border: 0;
-    border-left: 3px solid transparent;
-    border-radius: 0.375rem;
-    background: none;
-    color: var(--bs-body-color);
-    font-size: 0.9rem;
-    text-align: left;
-    cursor: pointer;
-  }
-  .ips-nav-item:hover {
-    background-color: var(--bs-tertiary-bg, #f8f9fa);
-  }
-  .ips-nav-item.active {
-    border-left-color: var(--bs-primary);
-    background-color: var(--bs-secondary-bg, #e9ecef);
-    font-weight: 600;
-  }
-  .ips-count {
-    flex: 0 0 auto;
-    font-size: 0.75rem;
-    font-weight: 400;
-    color: var(--bs-secondary-color, #6c757d);
   }
   .ips-section + .ips-section {
     margin-top: 1.75rem;
-  }
-  /* Where a jump to a section lands, clear of the floating tab bar when there is one */
-  .ips-section {
-    scroll-margin-top: calc(var(--ips-overlay) + 1.25rem);
   }
   .ips-section-title {
     display: flex;
@@ -431,7 +315,10 @@
     outline: 2px solid var(--bs-primary);
     outline-offset: 2px;
   }
-  .ips-section-title .ips-count {
+  .ips-count {
+    flex: 0 0 auto;
     font-size: 0.9rem;
+    font-weight: 400;
+    color: var(--bs-secondary-color, #6c757d);
   }
 </style>
