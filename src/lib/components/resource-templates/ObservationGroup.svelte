@@ -8,7 +8,7 @@
   import { getObservationDisplayValue } from '$lib/utils/observationSparkline';
   import { choiceDTFields, hasChoiceDTField } from '$lib/utils/util';
   import { getFriendlySourceNameBySource } from '$lib/utils/resourceCollectionUtils';
-  import ObservationChart from '$lib/components/app/ObservationChart.svelte';
+  import ObservationChart from '$lib/components/resource-templates/ObservationChart.svelte';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
   import Date from '$lib/components/resource-templates/Date.svelte';
 
