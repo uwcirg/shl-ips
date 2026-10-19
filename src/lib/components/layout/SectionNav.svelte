@@ -44,38 +44,57 @@
     return parseFloat(header) || 64;
   }
 
+  // Px from the top of the viewport at which a jump lands its element
+  function jumpOffset(): number {
+    const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    return overlayHeight() + JUMP_CLEARANCE_REM * rootFontSize;
+  }
+
   // --- Active section (scroll-spy) --------------------------------------------------------
   let activeElement: HTMLElement | null | undefined;
   $: if (!sections.some(({ element }) => element && element === activeElement)) {
     activeElement = sections.find(({ element }) => element)?.element;
   }
 
-  // The active section is the first (in list order) crossing the top part of the viewport. When
-  // none does (e.g. the elements are small headings and the reader is inside a long section), it
-  // is the last one that has scrolled above that part of the viewport.
+  // The active section is the last one (in list order) whose top has reached the spy line, a
+  // fixed fraction of the way down the viewport. Every element switches at that same line, whatever
+  // the size of its neighbours (a rule like "first one visible in the top part of the screen"
+  // makes a short section hold the highlight until it scrolls off, so the switch happens at
+  // a different place for each section).
   //
-  // This reads the elements' live positions on each scroll frame rather than remembering what an
-  // IntersectionObserver last reported: a fast scroll can carry an element across the band
-  // between two frames without any event, and remembered state then goes stale.
-  const SPY_BAND = 0.33; // fraction of the viewport height, from the top
+  // The line is never above where a jump lands an element, so a section you just jumped to counts
+  // as reached. Near the end of the page it slides down to the bottom edge: the page runs out of
+  // scroll, so the last (short) sections could otherwise never get their tops up to the line. The
+  // slide is gradual, so the active section can't flip back and forth as you scroll.
+  //
+  // This reads live positions on each scroll frame rather than remembering what an
+  // IntersectionObserver last reported: a fast scroll can carry an element past the line between
+  // two frames without any event, and remembered state then goes stale.
+  const SPY_LINE = 0.40; // fraction of the viewport height, from the top
+  const JUMP_SLACK_PX = 8;
   // A jump from the nav keeps its section active while the page scrolls there
   let lockUntil = 0;
   let frame = 0;
 
+  function spyLinePx(): number {
+    const viewport = window.innerHeight;
+    const base = Math.max(SPY_LINE * viewport, jumpOffset() + JUMP_SLACK_PX);
+    const remaining = Math.max(0, document.documentElement.scrollHeight - (window.scrollY + viewport));
+    const slideSpan = viewport - base;
+    if (slideSpan <= 0) return viewport;
+    return base + slideSpan * (1 - Math.min(remaining / slideSpan, 1));
+  }
+
   function updateActive() {
     if (performance.now() < lockUntil) return;
-    const bandBottom = window.innerHeight * SPY_BAND;
-    let inBand: HTMLElement | undefined;
-    let passed: HTMLElement | undefined;
+    const line = spyLinePx();
+    let reached: HTMLElement | undefined;
     for (const { element } of sections) {
       // Skip elements that aren't rendered (e.g. in a hidden tab), which would read as zero-sized at the top
       if (!element || element.getClientRects().length === 0) continue;
-      const rect = element.getBoundingClientRect();
-      if (rect.bottom > 0 && rect.top < bandBottom) inBand ??= element;
-      else if (rect.bottom <= 0) passed = element;
+      if (element.getBoundingClientRect().top <= line) reached = element;
     }
-    const current = inBand ?? passed;
-    if (current) activeElement = current;
+    if (reached) activeElement = reached;
   }
 
   function scheduleUpdate() {
@@ -104,8 +123,7 @@
     if (!element) return;
     activeElement = element;
     lockUntil = performance.now() + 800;
-    const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-    const top = element.getBoundingClientRect().top + window.scrollY - overlayHeight() - JUMP_CLEARANCE_REM * rootFontSize;
+    const top = element.getBoundingClientRect().top + window.scrollY - jumpOffset();
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     window.scrollTo({ top: Math.max(0, top), behavior: reduceMotion ? 'auto' : 'smooth' });
     // Move focus with the view so keyboard and screen reader users land on the section: its
