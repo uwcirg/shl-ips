@@ -23,12 +23,14 @@
   export let sortFields: string[] = [];
   export let filterFields: string[] = [];
   export let searchInput: string = "";
+  // The title element, bindable so a page can scroll to it (e.g. from a SectionNav)
+  export let titleElement: HTMLElement | undefined = undefined;
 
 </script>
 <Card class={className}>
   <CardHeader>
     <div class="d-flex justify-content-between">
-      <h5>{title}</h5>
+      <h5 bind:this={titleElement}>{title}</h5>
       {#if addFn}
         <div>
           <Button class="w-100" outline size="sm" color="secondary" style="border: 1px dashed" on:click={addFn}><Icon name="plus" /> Add</Button>
