@@ -31,10 +31,17 @@
   let categoryDataToDisplay: Readable<UnitMap> = derived(
     unitsStore,
     ($unitsStore) => {
-      if (categories.length === 0) {
-        return $unitsStore;
-      }
       let result: UnitMap = {};
+      if (categories.length === 0) {
+        // No categories prop: show all categories, alphabetical by name
+        Object.keys($unitsStore)
+          .sort((a, b) => a.localeCompare(b))
+          .forEach(category => {
+            result[category] = $unitsStore[category];
+          });
+        return result;
+      }
+      // Passed categories prop: keep the order the parent provided
       categories.forEach(category => {
         if ($unitsStore[category]) {
           result[category] = $unitsStore[category];
