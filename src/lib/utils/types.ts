@@ -218,6 +218,7 @@ export interface IAuthService {
   isAuthenticated(): Promise<boolean | undefined>;
   restoreSession(timeoutMs?: number): Promise<boolean>;
   syncTokenToServer(token: string): Promise<boolean>;
+  setAuthRequired(required: boolean): void;
 }
 
 export interface IResourceCollection {

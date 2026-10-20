@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getContext, setContext, onMount } from 'svelte';
+  import { getContext, setContext, onMount, onDestroy } from 'svelte';
   import { writable, type Writable, type Readable } from 'svelte/store';
   import {
     Col,
@@ -74,11 +74,18 @@
   }
 
   onMount(async () => {
+    // Pages under this layout need a session, so an ended session redirects
+    // to sign-in here; public pages just show the user as signed out.
+    authService.setAuthRequired(true);
     await checkUser();
     if (!data.unauthenticated) {
       await fhirDataService.loadUserData();
       $shlStore = await shlClient.getUserShls();
     }
+  });
+
+  onDestroy(() => {
+    authService.setAuthRequired(false);
   });
 
 </script>

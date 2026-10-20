@@ -96,7 +96,9 @@
       return;
     }
     try {
-      authenticated = !!(await authService.isAuthenticated()) || await authService.restoreSession();
+      // Uses a valid stored session as-is; an expired one is renewed silently
+      // if the IdP session is still alive, otherwise cleared (no redirect).
+      authenticated = await authService.restoreSession();
     } catch (e) {
       authenticated = false;
     }

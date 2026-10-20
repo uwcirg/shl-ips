@@ -69,7 +69,7 @@ function renderIpsPage(opts: { user?: { profile: Record<string, unknown> } } = {
     user: writable(opts.user ?? null),
     authenticated: writable(!!opts.user),
     isAuthenticated: vi.fn().mockResolvedValue(!!opts.user),
-    restoreSession: vi.fn().mockResolvedValue(false)
+    restoreSession: vi.fn().mockResolvedValue(!!opts.user)
   } as any);
   return render(IpsPage, { context: new Map([['authService', auth]]) });
 }
