@@ -217,8 +217,7 @@ export interface IAuthService {
   logout(): Promise<void>;
   isAuthenticated(): Promise<boolean | undefined>;
   restoreSession(timeoutMs?: number): Promise<boolean>;
-  syncTokenToServer(token: string): Promise<boolean>;
-}
+  syncTokenToServer(token: string): Promise<boolean>;}
 
 export interface IResourceCollection {
   id: string;

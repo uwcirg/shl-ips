@@ -102,24 +102,67 @@ describe('AuthService', () => {
     expect(get(service.user)).toEqual(user);
   });
 
-  it('forces a fresh login when a silent renew fails', () => {
-    new AuthService();
+  it('clears the user without redirecting when a silent renew fails', async () => {
+    const service = new AuthService();
     const manager = latestManager();
     const onSilentRenewError = manager.events.addSilentRenewError.mock.calls[0][0];
+    service.storeUser(fakeUser());
 
-    onSilentRenewError(new Error('renew failed'));
+    await onSilentRenewError(new Error('renew failed'));
 
-    expect(manager.signinRedirect).toHaveBeenCalled();
+    expect(manager.removeUser).toHaveBeenCalled();
+    expect(get(service.user)).toBeNull();
+    expect(get(service.authenticated)).toBe(false);
+    expect(manager.signinRedirect).not.toHaveBeenCalled();
   });
 
-  it('forces a fresh login as a backstop when the access token actually expires', () => {
-    new AuthService();
+  it('clears the user without redirecting when the access token expires', async () => {
+    const service = new AuthService();
     const manager = latestManager();
     const onAccessTokenExpired = manager.events.addAccessTokenExpired.mock.calls[0][0];
+    service.storeUser(fakeUser());
 
-    onAccessTokenExpired();
+    await onAccessTokenExpired();
 
-    expect(manager.signinRedirect).toHaveBeenCalled();
+    expect(manager.removeUser).toHaveBeenCalled();
+    expect(get(service.user)).toBeNull();
+    expect(get(service.authenticated)).toBe(false);
+    expect(manager.signinRedirect).not.toHaveBeenCalled();
+  });
+
+  describe('restoreSession', () => {
+    it('uses a stored user that is still valid without a silent sign-in', async () => {
+      const service = new AuthService();
+      const manager = latestManager();
+      manager.getUser.mockResolvedValue(fakeUser());
+
+      expect(await service.restoreSession()).toBe(true);
+      expect(manager.signinSilent).not.toHaveBeenCalled();
+    });
+
+    it('renews an expired stored user silently when the IdP session is alive', async () => {
+      const service = new AuthService();
+      const manager = latestManager();
+      manager.getUser.mockResolvedValue(fakeUser({ expired: true }));
+      manager.signinSilent.mockResolvedValue(fakeUser({ access_token: 'fresh-token' }));
+
+      expect(await service.restoreSession()).toBe(true);
+      expect(get(service.user)?.access_token).toBe('fresh-token');
+    });
+
+    it('clears an expired stored user without redirecting when the IdP session has ended', async () => {
+      const service = new AuthService();
+      const manager = latestManager();
+      manager.getUser.mockResolvedValue(fakeUser({ expired: true }));
+      manager.signinSilent.mockRejectedValue(
+        Object.assign(new Error('Session not active'), { error: 'invalid_grant' })
+      );
+
+      expect(await service.restoreSession()).toBe(false);
+      expect(manager.removeUser).toHaveBeenCalled();
+      expect(manager.signinRedirect).not.toHaveBeenCalled();
+      expect(get(service.authenticated)).toBe(false);
+    });
   });
 
   it('ignores token expiry while a sign-in callback is being processed', async () => {
@@ -134,7 +177,8 @@ describe('AuthService', () => {
     finishCallback(fakeUser());
     await callback;
 
-    expect(manager.signinRedirect).not.toHaveBeenCalled();
+    expect(manager.removeUser).not.toHaveBeenCalled();
+    expect(get(service.authenticated)).toBe(true);
   });
 
   it('starts only one redirect when several logins are requested at once', () => {

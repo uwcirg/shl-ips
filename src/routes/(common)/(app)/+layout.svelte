@@ -73,8 +73,16 @@
     }
   }
 
+  // AuthService only clears the user when a session ends; pages under this
+  // layout need a session, so the redirect to sign-in happens here.
+  let userChecked = false;
+  $: if (userChecked && !$user) {
+    authService.login();
+  }
+
   onMount(async () => {
     await checkUser();
+    userChecked = true;
     if (!data.unauthenticated) {
       await fhirDataService.loadUserData();
       $shlStore = await shlClient.getUserShls();

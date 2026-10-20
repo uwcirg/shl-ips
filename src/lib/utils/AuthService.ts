@@ -53,15 +53,24 @@ export class AuthService implements IAuthService {
     });
     this.userManager.events.addSilentRenewError((error: Error) => {
       console.error('Silent renew failed', error);
-      this.login();
+      return this.sessionEnded();
     });
     this.userManager.events.addAccessTokenExpired(() => {
       // Safety net in case automaticSilentRenew's own retry didn't recover in time.
       // Skipped mid-callback: a stale expired user left in sessionStorage fires
-      // this on page load, and redirecting would abort the sign-in in progress.
+      // this on page load, and clearing it would race the sign-in in progress.
       if (this.processingCallback) return;
-      this.login();
+      return this.sessionEnded();
     });
+  }
+
+  /**
+   * Signs the user out locally without redirecting. Pages that require a
+   * session watch the user store and initiate the login redirect themselves.
+   */
+  private async sessionEnded(): Promise<void> {
+    await this.userManager.removeUser();
+    this.storeUser(null);
   }
 
   async syncTokenToServer(token: string): Promise<boolean> {
@@ -203,7 +212,8 @@ export class AuthService implements IAuthService {
    */
   async restoreSession(timeoutMs: number = 4000): Promise<boolean> {
     try {
-      if (await this.userManager.getUser()) {
+      const stored = await this.userManager.getUser();
+      if (stored && !stored.expired) {
         return await this.isAuthenticated() ?? false;
       }
       const user = await Promise.race([
@@ -212,6 +222,7 @@ export class AuthService implements IAuthService {
       ]);
       if (!user) {
         console.warn(`restoreSession: silent sign-in did not complete within ${timeoutMs}ms`);
+        await this.clearExpiredUser(stored);
         return false;
       }
       this.storeUser(user);
@@ -223,7 +234,17 @@ export class AuthService implements IAuthService {
       // login_required etc: simply not signed in
       console.warn('restoreSession: silent sign-in failed', error);
       this.userManager.clearStaleState();
+      await this.clearExpiredUser();
       return false;
+    }
+  }
+
+  /** Drops a stored user whose session could not be renewed, so the app shows it as signed out. */
+  private async clearExpiredUser(stored?: User | null): Promise<void> {
+    const user = stored === undefined ? await this.userManager.getUser() : stored;
+    if (user?.expired) {
+      await this.userManager.removeUser();
+      this.storeUser(null);
     }
   }
 
