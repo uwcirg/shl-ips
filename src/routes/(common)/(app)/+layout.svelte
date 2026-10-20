@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getContext, setContext, onMount, onDestroy } from 'svelte';
+  import { getContext, setContext, onMount } from 'svelte';
   import { writable, type Writable, type Readable } from 'svelte/store';
   import {
     Col,
@@ -73,19 +73,20 @@
     }
   }
 
+  // AuthService only clears the user when a session ends; pages under this
+  // layout need a session, so the redirect to sign-in happens here.
+  let userChecked = false;
+  $: if (userChecked && !$user) {
+    authService.login();
+  }
+
   onMount(async () => {
-    // Pages under this layout need a session, so an ended session redirects
-    // to sign-in here; public pages just show the user as signed out.
-    authService.setAuthRequired(true);
     await checkUser();
+    userChecked = true;
     if (!data.unauthenticated) {
       await fhirDataService.loadUserData();
       $shlStore = await shlClient.getUserShls();
     }
-  });
-
-  onDestroy(() => {
-    authService.setAuthRequired(false);
   });
 
 </script>

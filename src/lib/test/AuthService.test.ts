@@ -102,41 +102,32 @@ describe('AuthService', () => {
     expect(get(service.user)).toEqual(user);
   });
 
-  it('forces a fresh login when a silent renew fails on a page that requires auth', () => {
-    const service = new AuthService();
-    service.setAuthRequired(true);
-    const manager = latestManager();
-    const onSilentRenewError = manager.events.addSilentRenewError.mock.calls[0][0];
-
-    onSilentRenewError(new Error('renew failed'));
-
-    expect(manager.signinRedirect).toHaveBeenCalled();
-  });
-
-  it('forces a fresh login as a backstop when the access token expires on a page that requires auth', () => {
-    const service = new AuthService();
-    service.setAuthRequired(true);
-    const manager = latestManager();
-    const onAccessTokenExpired = manager.events.addAccessTokenExpired.mock.calls[0][0];
-
-    onAccessTokenExpired();
-
-    expect(manager.signinRedirect).toHaveBeenCalled();
-  });
-
-  it('signs the user out locally instead of redirecting when the session ends on a public page', async () => {
+  it('clears the user without redirecting when a silent renew fails', async () => {
     const service = new AuthService();
     const manager = latestManager();
-    const onAccessTokenExpired = manager.events.addAccessTokenExpired.mock.calls[0][0];
     const onSilentRenewError = manager.events.addSilentRenewError.mock.calls[0][0];
     service.storeUser(fakeUser());
 
-    await onAccessTokenExpired();
     await onSilentRenewError(new Error('renew failed'));
 
-    expect(manager.signinRedirect).not.toHaveBeenCalled();
     expect(manager.removeUser).toHaveBeenCalled();
+    expect(get(service.user)).toBeNull();
     expect(get(service.authenticated)).toBe(false);
+    expect(manager.signinRedirect).not.toHaveBeenCalled();
+  });
+
+  it('clears the user without redirecting when the access token expires', async () => {
+    const service = new AuthService();
+    const manager = latestManager();
+    const onAccessTokenExpired = manager.events.addAccessTokenExpired.mock.calls[0][0];
+    service.storeUser(fakeUser());
+
+    await onAccessTokenExpired();
+
+    expect(manager.removeUser).toHaveBeenCalled();
+    expect(get(service.user)).toBeNull();
+    expect(get(service.authenticated)).toBe(false);
+    expect(manager.signinRedirect).not.toHaveBeenCalled();
   });
 
   describe('restoreSession', () => {
@@ -186,7 +177,8 @@ describe('AuthService', () => {
     finishCallback(fakeUser());
     await callback;
 
-    expect(manager.signinRedirect).not.toHaveBeenCalled();
+    expect(manager.removeUser).not.toHaveBeenCalled();
+    expect(get(service.authenticated)).toBe(true);
   });
 
   it('starts only one redirect when several logins are requested at once', () => {

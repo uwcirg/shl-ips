@@ -53,8 +53,6 @@ export class MockAuthService implements IAuthService {
     this.authenticated.set(false);
   }
 
-  setAuthRequired(_required: boolean): void {}
-
   async restoreSession(): Promise<boolean> {
     return (await this.isAuthenticated()) ?? false;
   }

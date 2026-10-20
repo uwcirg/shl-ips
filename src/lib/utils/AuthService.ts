@@ -19,9 +19,6 @@ export class AuthService implements IAuthService {
   protected redirect_url: string = "";
   private loginInProgress: Promise<void> | null = null;
   private processingCallback = false;
-  // True while a page that requires sign-in is mounted; public pages leave it
-  // false so an ended session signs the user out locally instead of redirecting.
-  private authRequired = false;
 
   private _user: Writable<User | null> = writable(null);
   public readonly user: Readable<User | null> = derived(this._user, ($user) => $user);
@@ -56,26 +53,22 @@ export class AuthService implements IAuthService {
     });
     this.userManager.events.addSilentRenewError((error: Error) => {
       console.error('Silent renew failed', error);
-      this.sessionEnded();
+      return this.sessionEnded();
     });
     this.userManager.events.addAccessTokenExpired(() => {
       // Safety net in case automaticSilentRenew's own retry didn't recover in time.
       // Skipped mid-callback: a stale expired user left in sessionStorage fires
-      // this on page load, and redirecting would abort the sign-in in progress.
+      // this on page load, and clearing it would race the sign-in in progress.
       if (this.processingCallback) return;
-      this.sessionEnded();
+      return this.sessionEnded();
     });
   }
 
-  setAuthRequired(required: boolean): void {
-    this.authRequired = required;
-  }
-
+  /**
+   * Signs the user out locally without redirecting. Pages that require a
+   * session watch the user store and initiate the login redirect themselves.
+   */
   private async sessionEnded(): Promise<void> {
-    if (this.authRequired) {
-      await this.login();
-      return;
-    }
     await this.userManager.removeUser();
     this.storeUser(null);
   }
