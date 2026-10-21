@@ -33,7 +33,7 @@
   export let submitting: boolean = false;
   export let sections: boolean | undefined = undefined;
 
-  let mode = getContext('mode');
+  let mode: Writable<string> = getContext('mode');
   
   const statusDispatch = createEventDispatcher<{ 'status-update': string }>();
   const errorDispatch = createEventDispatcher<{ error: string }>();
@@ -59,7 +59,7 @@
     }
   );
   
-  const { store: categorizedResourceStore, unitsStore } = createCategorizedStore(categorizerInput);
+  const { store: categorizedResourceStore, sortResources, unitsStore } = createCategorizedStore(categorizerInput);
 
   let patientStore: Record<string, CategorizedResource>;
   let patientBadgeColor: string = 'danger';
