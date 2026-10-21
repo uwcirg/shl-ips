@@ -60,6 +60,9 @@ export class FHIRDataService {
   patientLinks: Readable<Array<any>>;
   loading: Writable<boolean>;
 
+  // Tail of the queue that serializes master patient read-modify-write updates
+  private masterPatientWriteQueue: Promise<unknown> = Promise.resolve();
+
   constructor(auth: IAuthService) {
     this.auth = auth;
     this.userResources = writable({});
@@ -203,11 +206,10 @@ export class FHIRDataService {
             const key = getKey(duplicate);
             const patientId = get(duplicate.patient).id;
             try {
-              await this.removeLinkFromMasterPatient(`Patient/${patientId}`);
-              await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient/${patientId}?_cascade=delete`, {
-                method: 'DELETE',
-                headers: { Authorization: `Bearer ${await this.auth.getAccessToken()}` }
-              });
+              const response = await this.unlinkAndCascadeDeleteDatasetPatient(`Patient/${patientId}`);
+              if (!response.ok) {
+                throw new Error(await response.text());
+              }
               console.info(`Cleaned up duplicate dataset ${key}`);
             } catch (err) {
               // Non-fatal — the duplicate stays until next load
@@ -382,9 +384,14 @@ export class FHIRDataService {
   async saveDemographicsToPatient(): Promise<void> {
     try {
       const demographics = get(this.demographics);
-      let patientFromDemographics = constructPatientResource(demographics, get(this.masterPatient).resource);
-      delete patientFromDemographics.meta.tag;
-      await this.createOrUpdateMasterPatient(patientFromDemographics);
+      await this.updateMasterPatient(() => {
+        let patientFromDemographics = constructPatientResource(
+          demographics,
+          structuredClone(get(this.masterPatient).resource) as Patient
+        );
+        delete patientFromDemographics.meta?.tag;
+        return patientFromDemographics;
+      });
     } catch (err) {
       throw new FHIRServiceError('Failed to save changes', 'saveDemographicsToPatient', err);
     }
@@ -494,15 +501,59 @@ export class FHIRDataService {
     return masterPatient;
   }
 
+  // Serializes read-modify-write updates to the master patient. Without this, concurrent
+  // updates each clone the same in-memory patient and the last PUT wins, which can restore a
+  // link another caller just removed right before it cascade-deletes the linked dataset.
+  private updateMasterPatient(buildPatient: () => Resource): Promise<ResourceHelper> {
+    const write = this.masterPatientWriteQueue.then(() => this.createOrUpdateMasterPatient(buildPatient()));
+    this.masterPatientWriteQueue = write.catch(() => undefined);
+    return write;
+  }
+
   private async removeLinkFromMasterPatient(patientReference: string): Promise<void> {
-    const masterPatient = structuredClone(get(this.masterPatient).resource);
-    masterPatient.link = (masterPatient.link ?? []).filter(
-      (link) => link.other.reference !== patientReference
+    await this.updateMasterPatient(() => {
+      const masterPatient = structuredClone(get(this.masterPatient).resource);
+      masterPatient.link = (masterPatient.link ?? []).filter(
+        (link) => link.other.reference !== patientReference
+      );
+      if (masterPatient.link.length === 0) {
+        delete masterPatient.link;
+      }
+      return masterPatient;
+    });
+  }
+
+  // _cascade=delete also deletes every resource that references the deleted patient, including
+  // the master patient if it still links to it (and with it, the user's access to all datasets).
+  // Refuse unless the server confirms nothing links to the patient anymore.
+  private async assertNoPatientLinksTo(patientReference: string): Promise<void> {
+    const response = await fetch(
+      `${INTERMEDIATE_FHIR_SERVER_BASE}/Patient?link=${encodeURIComponent(patientReference)}&_summary=count`,
+      {
+        cache: 'no-store',
+        headers: { "Authorization": `Bearer ${await this.auth.getAccessToken()}` }
+      }
     );
-    if (masterPatient.link.length === 0) {
-      delete masterPatient.link;
+    const result = response.ok ? await response.json().catch(() => undefined) : undefined;
+    if (result?.total !== 0) {
+      throw new FHIRServiceError(
+        `Refusing to delete ${patientReference}: could not confirm that no patient still links to it`,
+        'assertNoPatientLinksTo',
+        result ?? response
+      );
     }
-    await this.createOrUpdateMasterPatient(masterPatient);
+  }
+
+  // The only path that should ever cascade-delete a dataset patient
+  private async unlinkAndCascadeDeleteDatasetPatient(patientReference: string): Promise<Response> {
+    await this.removeLinkFromMasterPatient(patientReference);
+    await this.assertNoPatientLinksTo(patientReference);
+    return fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/${patientReference}?_cascade=delete`, {
+      method: 'DELETE',
+      headers: {
+        "Authorization": `Bearer ${await this.auth.getAccessToken()}`
+      }
+    });
   }
 
   async deleteDatasetFromServer(category: string, method: string, source: string): Promise<void> {
@@ -514,24 +565,20 @@ export class FHIRDataService {
       throw new FHIRServiceError('Cannot delete a dataset that is currently loading', 'deleteDatasetFromServer');
     }
 
-    // Update master patient
     let collection = dataset.collection;
     const datasetPatientId = get(collection.patient).id;
-    let masterPatient = structuredClone(get(this.masterPatient).resource);
-    if (!masterPatient.link) {
+    const masterPatientLinks = get(this.masterPatient).resource.link;
+    if (!masterPatientLinks) {
       throw new FHIRServiceError('Patient has no linked datasets.', 'deleteDatasetFromServer');
     }
     const datasetPatientReference = `Patient/${datasetPatientId}`;
-    let datasetPatientLinkIndex = masterPatient.link.findIndex((link) => link.other.reference === datasetPatientReference);
-    if (datasetPatientLinkIndex === -1) {
+    if (!masterPatientLinks.some((link) => link.other.reference === datasetPatientReference)) {
       throw new FHIRServiceError('Dataset does not exist in patient records.', 'deleteDatasetFromServer');
     }
-    masterPatient.link.splice(datasetPatientLinkIndex, 1);
-    if (masterPatient.link.length === 0) {
-      delete masterPatient.link;
-    }
+
+    let deleteResult: Response;
     try {
-      await this.createOrUpdateMasterPatient(masterPatient);
+      deleteResult = await this.unlinkAndCascadeDeleteDatasetPatient(datasetPatientReference);
     } catch (err) {
       throw new FHIRServiceError(
         'Failed to delete dataset from patient record',
@@ -539,14 +586,6 @@ export class FHIRDataService {
         err
       );
     }
-
-    // Delete after master patient.link is updated to prevent cascade from deleting master patient resource
-    let deleteResult = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/Patient/${datasetPatientId}?_cascade=delete`, {
-      method: 'DELETE',
-      headers: {
-        "Authorization": `Bearer ${await this.auth.getAccessToken()}`
-      }
-    });
 
     if (!deleteResult.ok) {
       throw new FHIRServiceError(`Failed to delete dataset: ${await deleteResult.text()}`, 'deleteDatasetFromServer', deleteResult);
@@ -616,8 +655,7 @@ export class FHIRDataService {
     }
 
     try {
-      let masterPatient =this.addLinkToMasterPatient(patientReference);
-      await this.createOrUpdateMasterPatient(masterPatient);
+      await this.updateMasterPatient(() => this.addLinkToMasterPatient(patientReference));
     } catch(error) {
       // Rollback create
       status.set({ state: StateManager.State.ERROR });
@@ -632,8 +670,9 @@ export class FHIRDataService {
       // would also delete the master patient. Defensively strip the link before deleting,
       // regardless of which failure we saw — it's a cheap, idempotent no-op when the link
       // was never added.
+      let rollback: Response;
       try {
-        await this.removeLinkFromMasterPatient(patientReference);
+        rollback = await this.unlinkAndCascadeDeleteDatasetPatient(patientReference);
       } catch (cleanupError) {
         console.warn(
           `Could not confirm master patient link state for ${patientReference}; aborting rollback delete to avoid risking the master patient`,
@@ -641,22 +680,23 @@ export class FHIRDataService {
         );
         throw new FHIRServiceError('Failed to link dataset to your account', 'addOrReplaceDataset', error);
       }
-
-      const rollback = await fetch(`${INTERMEDIATE_FHIR_SERVER_BASE}/${patientReference}?_cascade=delete`, {
-        method: 'DELETE',
-        headers: {
-          "Authorization": `Bearer ${await this.auth.getAccessToken()}`
-        }
-      });
       if (!rollback.ok) {
         console.warn(`Rollback failed for ${dataset.source} — will be cleaned up on next load`);
       }
       throw new FHIRServiceError('Failed to link dataset to your account', 'addOrReplaceDataset', error);
     }
 
+    // Delete the replaced dataset by reference: deleteDatasetFromServer would refuse it, since it
+    // shares the status that is LOADING for this replacement.
     try {
       if (existingDataset) {
-        await this.deleteDatasetFromServer(dataset.category, dataset.method, dataset.source);
+        const oldPatientReference = `Patient/${get(existingDataset.collection.patient).id}`;
+        if (oldPatientReference !== patientReference) {
+          const deleteResult = await this.unlinkAndCascadeDeleteDatasetPatient(oldPatientReference);
+          if (!deleteResult.ok) {
+            throw new Error(await deleteResult.text());
+          }
+        }
       }
     } catch(error) {
       console.warn('Failed to delete old dataset, will be cleaned up on next load', error);

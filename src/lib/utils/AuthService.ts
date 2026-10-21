@@ -10,9 +10,15 @@ import { type User, UserManager } from 'oidc-client-ts';
 import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 import type { IAuthService } from '$lib/utils/types';
 
+// Set when a failed sign-in callback has already restarted login once, so a
+// callback that keeps failing surfaces an error instead of redirecting forever.
+const CALLBACK_RETRY_KEY = 'auth:callbackRetry';
+
 export class AuthService implements IAuthService {
   private userManager: UserManager;
   protected redirect_url: string = "";
+  private loginInProgress: Promise<void> | null = null;
+  private processingCallback = false;
 
   private _user: Writable<User | null> = writable(null);
   public readonly user: Readable<User | null> = derived(this._user, ($user) => $user);
@@ -47,12 +53,24 @@ export class AuthService implements IAuthService {
     });
     this.userManager.events.addSilentRenewError((error: Error) => {
       console.error('Silent renew failed', error);
-      this.login();
+      return this.sessionEnded();
     });
     this.userManager.events.addAccessTokenExpired(() => {
       // Safety net in case automaticSilentRenew's own retry didn't recover in time.
-      this.login();
+      // Skipped mid-callback: a stale expired user left in sessionStorage fires
+      // this on page load, and clearing it would race the sign-in in progress.
+      if (this.processingCallback) return;
+      return this.sessionEnded();
     });
+  }
+
+  /**
+   * Signs the user out locally without redirecting. Pages that require a
+   * session watch the user store and initiate the login redirect themselves.
+   */
+  private async sessionEnded(): Promise<void> {
+    await this.userManager.removeUser();
+    this.storeUser(null);
   }
 
   async syncTokenToServer(token: string): Promise<boolean> {
@@ -64,14 +82,23 @@ export class AuthService implements IAuthService {
     return response.ok;
   }
 
-  private handleError(error: unknown) {
+  private async handleError(error: any) {
     this.userManager.clearStaleState();
-    if (error.error === "login_required") {
+    if (error?.error === "login_required") {
       return;
     }
     this._error.set(error);
     console.error(error);
-    this.logout();
+    // Errors here mean the IdP session or stored tokens are no longer usable
+    // (e.g. after an idle night). Signing out would only land the user on the
+    // IdP's logout confirmation, so drop the local user and sign in again.
+    await this.userManager.removeUser();
+    this.storeUser(null);
+    // Inside the silent-renew iframe, the parent window handles recovery.
+    if (window.self !== window.top) {
+      return;
+    }
+    await this.login();
   }
 
   async getUser(): Promise<User | null> {
@@ -85,14 +112,12 @@ export class AuthService implements IAuthService {
       if (user && !user.expired && user?.access_token) {
         return user.access_token;
       } else {
+        // renewToken handles its own failures (including signing in again)
         const user = await this.renewToken();
-        if (!user) {
-          throw Error('Unable to renew token');
-        }
-        return user.access_token;
+        return user?.access_token;
       } 
     } catch (error) {
-      this.handleError(error);
+      await this.handleError(error);
     }
   }
 
@@ -108,22 +133,33 @@ export class AuthService implements IAuthService {
   }
 
   async signinCallback(): Promise<User | undefined> {
+    this.processingCallback = true;
     try {
       const user = await this.userManager.signinCallback();
-      // if (!user) {
-      //   throw Error('User not found');
-      // }
+      sessionStorage.removeItem(CALLBACK_RETRY_KEY);
       if (user) {
         this.redirect_url = user.url_state ?? "";
         this.storeUser(user);
         return user;
       }
     } catch (error) {
-      this.handleError(error);
+      // A callback can fail after a long idle, e.g. the IdP's login page timed
+      // out or the sign-in state was cleared. Restart login once; the IdP
+      // session from the login that just happened usually completes it silently.
+      if (sessionStorage.getItem(CALLBACK_RETRY_KEY)) {
+        sessionStorage.removeItem(CALLBACK_RETRY_KEY);
+        this._error.set(error);
+        console.error(error);
+        return;
+      }
+      sessionStorage.setItem(CALLBACK_RETRY_KEY, '1');
+      await this.handleError(error);
+    } finally {
+      this.processingCallback = false;
     }
   }
 
-  storeUser(user: User): void {
+  storeUser(user: User | null): void {
     if (!user) {
       this._user.set(null);
       this._authenticated.set(false);
@@ -136,12 +172,22 @@ export class AuthService implements IAuthService {
   }
 
   async login(): Promise<void> {
+    // Token expiry, silent renew failure and page checks can all request a
+    // login at once after an idle period; only start one redirect.
+    if (this.loginInProgress) {
+      return this.loginInProgress;
+    }
     let currentUrl = new URL(window.location.href.split('?')[0]);
     let redirectUrl = currentUrl.href;
     if (currentUrl.pathname === '/' || currentUrl.pathname === '/home') {
       redirectUrl = INSTANCE_CONFIG.defaultRedirectURI ?? '/data';
     }
-    return await this.userManager.signinRedirect({ url_state: redirectUrl });
+    const redirect = this.userManager.signinRedirect({ url_state: redirectUrl })
+      .finally(() => {
+        this.loginInProgress = null;
+      });
+    this.loginInProgress = redirect;
+    return await redirect;
   }
 
   async isAuthenticated(): Promise<boolean | undefined> {
@@ -154,7 +200,7 @@ export class AuthService implements IAuthService {
         return false;
       }
     } catch (error) {
-      this.handleError(error);
+      await this.handleError(error);
     }
   }
 
@@ -166,7 +212,8 @@ export class AuthService implements IAuthService {
    */
   async restoreSession(timeoutMs: number = 4000): Promise<boolean> {
     try {
-      if (await this.userManager.getUser()) {
+      const stored = await this.userManager.getUser();
+      if (stored && !stored.expired) {
         return await this.isAuthenticated() ?? false;
       }
       const user = await Promise.race([
@@ -175,6 +222,7 @@ export class AuthService implements IAuthService {
       ]);
       if (!user) {
         console.warn(`restoreSession: silent sign-in did not complete within ${timeoutMs}ms`);
+        await this.clearExpiredUser(stored);
         return false;
       }
       this.storeUser(user);
@@ -186,7 +234,17 @@ export class AuthService implements IAuthService {
       // login_required etc: simply not signed in
       console.warn('restoreSession: silent sign-in failed', error);
       this.userManager.clearStaleState();
+      await this.clearExpiredUser();
       return false;
+    }
+  }
+
+  /** Drops a stored user whose session could not be renewed, so the app shows it as signed out. */
+  private async clearExpiredUser(stored?: User | null): Promise<void> {
+    const user = stored === undefined ? await this.userManager.getUser() : stored;
+    if (user?.expired) {
+      await this.userManager.removeUser();
+      this.storeUser(null);
     }
   }
 
@@ -208,7 +266,7 @@ export class AuthService implements IAuthService {
         throw Error('Unable to authenticate user in background');
       }
     } catch (error) {
-      this.handleError(error);
+      await this.handleError(error);
     }
   }
 

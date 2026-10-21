@@ -16,6 +16,7 @@
   import { createCategorizedStore, type UnitMap, defaultResourceConfig } from '$lib/stores/categorizedResources';
   import type { DisplayUnit } from '$lib/stores/displayUnits';
   import UnitDisplay from '$lib/components/app/UnitDisplay.svelte';
+  import SectionNav, { type SectionNavItem } from '$lib/components/layout/SectionNav.svelte';
   import { derived, type Readable } from 'svelte/store';
   import { goto } from '$app/navigation';
 
@@ -30,10 +31,17 @@
   let categoryDataToDisplay: Readable<UnitMap> = derived(
     unitsStore,
     ($unitsStore) => {
-      if (categories.length === 0) {
-        return $unitsStore;
-      }
       let result: UnitMap = {};
+      if (categories.length === 0) {
+        // No categories prop: show all categories, alphabetical by name
+        Object.keys($unitsStore)
+          .sort((a, b) => a.localeCompare(b))
+          .forEach(category => {
+            result[category] = $unitsStore[category];
+          });
+        return result;
+      }
+      // Passed categories prop: keep the order the parent provided
       categories.forEach(category => {
         if ($unitsStore[category]) {
           result[category] = $unitsStore[category];
@@ -42,6 +50,20 @@
       return result;
     }
   );
+
+  // Categories that have something to show, in display order
+  $: shownCategories = Object.keys($categoryDataToDisplay ?? {}).filter(
+    (category) => $categoryDataToDisplay[category]?.length > 0
+  );
+  const categoryTitle = (category: string) =>
+    Object.values(defaultResourceConfig).find((cr) => cr.category === category) ? category : `${category}s`;
+
+  // Each category's title element, for the section nav to scroll to
+  let titleEls: Record<string, HTMLElement | undefined> = {};
+  $: navSections = shownCategories.map((category): SectionNavItem => ({
+    title: categoryTitle(category),
+    element: titleEls[category]
+  }));
 
   const unitItems = (unit: DisplayUnit) => unit.kind === 'single' ? [unit.item] : unit.members;
   // Friendly names come from a memo that fills in as collections load, in step with colorMap.
@@ -115,15 +137,23 @@
 
 
 {#if $categoryDataToDisplay && Object.keys($categoryDataToDisplay).length > 0}
-  {#each Object.keys($categoryDataToDisplay) as category}
+  <div class="category-layout" class:with-nav={shownCategories.length > 1}>
+  {#if shownCategories.length > 1}
+    <SectionNav sections={navSections} label="Categories" />
+  {/if}
+  <div class="category-list">
+  <!-- Keyed by category: categories can appear in the middle of the list as data loads, and an
+       unkeyed block would reuse instances, leaving the title element bound under the wrong key -->
+  {#each Object.keys($categoryDataToDisplay) as category (category)}
     {#if $categoryDataToDisplay[category] && $categoryDataToDisplay[category].length > 0}
       {@const units = $categoryDataToDisplay[category]}
-      {@const unitsToDisplay = summary ? units.slice(0, 3) : units}
+      {@const unitsToDisplay = summary ? units.slice(0, 5) : units}
       {@const valuesAsBundleEntries = units.flatMap(unitItems).map((item) => ({ resource: item.rh.resource }))}
       <div id={`${category}`}></div>
       <CategoryView
         class="mb-4"
-        title={Object.values(defaultResourceConfig).find((cr) => cr.category === category) ? category : `${category}s`}
+        title={categoryTitle(category)}
+        bind:titleElement={titleEls[category]}
         summary={summary}
         seeAllFn={summary ? () => goto(`/data/manage/${category}`) : undefined}
         sortFields={['sourceName', 'category', 'method', 'source']}
@@ -175,9 +205,26 @@
       </CategoryView>
     {/if}
   {/each}
+  </div>
+  </div>
 {/if}
 
 <style>
+  .category-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+  /* The SectionNav column; the nav itself is shown from md up */
+  @media (min-width: 768px) {
+    .category-layout.with-nav {
+      grid-template-columns: 13rem minmax(0, 1fr);
+    }
+  }
+  .category-list {
+    min-width: 0;
+  }
+
   :global(div.resource-list-accordion:not(:has(div.accordion-collapse.show)) > h2.accordion-header > button.accordion-button) {
     background-color: var(--bs-light) !important;
   }

@@ -1,7 +1,10 @@
+<script context="module" lang="ts">
+  // Gives each IPSContent on a page its own element ids (several can be mounted in tabs)
+  let instanceCounter = 0;
+</script>
+
 <script lang="ts">
   import {
-    Accordion,
-    AccordionItem,
     Button,
     ButtonGroup,
     Card,
@@ -22,6 +25,7 @@
   import { download } from '$lib/utils/util.js';
   import UnitDisplay from '$lib/components/app/UnitDisplay.svelte';
   import SectionExtension from '$lib/components/resource-templates/SectionExtension.svelte';
+  import SectionNav, { type SectionNavItem } from '$lib/components/layout/SectionNav.svelte';
   import { createCategorizedStore, type UnitMap } from '$lib/stores/categorizedResources';
   import { createIpsCategorizer, type IpsSectionInput } from '$lib/utils/ipsCategorizer';
 
@@ -32,6 +36,7 @@
   export let viewButtons: 'always' | 'advanced' = 'advanced';
 
   const mode: Readable<string> = getContext('mode') ?? readable('');
+
   $: showViewButtons = viewButtons === 'always' || $mode === 'advanced';
 
   type IpsSection = IpsSectionInput & { section: CompositionSection };
@@ -45,20 +50,62 @@
     const { input, categorize, sort } = createIpsCategorizer(bundle, ipsSections);
     unitsStore = createCategorizedStore(readable(input), { categorize, sort }).unitsStore;
   }
-  $: ipsContent = Object.fromEntries(ipsSections.map(({ title, section }) => [title, { section }]));
 
-  // The Patient first, then the Composition's sections
+  // The Patient first, then the Composition's sections in SECTION_ORDER
+  // Sections display in this order, matched by section code (LOINC) so titles can vary. Any
+  // other section comes after them, alphabetically by title, so sections added in the future
+  // still appear.
+  const SECTION_ORDER = [
+    "81338-6",  // Patient Story
+    "104605-1", // Alerts
+    "11450-4",  // Problem List
+    "48765-2",  // Allergies and Intolerances
+    "10160-0",  // Medication List
+    "42348-3",  // Advance Directives
+    "11369-6",  // History of Immunizations
+    "30954-2",  // Diagnostic Results
+    "47519-4",  // History of Procedures
+    "46264-8",  // Medical Devices
+    "18776-5",  // Plan of Care
+    "47420-5",  // Functional Status
+    "11348-0",  // History of Past Problems
+    "10162-6",  // History of Pregnancy
+    "29762-2",  // Social History
+    "8716-3"    // Vital Signs
+  ];
+
+  function sectionRank(section: CompositionSection) {
+    const codes = section.code?.coding?.map((coding) => coding.code) ?? [];
+    const ranks = codes.map((code) => SECTION_ORDER.indexOf(code ?? "")).filter((rank) => rank !== -1);
+    return ranks.length > 0 ? Math.min(...ranks) : SECTION_ORDER.length;
+  }
+
   function getIpsSections(ips: Bundle): IpsSection[] {
     let sections: IpsSection[] = [];
     let compositions = ips.entry?.filter((entry) => entry.resource?.resourceType === 'Composition');
     if (!compositions || !compositions[0]) {
       return sections;
     }
+    let composition = compositions[0].resource as Composition;
+    composition.section?.forEach((section) => {
+      let title = (section.title ?? section.code?.coding?.[0].display) ?? "[Untitled section]";
+      sections.push({
+        title,
+        // Composition.section.entry references, resolved against the whole bundle
+        references: section.entry?.map((entry) => entry.reference).filter((reference): reference is string => !!reference) ?? [],
+        section
+      });
+    });
+    sections.sort((a, b) =>
+      sectionRank(a.section) - sectionRank(b.section) || a.title.localeCompare(b.title)
+    );
+
+    // The Patient is not an IPS section, so it is constructed and always comes first
     let patient = ips.entry?.filter((entry) => entry.resource?.resourceType === 'Patient').map((entry) => entry.resource);
     if (patient?.[0]) {
       let patientName = patient[0].name?.[0]?.text ??
         `${patient[0].name?.[0]?.prefix ?? ""} ${patient[0].name?.[0]?.given?.join(' ') ?? ""} ${patient[0].name?.[0]?.family ?? ""}`;
-      sections.push({
+      sections.unshift({
         title: "Patient",
         resources: patient as Resource[],
         section: {
@@ -72,51 +119,24 @@
         }
       });
     }
-    let composition = compositions[0].resource as Composition;
-    composition.section?.forEach((section) => {
-      let title = (section.title ?? section.code?.coding?.[0].display) ?? "[Untitled section]";
-      sections.push({
-        title,
-        // Composition.section.entry references, resolved against the whole bundle
-        references: section.entry?.map((entry) => entry.reference).filter((reference): reference is string => !!reference) ?? [],
-        section
-      });
-    });
     return sections;
   }
 
-  // Sections display in this order, matched by title (ignoring case). Any other section comes
-  // after them, alphabetically, so sections added in the future still appear.
-  const SECTION_ORDER = [
-    "Patient",
-    "Patient Story",
-    "Alerts",
-    "Problem List",
-    "Allergies and Intolerances",
-    "Medication List",
-    "Advance Directives",
-    "History of Immunizations",
-    "Diagnostic Results",
-    "History of Procedures",
-    "Medical Devices",
-    "Plan of Care",
-    "Functional Status",
-    "History of Past Problems",
-    "History of Pregnancy",
-    "Social History",
-    "Vital Signs"
-  ].map((title) => title.toLowerCase());
+  // --- Section navigation ---------------------------------------------------------------
+  // Ids tie each heading to its section for assistive technology. Jumping between sections is
+  // the SectionNav's job; it is handed each section's element.
+  const uid = `ips${++instanceCounter}`;
+  const sectionDomId = (index: number) => `${uid}-section-${index}`;
 
-  function sectionRank(title: string) {
-    const rank = SECTION_ORDER.indexOf(title.trim().toLowerCase());
-    return rank === -1 ? SECTION_ORDER.length : rank;
-  }
-
-  function getSections(content: Record<string, { section: CompositionSection }>) {
-    return Object.entries(content).sort((a, b) =>
-      sectionRank(a[0]) - sectionRank(b[0]) || a[0].localeCompare(b[0])
-    );
-  }
+  let sectionEls: Record<string, HTMLElement | undefined> = {};
+  $: navSections = ipsSections.map(({ title }): SectionNavItem => {
+    const count = ($unitsStore[title] ?? []).length;
+    return {
+      title,
+      element: sectionEls[title],
+      count: count > 0 && displayMode !== "text" ? count : undefined
+    };
+  });
 
   let showInfo = false;
   let infoMessage = "";
@@ -184,24 +204,33 @@
 {#if showInfo}
   <Row class="text-info">{infoMessage}</Row>
 {/if}
-{#each getSections(ipsContent) as [title, sectionContent]}
-  {@const units = $unitsStore[title] ?? []}
-  <!-- Fall back to the section narrative when nothing could be rendered (e.g. an empty section) -->
-  {@const showNarrative = displayMode === "text" || (units.length === 0 && !sectionContent.section.extension?.length)}
-  <Row class="mx-0">
-    <!--wrap in accordion with title-->
-    <Accordion class="mt-3">
-      <AccordionItem active class="resource-content">
-        <h6 slot="header" class="my-2">{title}</h6>
+<div class="ips-layout">
+  <SectionNav sections={navSections} />
+
+  <div class="ips-sections">
+    {#each ipsSections as { title, section }, index}
+      {@const units = $unitsStore[title] ?? []}
+      <!-- Fall back to the section narrative when nothing could be rendered (e.g. an empty section) -->
+      {@const showNarrative = displayMode === "text" || (units.length === 0 && !section.extension?.length)}
+      <section
+        id={sectionDomId(index)}
+        class="ips-section"
+        aria-labelledby={`${sectionDomId(index)}-title`}
+        bind:this={sectionEls[title]}
+      >
+        <h2 id={`${sectionDomId(index)}-title`} class="ips-section-title" tabindex="-1">
+          {title}
+          {#if !showNarrative && units.length > 0}<span class="ips-count">{units.length}</span>{/if}
+        </h2>
         {#if showNarrative}
-          {#if sectionContent.section.text?.div}
-            {@html sectionContent.section.text?.div}
+          {#if section.text?.div}
+            {@html section.text?.div}
           {:else}
             No text available
           {/if}
         {:else}
-          {#if sectionContent.section.extension}
-            {#each sectionContent.section.extension as extension}
+          {#if section.extension}
+            {#each section.extension as extension}
               <Card style="width: 100%; max-width: 100%" class="mb-2">
                 <CardBody>
                   <Row class="overflow-auto d-flex justify-content-end align-content-center">
@@ -217,7 +246,7 @@
             {/each}
           {/if}
           {#if units.length > 0}
-          <Card style="width: 100%; max-width: 100%" class="mb-2">
+            <Card style="width: 100%; max-width: 100%" class="mb-2">
               {#each units as unit, index}
                 <CardBody class={index > 0 ? "border-top" : ""}>
                   <Row style="overflow:hidden" class="d-flex justify-content-end align-content-center">
@@ -247,8 +276,49 @@
               {/each}
             </Card>
           {/if}
-          {/if}
-      </AccordionItem>
-    </Accordion>
-  </Row>
-{/each}
+        {/if}
+      </section>
+    {/each}
+  </div>
+</div>
+
+<style>
+  .ips-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+    padding-top: 1rem;
+  }
+  /* The SectionNav column; the nav itself is shown from md up */
+  @media (min-width: 768px) {
+    .ips-layout {
+      grid-template-columns: 13rem minmax(0, 1fr);
+    }
+  }
+  .ips-section + .ips-section {
+    margin-top: 1.75rem;
+  }
+  .ips-section-title {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 2px solid var(--bs-border-color, #dee2e6);
+    font-size: 1.3rem;
+    font-weight: 600;
+  }
+  .ips-section-title:focus {
+    outline: none;
+  }
+  .ips-section-title:focus-visible {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: 2px;
+  }
+  .ips-count {
+    flex: 0 0 auto;
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: var(--bs-secondary-color, #6c757d);
+  }
+</style>

@@ -211,14 +211,13 @@ export interface IAuthService {
   getProfile(): Promise<any | undefined>;
   getRedirectUrl(): string;
   signinCallback(): Promise<User | undefined>;
-  storeUser(user: User): void;
+  storeUser(user: User | null): void;
   login(): Promise<void>;
   renewToken(): Promise<User | null>;
   logout(): Promise<void>;
   isAuthenticated(): Promise<boolean | undefined>;
   restoreSession(timeoutMs?: number): Promise<boolean>;
-  syncTokenToServer(token: string): Promise<boolean>;
-}
+  syncTokenToServer(token: string): Promise<boolean>;}
 
 export interface IResourceCollection {
   id: string;

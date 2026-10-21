@@ -4,6 +4,16 @@
   
   export let content: ResourceTemplateParams<DocumentReferencePOLST>; // Define a prop to pass the data to the component
 
+  // Decode base64 attachment data as UTF-8 text
+  function decodeText(data: string): string {
+    try {
+      const bytes = Uint8Array.from(atob(data), c => c.charCodeAt(0));
+      return new TextDecoder().decode(bytes);
+    } catch {
+      return 'Unable to decode text content';
+    }
+  }
+
   let resource: DocumentReferencePOLST;
   $: resource = content.resource;
 
@@ -174,22 +184,27 @@ Text:
 {#if resource.content}
 <!-- FIXME This iteration not ideal - should iterate whether pdf present or not, as created & pdfSignedDate (ill-named) actually refer to the larger context of the DR, not the pdf... as it stands the Personal Advance Care Plan Document won't show created/signed (bug), tho we don't care so much about that one in IPS. 
 -->
-  {#if resource.content[0].attachment.creation}
-    <b>Created:</b> {new Date(resource.content[0].attachment.creation).toLocaleString()}
-    <br>
-  {/if}
   {#if resource.pdfSignedDate}
     <b>Digitally signed:</b> {new Date(resource.pdfSignedDate).toLocaleString()}
     <br>
   {/if}
   {#each resource.content as content}
-    {#if content.attachment.contentType === "application/pdf" && content.attachment.data}
-      <b>PDF present:</b>
-      {#await base64toBlob(content.attachment.data, content.attachment.contentType)}
-        Loading...
-      {:then url}
-        <a href={url} target="_blank" rel="noopener noreferrer">View</a>
-      {/await}
+    {#if content.attachment.data}
+      {#if content.attachment.creation}
+        <b>Created:</b> {new Date(content.attachment.creation).toLocaleString()}
+        <br>
+      {/if}
+      {#if content.attachment.contentType === "application/pdf"}
+        <b>PDF present:</b>
+        {#await base64toBlob(content.attachment.data, content.attachment.contentType)}
+          Loading...
+        {:then url}
+          <a href={url} target="_blank" rel="noopener noreferrer">View</a>
+        {/await}
+      {:else if content.attachment.contentType === "text/plain"}
+        <b>Text:</b>
+        <p class="attachment-text">{decodeText(content.attachment.data)}</p>
+      {/if}
     {/if}
   {/each}
 {/if}
@@ -197,6 +212,12 @@ Text:
 </div>
 
 <style>
+  .attachment-text {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    margin: 0.25em 0;
+    font-family: inherit;
+  }
   .is-revoked {
     background-color: #f0f0f0; /* Light gray background */
     padding: 10px;

@@ -519,15 +519,72 @@ describe('FHIRDataService', () => {
       const updatedMasterPatient = taggedPatient({ id: 'master-1' });
       fetchMock
         .mockResolvedValueOnce(jsonResponse(updatedMasterPatient)) // PUT master patient (link removed)
+        .mockResolvedValueOnce(jsonResponse({ resourceType: 'Bundle', total: 0 })) // no patient still links to it
         .mockResolvedValueOnce({ ok: true, text: vi.fn().mockResolvedValue('') }); // DELETE dataset
 
       await service.deleteDatasetFromServer('labs', 'upload', 'src-1');
 
-      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
       expect(fetchMock.mock.calls[0][0]).toBe(`${BASE}/Patient/master-1`);
       expect(fetchMock.mock.calls[0][1]).toMatchObject({ method: 'PUT' });
-      expect(fetchMock.mock.calls[1][0]).toBe(`${BASE}/Patient/ds-1?_cascade=delete`);
-      expect(fetchMock.mock.calls[1][1]).toMatchObject({ method: 'DELETE' });
+      expect(fetchMock.mock.calls[1][0]).toBe(`${BASE}/Patient?link=${encodeURIComponent('Patient/ds-1')}&_summary=count`);
+      expect(fetchMock.mock.calls[2][0]).toBe(`${BASE}/Patient/ds-1?_cascade=delete`);
+      expect(fetchMock.mock.calls[2][1]).toMatchObject({ method: 'DELETE' });
+    });
+
+    it('refuses to cascade-delete when a patient still links to the dataset', async () => {
+      const service = new FHIRDataService(fakeAuth());
+      setUpDataset(service);
+      fetchMock
+        .mockResolvedValueOnce(jsonResponse(taggedPatient({ id: 'master-1' }))) // PUT master patient
+        .mockResolvedValueOnce(jsonResponse({ resourceType: 'Bundle', total: 1 })); // still linked server-side
+
+      await expect(service.deleteDatasetFromServer('labs', 'upload', 'src-1')).rejects.toBeInstanceOf(FHIRServiceError);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(fetchMock.mock.calls.some(([url]) => String(url).includes('_cascade=delete'))).toBe(false);
+    });
+
+    it('refuses to cascade-delete when the link check itself fails', async () => {
+      const service = new FHIRDataService(fakeAuth());
+      setUpDataset(service);
+      fetchMock
+        .mockResolvedValueOnce(jsonResponse(taggedPatient({ id: 'master-1' })))
+        .mockResolvedValueOnce(jsonResponse({}, { ok: false, status: 500 }));
+
+      await expect(service.deleteDatasetFromServer('labs', 'upload', 'src-1')).rejects.toBeInstanceOf(FHIRServiceError);
+      expect(fetchMock.mock.calls.some(([url]) => String(url).includes('_cascade=delete'))).toBe(false);
+    });
+
+    it('serializes concurrent deletes so one cannot restore a link the other removed', async () => {
+      const service = new FHIRDataService(fakeAuth());
+      service.setMasterPatient(
+        taggedPatient({
+          id: 'master-1',
+          link: [
+            { other: { reference: 'Patient/ds-1' }, type: 'seealso' },
+            { other: { reference: 'Patient/ds-2' }, type: 'seealso' }
+          ]
+        })
+      );
+      service.addDatasetToUserResources(new ResourceCollection(datasetPatient('ds-1', 'labs', 'upload', 'src-1')));
+      service.addDatasetToUserResources(new ResourceCollection(datasetPatient('ds-2', 'labs', 'upload', 'src-2')));
+
+      // Echo each PUT body back as the saved resource; answer everything else as "no links / deleted"
+      fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+        if (init?.method === 'PUT') return jsonResponse(JSON.parse(init.body as string));
+        if (String(url).includes('_summary=count')) return jsonResponse({ resourceType: 'Bundle', total: 0 });
+        return { ok: true, text: vi.fn().mockResolvedValue('') };
+      });
+
+      await Promise.all([
+        service.deleteDatasetFromServer('labs', 'upload', 'src-1'),
+        service.deleteDatasetFromServer('labs', 'upload', 'src-2')
+      ]);
+
+      const puts = fetchMock.mock.calls.filter(([, init]) => init?.method === 'PUT');
+      const lastPutBody = JSON.parse(puts[puts.length - 1][1].body);
+      expect(lastPutBody.link).toBeUndefined();
+      expect(get(service.masterPatient).resource.link).toBeUndefined();
     });
 
     it('wraps a failed cascade delete in a FHIRServiceError', async () => {
@@ -535,6 +592,7 @@ describe('FHIRDataService', () => {
       setUpDataset(service);
       fetchMock
         .mockResolvedValueOnce(jsonResponse(taggedPatient({ id: 'master-1' })))
+        .mockResolvedValueOnce(jsonResponse({ resourceType: 'Bundle', total: 0 })) // no patient still links to it
         .mockResolvedValueOnce({ ok: false, text: vi.fn().mockResolvedValue('server error') });
 
       await expect(service.deleteDatasetFromServer('labs', 'upload', 'src-1')).rejects.toBeInstanceOf(FHIRServiceError);
@@ -545,6 +603,7 @@ describe('FHIRDataService', () => {
       setUpDataset(service);
       fetchMock
         .mockResolvedValueOnce(jsonResponse(taggedPatient({ id: 'master-1' })))
+        .mockResolvedValueOnce(jsonResponse({ resourceType: 'Bundle', total: 0 })) // no patient still links to it
         .mockResolvedValueOnce({ ok: true, text: vi.fn().mockResolvedValue('') });
 
       await service.deleteDataset('labs', 'upload', 'src-1');
@@ -557,6 +616,7 @@ describe('FHIRDataService', () => {
       setUpDataset(service);
       fetchMock
         .mockResolvedValueOnce(jsonResponse(taggedPatient({ id: 'master-1' })))
+        .mockResolvedValueOnce(jsonResponse({ resourceType: 'Bundle', total: 0 })) // no patient still links to it
         .mockResolvedValueOnce({ ok: false, text: vi.fn().mockResolvedValue('server error') });
 
       await expect(service.deleteDataset('labs', 'upload', 'src-1')).rejects.toBeInstanceOf(FHIRServiceError);
@@ -636,6 +696,7 @@ describe('FHIRDataService', () => {
       fetchMock
         .mockRejectedValueOnce(new Error('link PUT failed')) // createOrUpdateMasterPatient (add link)
         .mockResolvedValueOnce(jsonResponse(taggedPatient({ id: 'master-1' }))) // removeLinkFromMasterPatient PUT
+        .mockResolvedValueOnce(jsonResponse({ resourceType: 'Bundle', total: 0 })) // no patient still links to it
         .mockResolvedValueOnce({ ok: true, text: vi.fn().mockResolvedValue('') }); // cascade delete of Patient/new-1
 
       await expect(
@@ -649,9 +710,9 @@ describe('FHIRDataService', () => {
       ).rejects.toBeInstanceOf(FHIRServiceError);
 
       expect(service.datasetExists('labs', 'upload', 'src-1')).toBe(false);
-      expect(fetchMock).toHaveBeenCalledTimes(3);
-      expect(fetchMock.mock.calls[2][0]).toBe(`${BASE}/Patient/new-1?_cascade=delete`);
-      expect(fetchMock.mock.calls[2][1]).toMatchObject({ method: 'DELETE' });
+      expect(fetchMock).toHaveBeenCalledTimes(4);
+      expect(fetchMock.mock.calls[3][0]).toBe(`${BASE}/Patient/new-1?_cascade=delete`);
+      expect(fetchMock.mock.calls[3][1]).toMatchObject({ method: 'DELETE' });
     });
 
     it('aborts the cascade delete when the link removal itself cannot be confirmed', async () => {

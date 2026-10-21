@@ -124,19 +124,30 @@ export class IPSResourceCollection extends ResourceCollection {
         });
         const datasetMethod = datasetPatient?.meta?.tag?.find(t => t.system === METHOD_SYSTEM)?.code;
         let sectionExtenderForMethod = this.sectionExtenderRegistry.register(datasetMethod);
-        let extendedSectionTitle = sectionExtenderForMethod?.getSectionTitle();
         let result = super.addResources(resources);
+        if (datasetPatient && datasetMethod && sectionExtenderForMethod) {
+            // The dataset's method decides the section; all its resources go there
+            const extendedSectionTitle = sectionExtenderForMethod.getSectionTitle();
+            result.forEach(rh => this.trackForExtension(extendedSectionTitle, rh));
+            return result;
+        }
+        // Otherwise, individual resources may trigger an extender based on their content
         result.forEach(rh => {
-            if (datasetPatient && datasetMethod && sectionExtenderForMethod && extendedSectionTitle) {
-                // Add resource ids to extended section list
-                this.sectionExtensionResources.update((curr) => {
-                    curr[extendedSectionTitle] = curr[extendedSectionTitle] ?? new Set<string>();
-                    curr[extendedSectionTitle].add(rh.tempId);
-                    return { ...curr };
-                });
+            const extender = this.sectionExtenderRegistry.registerForResource(rh.resource);
+            if (extender) {
+                this.trackForExtension(extender.getSectionTitle(), rh);
             }
         });
         return result;
+    }
+
+    // Add resource id to the extended section list
+    private trackForExtension(sectionTitle: string, rh: ResourceHelper) {
+        this.sectionExtensionResources.update((curr: Record<string, Set<string>>) => {
+            curr[sectionTitle] =curr[sectionTitle] ?? new Set<string>();
+            curr[sectionTitle].add(rh.tempId);
+            return { ...curr };
+        });
     }
 
     extendIPS(ips: Bundle) {
@@ -147,18 +158,20 @@ export class IPSResourceCollection extends ResourceCollection {
         const composition = ips.entry?.find(entry => entry.resource?.resourceType === "Composition").resource as Composition;
 
         // get the extenders from the registry (they're deduplicated by the registry)
-        const extenders = this.sectionExtenderRegistry.getRegisteredExtenders();
+        const extenders = Array.from(new Set([
+            ...this.sectionExtenderRegistry.getRegisteredExtenders(),
+            ...this.sectionExtenderRegistry.getAlwaysRunExtenders()
+        ]));
         // for each of them, call the extend function using the appropriate resource list
         const updates: { update: SectionUpdates, selector: Function }[] = [];
         for (const extender of extenders) {
             const sectionTitle = extender.getSectionTitle();
-            const resourceIdsForExtension = Array.from(get(this.sectionExtensionResources)[sectionTitle]);
+            const resourceIdsForExtension = Array.from(get(this.sectionExtensionResources)[sectionTitle] ?? []);
             const resourcesForExtension = resourceIdsForExtension
                 .map(resourceTempId => get((this as ResourceCollection).resources)[resourceTempId])
                 .filter(rh => rh.include)
                 .map(rh => rh.resource);
-            const existingSection = composition.section.find(s => extender.sectionSelector(s));
-            const update = extender.extend(resourcesForExtension, existingSection);
+            const update = extender.extend(resourcesForExtension, ips);
             if (update) {
                 updates.push({
                     update: update,

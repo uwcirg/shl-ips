@@ -8,7 +8,7 @@
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
   import Date from '$lib/components/resource-templates/Date.svelte';
   import { buildObservationSeriesMap, type SparklinePoint, sparklineSeriesFor, getValueString } from '$lib/utils/observationSparkline';
-  import ObservationSparkline from '$lib/components/app/ObservationSparkline.svelte';
+  import ObservationSparkline from '$lib/components/resource-templates/ObservationSparkline.svelte';
   
   export let content: ResourceTemplateParams<Observation>; // Define a prop to pass the data to the component
   export let contained: Boolean = false;

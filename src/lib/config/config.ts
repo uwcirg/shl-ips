@@ -342,7 +342,8 @@ if (env('VITE_SMILECARINBB_CLIENT_ID')) {
 // End Connectathon Testing Servers ///////////////////////////////////////////////////////////////////////////
 
 export const BEARER_AUTHORIZATION = {
-  'EpicHIMSS': env('VITE_EPIC_CLIENT_ID')
+  'EpicHIMSS': env('VITE_EPIC_CLIENT_ID'),
+  'EpicIHE': env('VITE_EPIC_HIMSS_CLIENT_ID'),
 }
 export const SOF_REDIRECT_URI = '/data';
 
@@ -370,7 +371,7 @@ export const USCDI_RESOURCES = [
   // 'QuestionnaireResponse',
 ];
 
-const SYSTEM_URL = env('VITE_SYSTEM_URL') || (typeof window !== 'undefined' ? new URL(window.location.href).toString() : undefined);
+export const SYSTEM_URL = env('VITE_SYSTEM_URL') || (typeof window !== 'undefined' ? new URL(window.location.href).toString() : undefined);
 export const VIEWER_BASE = env('VITE_VIEWER_BASE') || ((SYSTEM_URL ?? "") + '/ips#');
 export const SHOW_VIEWER_DEMO = env('VITE_SHOW_VIEWER_DEMO');
 
@@ -393,5 +394,9 @@ export const EXAMPLE_IPS = {
   'Desiree': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/Pat1-System2/$summary',
   // 2025-01 Connectathon PACIO track:
   'Jenny Mosley': 'https://hapi.fhir.org/baseR4/Patient/patientJM1/$summary',
+  // 2026-10 IHE Plugathon:
+  'Marta Villa': 'https://fhir.myhealthsummary.demo.cirg.uw.edu/fhir/Bundle/ce0accba-be92-4ac5-947a-9fc404264aa8',
+  'Genny Works': 'https://fhir.myhealthsummary.demo.cirg.uw.edu/fhir/Bundle/fc642b1c-5b63-4254-bdf6-a80c135b548f',
+  'Lilly Curic': 'https://fhir.myhealthsummary.demo.cirg.uw.edu/fhir/Bundle/03dee25e-7ce8-4677-be1d-0053c6e7da1b',
 };
 export const IPS_DEFAULT = 'Maria SEATTLE Gravitate';

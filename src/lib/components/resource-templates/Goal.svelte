@@ -33,7 +33,7 @@
 
 <!-- Display resource type and lifecycle status -->
 <Badge color="primary">
-  {`${resource.resourceType} (${resource.lifecycleStatus})`}
+  {resource.lifecycleStatus}
 </Badge>
 
 <!-- Display priority if available -->

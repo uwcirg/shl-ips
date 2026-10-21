@@ -20,8 +20,7 @@ export function fakeAuth(overrides: Partial<IAuthService & { userId: any }> = {}
     logout: vi.fn(),
     isAuthenticated: vi.fn(),
     restoreSession: vi.fn().mockResolvedValue(false),
-    syncTokenToServer: vi.fn(),
-    ...overrides
+    syncTokenToServer: vi.fn(), ...overrides
   } as unknown as IAuthService;
 }
 
