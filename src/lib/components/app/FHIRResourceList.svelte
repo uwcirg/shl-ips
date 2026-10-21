@@ -1,3 +1,4 @@
+
 <script lang="ts">
   import { download } from '$lib/utils/util.js';
   import { createEventDispatcher, getContext } from 'svelte';
@@ -8,15 +9,9 @@
     Badge,
     Button,
     ButtonGroup,
-    Card,
-    CardBody,
-    CardHeader,
     Col,
-    FormGroup,
     Icon,
-    Input,
     Offcanvas,
-    Label,
     Row
   } from '@sveltestrap/sveltestrap';
   import { PLACEHOLDER_SYSTEM } from '$lib/config/config';
@@ -29,11 +24,12 @@
   export let resourceCollection: ResourceCollection;
   export let scroll: boolean = true;
   export let submitting: boolean = false;
+  export let sections: boolean | undefined = undefined;
+
+  let mode: Writable<string> = getContext('mode');
   
   const statusDispatch = createEventDispatcher<{ 'status-update': string }>();
   const errorDispatch = createEventDispatcher<{ error: string }>();
-
-  let mode: Writable<string> = getContext('mode');
 
   let reference: string;
   let selectedPatient = resourceCollection.selectedPatient;
@@ -56,7 +52,7 @@
     }
   );
   
-  const { store: categorizedResourceStore, unitsStore } = createCategorizedStore(categorizerInput);
+  const { store: categorizedResourceStore, sortResources, unitsStore } = createCategorizedStore(categorizerInput);
 
   let patientStore: Record<string, CategorizedResource>;
   let patientBadgeColor: string = 'danger';
@@ -92,6 +88,7 @@
   header={resourceType + ' JSON'}
   placement="end"
   title={resourceType + ' JSON'}
+  class="resource-json-offcanvas"
   style="display: flex;  overflow-y:hidden; height: 100dvh; width: fit-content; max-width: 80dvw; min-width: var(--bs-offcanvas-width);"
 >
   <Row class="d-flex" style="height: 100%">
@@ -125,6 +122,7 @@
 
 {#if $categorizedResourceStore && $unitsStore}
   {@const allDataAsBundleEntries = Object.values($categorizedResourceStore).map(types => Object.values(types)).flat().map(cr => ({ resource: cr.rh.resource }))}
+  {#if sections || sections === undefined && Object.keys($categorizedResourceStore).length > 1}
   <Accordion stayOpen class="w-100">
     {#each Object.keys($unitsStore) as category}
       {#if $unitsStore[category].length > 0}
@@ -172,6 +170,39 @@
       {/if}
     {/each}
   </Accordion>
+  {:else}
+    <!-- All resources in one list, regardless of category -->
+    {@const allResources = Object.values($unitsStore).flatMap((category) => Object.values(category).sort(sortResources))}
+    {#if allResources.length > 0}
+      <div
+        class="resource-content bg-body border rounded p-3 w-100"
+        style={scroll ? 'overflow: auto; max-height: 65vh' : ''}
+      >
+        {#each allResources as unit, index}
+          <Row class={index > 0 ? "border-top pt-2 mt-2" : ""} style="overflow: hidden">
+            <Col class="overflow-auto justify-content-center align-items-center">
+              <UnitDisplay {unit} entries={allDataAsBundleEntries} advanced={$mode === 'advanced'} onView={setJson} />
+            </Col>
+            <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
+              {#if $mode === 'advanced' && unit.kind === 'single'}
+                <Button
+                  size="sm"
+                  color="secondary"
+                  outline
+                  on:click={(event) => {
+                    event.stopPropagation();
+                    setJson(unit.item.rh)
+                  }}
+                >
+                  View
+                </Button>
+              {/if}
+            </Col>
+          </Row>
+        {/each}
+      </div>
+    {/if}
+  {/if}
 {/if}
 
 <style>
@@ -180,5 +211,13 @@
   }
   :global(div.resource-list-accordion:has(div.accordion-collapse.collapsing) > h2.accordion-header > button.accordion-button) {
     background-color: var(--bs-accordion-active-bg) !important;
+  }
+  /* Bootstrap stacks offcanvases below modals, but this one can be opened from inside one (e.g. the
+     import confirmation), so put it and its backdrop above them */
+  :global(.offcanvas.resource-json-offcanvas) {
+    z-index: 1060;
+  }
+  :global(body:has(.offcanvas.resource-json-offcanvas.show) .offcanvas-backdrop) {
+    z-index: 1059;
   }
 </style>
