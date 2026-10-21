@@ -95,7 +95,7 @@
 
   async function loadActivity() {
     try {
-      const accessLog: AccessLogEntry[] = await shlClient.getAccessLog(shl.id, ACTIVITY_LIMIT);
+      const accessLog: AccessLogEntry[] = await shlClient.getAccessLog(shl.id, 'other', ACTIVITY_LIMIT);
       const history: EventLogEntry[] = await shlClient.getHistory(shl.id, ACTIVITY_LIMIT);
       activity = [
         ...accessLog.map((e) => ({
@@ -477,7 +477,7 @@
             <Row class="align-items-center">
               <Col xs=6 class="align-items-center">
                 {#if file.added}
-                  <strong><Icon name="calendar"></Icon> {file.added.split(' ')[0]}</strong>
+                  <strong><Icon name="calendar"></Icon> {file.added.split('T')[0]}</strong>
                 {/if}
               </Col>
               <Col xs=6>
