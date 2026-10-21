@@ -16,7 +16,6 @@
   import { authorize, completeConfidentialClientAuth, endSession } from '$lib/utils/sofClient';
   import { createEventDispatcher, onMount } from 'svelte';
   import type { BundleEntry, Resource } from 'fhir/r4';
-  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
 
   export let disabled = false;
@@ -32,7 +31,6 @@
 
   const CATEGORY = CATEGORIES.PROVIDER_HEALTH_RECORD;
   const METHOD = METHODS.PROVIDER_HEALTH_RECORD_CARINBB;
-  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let loadingSample = false;
   let fetchError = "";
@@ -138,7 +136,7 @@
   });
 
 </script>
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, sofHost?.url ?? "", prepareIps)}>
+<form on:submit|preventDefault={() => prepareIps()}>
   <FormGroup>
     <h6>WA State Apple Health Providers</h6>
     {#each CARIN_HOSTS.filter(e => e.section === 'applehealth') as host}
@@ -176,6 +174,5 @@
     </Col>
   </Row>
 </form>
-<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 
 <span class="text-danger">{fetchError}</span>

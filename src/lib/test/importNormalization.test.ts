@@ -231,22 +231,72 @@ describe('finalizeForUpload', () => {
     const result = finalizeForUpload(entries);
 
     const obs1 = result.find(e => (e.resource as any).id === 'obs-1')!;
-    expect((obs1.resource as any).hasMember[0].reference).toBeUndefined();
+    expect((obs1.resource as any).hasMember).toBeUndefined();
     expect(warnSpy).toHaveBeenCalled();
 
     warnSpy.mockRestore();
   });
 
-  it('leaves an unresolvable non-urn reference untouched', () => {
+  it('drops an unresolvable relative reference, removing the emptied element', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const entries = [
       patientEntry('patient-1'),
-      observationEntry('obs-1', { hasMember: [{ reference: 'Practitioner/does-not-exist' }] })
+      observationEntry('obs-1', { focus: [{ reference: 'ObservationDefinition/missing' }] })
     ];
 
     const result = finalizeForUpload(entries);
 
     const obs1 = result.find(e => (e.resource as any).id === 'obs-1')!;
-    expect((obs1.resource as any).hasMember[0].reference).toBe('Practitioner/does-not-exist');
+    expect((obs1.resource as any).focus).toBeUndefined();
+    warnSpy.mockRestore();
+  });
+
+  it('keeps the display of a dropped reference', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const entries = [
+      patientEntry('patient-1'),
+      observationEntry('obs-1', { focus: [{ reference: 'ObservationDefinition/missing', display: 'Panel definition' }] })
+    ];
+
+    const result = finalizeForUpload(entries);
+
+    const obs1 = result.find(e => (e.resource as any).id === 'obs-1')!;
+    expect((obs1.resource as any).focus).toEqual([{ display: 'Panel definition' }]);
+    warnSpy.mockRestore();
+  });
+
+  it('handles several dropped references in one array without disturbing resolvable ones', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const entries = [
+      patientEntry('patient-1'),
+      observationEntry('obs-1'),
+      observationEntry('obs-2', {
+        hasMember: [
+          { reference: 'Observation/missing-a' },
+          { reference: 'Observation/obs-1' },
+          { reference: 'Observation/missing-b' }
+        ]
+      })
+    ];
+
+    const result = finalizeForUpload(entries);
+
+    const obs1 = result.find(e => (e.resource as any).id === 'obs-1')!;
+    const obs2 = result.find(e => (e.resource as any).id === 'obs-2')!;
+    expect((obs2.resource as any).hasMember).toEqual([{ reference: obs1.fullUrl }]);
+    warnSpy.mockRestore();
+  });
+
+  it('leaves contained (#) references untouched', () => {
+    const entries = [
+      patientEntry('patient-1'),
+      observationEntry('obs-1', { focus: [{ reference: '#contained-1' }] })
+    ];
+
+    const result = finalizeForUpload(entries);
+
+    const obs1 = result.find(e => (e.resource as any).id === 'obs-1')!;
+    expect((obs1.resource as any).focus).toEqual([{ reference: '#contained-1' }]);
   });
 
   it('forces subject/patient-linked fields to point at the resolved Patient', () => {

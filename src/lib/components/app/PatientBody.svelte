@@ -12,7 +12,6 @@
   import { createEventDispatcher } from 'svelte';
   import type { IResourceCollection, ResourceRetrieveEvent } from '$lib/utils/types';
   import type { CodeableConcept, Condition } from 'fhir/r4';
-  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
   import { ResourceHelper } from '$lib/utils/ResourceHelper';
   import { copyOf, getUniqueResourceObject } from '$lib/utils/util';
@@ -38,7 +37,6 @@
     url: window.location.origin,
     name: 'My Body'
   };
-  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
   const resourceDispatch = createEventDispatcher<{'update-resources': ResourceRetrieveEvent}>();
 
   let fetchError = '';
@@ -560,7 +558,7 @@
         color="primary"
         style="width:fit-content"
         disabled={processing || disabled}
-        on:click={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, SOURCE.url, prepareIps)}
+        on:click={() => prepareIps()}
       >
         {processing ? processingText : buttonText}
       </Button>
@@ -574,5 +572,4 @@
     </Col>
   </Row>
 </form>
-<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 <span class="text-danger">{fetchError}</span>

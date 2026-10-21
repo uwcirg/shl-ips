@@ -20,7 +20,6 @@
   } from '$lib/utils/sofClient';
   import { createEventDispatcher, onMount } from 'svelte';
   import { clearURLOfParams, getEntriesFromIPS } from '$lib/utils/util';
-  import FHIRDataServiceChecker from '$lib/components/app/FHIRDataServiceChecker.svelte';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
 
   export let disabled = false;
@@ -42,7 +41,6 @@
 
   const CATEGORY = CATEGORIES.PROVIDER_HEALTH_RECORD;
   const METHOD = METHODS.PROVIDER_HEALTH_RECORD_SOF;
-  let FHIRDataServiceCheckerInstance: FHIRDataServiceChecker | undefined;
 
   let fetchError = "";
   let result: ResourceRetrieveEvent = {
@@ -189,7 +187,7 @@
     }
   }
 </script>
-<form on:submit|preventDefault={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, sofHost?.url ?? "Unknown", prepareIps)}>
+<form on:submit|preventDefault={() => prepareIps()}>
   <FormGroup>
     {#each SOF_HOSTS as host}
       <Row class="mx-2">
@@ -213,7 +211,7 @@
       style="width:fit-content"
       disabled={processing || disabled}
       type="button"
-      on:click={() => FHIRDataServiceCheckerInstance?.checkFHIRDataServiceBeforeFetch(CATEGORY, METHOD, defaultUrl, quickLoad)}>
+      on:click={() => quickLoad()}>
         Quick Sample
       </Button>
     </Col>
@@ -226,5 +224,4 @@
     </Col>
   </Row>
 </form>
-<FHIRDataServiceChecker bind:this={FHIRDataServiceCheckerInstance}/>
 <span class="text-danger">{fetchError}</span>
