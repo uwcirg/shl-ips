@@ -380,21 +380,6 @@ export const PATIENT_IPS = {
   'Peter Kieth Jordan': 'https://terminz.azurewebsites.net/fhir/Patient/$summary?profile=http://hl7.org/fhir/uv/ips/StructureDefinition/Bundle-uv-ips&identifier=https://standards.digital.health.nz/ns/nhi-id|NNJ9186&_format=json'
 }
 export const EXAMPLE_IPS = {
-  'Lilly Taiwan': 'https://fhir.myhealthsummary.demo.cirg.uw.edu/fhir/Bundle/3d79b501-a171-47a8-8042-53c508dd3b61',
-  'Genny Taiwan': 'https://fhir.myhealthsummary.demo.cirg.uw.edu/fhir/Bundle/029607a9-01f5-4ff8-a046-c5498f3284a5',
-  'Marta Taiwan': 'https://fhir.myhealthsummary.demo.cirg.uw.edu/fhir/Bundle/dbf9baad-db95-438b-8554-b92174e45fd3',
-  'Patricia Taiwan': 'https://fhir.myhealthsummary.demo.cirg.uw.edu/fhir/Bundle/b4536645-6872-479c-ba5d-05420a3ca6d3',
-  'Jennifer Taiwan': 'https://fhir.myhealthsummary.demo.cirg.uw.edu/fhir/Bundle/8a019a33-86d7-4e83-afd6-ae580206a33c',
-  'Marta JP': 'https://fhir.myhealthsummary.demo.cirg.uw.edu/fhir/Bundle/e14a4fe8-9285-45ea-aec1-d13a93237fe3',
-  'José Paraguay': 'https://fhir.dhealth-lab.org/fhir/Bundle/55',
-  'Fabian Peru': 'https://fhir.dhealth-lab.org/fhir/Bundle/54',
-  'Matias Argentina': 'https://fhir.dhealth-lab.org/fhir/Bundle/53',
-  'Epic IHE 2025 - Marta Villa Summary': `${SYSTEM_URL}/api/epic-ihe-2026/summary?pid=eRHdrDtPMnBqWCyr3lpmwMA3`,
-  'Epic IHE 2025 - Marta Villa Everything': `${SYSTEM_URL}/api/epic-ihe-2026/everything?pid=eRHdrDtPMnBqWCyr3lpmwMA3`,
-  'Epic IHE 2025 - Genny Works Summary': `${SYSTEM_URL}/api/epic-ihe-2026/summary?pid=eufNrX8r16idDdxj5WraIKg3`,
-  'Epic IHE 2025 - Genny Works Everything': `${SYSTEM_URL}/api/epic-ihe-2026/everything?pid=eufNrX8r16idDdxj5WraIKg3`,
-  'Epic IHE 2025 - Lilly Curic Summary': `${SYSTEM_URL}/api/epic-ihe-2026/summary?pid=eFvqTuODmXSrNFBkmTg4UuQ3`,
-  'Epic IHE 2025 - Lilly Curic Everything': `${SYSTEM_URL}/api/epic-ihe-2026/everything?pid=eFvqTuODmXSrNFBkmTg4UuQ3`,
   'Betsy QuestionnaireResponses 2026-07 Connectathon': 'https://gw.interop.community/paciosandbox/open/QuestionnaireResponse?patient=patient-betsysmith-johnson01&questionnaire=https://gw.interop.community/paciosandbox/open/Questionnaire/GAD7Questionnaire',
   'Epic $summary Connectathon 2025-05': 'https://connectathon.epic.com/Interconnect-Fhir-Oauth/api/FHIR/R4/Patient/e5ZHnklVuYuT85PnDVOepOg3/$summary',
   'Epic HIMSS': 'https://ihe-nimbus.epic.com/Interconnect-FHIR-Open/api/FHIR/R4/Patient/e1o-b5iIsAPxRiD2Ct8KekQ3/$summary',
@@ -409,5 +394,9 @@ export const EXAMPLE_IPS = {
   'Desiree': 'https://fhir.ips-demo.dev.cirg.uw.edu/fhir/Patient/Pat1-System2/$summary',
   // 2025-01 Connectathon PACIO track:
   'Jenny Mosley': 'https://hapi.fhir.org/baseR4/Patient/patientJM1/$summary',
+  // 2026-10 IHE Plugathon:
+  'Marta Villa': 'https://fhir.myhealthsummary.demo.cirg.uw.edu/fhir/Bundle/ce0accba-be92-4ac5-947a-9fc404264aa8',
+  'Genny Works': 'https://fhir.myhealthsummary.demo.cirg.uw.edu/fhir/Bundle/fc642b1c-5b63-4254-bdf6-a80c135b548f',
+  'Lilly Curic': 'https://fhir.myhealthsummary.demo.cirg.uw.edu/fhir/Bundle/03dee25e-7ce8-4677-be1d-0053c6e7da1b',
 };
 export const IPS_DEFAULT = 'Maria SEATTLE Gravitate';
