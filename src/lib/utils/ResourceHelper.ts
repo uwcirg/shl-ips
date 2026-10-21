@@ -14,6 +14,10 @@ export class ResourceHelper {
     resource: Resource;
     include: boolean;
     inject: boolean;
+    // Bundle fullUrl the resource came from, when known (e.g. an IPS bundle). Lets references
+    // written as fullUrls (urn:uuid:...) resolve. Not serialized: it only describes the bundle
+    // a resource was read from.
+    fullUrl?: string;
 
     constructor(resource: Resource, inject?: boolean, include?: boolean) {
         this.id = crypto.randomUUID();

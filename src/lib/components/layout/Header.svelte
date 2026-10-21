@@ -113,7 +113,8 @@
   function addDynamicNavbarListeners() {
     document.addEventListener('click', (event) => {
       // Ignore clicks on the navbar toggler
-      if (event.target?.className?.includes('navbar-toggler')) return;
+      // (closest, not className: className is an SVGAnimatedString on SVG elements)
+      if (event.target?.closest?.('.navbar-toggler, .navbar-toggler-icon')) return;
       // Ignore clicks on the dropdown toggle menu items
       if (event.target?.closest('.nav-link.header-link') && event.target?.closest('.dropdown-toggle')) {
         navOpening = true;

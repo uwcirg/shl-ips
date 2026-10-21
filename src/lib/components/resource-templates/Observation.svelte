@@ -7,7 +7,7 @@
   import { hasChoiceDTField, choiceDTFields } from '$lib/utils/util';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
   import Date from '$lib/components/resource-templates/Date.svelte';
-  import { buildObservationSeriesMap, type SparklinePoint, sparklineSeriesFor } from '$lib/utils/observationSparkline';
+  import { buildObservationSeriesMap, type SparklinePoint, sparklineSeriesFor, getValueString } from '$lib/utils/observationSparkline';
   import ObservationSparkline from '$lib/components/app/ObservationSparkline.svelte';
   
   export let content: ResourceTemplateParams<Observation>; // Define a prop to pass the data to the component
@@ -72,40 +72,6 @@
       const resources = content.entries.map((r) => r.resource as Observation);
       const observationSeriesMap = buildObservationSeriesMap(resources);
       sparklineSeries = sparklineSeriesFor(resource, observationSeriesMap);
-    }
-  }
-
-  // Find the value[x] field on an Observation (or Observation.component) and
-  // return a display string appropriate to its FHIR data type.
-  function getValueString(obj: any): string | undefined {
-    if (!obj) return undefined;
-    const valueKey = Object.keys(obj).find(k => k.startsWith('value') && k !== 'value');
-    if (!valueKey) return undefined;
-    const value = obj[valueKey];
-    if (value === undefined || value === null) return undefined;
-
-    switch (valueKey) {
-      case 'valueQuantity':
-        return `${value.value ?? ''} ${value.unit ?? ''}`.trim();
-      case 'valueCodeableConcept':
-        return value.coding?.[0]?.display ?? value.text;
-      case 'valueRange':
-        return `${value.low?.value ?? '?'} ${value.low?.unit ?? ''} - ${value.high?.value ?? '?'} ${value.high?.unit ?? ''}`.trim();
-      case 'valueRatio':
-        return `${value.numerator?.value ?? ''} ${value.numerator?.unit ?? ''} / ${value.denominator?.value ?? ''} ${value.denominator?.unit ?? ''}`.trim();
-      case 'valuePeriod':
-        return `${value.start ?? ''} - ${value.end ?? ''}`;
-      case 'valueString':
-      case 'valueBoolean':
-      case 'valueInteger':
-      case 'valueDecimal':
-      case 'valueTime':
-      case 'valueDateTime':
-      case 'valueUri':
-      case 'valueCode':
-        return String(value);
-      default:
-        return typeof value === 'object' ? JSON.stringify(value) : String(value);
     }
   }
 </script>

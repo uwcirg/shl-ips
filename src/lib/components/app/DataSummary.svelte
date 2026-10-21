@@ -13,35 +13,50 @@
   import { ResourceHelper } from '$lib/utils/ResourceHelper.js';
   import CategoryView from '$lib/components/app/CategoryView.svelte';
   import {getFriendlySourceNameBySource} from '$lib/utils/resourceCollectionUtils';
-  import { createCategorizedStore, type CategoryMap, defaultResourceConfig } from '$lib/stores/categorizedResources';
-  import ResourceDisplay from '$lib/components/app/ResourceDisplay.svelte';
+  import { createCategorizedStore, type UnitMap, defaultResourceConfig } from '$lib/stores/categorizedResources';
+  import type { DisplayUnit } from '$lib/stores/displayUnits';
+  import UnitDisplay from '$lib/components/app/UnitDisplay.svelte';
   import { derived, type Readable } from 'svelte/store';
   import { goto } from '$app/navigation';
 
   let colorMap = getContext<Writable<Map<string, string>>>('colorMap');
   
   export let categorizedStore: ReturnType<typeof createCategorizedStore> = getContext('categorizedStore');
-  const categorizedResourceStore = categorizedStore.store;
-  const getRenderInfo = categorizedStore.getRenderInfo;
-  const sortResources = categorizedStore.sortResources;
+  // Units (single resources or groups) are already grouped and sorted by the store
+  const unitsStore = categorizedStore.unitsStore;
 
   export let summary = false;
   export let categories: string[] = [];
-  let categoryDataToDisplay: Readable<CategoryMap> = derived(
-    categorizedResourceStore,
-    ($categorizedResourceStore) => {
+  let categoryDataToDisplay: Readable<UnitMap> = derived(
+    unitsStore,
+    ($unitsStore) => {
       if (categories.length === 0) {
-        return $categorizedResourceStore;
+        return $unitsStore;
       }
-      let result: CategoryMap = {};
+      let result: UnitMap = {};
       categories.forEach(category => {
-        if ($categorizedResourceStore[category]) {
-          result[category] = $categorizedResourceStore[category];
+        if ($unitsStore[category]) {
+          result[category] = $unitsStore[category];
         }
       });
       return result;
     }
   );
+
+  const unitItems = (unit: DisplayUnit) => unit.kind === 'single' ? [unit.item] : unit.members;
+  // Friendly names come from a memo that fills in as collections load, in step with colorMap.
+  // Callers pass $colorMap so rows recompute when it changes instead of keeping a stale raw name.
+  const unitSourceNames = (unit: DisplayUnit, _colorMap?: Map<string, string>) => [
+    ...new Set(unitItems(unit).map(item => getFriendlySourceNameBySource(item.source)))
+  ];
+  const NEUTRAL_COLOR = '#6c757d';
+  const colorOf = (name: string, colors: Map<string, string>) => colors.get(name) ?? NEUTRAL_COLOR;
+  // Vertical bar split evenly between the sources a unit draws from
+  function sourceGradient(names: string[], colors: Map<string, string>) {
+    const step = 100 / names.length;
+    const stops = names.map((name, i) => `${colorOf(name, colors)} ${i * step}% ${(i + 1) * step}%`);
+    return `linear-gradient(to bottom, ${stops.join(', ')})`;
+  }
   export let submitting: boolean = false;
   
   const statusDispatch = createEventDispatcher<{ 'status-update': string }>();
@@ -100,12 +115,11 @@
 
 
 {#if $categoryDataToDisplay && Object.keys($categoryDataToDisplay).length > 0}
-  {@const allDataAsBundleEntries = Object.values($categorizedResourceStore).map(types => Object.values(types)).flat().map(cr => cr.rh)}
   {#each Object.keys($categoryDataToDisplay) as category}
-    {#if $categoryDataToDisplay[category] && Object.keys($categoryDataToDisplay[category]).length > 0}
-      {@const values = Object.values($categoryDataToDisplay[category]).sort((a, b) => sortResources(a, b))}
-      {@const valuesToDisplay = summary ? values.slice(0, 3) : values}
-      {@const valuesAsBundleEntries = values.map((value) => ({ resource: value.rh.resource}))}
+    {#if $categoryDataToDisplay[category] && $categoryDataToDisplay[category].length > 0}
+      {@const units = $categoryDataToDisplay[category]}
+      {@const unitsToDisplay = summary ? units.slice(0, 3) : units}
+      {@const valuesAsBundleEntries = units.flatMap(unitItems).map((item) => ({ resource: item.rh.resource }))}
       <div id={`${category}`}></div>
       <CategoryView
         class="mb-4"
@@ -115,33 +129,33 @@
         sortFields={['sourceName', 'category', 'method', 'source']}
       >
         <div slot="resources">
-          {#each valuesToDisplay as value, index}
-            {@const sourceName=getFriendlySourceNameBySource(value.source)}
+          {#each unitsToDisplay as unit, index}
+            {@const sourceNames = unitSourceNames(unit, $colorMap)}
+            {@const sourceName = sourceNames[0]}
             <Row class={(index > 0 ? "border-top pt-2 mt-2" : "") + " source-row"} style="overflow-x: clip; position: relative; flex-wrap: wrap;">
               <div
-                class="ps-2 pe-4 tooltip-host"
+                class="ps-2 pe-4 tooltip-host d-flex"
                 style="max-width: 0px; align-self: stretch;"
-                style:--tooltip-color={$colorMap.get(sourceName)}
+                style:--tooltip-color={colorOf(sourceName, $colorMap)}
               >
-                <div class="p-0 m-0 rounded h-100" style="max-width: 0px; border: .2rem solid {$colorMap.get(sourceName)}"></div>
+                <!-- A flex item, so it stretches to the row's height without relying on percentage heights -->
+                <div
+                  class="source-bar rounded"
+                  style:background={sourceNames.length > 1 ? sourceGradient(sourceNames, $colorMap) : colorOf(sourceName, $colorMap)}
+                ></div>
               </div>
               <Col class="ps-0 resource-content overflow-auto justify-content-center align-items-center">
-                <ResourceDisplay
-                  resource={value.rh.resource}
-                  renderInfo={value.renderInfo}
-                  entries={valuesAsBundleEntries}
-                  codeBadges="advanced"
-                />
+                <UnitDisplay {unit} entries={valuesAsBundleEntries} advanced={$mode === 'advanced'} onView={setJson} />
               </Col>
               <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
-                {#if $mode === 'advanced'}
+                {#if $mode === 'advanced' && unit.kind === 'single'}
                   <Button
                     size="sm"
                     color="secondary"
                     outline
                     on:click={(event) => {
                       event.stopPropagation();
-                      setJson(value.rh)
+                      setJson(unit.item.rh)
                     }}
                   >
                     View
@@ -149,9 +163,11 @@
                 {/if}
               </Col>
               <Row class="ps-2 ms-0 pt-1">
-                <div class="source-label" style:--tooltip-color={$colorMap.get(sourceName)}>
-                  From {sourceName}
-                </div>
+                {#each sourceNames as name}
+                  <div class="source-label" style:--tooltip-color={colorOf(name, $colorMap)}>
+                    From {name}
+                  </div>
+                {/each}
               </Row>
             </Row>
           {/each}
@@ -167,6 +183,13 @@
   }
   :global(div.resource-list-accordion:has(div.accordion-collapse.collapsing) > h2.accordion-header > button.accordion-button) {
     background-color: var(--bs-accordion-active-bg) !important;
+  }
+
+  .source-bar {
+    flex: 0 0 0.4rem;
+    width: 0.4rem;
+    align-self: stretch;
+    min-height: 1rem;
   }
 
   .source-label {

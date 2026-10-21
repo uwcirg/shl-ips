@@ -418,7 +418,7 @@
   </TabContent>
 {:else}
   <!-- Single tab view -->
-  <IPSContent bundle={shlContents[0]} displayMode={$displayMode} />
+  <IPSContent bundle={shlContents[0]} displayMode={$displayMode} codeBadges="advanced" />
 {/if}
 {:else if loading}
   <Row id="ips-loader" class="mx-2">
