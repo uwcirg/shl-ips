@@ -9,15 +9,9 @@
     Badge,
     Button,
     ButtonGroup,
-    Card,
-    CardBody,
-    CardHeader,
     Col,
-    FormGroup,
     Icon,
-    Input,
     Offcanvas,
-    Label,
     Row
   } from '@sveltestrap/sveltestrap';
   import { PLACEHOLDER_SYSTEM } from '$lib/config/config';
@@ -26,7 +20,6 @@
   import { createCategorizedStore, type ResourceInput, type CategorizedResource } from '$lib/stores/categorizedResources';
   import type { DisplayUnit } from '$lib/stores/displayUnits';
   import UnitDisplay from '$lib/components/app/UnitDisplay.svelte';
-  import ResourceRows from '$lib/components/app/ResourceRows.svelte';
 
   export let resourceCollection: ResourceCollection;
   export let scroll: boolean = true;
@@ -179,17 +172,34 @@
   </Accordion>
   {:else}
     <!-- All resources in one list, regardless of category -->
-    {@const allResources = Object.values($categorizedResourceStore).flatMap((category) => Object.values(category).sort(sortResources))}
+    {@const allResources = Object.values($unitsStore).flatMap((category) => Object.values(category).sort(sortResources))}
     {#if allResources.length > 0}
       <div
         class="resource-content bg-body border rounded p-3 w-100"
         style={scroll ? 'overflow: auto; max-height: 65vh' : ''}
       >
-        <ResourceRows
-          resources={allResources}
-          entries={allDataAsBundleEntries}
-          on:view={({ detail }) => setJson(detail)}
-        />
+        {#each allResources as unit, index}
+          <Row class={index > 0 ? "border-top pt-2 mt-2" : ""} style="overflow: hidden">
+            <Col class="overflow-auto justify-content-center align-items-center">
+              <UnitDisplay {unit} entries={allDataAsBundleEntries} advanced={$mode === 'advanced'} onView={setJson} />
+            </Col>
+            <Col class="d-flex justify-content-end align-items-center" style="max-width: fit-content">
+              {#if $mode === 'advanced' && unit.kind === 'single'}
+                <Button
+                  size="sm"
+                  color="secondary"
+                  outline
+                  on:click={(event) => {
+                    event.stopPropagation();
+                    setJson(unit.item.rh)
+                  }}
+                >
+                  View
+                </Button>
+              {/if}
+            </Col>
+          </Row>
+        {/each}
       </div>
     {/if}
   {/if}
