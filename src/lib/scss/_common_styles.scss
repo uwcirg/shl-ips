@@ -1,5 +1,8 @@
 :root {
   --header-height: 64px;
+  /* Width of the column holding a SectionNav. Wide enough for the longest section title in bold
+     (the active item), since a title that fits in regular weight but not bold would wrap when active. */
+  --section-nav-width: 13.5rem;
 }
 
 html {

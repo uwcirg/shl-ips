@@ -62,7 +62,8 @@
   let titleEls: Record<string, HTMLElement | undefined> = {};
   $: navSections = shownCategories.map((category): SectionNavItem => ({
     title: categoryTitle(category),
-    element: titleEls[category]
+    element: titleEls[category],
+    count: $categoryDataToDisplay[category]?.length
   }));
 
   const unitItems = (unit: DisplayUnit) => unit.kind === 'single' ? [unit.item] : unit.members;
@@ -218,7 +219,7 @@
   /* The SectionNav column; the nav itself is shown from md up */
   @media (min-width: 768px) {
     .category-layout.with-nav {
-      grid-template-columns: 13rem minmax(0, 1fr);
+      grid-template-columns: var(--section-nav-width, 14.5rem) minmax(0, 1fr);
     }
   }
   .category-list {

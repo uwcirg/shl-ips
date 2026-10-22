@@ -292,7 +292,7 @@
   /* The SectionNav column; the nav itself is shown from md up */
   @media (min-width: 768px) {
     .ips-layout {
-      grid-template-columns: 13rem minmax(0, 1fr);
+      grid-template-columns: var(--section-nav-width, 13.5rem) minmax(0, 1fr);
     }
   }
   .ips-section + .ips-section {
