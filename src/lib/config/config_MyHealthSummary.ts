@@ -12,7 +12,6 @@ import PatientNeeds from '$lib/components/app/PatientNeeds.svelte';
 import PatientBody from '$lib/components/app/PatientBody.svelte';
 import CreatePOLST from '$lib/components/app/CreatePOLST.svelte';
 import ODHForm from '$lib/components/app/ODHForm.svelte';
-import AboutMeTitle from '$lib/components/app/AboutMeTitle.svelte';
 
 export default {
   title: "My Health Summary",
@@ -32,7 +31,7 @@ export default {
       sections: [
         {
           id: "healthcare-providers",
-          title: "Data from Healthcare Providers",
+          title: "Import from Healthcare Providers",
           description: "",
           category: CATEGORIES.PROVIDER_HEALTH_RECORD,
           forms: [
@@ -40,13 +39,14 @@ export default {
               method: METHODS.PROVIDER_HEALTH_RECORD_SOF_SEARCH,
               tabTitle: "Provider Search",
               description: "Import your health data from your healthcare provider via SMART authorization.",
+              formDescription: "Search for the name of your healthcare provider and sign in to access your health data.",
               component: FetchSoFSearch
             }
           ]
         },
         {
           id: "my-story",
-          title: "My Health in My Words",
+          title: "Personal Health Notes",
           description: "Your own representation of your health, history, needs and goals.",
           category: CATEGORIES.PATIENT_STORY,
           forms: [
@@ -99,9 +99,11 @@ export default {
           title: "About Me",
           description: "Add or update information about yourself.",
           info: "Some fields may already be filled with information from your account login. The information here can be added to your Shareable Health Summary, but this form will not change information that you download from healthcare providers or other sources.",
+          category: CATEGORIES.ABOUT_ME,
           forms: [
             {
-              method: "patient",
+              method: METHODS.PATIENT_DEMOGRAPHICS,
+              tabTitle: "About Me",
               title: "Edit My Personal Information",
               description: "Edit the information about yourself that you would like to include in your Shareable Health Summaries.",
               component: Demographic,
@@ -117,6 +119,8 @@ export default {
           forms: [
             {
               method: METHODS.OCCUPATIONAL_DATA_FOR_HEALTH_FORM,
+              tabTitle: "Edit My Work Information",
+              description: "Add your employment history, retirement status, and combat zone exposure.",
               component: ODHForm,
               editable: true
             }
