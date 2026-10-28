@@ -34,6 +34,33 @@ export interface CategoryRule {
   match: (resource: any) => boolean;
 }
 
+const LOINC_CODE_PREGNANCY_STATUS = "82810-3";
+const LOINC_CODE_NUMBER_BIRTHS_LIVE = "11636-8";
+const LOINC_CODE_NUMBER_BIRTHS_PRETERM = "11637-6";
+const LOINC_CODE_NUMBER_BIRTHS_STILL_LIVING = "11638-4";
+const LOINC_CODE_NUMBER_BIRTHS_TERM = "11639-2";
+const LOINC_CODE_NUMBER_BIRTHS_TOTAL = "11640-0";
+const LOINC_CODE_NUMBER_ABORTIONS = "11612-9";
+const LOINC_CODE_NUMBER_ABORTIONS_INDUCED = "11613-7";
+const LOINC_CODE_NUMBER_ABORTIONS_SPONTANEOUS = "11614-5";
+const LOINC_CODE_NUMBER_ECTOPIC_PREGNANCY = "33065-4";
+
+const PREGNANCY_CODES = [
+  LOINC_CODE_PREGNANCY_STATUS,
+  LOINC_CODE_NUMBER_BIRTHS_LIVE,
+  LOINC_CODE_NUMBER_BIRTHS_PRETERM,
+  LOINC_CODE_NUMBER_BIRTHS_STILL_LIVING,
+  LOINC_CODE_NUMBER_BIRTHS_TERM,
+  LOINC_CODE_NUMBER_BIRTHS_TOTAL,
+  LOINC_CODE_NUMBER_ABORTIONS,
+  LOINC_CODE_NUMBER_ABORTIONS_INDUCED,
+  LOINC_CODE_NUMBER_ABORTIONS_SPONTANEOUS,
+  LOINC_CODE_NUMBER_ECTOPIC_PREGNANCY
+];
+
+const isPregnancy = (resource: any): boolean =>
+  resource.code?.coding?.some((c: any) => PREGNANCY_CODES.includes(c?.code));
+
 // True if any of the Observation's category codings has this code
 const hasObservationCategory = (code: string) => (resource: any): boolean =>
   (resource.category ?? []).some((cc: any) => cc?.coding?.some((c: any) => c?.code === code));
@@ -124,6 +151,7 @@ export const RESOURCE_CONFIG: Record<string, any> = {
       // Observations with none of the categories below stay here
       category: 'Other Observations',
       categoryRules: [
+        { category: 'Pregnancies', match: isPregnancy },
         { category: 'Vital Signs', match: hasObservationCategory('vital-signs') },
         { category: 'Lab Results', match: hasObservationCategory('laboratory') },
         { category: 'Occupation & Social History', match: hasObservationCategory('social-history') },
