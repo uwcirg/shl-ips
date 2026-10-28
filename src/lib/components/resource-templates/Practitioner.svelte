@@ -31,7 +31,7 @@
     </strong>
     <br>
 {/if}
-{#if resource.gender}
+<!-- {#if resource.gender}
     Gender: {resource.gender ?? ""}<br>
 {/if}
 {#if resource.address}
@@ -66,5 +66,5 @@
       {/each}
       </tbody>
   </table>
-{/if}
+{/if} -->
   
