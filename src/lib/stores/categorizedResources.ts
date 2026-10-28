@@ -32,7 +32,7 @@ import type { ComponentType } from 'svelte';
 import { type Readable, derived } from 'svelte/store';
 import type { Resource } from 'fhir/r4';
 import type { ResourceHelper } from '$lib/utils/ResourceHelper';
-import { RESOURCE_CONFIG as defaultResourceConfig, RESOURCE_TYPE_FALLBACK_KEY } from '$lib/config/resource_config';
+import { RESOURCE_CONFIG as defaultResourceConfig, RESOURCE_TYPE_FALLBACK_KEY, type CategoryRule } from '$lib/config/resource_config';
 import { getFHIRDateAndPrecision } from '$lib/utils/util';
 import { ReferenceIndex } from '$lib/utils/referenceIndex';
 import { buildDisplayUnits, defaultGroupers, type DisplayUnit, type Grouper } from '$lib/stores/displayUnits';
@@ -141,9 +141,12 @@ export function createCategorizedStore(
 }
 
 // Exported so callers can compose their own sort/categorize fns from these primitives
-// Default: categorize by resourceConfig.category or default to resourceType
+// Default: categorize by the first matching resourceConfig.categoryRules entry, else
+// resourceConfig.category, else resourceType
 export function defaultCategorize(resource: Resource, resourceConfig: ResourceConfig): string {
-  let type = resourceConfig[resource.resourceType]?.category;
+  const entry = resourceConfig[resource.resourceType];
+  const rule = entry?.categoryRules?.find((r: CategoryRule) => r.match(resource));
+  let type = rule?.category ?? entry?.category;
   if (!type) {
     type = resource.resourceType;
   }

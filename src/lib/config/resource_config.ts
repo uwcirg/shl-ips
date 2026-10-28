@@ -27,6 +27,17 @@ import DiagnosticReportGroup from '$lib/components/resource-templates/Diagnostic
 
 export const RESOURCE_TYPE_FALLBACK_KEY = 'Other';
 
+// A rule that moves a resource out of its type's default `category` when `match` is true.
+// Rules are tried in order and the first match wins.
+export interface CategoryRule {
+  category: string;
+  match: (resource: any) => boolean;
+}
+
+// True if any of the Observation's category codings has this code
+const hasObservationCategory = (code: string) => (resource: any): boolean =>
+  (resource.category ?? []).some((cc: any) => cc?.coding?.some((c: any) => c?.code === code));
+
 export const RESOURCE_CONFIG: Record<string, any> = {
     [RESOURCE_TYPE_FALLBACK_KEY]: {
       category: 'Other',
@@ -110,7 +121,15 @@ export const RESOURCE_CONFIG: Record<string, any> = {
       sortFields: ['effective', 'dateAsserted']
     },
     'Observation': {
-      category: 'Observations and Results',
+      // Observations with none of the categories below stay here
+      category: 'Other Observations',
+      categoryRules: [
+        { category: 'Vital Signs', match: hasObservationCategory('vital-signs') },
+        { category: 'Lab Results', match: hasObservationCategory('laboratory') },
+        { category: 'Occupation & Social History', match: hasObservationCategory('social-history') },
+        { category: 'Imaging Results', match: hasObservationCategory('imaging') },
+        { category: 'Surveys', match: hasObservationCategory('survey') },
+      ] as CategoryRule[],
       component: Observation,
       sortFields: ['effective', 'issued']
     },

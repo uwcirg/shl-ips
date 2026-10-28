@@ -56,7 +56,9 @@
     (category) => $categoryDataToDisplay[category]?.length > 0
   );
   const categoryTitle = (category: string) =>
-    Object.values(defaultResourceConfig).find((cr) => cr.category === category) ? category : `${category}s`;
+    Object.values(defaultResourceConfig).find(
+      (cr) => cr.category === category || cr.categoryRules?.some((rule: { category: string }) => rule.category === category)
+    ) ? category : `${category}s`;
 
   // Each category's title element, for the section nav to scroll to
   let titleEls: Record<string, HTMLElement | undefined> = {};
