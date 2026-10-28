@@ -76,6 +76,14 @@ function buildPatient() {
   };
 }
 
+function buildOrganization() {
+  return {
+    resourceType: 'Organization',
+    id: 'org-1',
+    name: 'Utility Org Name'
+  };
+}
+
 function buildObservation() {
   return {
     resourceType: 'Observation',
@@ -91,7 +99,7 @@ function buildObservation() {
 // context — colorMap in $lib/routes/(common)/(app)/+layout.svelte, categorizedStore in
 // data/manage/+layout.svelte — since this test renders the page directly rather than through
 // SvelteKit's router.
-function buildManageContext(fhirDataService: FHIRDataService) {
+function buildManageContext(fhirDataService: FHIRDataService, mode = 'normal') {
   const collectionInfo = fhirDataService.getAllResourceCollections().map((c) => c.getTags());
   const friendlySourceNames = getFriendlySourceNames(collectionInfo);
   const colorMap = writable(buildColorMap(friendlySourceNames));
@@ -122,7 +130,7 @@ function buildManageContext(fhirDataService: FHIRDataService) {
     ['colorMap', colorMap],
     ['categorizedStore', categorizedStore],
     ['resourceFilters', createFilterStore()],
-    ['mode', writable('normal')]
+    ['mode', writable(mode)]
   ]);
 }
 
@@ -145,6 +153,30 @@ describe('/data/manage page', () => {
     // DataSummary: the loaded Observation itself rendered through its real resource template.
     expect(screen.getByText('Test Observation')).toBeInTheDocument();
     expect(screen.getByText(/Recognizable test value/)).toBeInTheDocument();
+  });
+
+  it('does not list utility resources on their own in normal mode', () => {
+    const fhirDataService = new FHIRDataService(fakeAuth());
+    const collection = new ResourceCollection([buildPatient(), buildObservation(), buildOrganization()] as any);
+    fhirDataService.addDatasetToUserResources(collection);
+
+    render(ManagePage, { context: buildManageContext(fhirDataService) });
+
+    expect(screen.getByText('Test Observation')).toBeInTheDocument();
+    expect(screen.queryByText('Utility Org Name')).not.toBeInTheDocument();
+    // its category isn't listed either, since nothing in it is shown
+    expect(screen.queryByText('Organizations')).not.toBeInTheDocument();
+  });
+
+  it('lists utility resources in advanced mode', () => {
+    const fhirDataService = new FHIRDataService(fakeAuth());
+    const collection = new ResourceCollection([buildPatient(), buildObservation(), buildOrganization()] as any);
+    fhirDataService.addDatasetToUserResources(collection);
+
+    render(ManagePage, { context: buildManageContext(fhirDataService, 'advanced') });
+
+    expect(screen.getByText('Test Observation')).toBeInTheDocument();
+    expect(screen.getByText('Utility Org Name')).toBeInTheDocument();
   });
 
   it('shows no source pills when the store is empty', () => {

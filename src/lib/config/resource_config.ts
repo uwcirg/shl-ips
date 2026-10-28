@@ -142,6 +142,17 @@ export const RESOURCE_CONFIG: Record<string, any> = {
     },
   };
 
+// Utility resources exist mostly to be referenced by others (the Organization and Practitioner an
+// Encounter or prescription points at), so the data views don't list them on their own: they show
+// only in advanced mode. Views of a dataset being imported show every resource.
+export const UTILITY_RESOURCE_TYPES: ReadonlySet<string> = new Set([
+  'Practitioner',
+  'PractitionerRole',
+  'Location',
+  'Organization'
+]);
+export const isUtilityResourceType = (resourceType: string) => UTILITY_RESOURCE_TYPES.has(resourceType);
+
 // Templates for grouped display units (see $lib/stores/displayUnits), keyed by groupType.
 // Unlike RESOURCE_CONFIG these take `unit` rather than `content`.
 export const GROUP_COMPONENTS: Record<string, ComponentType> = {
