@@ -361,6 +361,7 @@ export const USCDI_RESOURCES = [
   'Device',
   // 'DeviceUseStatement', // Not in EPIC USCDI R4
   'DiagnosticReport', // TODO change to subject
+  'Encounter',
   // 'ImagingStudy', // Not in EPIC USCDI R4
   // 'Media', // Not in EPIC USCDI R4
   'Location',
