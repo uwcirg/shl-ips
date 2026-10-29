@@ -100,12 +100,16 @@
     if (performance.now() < lockUntil) return;
     const line = spyLinePx();
     let reached: HTMLElement | undefined;
+    let firstRendered: HTMLElement | undefined;
     for (const { element } of sections) {
       // Skip elements that aren't rendered (e.g. in a hidden tab), which would read as zero-sized at the top
       if (!element || element.getClientRects().length === 0) continue;
+      firstRendered ??= element;
       if (element.getBoundingClientRect().top <= line) reached = element;
     }
-    if (reached) activeElement = reached;
+    // Before the first section reaches the line (top of the page), the first section is the
+    // active one; keeping the previous value would leave a stale section shown as sections load in
+    activeElement = reached ?? firstRendered ?? activeElement;
   }
 
   function scheduleUpdate() {
