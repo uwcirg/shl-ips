@@ -15,8 +15,11 @@
   import type { IAuthService } from '$lib/utils/types';
 
   // A table of contents for a long page: lists sections, highlights the one in view, and jumps
-  // to one on click. Meant to sit in a column beside the content (from md up it sticks below the
-  // app's header; below md it is hidden, since mobile navigation is a separate piece).
+  // to one on click. From md up it is a column beside the content that sticks below the app's
+  // header. Below md it collapses to a small floating pill at the bottom of the viewport showing
+  // the section in view (a "you are here" indicator); tapping it opens the full list upward, and
+  // picking a section jumps there and collapses it again. On signed-in phones the pill rides
+  // just above the app's bottom tab bar.
   //
   //   <SectionNav sections={[{ title: 'Medications', element: medsEl, count: 4 }, ...]} />
   //
@@ -113,7 +116,12 @@
     });
   }
 
+  // Installed as an app (standalone/fullscreen): Header pads the bottom tab bar by 1.5rem (pb-4)
+  // there, so it is taller and the pill needs to clear that too. Same check as Header's pwaMode.
+  let pwaMode = false;
+
   onMount(() => {
+    pwaMode = window.matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches;
     window.addEventListener('scroll', scheduleUpdate, { passive: true });
     window.addEventListener('resize', scheduleUpdate);
     scheduleUpdate();
@@ -126,6 +134,43 @@
 
   // Re-evaluate when the list changes (e.g. elements appearing once the page has rendered)
   $: if (sections) scheduleUpdate();
+
+  // --- Collapsed (small screen) menu ------------------------------------------------------
+  let open = false;
+  let pillEl: HTMLElement;
+  const menuId = `section-nav-menu-${Math.random().toString(36).slice(2, 8)}`;
+
+  $: activeIndex = sections.findIndex(({ element }) => !!element && element === activeElement);
+  $: activeItem = activeIndex >= 0 ? sections[activeIndex] : undefined;
+
+  function onWindowClick(event: MouseEvent) {
+    if (open && pillEl && !pillEl.contains(event.target as Node)) open = false;
+  }
+
+  function onKeydown(event: KeyboardEvent) {
+    if (open && event.key === 'Escape') {
+      open = false;
+      pillEl?.querySelector<HTMLElement>('.section-nav-toggle')?.focus();
+    }
+  }
+
+  function select(element: HTMLElement | null | undefined) {
+    open = false;
+    jumpTo(element);
+  }
+
+  // Scrolls to the top of the page; the section in view then updates as the scroll passes
+  function scrollToTop() {
+    lockUntil = 0;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+  }
+
+  function topFromMenu() {
+    open = false;
+    scrollToTop();
+    pillEl?.querySelector<HTMLElement>('.section-nav-toggle')?.focus({ preventScroll: true });
+  }
 
   function jumpTo(element: HTMLElement | null | undefined) {
     if (!element) return;
@@ -141,6 +186,8 @@
     target.focus({ preventScroll: true });
   }
 </script>
+
+<svelte:window on:click={onWindowClick} on:keydown={onKeydown} />
 
 <nav class="section-nav" class:signed-in={signedIn} class:inset aria-label={label}>
   <ul class="list-unstyled mb-0">
@@ -159,7 +206,58 @@
       </li>
     {/each}
   </ul>
+  <button type="button" class="section-nav-item section-nav-top" on:click={scrollToTop}>
+    <span>Back to top</span>
+    <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V3M3.5 7.5L8 3l4.5 4.5" /></svg>
+  </button>
 </nav>
+
+{#if sections.length > 0}
+  <nav
+    class="section-nav-pill"
+    class:signed-in={signedIn}
+    class:pwa={pwaMode}
+    class:open
+    aria-label={label}
+    bind:this={pillEl}
+  >
+    {#if open}
+      <div class="section-nav-menu shadow rounded-4" id={menuId}>
+        <ul class="list-unstyled mb-0">
+          {#each sections as { title, element, count }}
+            <li>
+              <button
+                type="button"
+                class="section-nav-item"
+                class:active={!!element && element === activeElement}
+                aria-current={!!element && element === activeElement ? 'true' : undefined}
+                on:click={() => select(element)}
+              >
+                <span>{title}</span>
+                {#if count !== undefined}<span class="section-nav-count">{count}</span>{/if}
+              </button>
+            </li>
+          {/each}
+        </ul>
+        <button type="button" class="section-nav-item section-nav-top" on:click={topFromMenu}>
+          <span>Back to top</span>
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V3M3.5 7.5L8 3l4.5 4.5" /></svg>
+        </button>
+      </div>
+    {/if}
+    <button
+      type="button"
+      class="section-nav-toggle shadow rounded-pill"
+      aria-expanded={open}
+      aria-controls={open ? menuId : undefined}
+      on:click={() => (open = !open)}
+    >
+      <span class="section-nav-current" aria-live="polite">{activeItem?.title ?? label}</span>
+      <svg class="section-nav-chevron" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l5-5 5 5" /></svg>
+    </button>
+  </nav>
+{/if}
+
 
 <style>
   .section-nav {
@@ -172,7 +270,7 @@
       --section-nav-overlay: var(--header-height, 64px);
     }
   }
-  /* Shown from md up; a mobile menu is a separate piece */
+  /* Shown from md up; below md the pill takes over */
   @media (min-width: 768px) {
     .section-nav {
       display: block;
@@ -185,6 +283,79 @@
     /* Height of the floating compact filters plus a gap */
     .section-nav.inset {
       padding-top: 3.5rem;
+    }
+  }
+  /* Below md: the collapsed pill */
+  .section-nav-pill {
+    /* Clearance above the viewport's bottom edge; signed-in phones add the app's bottom tab bar */
+    --section-nav-bottom: 1.75rem;
+    position: fixed;
+    left: 50%;
+    bottom: calc(var(--section-nav-bottom) + env(safe-area-inset-bottom, 0px));
+    transform: translateX(-50%);
+    z-index: 1020; /* under the app's tab bars (1030) */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+    width: max-content;
+    max-width: calc(100vw - 2rem);
+  }
+  @media (max-width: 575.98px) {
+    .section-nav-pill.signed-in {
+      --section-nav-bottom: calc(var(--header-height, 64px) + 1.25rem);
+    }
+    /* Keep the extra in step with the pb-4 Header gives the tab bar in PWA mode */
+    .section-nav-pill.signed-in.pwa {
+      --section-nav-bottom: calc(var(--header-height, 64px) + 1.5rem + 1.25rem);
+    }
+  }
+  @media (min-width: 768px) {
+    .section-nav-pill {
+      display: none;
+    }
+  }
+  .section-nav-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: 100%;
+    padding: 0.65rem 1.15rem;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    background-color: var(--bs-body-bg, #fff);
+    color: var(--bs-body-color);
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  .section-nav-toggle:hover {
+    background-color: var(--bs-tertiary-bg, #f8f9fa);
+  }
+  .section-nav-current {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+  }
+  .section-nav-chevron {
+    flex: 0 0 auto;
+    transition: transform 0.2s;
+  }
+  .open .section-nav-chevron {
+    transform: rotate(180deg);
+  }
+  .section-nav-menu {
+    width: 18rem;
+    max-width: calc(100vw - 2rem);
+    max-height: calc(100vh - 9rem - var(--header-height, 64px));
+    overflow-y: auto;
+    padding: 0.4rem;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    background-color: var(--bs-body-bg, #fff);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .section-nav-chevron {
+      transition: none;
     }
   }
   .section-nav-item {
@@ -210,6 +381,14 @@
     border-left-color: var(--bs-primary);
     background-color: var(--bs-secondary-bg, #e9ecef);
     font-weight: 600;
+  }
+  /* Sits apart from the section list, at the bottom of the menu */
+  .section-nav-top {
+    margin-top: 0.4rem;
+    border-top: 1px solid var(--bs-border-color, #dee2e6);
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    color: var(--bs-secondary-color, #6c757d);
   }
   .section-nav-count {
     flex: 0 0 auto;
