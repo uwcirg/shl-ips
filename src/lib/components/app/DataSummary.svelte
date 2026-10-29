@@ -13,8 +13,9 @@
   import { ResourceHelper } from '$lib/utils/ResourceHelper.js';
   import CategoryView from '$lib/components/app/CategoryView.svelte';
   import {getFriendlySourceNameBySource} from '$lib/utils/resourceCollectionUtils';
-  import { createCategorizedStore, type UnitMap, defaultResourceConfig } from '$lib/stores/categorizedResources';
-  import type { DisplayUnit } from '$lib/stores/displayUnits';
+  import { createCategorizedStore, categoryTitle, type UnitMap } from '$lib/stores/categorizedResources';
+  import { unitItems, type DisplayUnit } from '$lib/stores/displayUnits';
+  import { createFilterStore, filterUnits, type ResourceFilterStore } from '$lib/stores/resourceFilters';
   import UnitDisplay from '$lib/components/app/UnitDisplay.svelte';
   import SectionNav, { type SectionNavItem } from '$lib/components/layout/SectionNav.svelte';
   import { derived, type Readable } from 'svelte/store';
@@ -26,25 +27,30 @@
   // Units (single resources or groups) are already grouped and sorted by the store
   const unitsStore = categorizedStore.unitsStore;
 
+  // Pages without filtering get a store nothing writes to, which filters nothing
+  export let filters: ResourceFilterStore = getContext('resourceFilters') ?? createFilterStore();
+  const filtersActive = filters.isActive;
+
   export let summary = false;
   export let categories: string[] = [];
   let categoryDataToDisplay: Readable<UnitMap> = derived(
-    unitsStore,
-    ($unitsStore) => {
+    [unitsStore, categorizedStore.referenceIndex, filters],
+    ([$unitsStore, $referenceIndex, $filters]) => {
+      const filtered = filterUnits($unitsStore, $filters, { index: $referenceIndex });
       let result: UnitMap = {};
       if (categories.length === 0) {
         // No categories prop: show all categories, alphabetical by name
-        Object.keys($unitsStore)
+        Object.keys(filtered)
           .sort((a, b) => a.localeCompare(b))
           .forEach(category => {
-            result[category] = $unitsStore[category];
+            result[category] = filtered[category];
           });
         return result;
       }
       // Passed categories prop: keep the order the parent provided
       categories.forEach(category => {
-        if ($unitsStore[category]) {
-          result[category] = $unitsStore[category];
+        if (filtered[category]) {
+          result[category] = filtered[category];
         }
       });
       return result;
@@ -55,8 +61,6 @@
   $: shownCategories = Object.keys($categoryDataToDisplay ?? {}).filter(
     (category) => $categoryDataToDisplay[category]?.length > 0
   );
-  const categoryTitle = (category: string) =>
-    Object.values(defaultResourceConfig).find((cr) => cr.category === category) ? category : `${category}s`;
 
   // Each category's title element, for the section nav to scroll to
   let titleEls: Record<string, HTMLElement | undefined> = {};
@@ -65,7 +69,6 @@
     element: titleEls[category]
   }));
 
-  const unitItems = (unit: DisplayUnit) => unit.kind === 'single' ? [unit.item] : unit.members;
   // Friendly names come from a memo that fills in as collections load, in step with colorMap.
   // Callers pass $colorMap so rows recompute when it changes instead of keeping a stale raw name.
   const unitSourceNames = (unit: DisplayUnit, _colorMap?: Map<string, string>) => [
@@ -147,16 +150,18 @@
   {#each Object.keys($categoryDataToDisplay) as category (category)}
     {#if $categoryDataToDisplay[category] && $categoryDataToDisplay[category].length > 0}
       {@const units = $categoryDataToDisplay[category]}
-      {@const unitsToDisplay = summary ? units.slice(0, 5) : units}
-      {@const valuesAsBundleEntries = units.flatMap(unitItems).map((item) => ({ resource: item.rh.resource }))}
+      <!-- Filtering shows every match in every section, so only truncate when unfiltered -->
+      {@const truncate = summary && !$filtersActive}
+      {@const unitsToDisplay = truncate ? units.slice(0, 5) : units}
+      <!-- Entries come from the unfiltered units so references still resolve -->
+      {@const valuesAsBundleEntries = ($unitsStore[category] ?? units).flatMap(unitItems).map((item) => ({ resource: item.rh.resource }))}
+      {@const totalOthers = units.length - unitsToDisplay.length}
       <div id={`${category}`}></div>
       <CategoryView
         class="mb-4"
         title={categoryTitle(category)}
         bind:titleElement={titleEls[category]}
-        summary={summary}
-        seeAllFn={summary ? () => goto(`/data/manage/${category}`) : undefined}
-        sortFields={['sourceName', 'category', 'method', 'source']}
+        seeAllFn={truncate ? () => goto(`/data/manage/${category}`) : undefined}
       >
         <div slot="resources">
           {#each unitsToDisplay as unit, index}
@@ -201,11 +206,23 @@
               </Row>
             </Row>
           {/each}
+          {#if totalOthers > 0}
+            <Row class={"border-top px-2 pt-3 mt-2 source-row"} style="overflow-x: clip; position: relative; flex-wrap: wrap;">
+              <Button class="w-100 py-2" style="--bs-btn-border-color: var(--bs-border-color);" outline size="sm" color="secondary" on:click={() => goto(`/data/manage/${category}`)}>
+                See all {units.length} <Icon name="chevron-right" />
+              </Button>
+            </Row>
+          {/if}
         </div>
       </CategoryView>
     {/if}
   {/each}
   </div>
+  </div>
+{:else if $filtersActive}
+  <div class="text-center text-secondary py-4">
+    <p class="mb-2">No data matches the current filters.</p>
+    <Button size="sm" color="secondary" outline on:click={filters.reset}>Clear filters</Button>
   </div>
 {/if}
 
