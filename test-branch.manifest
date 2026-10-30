@@ -1,11 +1,19 @@
-# Branches to merge into "test", one per line, in order.
+# Branches to merge into "test/auto", one per line, in order.
 # Order matters: earlier branches merge first, so put whichever branch is
 # conceptually "upstream" (touches more core/shared logic) earlier in the
 # list - later branches then merge on top of it, same as a stacked PR.
 #
 # Blank lines and lines starting with # are ignored.
 #
-# Copy this file to test-branch.manifest (on main) and list your branches:
+# This file is read from main, so changes only take effect once merged there.
+# List your branches like this:
 #
 # feature/some-feature
 # feature/another-feature
+
+feature/add-counts-to-ds-section-nav
+feature/device-display-group
+feature/categorize-observations
+feature/encounter-grouping
+feature/data-summary-filters
+feature/hide-utility-resource-categories

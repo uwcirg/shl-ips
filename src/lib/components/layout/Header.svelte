@@ -273,12 +273,18 @@
   </Navbar>
 </div>
 {#if showFixedTabs && $authenticated && $user}
-  <div class="d-none d-sm-flex fixed-top m-2 shadow rounded-4"
+  <!-- Padding rather than a margin around the bar, on a short strip that is opaque at the top and
+       fades out below, so page content doesn't show through the gap above and beside the bar but
+       doesn't end in a hard edge. The bar is taller than the strip and overflows it. Clicks pass
+       through the strip to the page except on the bar. -->
+  <div class="d-none d-sm-block fixed-top p-2"
     in:fly={{ y: -50, duration: 200 }}
     out:fly={{ y: -50, duration: 100 }}
-    style="z-index: 1030;"
+    style="z-index: 1030; pointer-events: none; height: 2.5rem; background: linear-gradient(to bottom, var(--bs-body-bg) 1rem, transparent 2.5rem);"
   >
-    <TabNav class="rounded-4" activeItem={activeItem} />
+    <div class="d-flex shadow rounded-4" style="pointer-events: auto;">
+      <TabNav class="rounded-4" activeItem={activeItem} />
+    </div>
   </div>
 {/if}
 {#if false && DEMO_WARNING}

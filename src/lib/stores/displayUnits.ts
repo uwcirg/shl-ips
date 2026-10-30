@@ -14,7 +14,7 @@ lives on the resource, so every appearance of it stays in sync.
 
 import type { CategorizedResource } from '$lib/stores/categorizedResources';
 import type { ReferenceIndex } from '$lib/utils/referenceIndex';
-import type { DiagnosticReport, Observation } from 'fhir/r4';
+import type { DeviceUseStatement, DiagnosticReport, Encounter, Observation } from 'fhir/r4';
 import {
   buildObservationPanels,
   buildObservationSeries,
@@ -50,6 +50,10 @@ export interface Grouper<T = unknown> {
   type: string;
   group(items: CategorizedResource[], index: ReferenceIndex): GroupResult<T>[];
 }
+
+// The resources a unit draws on: its one resource, or every member of a group
+export const unitItems = (unit: DisplayUnit): CategorizedResource[] =>
+  unit.kind === 'single' ? [unit.item] : unit.members;
 
 export const OBSERVATION_SERIES = 'observationSeries';
 
@@ -134,7 +138,104 @@ export const diagnosticReportGrouper: Grouper<DiagnosticReportData> = {
   }
 };
 
-export const defaultGroupers: Grouper[] = [diagnosticReportGrouper, observationSeriesGrouper];
+export const DEVICE_USE_STATEMENT = 'deviceUseStatement';
+
+export interface DeviceUseStatementData {
+  statement: CategorizedResource;
+  device: CategorizedResource;
+}
+
+// A DeviceUseStatement plus the Device it points to. The statement is the anchor: it has exactly
+// one device and carries the clinical record (status, timing, reason, site), so the group sorts
+// and is categorized as the statement. A Device shared by several statements is shown under each.
+// Statements whose device can't be resolved (e.g. a contained one) stay single rows.
+export const deviceUseStatementGrouper: Grouper<DeviceUseStatementData> = {
+  type: DEVICE_USE_STATEMENT,
+  group(items, index) {
+    const byTempId = new Map(items.map(item => [item.rh.tempId, item]));
+    const results: GroupResult<DeviceUseStatementData>[] = [];
+    for (const item of items) {
+      if (item.rh.resource.resourceType !== 'DeviceUseStatement') continue;
+      const reference = (item.rh.resource as DeviceUseStatement).device?.reference;
+      const target = reference ? index.resolve(reference, item.source) : undefined;
+      const device = target ? byTempId.get(target.rh.tempId) : undefined;
+      if (device?.rh.resource.resourceType !== 'Device') continue;
+      results.push({
+        key: `device:${item.rh.tempId}`,
+        members: [item, device],
+        anchor: item,
+        data: { statement: item, device }
+      });
+    }
+    return results;
+  }
+};
+
+export const ENCOUNTER = 'encounter';
+
+export interface EncounterData {
+  encounter: CategorizedResource;
+  // The resources the Encounter references directly, by the reference text it uses for each
+  related: Record<string, CategorizedResource>;
+}
+
+// What an Encounter's direct references may point at: its service provider, its participants
+// and its locations.
+const ENCOUNTER_RELATED_TYPES = new Set([
+  'Organization',
+  'Practitioner',
+  'PractitionerRole',
+  'RelatedPerson',
+  'Location'
+]);
+
+// An Encounter plus the resources it references directly (serviceProvider, participant.individual
+// and location.location). Only those direct references are followed: a PractitionerRole that
+// merely points at a participating Practitioner is not pulled in. The Encounter is the anchor.
+// A resource referenced by several Encounters is shown under each. An Encounter none of whose
+// references resolve stays a single row.
+export const encounterGrouper: Grouper<EncounterData> = {
+  type: ENCOUNTER,
+  group(items, index) {
+    const byTempId = new Map(items.map(item => [item.rh.tempId, item]));
+    const results: GroupResult<EncounterData>[] = [];
+    for (const item of items) {
+      if (item.rh.resource.resourceType !== 'Encounter') continue;
+      const encounter = item.rh.resource as Encounter;
+      const references = [
+        encounter.serviceProvider?.reference,
+        ...(encounter.participant ?? []).map(participant => participant.individual?.reference),
+        ...(encounter.location ?? []).map(location => location.location?.reference)
+      ];
+      const related: Record<string, CategorizedResource> = {};
+      for (const reference of references) {
+        if (!reference || reference in related) continue;
+        const target = index.resolve(reference, item.source);
+        const resolved = target ? byTempId.get(target.rh.tempId) : undefined;
+        if (resolved && ENCOUNTER_RELATED_TYPES.has(resolved.rh.resource.resourceType)) {
+          related[reference] = resolved;
+        }
+      }
+      // Different references can reach the same resource, so list each member once
+      const members = [item, ...new Set(Object.values(related))];
+      if (members.length < 2) continue;
+      results.push({
+        key: `encounter:${item.rh.tempId}`,
+        members,
+        anchor: item,
+        data: { encounter: item, related }
+      });
+    }
+    return results;
+  }
+};
+
+export const defaultGroupers: Grouper[] = [
+  diagnosticReportGrouper,
+  observationSeriesGrouper,
+  deviceUseStatementGrouper,
+  encounterGrouper
+];
 
 export function buildDisplayUnits(
   items: CategorizedResource[],

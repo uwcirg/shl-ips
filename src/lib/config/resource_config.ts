@@ -24,6 +24,8 @@ import Procedure from '$lib/components/resource-templates/Procedure.svelte';
 import QuestionnaireResponse from '$lib/components/resource-templates/QuestionnaireResponse.svelte';
 import ObservationGroup from '$lib/components/resource-templates/ObservationGroup.svelte';
 import DiagnosticReportGroup from '$lib/components/resource-templates/DiagnosticReportGroup.svelte';
+import DeviceUseStatementGroup from '$lib/components/resource-templates/DeviceUseStatementGroup.svelte';
+import EncounterGroup from '$lib/components/resource-templates/EncounterGroup.svelte';
 
 export const RESOURCE_TYPE_FALLBACK_KEY = 'Other';
 
@@ -189,9 +191,22 @@ export const RESOURCE_CONFIG: Record<string, any> = {
     },
   };
 
+// Utility resources exist mostly to be referenced by others (the Organization and Practitioner an
+// Encounter or prescription points at), so the data views don't list them on their own: they show
+// only in advanced mode. Views of a dataset being imported show every resource.
+export const UTILITY_RESOURCE_TYPES: ReadonlySet<string> = new Set([
+  'Practitioner',
+  'PractitionerRole',
+  'Location',
+  'Organization'
+]);
+export const isUtilityResourceType = (resourceType: string) => UTILITY_RESOURCE_TYPES.has(resourceType);
+
 // Templates for grouped display units (see $lib/stores/displayUnits), keyed by groupType.
 // Unlike RESOURCE_CONFIG these take `unit` rather than `content`.
 export const GROUP_COMPONENTS: Record<string, ComponentType> = {
   observationSeries: ObservationGroup,
   diagnosticReport: DiagnosticReportGroup,
+  deviceUseStatement: DeviceUseStatementGroup,
+  encounter: EncounterGroup,
 };

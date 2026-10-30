@@ -1,7 +1,7 @@
 <script lang="ts">
   import DataSummary from '$lib/components/app/DataSummary.svelte';
   import ManageData from '$lib/components/app/ManageData.svelte';
-  import SourceSummary from '$lib/components/app/SourceSummary.svelte';
+  import FilterBar from '$lib/components/app/FilterBar.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import {
     TabContent,
@@ -20,8 +20,7 @@
 <TabContent>
   <TabPane tabId="data" active class="py-3">
     <span slot="tab">My Health Data</span>
-    <h6>Your Sources:</h6>
-    <SourceSummary class="mb-3"/>
+    <FilterBar class="mb-3" />
     <DataSummary summary={true} />
   </TabPane>
   <TabPane tabId="sources" class="py-3">

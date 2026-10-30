@@ -1,53 +1,30 @@
 <script lang="ts">
-  import { Badge } from '@sveltestrap/sveltestrap';
   import type { BundleEntry, Device, DeviceUseStatement } from 'fhir/r4';
   import type { ResourceTemplateParams } from '$lib/utils/types';
-  import DeviceTemplate from '$lib/components/resource-templates/Device.svelte';
-  import { getEntry, hasChoiceDTField, choiceDTFields } from '$lib/utils/util';
-  import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
-  import Date from '$lib/components/resource-templates/Date.svelte';
+  import DeviceUseStatementCard from '$lib/components/resource-templates/DeviceUseStatementCard.svelte';
+  import { getEntry } from '$lib/utils/util';
 
+  // Used when a statement is shown on its own: its device is contained, can't be resolved into a
+  // grouped display, or the statement is shown in the viewer/selector views. The surrounding list
+  // supplies the statement's "View" button, so none is rendered here.
   export let content: ResourceTemplateParams<DeviceUseStatement>; // Define a prop to pass the data to the component
 
   let resource: DeviceUseStatement;
   $: if (content) resource = content.resource;
 
-  let device: Device | undefined;
-
-  $: {
-    if (resource) {
-      if (resource.device) {
-        if (resource.contained?.[0]?.resourceType === 'Device') {
-          // If the device is contained in the resource
-          device = resource.contained[0];
-        } else if (resource.device?.reference) {
-          // If the device is referenced
-          device = getEntry(content.entries as BundleEntry[], resource.device.reference) as Device;
-        }
-      }
-    }
+  function resolveDevice(statement: DeviceUseStatement, entries: BundleEntry[] | undefined): Device | undefined {
+    const reference = statement.device?.reference;
+    if (!reference) return undefined;
+    // A contained device first, matched by id for a "#id" reference
+    const containedId = reference.startsWith('#') ? reference.slice(1) : undefined;
+    const contained = statement.contained?.find(
+      (resource) => resource.resourceType === 'Device' && (!containedId || resource.id === containedId)
+    ) as Device | undefined;
+    if (contained) return contained;
+    return containedId ? undefined : (getEntry(entries as BundleEntry[], reference) as Device | undefined);
   }
+
+  $: device = resource ? resolveDevice(resource, content.entries) : undefined;
 </script>
 
-<Badge color={resource.status === 'stopped' ? 'secondary' : 'primary'}>
-  {resource.status ? `${resource.status}` : ''}
-</Badge><br>
-
-{#if device}
-  <DeviceTemplate content={{ resource: device, entries: content.entries }} /><br>
-{:else if resource.device?.display}
-  <strong>{resource.device?.display}</strong>
-  <br>
-{/if}
-{#if resource.reasonCode}
-  Reason:<br>
-  <CodeableConcept codeableConcept={resource.reasonCode} />
-{/if}
-{#if resource.bodySite}
-  Site:<br>
-  <CodeableConcept codeableConcept={resource.bodySite} />
-{/if}
-
-{#if hasChoiceDTField("timing", resource)}
-  Timing: <Date fields={choiceDTFields("timing", resource)} />
-{/if}
+<DeviceUseStatementCard statement={resource} {device} />

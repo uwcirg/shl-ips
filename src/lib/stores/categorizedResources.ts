@@ -158,6 +158,10 @@ export function defaultSort(a: Resource, b: Resource, config: ResourceConfig, op
 }
 export { defaultResourceConfig }; // exported as a building block, not an implicit global
 
+// Display title for a category: pluralized unless it is already a configured category name
+export const categoryTitle = (category: string) =>
+  Object.values(defaultResourceConfig).find((cr) => cr.category === category) ? category : `${category}s`;
+
 export function getResourceRenderInfo(
   resource: Resource,
   config: ResourceConfig,
