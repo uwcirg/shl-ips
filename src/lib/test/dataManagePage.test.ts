@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { get, writable, derived, readable } from 'svelte/store';
 import { fakeAuth } from '$lib/test/mocks';
 import FHIRDataService from '$lib/utils/FHIRDataService';
@@ -126,15 +126,21 @@ function buildManageContext(fhirDataService: FHIRDataService) {
   ]);
 }
 
+// The source pills live in the filter panel, which starts collapsed behind the Filters button
+async function openFilters() {
+  await fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
+}
+
 describe('/data/manage page', () => {
-  it('shows the loaded source and its data once a dataset is in the FHIRDataService store', () => {
+  it('shows the loaded source and its data once a dataset is in the FHIRDataService store', async () => {
     const fhirDataService = new FHIRDataService(fakeAuth());
     const collection = new ResourceCollection([buildPatient(), buildObservation()] as any);
     fhirDataService.addDatasetToUserResources(collection);
 
     render(ManagePage, { context: buildManageContext(fhirDataService) });
 
-    // SourceSummary: the dataset's source shows up as a pill.
+    // SourceSummary: the dataset's source shows up as a pill in the filter panel.
+    await openFilters();
     expect(screen.getByText('Test Clinic')).toBeInTheDocument();
     // DataSummary: the loaded Observation itself rendered through its real resource template.
     expect(screen.getByText('Test Observation')).toBeInTheDocument();
@@ -156,7 +162,8 @@ describe('/data/manage page', () => {
 
     const search = screen.getByLabelText('Search your health data');
     await fireEvent.input(search, { target: { value: 'no such thing' } });
-    expect(screen.queryByText('Test Observation')).not.toBeInTheDocument();
+    // Typing is debounced, so the list narrows once the user pauses
+    await waitFor(() => expect(screen.queryByText('Test Observation')).not.toBeInTheDocument());
     expect(screen.getByText('No data matches the current filters.')).toBeInTheDocument();
 
     await fireEvent.click(screen.getByText('Clear filters'));
@@ -168,6 +175,7 @@ describe('/data/manage page', () => {
     fhirDataService.addDatasetToUserResources(new ResourceCollection([buildPatient(), buildObservation()] as any));
     render(ManagePage, { context: buildManageContext(fhirDataService) });
 
+    await openFilters();
     const pill = screen.getByText('Test Clinic').closest('button')!;
     expect(pill).toHaveAttribute('aria-pressed', 'false');
     await fireEvent.click(pill);

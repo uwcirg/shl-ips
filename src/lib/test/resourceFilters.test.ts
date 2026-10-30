@@ -1,8 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { get, readable } from 'svelte/store';
 import { createCategorizedStore, type ResourceInput } from '$lib/stores/categorizedResources';
 import {
   createFilterStore,
+  SEARCH_DEBOUNCE_MS,
   emptyCriteria,
   filterUnits,
   type FilterCriteria
@@ -92,7 +93,8 @@ describe('filterUnits', () => {
 
   it('searches the text of directly referenced resources', () => {
     const { result } = run({ text: 'lisinopril' });
-    expect(summarize(result)).toEqual({ Medications: ['mr1'] });
+    // The Medication itself matches too, since it is a unit of its own
+    expect(summarize(result)).toEqual({ Medications: ['med1', 'mr1'] });
   });
 
   it('searches source and section names', () => {
@@ -109,7 +111,7 @@ describe('filterUnits', () => {
     expect(summarize(result)).toEqual({
       Conditions: ['c1'],
       // Undated: no sortFields date, so never excluded by a date filter
-      Medications: ['mr1']
+      Medications: ['med1', 'mr1']
     });
   });
 
@@ -162,5 +164,38 @@ describe('createFilterStore', () => {
 
     filters.reset();
     expect(get(filters.isActive)).toBe(false);
+  });
+
+  it('applies debounced text once typing pauses, using only the last value', () => {
+    vi.useFakeTimers();
+    try {
+      const filters = createFilterStore();
+      filters.setTextDebounced('a');
+      filters.setTextDebounced('as');
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS - 1);
+      expect(get(filters).text).toBe('');
+      vi.advanceTimersByTime(1);
+      expect(get(filters).text).toBe('as');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('drops queued text when the text is set directly or the filters are reset', () => {
+    vi.useFakeTimers();
+    try {
+      const filters = createFilterStore();
+      filters.setTextDebounced('queued');
+      filters.setText('');
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+      expect(get(filters).text).toBe('');
+
+      filters.setTextDebounced('queued');
+      filters.reset();
+      vi.advanceTimersByTime(SEARCH_DEBOUNCE_MS);
+      expect(get(filters).text).toBe('');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
