@@ -1,6 +1,6 @@
 <script lang="ts">
   import DataSummary from '$lib/components/app/DataSummary.svelte';
-  import SourceSummary from '$lib/components/app/SourceSummary.svelte';
+  import FilterBar from '$lib/components/app/FilterBar.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import { goto } from '$app/navigation';
   import { Row, Col, Button, Icon } from '@sveltestrap/sveltestrap';
@@ -19,6 +19,5 @@
   </Col>
 </Row>
 <h4>Review {category}</h4>
-<h6>Your Sources:</h6>
-<SourceSummary class="mb-3"/>
+<FilterBar class="mb-3" showSections={false} />
 <DataSummary categories={[category]}/>

@@ -6,6 +6,7 @@
   import { PLACEHOLDER_SYSTEM } from '$lib/config/config';
   import FHIRDataService from '$lib/utils/FHIRDataService';
   import { createCategorizedStore, type ResourceInput } from '$lib/stores/categorizedResources';
+  import { createFilterStore } from '$lib/stores/resourceFilters';
 
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
   let userResources = fhirDataService.userResources;
@@ -33,6 +34,7 @@
 
   const categorizedStore = createCategorizedStore(categorizerInput);
   setContext('categorizedStore', categorizedStore);
+  setContext('resourceFilters', createFilterStore());
 </script>
 
 <slot />

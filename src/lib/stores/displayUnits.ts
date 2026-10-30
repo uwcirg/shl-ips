@@ -51,6 +51,10 @@ export interface Grouper<T = unknown> {
   group(items: CategorizedResource[], index: ReferenceIndex): GroupResult<T>[];
 }
 
+// The resources a unit draws on: its one resource, or every member of a group
+export const unitItems = (unit: DisplayUnit): CategorizedResource[] =>
+  unit.kind === 'single' ? [unit.item] : unit.members;
+
 export const OBSERVATION_SERIES = 'observationSeries';
 
 export interface ObservationSeriesData {
