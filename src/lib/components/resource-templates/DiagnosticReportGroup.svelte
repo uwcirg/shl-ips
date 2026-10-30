@@ -1,13 +1,12 @@
 <script lang="ts">
-  import { getContext } from 'svelte';
-  import { readable, type Readable } from 'svelte/store';
   import { Button } from '@sveltestrap/sveltestrap';
   import type { DiagnosticReport } from 'fhir/r4';
   import type { DiagnosticReportData, GroupUnit } from '$lib/stores/displayUnits';
   import type { ResourceHelper } from '$lib/utils/ResourceHelper';
   import { hasChoiceDTField } from '$lib/utils/util';
-  import { getFriendlySourceNameBySource } from '$lib/utils/resourceCollectionUtils';
   import DiagnosticReportCard from '$lib/components/resource-templates/DiagnosticReportCard.svelte';
+  import GroupShowMore from '$lib/components/resource-templates/GroupShowMore.svelte';
+  import GroupSourceDot from '$lib/components/resource-templates/GroupSourceDot.svelte';
   import ObservationTemplate from '$lib/components/resource-templates/Observation.svelte';
   import ResourceDisplay from '$lib/components/app/ResourceDisplay.svelte';
 
@@ -21,20 +20,6 @@
 
   const INITIAL_RESULTS = 5;
 
-  // Source colours exist only where the page provides them (not, e.g., on the IPS viewer, which
-  // has a single source); without them the source dot is left blank rather than coloured.
-  const colorMapContext = getContext<Readable<Map<string, string>> | undefined>('colorMap');
-  const colorMap: Readable<Map<string, string>> = colorMapContext ?? readable(new Map());
-  const showSources = colorMapContext !== undefined;
-
-  // Friendly names come from a memo that fills in alongside colorMap, so lookups are tied to
-  // $colorMap and recompute when it changes.
-  const sourceName = (source?: string, _colorMap?: Map<string, string>) =>
-    source ? getFriendlySourceNameBySource(source) : undefined;
-  const colorOf = (source: string | undefined, colors: Map<string, string>) => {
-    const name = sourceName(source, colors);
-    return (name && colors.get(name)) || '#6c757d';
-  };
   // Svelte 4 doesn't allow TS syntax in markup, so casts live here
   const asReport = (rh: ResourceHelper) => rh.resource as DiagnosticReport;
 
@@ -60,16 +45,8 @@
 
   {#each visibleResults as result (result.rh.tempId)}
     <div class="report-result">
-      {#if showSources}
-        <span
-          class="source-dot"
-          style:background={colorOf(result.source, $colorMap)}
-          title={`From ${sourceName(result.source, $colorMap) ?? ''}`}
-        ></span>
-      {:else}
-        <!-- Keeps the result indent that tells results apart from the report, with no colours to show -->
-        <span class="source-dot placeholder"></span>
-      {/if}
+      <!-- Without source colours this is blank, which keeps the indent that sets results apart from the report -->
+      <GroupSourceDot source={result.source} placeholder class="report-result-marker" />
       <div class="report-result-content">
         {#if result.rh.resource.resourceType === 'Observation'}
           <ObservationTemplate
@@ -87,26 +64,9 @@
   {/each}
   {#each unit.data.unresolved as display}
     <div class="report-result text-muted">
-      <span class="source-dot placeholder"></span>
+      <span class="report-result-marker"></span>
       <div class="report-result-content">{display}</div>
     </div>
   {/each}
-  {#if results.length > INITIAL_RESULTS}
-    <button type="button" class="report-show-more" on:click={() => (showAll = !showAll)}>
-      {showAll ? 'Show fewer' : `Show ${hiddenCount} more result${hiddenCount === 1 ? '' : 's'}`}
-    </button>
-  {/if}
+  <GroupShowMore {hiddenCount} noun="more result" bind:expanded={showAll} />
 </DiagnosticReportCard>
-
-<style>
-  .source-dot {
-    flex: 0 0 auto;
-    width: 0.6rem;
-    height: 0.6rem;
-    margin-top: 0.35rem;
-    border-radius: 50%;
-  }
-  .source-dot.placeholder {
-    background: transparent;
-  }
-</style>

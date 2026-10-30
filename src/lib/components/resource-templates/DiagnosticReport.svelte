@@ -3,6 +3,7 @@
   import type { ResourceTemplateParams } from '$lib/utils/types';
   import ObservationTemplate from '$lib/components/resource-templates/Observation.svelte';
   import DiagnosticReportCard from '$lib/components/resource-templates/DiagnosticReportCard.svelte';
+  import GroupShowMore from '$lib/components/resource-templates/GroupShowMore.svelte';
   import { getEntry, hasChoiceDTField } from '$lib/utils/util';
 
   // Used when a report is shown on its own: results that can't be resolved into a grouped
@@ -83,9 +84,5 @@
       </div>
     </div>
   {/each}
-  {#if results.length > INITIAL_RESULTS}
-    <button type="button" class="report-show-more" on:click={() => (showAll = !showAll)}>
-      {showAll ? 'Show fewer' : `Show ${hiddenCount} more result${hiddenCount === 1 ? '' : 's'}`}
-    </button>
-  {/if}
+  <GroupShowMore {hiddenCount} noun="more result" bind:expanded={showAll} />
 </DiagnosticReportCard>

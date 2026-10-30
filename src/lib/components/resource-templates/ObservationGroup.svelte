@@ -1,16 +1,16 @@
 <script lang="ts">
-  import { getContext } from 'svelte';
-  import { readable, type Readable } from 'svelte/store';
   import { Button } from '@sveltestrap/sveltestrap';
   import type { Observation } from 'fhir/r4';
   import type { GroupUnit, ObservationSeriesData } from '$lib/stores/displayUnits';
   import type { ResourceHelper } from '$lib/utils/ResourceHelper';
   import { getObservationDisplayValue } from '$lib/utils/observationSparkline';
   import { choiceDTFields, hasChoiceDTField } from '$lib/utils/util';
-  import { getFriendlySourceNameBySource } from '$lib/utils/resourceCollectionUtils';
   import ObservationChart from '$lib/components/resource-templates/ObservationChart.svelte';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
   import Date from '$lib/components/resource-templates/Date.svelte';
+  import GroupShowMore from '$lib/components/resource-templates/GroupShowMore.svelte';
+  import GroupSourceDot from '$lib/components/resource-templates/GroupSourceDot.svelte';
+  import { useGroupSources } from '$lib/components/resource-templates/groupSources';
 
   export let unit: GroupUnit<ObservationSeriesData>;
   // Part of the group template contract; this template resolves everything from the unit itself
@@ -20,20 +20,8 @@
   export let onView: ((rh: ResourceHelper) => void) | undefined = undefined;
   export let advanced = false;
 
-  // Source colours exist only where the page provides them (not, e.g., on the IPS viewer, which
-  // has a single source); without them the source dot and name are left out.
-  const colorMapContext = getContext<Readable<Map<string, string>> | undefined>('colorMap');
-  const colorMap: Readable<Map<string, string>> = colorMapContext ?? readable(new Map());
-  const showSources = colorMapContext !== undefined;
-
-  // Friendly names come from a memo that fills in alongside colorMap, so everything
-  // derived from them is tied to $colorMap and recomputes when it changes.
-  const sourceName = (source?: string, _colorMap?: Map<string, string>) =>
-    source ? getFriendlySourceNameBySource(source) : undefined;
-  $: colorFor = (source?: string) => {
-    const name = sourceName(source, $colorMap);
-    return (name && $colorMap.get(name)) || undefined;
-  };
+  const { showSources, colorMap, sourceName, colorOf } = useGroupSources();
+  $: colorFor = (source?: string) => colorOf(source, $colorMap);
   // Svelte 4 doesn't allow TS syntax in markup, so casts live here
   const asObservation = (rh: ResourceHelper) => rh.resource as Observation;
 
@@ -95,7 +83,7 @@
         <span class="reading-value">{getObservationDisplayValue(resource) ?? ''}</span>
         <span class="reading-source">
           {#if showSources && name}
-            <span class="source-dot" style:background={colorFor(member.source) ?? '#6c757d'}></span>
+            <GroupSourceDot source={member.source} />
             {name}
           {/if}
         </span>
@@ -114,11 +102,7 @@
         {/if}
       </div>
     {/each}
-    {#if members.length > INITIAL_READINGS && (hiddenCount > 0 || showAll)}
-      <button type="button" class="show-more" on:click={() => (showAll = !showAll)}>
-        {showAll ? 'Show fewer' : `Show ${hiddenCount} earlier reading${hiddenCount === 1 ? '' : 's'}`}
-      </button>
-    {/if}
+    <GroupShowMore {hiddenCount} noun="earlier reading" indent="0.65rem" bind:expanded={showAll} />
   </div>
 </div>
 
@@ -146,19 +130,6 @@
   .reading.selected {
     background-color: var(--bs-secondary-bg, #e9ecef);
   }
-  .show-more {
-    align-self: flex-start;
-    margin: 0.25rem 0 0 0.65rem;
-    padding: 0;
-    border: 0;
-    background: none;
-    font-size: 0.85rem;
-    color: var(--bs-link-color, #0d6efd);
-    cursor: pointer;
-  }
-  .show-more:hover {
-    text-decoration: underline;
-  }
   .reading-date {
     flex: 0 0 7.5rem;
     font-size: 0.85rem;
@@ -176,12 +147,5 @@
     font-size: 0.8rem;
     color: var(--bs-secondary-color, #6c757d);
     white-space: nowrap;
-  }
-  .source-dot {
-    display: inline-block;
-    width: 0.6rem;
-    height: 0.6rem;
-    border-radius: 50%;
-    background: #6c757d;
   }
 </style>

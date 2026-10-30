@@ -14,7 +14,7 @@ lives on the resource, so every appearance of it stays in sync.
 
 import type { CategorizedResource } from '$lib/stores/categorizedResources';
 import type { ReferenceIndex } from '$lib/utils/referenceIndex';
-import type { DiagnosticReport, Observation } from 'fhir/r4';
+import type { DeviceUseStatement, DiagnosticReport, Observation } from 'fhir/r4';
 import {
   buildObservationPanels,
   buildObservationSeries,
@@ -138,7 +138,40 @@ export const diagnosticReportGrouper: Grouper<DiagnosticReportData> = {
   }
 };
 
-export const defaultGroupers: Grouper[] = [diagnosticReportGrouper, observationSeriesGrouper];
+export const DEVICE_USE_STATEMENT = 'deviceUseStatement';
+
+export interface DeviceUseStatementData {
+  statement: CategorizedResource;
+  device: CategorizedResource;
+}
+
+// A DeviceUseStatement plus the Device it points to. The statement is the anchor: it has exactly
+// one device and carries the clinical record (status, timing, reason, site), so the group sorts
+// and is categorized as the statement. A Device shared by several statements is shown under each.
+// Statements whose device can't be resolved (e.g. a contained one) stay single rows.
+export const deviceUseStatementGrouper: Grouper<DeviceUseStatementData> = {
+  type: DEVICE_USE_STATEMENT,
+  group(items, index) {
+    const byTempId = new Map(items.map(item => [item.rh.tempId, item]));
+    const results: GroupResult<DeviceUseStatementData>[] = [];
+    for (const item of items) {
+      if (item.rh.resource.resourceType !== 'DeviceUseStatement') continue;
+      const reference = (item.rh.resource as DeviceUseStatement).device?.reference;
+      const target = reference ? index.resolve(reference, item.source) : undefined;
+      const device = target ? byTempId.get(target.rh.tempId) : undefined;
+      if (device?.rh.resource.resourceType !== 'Device') continue;
+      results.push({
+        key: `device:${item.rh.tempId}`,
+        members: [item, device],
+        anchor: item,
+        data: { statement: item, device }
+      });
+    }
+    return results;
+  }
+};
+
+export const defaultGroupers: Grouper[] = [diagnosticReportGrouper, observationSeriesGrouper, deviceUseStatementGrouper];
 
 export function buildDisplayUnits(
   items: CategorizedResource[],
