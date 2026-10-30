@@ -23,19 +23,7 @@
   const dispatch = createEventDispatcher<{ done: void }>();
 </script>
 
-<div class="d-flex align-items-center gap-2 mb-3">
-  <h5 class="mb-0">Filters</h5>
-  {#if $isActive}
-    <Button
-      color="danger"
-      outline
-      class="rounded-pill py-0 px-2 d-inline-flex align-items-center gap-1"
-      on:click={filters.reset}
-    >
-      <Icon name="x" /> Clear all
-    </Button>
-  {/if}
-</div>
+<h5 class="mb-3">Filters</h5>
 <h6 class="mb-1">Sources</h6>
 <SourceSummary class="mb-3" {filters} />
 
@@ -85,5 +73,10 @@
       <Icon name="x-lg" />
     </Button>
   {/if}
-  <Button color="primary" class="ms-auto" on:click={() => dispatch('done')}>Done</Button>
+  <div class="ms-auto d-flex align-items-center gap-2">
+    {#if $isActive}
+      <Button color="danger" outline on:click={filters.reset}>Clear all</Button>
+    {/if}
+    <Button color="primary" on:click={() => dispatch('done')}>Done</Button>
+  </div>
 </div>
