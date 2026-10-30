@@ -145,3 +145,37 @@ export function filterUnits(units: UnitMap, c: FilterCriteria, options: FilterOp
   }
   return result;
 }
+
+// Building a resource's search text is the expensive part of the first search, and is cached from
+// then on. This builds it ahead of time in idle slices so the first search doesn't pay for it all
+// at once. Returns a function that cancels the remaining work (call it when the inputs change).
+export function warmSearchText(units: UnitMap, options: FilterOptions = {}): () => void {
+  const queue = Object.values(units).flatMap(list => list.flatMap(unitItems));
+  const hasIdle = typeof requestIdleCallback !== 'undefined';
+  let handle: number | undefined;
+  let cancelled = false;
+  let next = 0;
+
+  const schedule = () => {
+    handle = hasIdle
+      ? requestIdleCallback(run, { timeout: 2000 })
+      : (setTimeout(() => run(), 50) as unknown as number);
+  };
+  const run = (deadline?: IdleDeadline) => {
+    if (cancelled) return;
+    // Without idle deadlines, fall back to short fixed slices
+    const end = performance.now() + 8;
+    while (next < queue.length && (deadline ? deadline.timeRemaining() > 1 : performance.now() < end)) {
+      getSearchText(queue[next++], options.index);
+    }
+    if (next < queue.length) schedule();
+  };
+
+  if (queue.length > 0) schedule();
+  return () => {
+    cancelled = true;
+    if (handle === undefined) return;
+    if (hasIdle) cancelIdleCallback(handle);
+    else clearTimeout(handle);
+  };
+}

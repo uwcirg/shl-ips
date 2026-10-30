@@ -1,6 +1,6 @@
 <script lang="ts">
   import { download } from '$lib/utils/util.js';
-  import { createEventDispatcher, getContext } from 'svelte';
+  import { createEventDispatcher, getContext, onDestroy } from 'svelte';
   import { type Writable } from 'svelte/store';
   import {
     Button,
@@ -15,7 +15,7 @@
   import {getFriendlySourceNameBySource} from '$lib/utils/resourceCollectionUtils';
   import { createCategorizedStore, categoryTitle, type UnitMap } from '$lib/stores/categorizedResources';
   import { unitItems, type DisplayUnit } from '$lib/stores/displayUnits';
-  import { createFilterStore, filterUnits, type ResourceFilterStore } from '$lib/stores/resourceFilters';
+  import { createFilterStore, filterUnits, warmSearchText, type ResourceFilterStore } from '$lib/stores/resourceFilters';
   import UnitDisplay from '$lib/components/app/UnitDisplay.svelte';
   import StickyFilters from '$lib/components/app/StickyFilters.svelte';
   import SectionNav, { type SectionNavItem } from '$lib/components/layout/SectionNav.svelte';
@@ -27,6 +27,7 @@
   export let categorizedStore: ReturnType<typeof createCategorizedStore> = getContext('categorizedStore');
   // Units (single resources or groups) are already grouped and sorted by the store
   const unitsStore = categorizedStore.unitsStore;
+  const referenceIndex = categorizedStore.referenceIndex;
 
   // Pages without filtering get a store nothing writes to, which filters nothing
   const contextFilters: ResourceFilterStore | undefined = getContext('resourceFilters');
@@ -39,6 +40,14 @@
   // context there is nothing to float.
   export let stickyFilters = !!contextFilters;
   let filtersStuck = false;
+
+  // Build the search text in idle time so the first search isn't slow. Restarts as data loads.
+  let cancelWarm: (() => void) | undefined;
+  $: {
+    cancelWarm?.();
+    cancelWarm = contextFilters ? warmSearchText($unitsStore, { index: $referenceIndex }) : undefined;
+  }
+  onDestroy(() => cancelWarm?.());
   let categoryDataToDisplay: Readable<UnitMap> = derived(
     [unitsStore, categorizedStore.referenceIndex, filters],
     ([$unitsStore, $referenceIndex, $filters]) => {
