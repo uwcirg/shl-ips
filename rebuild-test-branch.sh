@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
-# Rebuilds the "test" branch from scratch: main + every branch listed in
-# test-branch.manifest, in order. Recurring conflicts are auto-resolved via
-# git rerere; conflicts with no cached resolution are skipped (not fatal),
-# reported in TEST_STATUS.md, and flagged for the branch owner.
-#
-# Assumes: rerere is already enabled+configured with an autoUpdate cache
-# (see workflow YAML for how the cache is restored before this runs).
+# Rebuilds the "test/auto" branch from scratch: main + every branch listed in
+# test-branch.manifest, in order. Conflicting branches are skipped (not fatal),
+# reported in TEST_STATUS.md, and flagged on their PRs. Conflicts are not
+# resolved here: they must be fixed in the branches themselves (see README).
 
 set -euo pipefail
 
@@ -16,8 +13,6 @@ SKIPPED_FILE="skipped.txt"   # consumed by the workflow to post PR comments
 
 git config user.name "test-branch-bot"
 git config user.email "test-branch-bot@users.noreply.github.com"
-git config rerere.enabled true
-git config rerere.autoUpdate true
 
 git fetch origin --prune
 
@@ -57,18 +52,10 @@ while IFS= read -r branch; do
     continue
   fi
 
-  # Merge failed. rerere may already have staged a resolution (autoUpdate).
-  # If unmerged paths remain, there was no usable cached resolution.
-  if git diff --name-only --diff-filter=U | grep -q .; then
-    echo "  unresolved conflict, no rerere cache for this hunk"
-    echo "$branch: conflicts with prior branch(es) in the stack, no cached resolution" >> "$SKIPPED_FILE"
-    git merge --abort
-  else
-    git add -A
-    git commit --no-edit
-    MERGED+=("$branch (auto-resolved via rerere)")
-    echo "  resolved automatically via rerere"
-  fi
+  # Merge failed: leave the branch out and report it.
+  echo "  unresolved conflict"
+  echo "$branch: conflicts with main or a prior branch in the stack" >> "$SKIPPED_FILE"
+  git merge --abort
 done < /tmp/manifest.txt
 
 {
