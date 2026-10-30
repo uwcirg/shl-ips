@@ -17,6 +17,7 @@
   import { unitItems, type DisplayUnit } from '$lib/stores/displayUnits';
   import { createFilterStore, filterUnits, type ResourceFilterStore } from '$lib/stores/resourceFilters';
   import UnitDisplay from '$lib/components/app/UnitDisplay.svelte';
+  import StickyFilters from '$lib/components/app/StickyFilters.svelte';
   import SectionNav, { type SectionNavItem } from '$lib/components/layout/SectionNav.svelte';
   import { derived, type Readable } from 'svelte/store';
   import { goto } from '$app/navigation';
@@ -28,11 +29,16 @@
   const unitsStore = categorizedStore.unitsStore;
 
   // Pages without filtering get a store nothing writes to, which filters nothing
-  export let filters: ResourceFilterStore = getContext('resourceFilters') ?? createFilterStore();
+  const contextFilters: ResourceFilterStore | undefined = getContext('resourceFilters');
+  export let filters: ResourceFilterStore = contextFilters ?? createFilterStore();
   const filtersActive = filters.isActive;
 
   export let summary = false;
   export let categories: string[] = [];
+  // Float the compact filters once the main filter bar has scrolled away. Without a filter
+  // context there is nothing to float.
+  export let stickyFilters = !!contextFilters;
+  let filtersStuck = false;
   let categoryDataToDisplay: Readable<UnitMap> = derived(
     [unitsStore, categorizedStore.referenceIndex, filters],
     ([$unitsStore, $referenceIndex, $filters]) => {
@@ -140,9 +146,14 @@
 
 
 {#if $categoryDataToDisplay && Object.keys($categoryDataToDisplay).length > 0}
+  <!-- One block spanning the whole list, so the filters' sticky anchor stays put until the list ends -->
+  <div>
+  {#if stickyFilters}
+    <StickyFilters {filters} {categorizedStore} showSections={categories.length === 0} withNav={shownCategories.length > 1} bind:stuck={filtersStuck} />
+  {/if}
   <div class="category-layout" class:with-nav={shownCategories.length > 1}>
   {#if shownCategories.length > 1}
-    <SectionNav sections={navSections} label="Categories" />
+    <SectionNav sections={navSections} label="Categories" inset={filtersStuck} />
   {/if}
   <div class="category-list">
   <!-- Keyed by category: categories can appear in the middle of the list as data loads, and an
@@ -217,6 +228,7 @@
       </CategoryView>
     {/if}
   {/each}
+  </div>
   </div>
   </div>
 {:else if $filtersActive}

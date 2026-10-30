@@ -24,6 +24,8 @@
   // entries are buttons that scroll the window, not #anchor links.
   export let sections: SectionNavItem[] = [];
   export let label = 'Sections';
+  // Leaves room at the top for something floated over it (e.g. the compact filters)
+  export let inset = false;
 
   // --- Offsets ------------------------------------------------------------------------------
   // When signed in, the app shows a floating tab bar over the top of the viewport while scrolling
@@ -31,6 +33,10 @@
   // from sm up (signed-in phones get a bottom bar instead); keep this in step with the CSS below.
   const FLOATING_NAV_MIN_WIDTH = 576;
   const JUMP_CLEARANCE_REM = 1.25;
+  // Width from which the nav column (and the floated controls beside it) shows; keep in step with
+  // the CSS below. Height of the floated controls plus a gap, for narrower screens.
+  const NAV_MIN_WIDTH = 768;
+  const FLOATING_CONTROLS_REM = 3.5;
 
   const authService = getContext<IAuthService | undefined>('authService');
   const authenticated: Readable<boolean> = authService?.authenticated ?? readable(false);
@@ -47,7 +53,9 @@
   // Px from the top of the viewport at which a jump lands its element
   function jumpOffset(): number {
     const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-    return overlayHeight() + JUMP_CLEARANCE_REM * rootFontSize;
+    // Below md the floated controls sit over the content instead of beside it (see the CSS below)
+    const floating = inset && window.innerWidth < NAV_MIN_WIDTH ? FLOATING_CONTROLS_REM : 0;
+    return overlayHeight() + (JUMP_CLEARANCE_REM + floating) * rootFontSize;
   }
 
   // --- Active section (scroll-spy) --------------------------------------------------------
@@ -134,7 +142,7 @@
   }
 </script>
 
-<nav class="section-nav" class:signed-in={signedIn} aria-label={label}>
+<nav class="section-nav" class:signed-in={signedIn} class:inset aria-label={label}>
   <ul class="list-unstyled mb-0">
     {#each sections as { title, element, count }}
       <li>
@@ -173,6 +181,10 @@
       align-self: start;
       max-height: calc(100vh - var(--section-nav-overlay) - 2rem);
       overflow-y: auto;
+    }
+    /* Height of the floating compact filters plus a gap */
+    .section-nav.inset {
+      padding-top: 3.5rem;
     }
   }
   .section-nav-item {
