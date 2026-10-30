@@ -69,7 +69,7 @@
           placeholder="Search"
           bind:this={searchInput}
           value={$filters.text}
-          on:input={(e) => filters.setText(e.currentTarget.value)}
+          on:input={(e) => filters.setTextDebounced(e.currentTarget.value)}
         />
         {#if $filters.text}
           <!-- Shown only while the search is expanded. Its press keeps focus in the input, and

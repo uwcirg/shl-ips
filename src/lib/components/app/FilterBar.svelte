@@ -30,7 +30,7 @@
         placeholder="Search your health data"
         aria-label="Search your health data"
         value={$filters.text}
-        on:input={(e) => filters.setText(e.currentTarget.value)}
+        on:input={(e) => filters.setTextDebounced(e.currentTarget.value)}
       />
       {#if $filters.text}
         <button type="button" class="search-box-clear" aria-label="Clear search" on:click={() => filters.setText('')}>

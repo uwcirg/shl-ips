@@ -41,6 +41,9 @@ export const panelFilterCount = (c: FilterCriteria) =>
 
 export const isCriteriaActive = (c: FilterCriteria) => panelFilterCount(c) > 0 || c.text.trim() !== '';
 
+// How long typing must pause before a search is applied
+export const SEARCH_DEBOUNCE_MS = 250;
+
 export function createFilterStore() {
   const store = writable<FilterCriteria>(emptyCriteria());
   const toggle = (key: 'sources' | 'sections', value: string) =>
@@ -49,6 +52,18 @@ export function createFilterStore() {
       if (!next.delete(value)) next.add(value);
       return { ...c, [key]: next };
     });
+
+  // Every update re-filters and re-renders the whole list, so keystrokes are queued and only the
+  // last one in a burst is applied. Any direct change to the text cancels what is queued.
+  let pendingText: ReturnType<typeof setTimeout> | undefined;
+  const cancelPendingText = () => {
+    clearTimeout(pendingText);
+    pendingText = undefined;
+  };
+  const setText = (text: string) => {
+    cancelPendingText();
+    store.update(c => (c.text === text ? c : { ...c, text }));
+  };
 
   return {
     subscribe: store.subscribe,
@@ -59,8 +74,17 @@ export function createFilterStore() {
     clearSections: () => store.update(c => ({ ...c, sections: new Set() })),
     setDateRange: (dateFrom: string, dateTo: string) => store.update(c => ({ ...c, dateFrom, dateTo })),
     clearDates: () => store.update(c => ({ ...c, dateFrom: '', dateTo: '' })),
-    setText: (text: string) => store.update(c => ({ ...c, text })),
-    reset: () => store.set(emptyCriteria())
+    setText,
+    // For typing: applies the text once the user pauses. The input already shows what was typed,
+    // so only the filtering waits.
+    setTextDebounced: (text: string) => {
+      cancelPendingText();
+      pendingText = setTimeout(() => setText(text), SEARCH_DEBOUNCE_MS);
+    },
+    reset: () => {
+      cancelPendingText();
+      store.set(emptyCriteria());
+    }
   };
 }
 
