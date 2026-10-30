@@ -68,10 +68,15 @@
   onMount(() => {
     window.addEventListener('scroll', scheduleUpdate, { passive: true });
     window.addEventListener('resize', scheduleUpdate);
+    // Content above the anchor changing height (e.g. the main filter bar's accordion closing)
+    // moves the anchor, and can clamp the scroll position, without a scroll event always following
+    const resizeObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(scheduleUpdate) : undefined;
+    resizeObserver?.observe(document.body);
     scheduleUpdate();
     return () => {
       window.removeEventListener('scroll', scheduleUpdate);
       window.removeEventListener('resize', scheduleUpdate);
+      resizeObserver?.disconnect();
       if (frame) cancelAnimationFrame(frame);
     };
   });
