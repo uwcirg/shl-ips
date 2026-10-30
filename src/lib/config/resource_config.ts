@@ -25,6 +25,7 @@ import QuestionnaireResponse from '$lib/components/resource-templates/Questionna
 import ObservationGroup from '$lib/components/resource-templates/ObservationGroup.svelte';
 import DiagnosticReportGroup from '$lib/components/resource-templates/DiagnosticReportGroup.svelte';
 import DeviceUseStatementGroup from '$lib/components/resource-templates/DeviceUseStatementGroup.svelte';
+import EncounterGroup from '$lib/components/resource-templates/EncounterGroup.svelte';
 
 export const RESOURCE_TYPE_FALLBACK_KEY = 'Other';
 
@@ -160,4 +161,5 @@ export const GROUP_COMPONENTS: Record<string, ComponentType> = {
   observationSeries: ObservationGroup,
   diagnosticReport: DiagnosticReportGroup,
   deviceUseStatement: DeviceUseStatementGroup,
+  encounter: EncounterGroup,
 };
