@@ -160,7 +160,9 @@ export { defaultResourceConfig }; // exported as a building block, not an implic
 
 // Display title for a category: pluralized unless it is already a configured category name
 export const categoryTitle = (category: string) =>
-  Object.values(defaultResourceConfig).find((cr) => cr.category === category) ? category : `${category}s`;
+  Object.values(defaultResourceConfig).find(
+    (cr) => cr.category === category || cr.categoryRules?.some((rule: { category: string }) => rule.category === category)
+  ) ? category : `${category}s`;
 
 export function getResourceRenderInfo(
   resource: Resource,

@@ -13,7 +13,7 @@
   import { ResourceHelper } from '$lib/utils/ResourceHelper.js';
   import CategoryView from '$lib/components/app/CategoryView.svelte';
   import {getFriendlySourceNameBySource} from '$lib/utils/resourceCollectionUtils';
-  import { createCategorizedStore, categoryTitle, type UnitMap, defaultResourceConfig } from '$lib/stores/categorizedResources';
+  import { createCategorizedStore, categoryTitle, type UnitMap } from '$lib/stores/categorizedResources';
   import { isUtilityResourceType } from '$lib/config/resource_config';
   import { unitItems, type DisplayUnit } from '$lib/stores/displayUnits';
   import { createFilterStore, filterUnits, warmSearchText, type ResourceFilterStore } from '$lib/stores/resourceFilters';
@@ -86,10 +86,6 @@
   $: shownCategories = Object.keys($categoryDataToDisplay ?? {}).filter(
     (category) => $categoryDataToDisplay[category]?.length > 0
   );
-  const categoryTitle = (category: string) =>
-    Object.values(defaultResourceConfig).find(
-      (cr) => cr.category === category || cr.categoryRules?.some((rule: { category: string }) => rule.category === category)
-    ) ? category : `${category}s`;
 
   // Each category's title element, for the section nav to scroll to
   let titleEls: Record<string, HTMLElement | undefined> = {};
