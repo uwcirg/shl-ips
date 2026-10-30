@@ -9,3 +9,10 @@
 #
 # feature/some-feature
 # feature/another-feature
+
+feature/add-counts-to-ds-section-nav
+feature/device-display-group
+feature/categorize-observations
+feature/encounter-grouping
+feature/hide-utility-resource-categories
+feature/data-summary-filters
