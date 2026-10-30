@@ -13,7 +13,8 @@
   import { ResourceHelper } from '$lib/utils/ResourceHelper.js';
   import CategoryView from '$lib/components/app/CategoryView.svelte';
   import {getFriendlySourceNameBySource} from '$lib/utils/resourceCollectionUtils';
-  import { createCategorizedStore, categoryTitle, type UnitMap } from '$lib/stores/categorizedResources';
+  import { createCategorizedStore, categoryTitle, type UnitMap, defaultResourceConfig } from '$lib/stores/categorizedResources';
+  import { isUtilityResourceType } from '$lib/config/resource_config';
   import { unitItems, type DisplayUnit } from '$lib/stores/displayUnits';
   import { createFilterStore, filterUnits, warmSearchText, type ResourceFilterStore } from '$lib/stores/resourceFilters';
   import UnitDisplay from '$lib/components/app/UnitDisplay.svelte';
@@ -34,6 +35,8 @@
   export let filters: ResourceFilterStore = contextFilters ?? createFilterStore();
   const filtersActive = filters.isActive;
 
+  let mode: Writable<string> = getContext('mode');
+
   export let summary = false;
   export let categories: string[] = [];
   // Float the compact filters once the main filter bar has scrolled away. Without a filter
@@ -48,26 +51,33 @@
     cancelWarm = contextFilters ? warmSearchText($unitsStore, { index: $referenceIndex }) : undefined;
   }
   onDestroy(() => cancelWarm?.());
+
+  // Utility resources (Practitioner, Organization, ...) are not listed on their own except in
+  // advanced mode. Resources inside a group still show, as part of it.
+  const withoutUtilityResources = (units: DisplayUnit[], advanced: boolean) =>
+    advanced
+      ? units
+      : units.filter((unit) => unit.kind !== 'single' || !isUtilityResourceType(unit.item.rh.resource.resourceType));
+
   let categoryDataToDisplay: Readable<UnitMap> = derived(
-    [unitsStore, categorizedStore.referenceIndex, filters],
-    ([$unitsStore, $referenceIndex, $filters]) => {
+    [unitsStore, categorizedStore.referenceIndex, filters, mode],
+    ([$unitsStore, $referenceIndex, $filters, $mode]) => {
+      const advanced = $mode === 'advanced';
       const filtered = filterUnits($unitsStore, $filters, { index: $referenceIndex });
       let result: UnitMap = {};
+      const add = (category: string) => {
+        const units = withoutUtilityResources(filtered[category] ?? [], advanced);
+        if (units.length > 0) result[category] = units;
+      };
       if (categories.length === 0) {
         // No categories prop: show all categories, alphabetical by name
         Object.keys(filtered)
           .sort((a, b) => a.localeCompare(b))
-          .forEach(category => {
-            result[category] = filtered[category];
-          });
+          .forEach(add);
         return result;
       }
       // Passed categories prop: keep the order the parent provided
-      categories.forEach(category => {
-        if (filtered[category]) {
-          result[category] = filtered[category];
-        }
-      });
+      categories.forEach(add);
       return result;
     }
   );
@@ -101,8 +111,6 @@
   
   const statusDispatch = createEventDispatcher<{ 'status-update': string }>();
   const errorDispatch = createEventDispatcher<{ error: string }>();
-
-  let mode: Writable<string> = getContext('mode');
 
   let json = '';
   let resourceType = '';

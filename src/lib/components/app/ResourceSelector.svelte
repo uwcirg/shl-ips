@@ -25,6 +25,7 @@
   import type { IAuthService, IPSRetrieveEvent } from '$lib/utils/types.ts';
   import type { CompositionSection, BundleEntry } from 'fhir/r4';
   import { finalizeForUpload, getEntries } from '$lib/utils/importNormalization';
+  import { isUtilityResourceType } from '$lib/config/resource_config';
 
   import AdvanceDirective from '$lib/components/resource-templates/AdvanceDirective.svelte';
   import AllergyIntolerance from '$lib/components/resource-templates/AllergyIntolerance.svelte';
@@ -236,7 +237,9 @@
   <Accordion>
     {#if Object.keys($resourcesByTypeStore).length > 0}
       {#each Object.keys($resourcesByTypeStore) as resourceType}
-        {#if Object.keys($resourcesByTypeStore[resourceType]).length > 0}
+        <!-- Utility resources (Practitioner, Organization, ...) are listed only in advanced mode.
+             Hiding them here doesn't change whether they are included in the summary. -->
+        {#if Object.keys($resourcesByTypeStore[resourceType]).length > 0 && !isUtilityResourceType(resourceType)}
           <AccordionItem on:toggle={() => updateBadge(resourceType)}>
             <span slot="header">
               {#if resourceType === 'Patient'}
