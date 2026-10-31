@@ -262,7 +262,7 @@
     grid-template-columns: minmax(0, 1fr);
     gap: 1.5rem;
   }
-  /* The SectionNav column; the nav itself is shown from md up */
+    /* The SectionNav column; the nav itself is shown from md up */
   @media (min-width: 768px) {
     .category-layout.with-nav {
       grid-template-columns: var(--section-nav-width, 14.5rem) minmax(0, 1fr);

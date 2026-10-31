@@ -20,3 +20,19 @@ if (!('ResizeObserver' in globalThis)) {
     disconnect() {}
   };
 }
+
+// jsdom doesn't implement matchMedia either. SectionNav and Header query it on mount (display
+// mode, reduced motion). Report no match for every query, i.e. a plain desktop browser.
+if (typeof window !== 'undefined' && !window.matchMedia) {
+  window.matchMedia = (query: string) =>
+    ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addEventListener() {},
+      removeEventListener() {},
+      addListener() {},
+      removeListener() {},
+      dispatchEvent: () => false
+    }) as MediaQueryList;
+}
