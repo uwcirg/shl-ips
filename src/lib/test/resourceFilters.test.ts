@@ -73,7 +73,7 @@ describe('filterUnits', () => {
     const { result } = run({ sources: new Set(['Clinic B']) });
     expect(summarize(result)).toEqual({
       Conditions: ['c2'],
-      'Observations and Results': ['observationSeries']
+      'Other Observations': ['observationSeries']
     });
   });
 
@@ -126,8 +126,8 @@ describe('filterUnits', () => {
   });
 
   it('keeps a group when any member is in range', () => {
-    const { result } = run({ dateFrom: '2022-01-01', sections: new Set(['Observations and Results']) });
-    expect(summarize(result)).toEqual({ 'Observations and Results': ['observationSeries'] });
+    const { result } = run({ dateFrom: '2022-01-01', sections: new Set(['Other Observations']) });
+    expect(summarize(result)).toEqual({ 'Other Observations': ['observationSeries'] });
   });
 
   it('combines facets with AND', () => {
