@@ -13,7 +13,7 @@
   import { ResourceHelper } from '$lib/utils/ResourceHelper.js';
   import CategoryView from '$lib/components/app/CategoryView.svelte';
   import {getFriendlySourceNameBySource} from '$lib/utils/resourceCollectionUtils';
-  import { createCategorizedStore, categoryTitle, type UnitMap, defaultResourceConfig } from '$lib/stores/categorizedResources';
+  import { createCategorizedStore, categoryTitle, type UnitMap } from '$lib/stores/categorizedResources';
   import { isUtilityResourceType } from '$lib/config/resource_config';
   import { unitItems, type DisplayUnit } from '$lib/stores/displayUnits';
   import { createFilterStore, filterUnits, warmSearchText, type ResourceFilterStore } from '$lib/stores/resourceFilters';
