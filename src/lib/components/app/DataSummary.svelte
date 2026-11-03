@@ -21,6 +21,7 @@
   import StickyFilters from '$lib/components/app/StickyFilters.svelte';
   import SectionNav, { type SectionNavItem } from '$lib/components/layout/SectionNav.svelte';
   import { derived, readable, type Readable } from 'svelte/store';
+  import { slide } from 'svelte/transition';
   import type FHIRDataService from '$lib/utils/FHIRDataService';
   import { batchedWhile } from '$lib/stores/batchedWhile';
   import LoadingBar from '$lib/components/app/LoadingBar.svelte';
@@ -34,6 +35,7 @@
   // While datasets are still loading in, new data is applied in batches so the list doesn't
   // reshuffle with every dataset. The loading bar below follows the loads themselves, unbatched.
   const BATCH_MS = 750;
+  const reduceMotion = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const fhirDataService: FHIRDataService | undefined = getContext('fhirDataService');
   const syncing = fhirDataService?.syncing ?? readable(false);
   const syncProgress = fhirDataService?.syncProgress ?? readable({ total: 0, done: 0 });
@@ -176,7 +178,11 @@
 
 
 {#if $syncProgress.total > 0 && $syncProgress.done < $syncProgress.total}
-  <LoadingBar class="mb-3" done={$syncProgress.done} total={$syncProgress.total} />
+  <!-- Slides in and out so the list below eases down and up instead of jumping. The spacing is
+       padding inside the sliding wrapper, since a margin on it would not animate with it. -->
+  <div transition:slide={{ duration: reduceMotion ? 0 : 300 }}>
+    <LoadingBar class="pb-3" done={$syncProgress.done} total={$syncProgress.total} />
+  </div>
 {/if}
 
 {#if $categoryDataToDisplay && Object.keys($categoryDataToDisplay).length > 0}
