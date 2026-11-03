@@ -251,7 +251,7 @@
     {/if}
     <button
       type="button"
-      class="section-nav-toggle shadow rounded-pill"
+      class="section-nav-toggle rounded-pill"
       aria-expanded={open}
       aria-controls={open ? menuId : undefined}
       on:click={() => (open = !open)}
@@ -327,15 +327,22 @@
     align-items: center;
     gap: 0.5rem;
     max-width: 100%;
-    padding: 0.65rem 1.15rem;
-    border: 1px solid var(--bs-border-color, #dee2e6);
-    background-color: var(--bs-body-bg, #fff);
-    color: var(--bs-body-color);
+    padding: 0.7rem 1.25rem;
+    /* Filled with the primary color, with a stronger shadow, so it stands out from the content
+       it floats over */
+    border: 1px solid var(--bs-primary);
+    background-color: var(--bs-primary);
+    color: #fff;
     font-size: 1rem;
+    box-shadow: var(--bs-box-shadow-lg);
     cursor: pointer;
   }
   .section-nav-toggle:hover {
-    background-color: var(--bs-tertiary-bg, #f8f9fa);
+    filter: brightness(0.92);
+  }
+  .section-nav-toggle:focus-visible {
+    outline: 3px solid var(--bs-primary-border-subtle, #9ec5fe);
+    outline-offset: 2px;
   }
   .section-nav-current {
     min-width: 0;
