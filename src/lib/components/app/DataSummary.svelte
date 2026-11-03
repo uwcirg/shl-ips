@@ -20,14 +20,28 @@
   import UnitDisplay from '$lib/components/app/UnitDisplay.svelte';
   import StickyFilters from '$lib/components/app/StickyFilters.svelte';
   import SectionNav, { type SectionNavItem } from '$lib/components/layout/SectionNav.svelte';
-  import { derived, type Readable } from 'svelte/store';
+  import { derived, readable, type Readable } from 'svelte/store';
+  import { slide } from 'svelte/transition';
+  import type FHIRDataService from '$lib/utils/FHIRDataService';
+  import { batchedWhile } from '$lib/stores/batchedWhile';
+  import LoadingBar from '$lib/components/app/LoadingBar.svelte';
+  import ListSkeleton from '$lib/components/app/ListSkeleton.svelte';
   import { goto } from '$app/navigation';
 
   let colorMap = getContext<Writable<Map<string, string>>>('colorMap');
   
   export let categorizedStore: ReturnType<typeof createCategorizedStore> = getContext('categorizedStore');
   // Units (single resources or groups) are already grouped and sorted by the store
-  const unitsStore = categorizedStore.unitsStore;
+  // While datasets are still loading in, new data is applied in batches so the list doesn't
+  // reshuffle with every dataset. The loading bar below follows the loads themselves, unbatched.
+  const BATCH_MS = 750;
+  const reduceMotion = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const fhirDataService: FHIRDataService | undefined = getContext('fhirDataService');
+  const syncing = fhirDataService?.syncing ?? readable(false);
+  const syncProgress = fhirDataService?.syncProgress ?? readable({ total: 0, done: 0 });
+  const unitsStore = fhirDataService
+    ? batchedWhile(categorizedStore.unitsStore, syncing, BATCH_MS)
+    : categorizedStore.unitsStore;
   const referenceIndex = categorizedStore.referenceIndex;
 
   // Pages without filtering get a store nothing writes to, which filters nothing
@@ -163,6 +177,14 @@
 </Offcanvas>
 
 
+{#if $syncProgress.total > 0 && $syncProgress.done < $syncProgress.total}
+  <!-- Slides in and out so the list below eases down and up instead of jumping. The spacing is
+       padding inside the sliding wrapper, since a margin on it would not animate with it. -->
+  <div transition:slide={{ duration: reduceMotion ? 0 : 300 }}>
+    <LoadingBar class="pb-3" done={$syncProgress.done} total={$syncProgress.total} />
+  </div>
+{/if}
+
 {#if $categoryDataToDisplay && Object.keys($categoryDataToDisplay).length > 0}
   <!-- One block spanning the whole list, so the filters' sticky anchor stays put until the list ends -->
   <div>
@@ -249,6 +271,8 @@
   </div>
   </div>
   </div>
+{:else if $syncing}
+  <ListSkeleton showNav={categories.length === 0} />
 {:else if $filtersActive}
   <div class="text-center text-secondary py-4">
     <p class="mb-2">No data matches the current filters.</p>

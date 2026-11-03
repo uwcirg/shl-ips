@@ -69,6 +69,22 @@ export class FHIRDataService {
   demographics: Writable<UserDemographics>;
   patientLinks: Readable<Array<any>>;
   loading: Writable<boolean>;
+  // Progress of the background fetch of each dataset's full data after the initial seed: how many
+  // datasets are being synced, and how many of those have finished (successfully or not)
+  syncProgress: Writable<{ total: number, done: number }>;
+  // True from the start of loading until every dataset has finished syncing
+  syncing: Readable<boolean>;
+  // Whether the first pass (the datasets' patients and metadata) has finished, successfully or not.
+  // Until then it isn't known which datasets exist.
+  seeded: Writable<boolean>;
+  // Datasets (as `category|method|source`) whose full data has not finished loading in yet
+  private syncPending: Writable<Set<string>>;
+  // Datasets whose sync has not started yet
+  private syncQueue: Array<{ category: string, method: string, source: string }> = [];
+  // Syncs of prioritized datasets that are in flight
+  private activePrioritySyncs = 0;
+  // Datasets of these `category|method` pairs are synced ahead of the rest
+  private priorities = new Map<string, number>();
 
   // Tail of the queue that serializes master patient read-modify-write updates
   private masterPatientWriteQueue: Promise<unknown> = Promise.resolve();
@@ -80,6 +96,13 @@ export class FHIRDataService {
     this.demographics = writable({});
     this.patientLinks = derived(this.masterPatient, ($masterPatient) => $masterPatient?.resource?.link ?? []);
     this.loading = writable(false);
+    this.syncProgress = writable({ total: 0, done: 0 });
+    this.seeded = writable(false);
+    this.syncPending = writable(new Set());
+    this.syncing = derived(
+      [this.loading, this.syncProgress],
+      ([$loading, $progress]) => $loading || $progress.done < $progress.total
+    );
   }
 
   // Get the cached, fetched, or newly created master patient
@@ -119,18 +142,84 @@ export class FHIRDataService {
       // Load bare minimum for datasets to be operated on
       resourceCollections = await this.seedUserResources().catch((error) => {
         this.loading.set(false);
+        this.seeded.set(true);
         throw new FHIRServiceError('Unable to load health data', 'loadUserData', error);
       }) ?? [];
     }
     resourceCollections.map((collection) => this.addDatasetToUserResources(collection));
+
+    // Finish loading datasets. What is pending is recorded before the first pass is reported as
+    // done, so a page waiting on its own dataset never sees a gap between the two.
+    const datasets = resourceCollections.map((collection) => collection.getTags());
+    this.syncProgress.set({ total: datasets.length, done: 0 });
+    this.syncPending.set(new Set(datasets.map(({ category, method, source }) => `${category}|${method}|${source}`)));
     this.loading.set(false);
-    
-    // Finish loading datasets
-    resourceCollections.forEach((collection) => {
-      const { category, method, source } = collection.getTags();
-      this.syncDataset(category, method, source);
-    });
-    
+    this.seeded.set(true);
+    this.syncQueue.push(...datasets.map(({ category, method, source }) => ({ category, method, source })));
+    this.pumpSyncQueue();
+  }
+
+  /**
+   * Whether the first pass of loading has not finished yet, so it isn't known what data exists.
+   */
+  get firstPassLoading(): Readable<boolean> {
+    return derived([this.seeded, this.loading], ([$seeded, $loading]) => !$seeded || $loading);
+  }
+
+  /**
+   * Whether any dataset of the given category and method is still loading in. False once the
+   * first pass is done and there is no such dataset, or all of them have finished.
+   */
+  datasetsLoading(category: string, method: string): Readable<boolean> {
+    const prefix = `${category}|${method}|`;
+    return derived(this.syncPending, ($pending) => [...$pending].some((key) => key.startsWith(prefix)));
+  }
+
+  /**
+   * Syncs datasets of the given category and method ahead of the others, including ones whose
+   * sync has not started yet. Returns a function that removes the priority again.
+   */
+  prioritizeDatasets(category: string, method: string): () => void {
+    const key = `${category}|${method}`;
+    this.priorities.set(key, (this.priorities.get(key) ?? 0) + 1);
+    return () => {
+      const remaining = (this.priorities.get(key) ?? 1) - 1;
+      if (remaining > 0) this.priorities.set(key, remaining);
+      else this.priorities.delete(key);
+      // Without a priority, datasets that were held back no longer need to wait
+      this.pumpSyncQueue();
+    };
+  }
+
+  // Starts queued dataset syncs. Prioritized datasets start right away, and the rest wait until
+  // those have finished, then all start at once. With no prioritized dataset, everything starts
+  // at once.
+  private pumpSyncQueue(): void {
+    const isPriority = ({ category, method }: { category: string, method: string }) =>
+      this.priorities.has(`${category}|${method}`);
+    const start = (dataset: { category: string, method: string, source: string }, priority: boolean) => {
+      if (priority) this.activePrioritySyncs++;
+      this.syncDataset(dataset.category, dataset.method, dataset.source).finally(() => {
+        if (priority) this.activePrioritySyncs--;
+        this.syncPending.update((pending) => {
+          const remaining = new Set(pending);
+          remaining.delete(`${dataset.category}|${dataset.method}|${dataset.source}`);
+          return remaining;
+        });
+        this.syncProgress.update(({ total, done }) => ({ total, done: done + 1 }));
+        this.pumpSyncQueue();
+      });
+    };
+
+    const priorityDatasets = this.syncQueue.filter(isPriority);
+    this.syncQueue = this.syncQueue.filter((dataset) => !isPriority(dataset));
+    priorityDatasets.forEach((dataset) => start(dataset, true));
+
+    if (this.priorities.size === 0 || this.activePrioritySyncs === 0) {
+      const rest = this.syncQueue;
+      this.syncQueue = [];
+      rest.forEach((dataset) => start(dataset, false));
+    }
   }
 
   private async seedUserResources(): Promise<Array<ResourceCollection> | undefined> {
