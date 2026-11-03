@@ -194,7 +194,7 @@
 <svelte:window on:click={onWindowClick} on:keydown={onKeydown} />
 
 <nav class="section-nav" class:signed-in={signedIn} class:inset aria-label={label}>
-  <ul class="list-unstyled mb-0">
+  <ul class="section-nav-list list-unstyled mb-0">
     {#each sections as { title, element, count }}
       <li>
         <button
@@ -227,7 +227,7 @@
   >
     {#if open}
       <div class="section-nav-menu shadow rounded-4" id={menuId}>
-        <ul class="list-unstyled mb-0">
+        <ul class="section-nav-list list-unstyled mb-0">
           {#each sections as { title, element, count }}
             <li>
               <button
@@ -276,17 +276,20 @@
   }
   /* Shown from md up; below md the pill takes over */
   @media (min-width: 768px) {
+    /* Only the section list scrolls (.section-nav-list), so "Back to top" stays at the bottom of
+       the column, and the inset below stays put instead of scrolling away */
     .section-nav {
-      display: block;
+      display: flex;
+      flex-direction: column;
       position: sticky;
       top: calc(var(--section-nav-overlay) + 1rem);
       align-self: start;
       max-height: calc(100vh - var(--section-nav-overlay) - 2rem);
-      overflow-y: auto;
     }
-    /* Height of the floating compact filters plus a gap */
+    /* Height of the floating compact filters plus a gap: the list starts below them, so its
+       sections never scroll underneath them */
     .section-nav.inset {
-      padding-top: 3.5rem;
+      padding-top: 3rem;
     }
   }
   /* Below md: the collapsed pill */
@@ -352,7 +355,10 @@
     width: 18rem;
     max-width: calc(100vw - 2rem);
     max-height: calc(100vh - 9rem - var(--header-height, 64px));
-    overflow-y: auto;
+    /* Only the section list scrolls, so "Back to top" is always visible at the bottom */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     padding: 0.4rem;
     border: 1px solid var(--bs-border-color, #dee2e6);
     background-color: var(--bs-body-bg, #fff);
@@ -361,6 +367,11 @@
     .section-nav-chevron {
       transition: none;
     }
+  }
+  .section-nav-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
   }
   .section-nav-item {
     display: flex;
@@ -388,6 +399,7 @@
   }
   /* Sits apart from the section list, at the bottom of the menu */
   .section-nav-top {
+    flex: 0 0 auto;
     margin-top: 0.4rem;
     border-top: 1px solid var(--bs-border-color, #dee2e6);
     border-top-left-radius: 0;
