@@ -13,6 +13,7 @@
   import type { IResourceCollection, ResourceRetrieveEvent } from '$lib/utils/types';
   import type { Goal, Observation, Resource } from 'fhir/r4';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
+  import { OBSERVATION_CATEGORY_SYSTEM } from '$lib/config/config';
   import { ResourceHelper } from '$lib/utils/ResourceHelper';
   import { copyOf, getUniqueResourceObject } from '$lib/utils/util';
 
@@ -56,6 +57,17 @@
   let observationResourceTemplate: Observation = {
     resourceType: "Observation",
     status: "final",
+    category: [
+      {
+        coding: [
+          {
+            system: OBSERVATION_CATEGORY_SYSTEM,
+            code: "patient-story",
+            display: "Patient Story"
+          }
+        ]
+      }
+    ],
     code: {
       coding: [
         {

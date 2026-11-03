@@ -172,6 +172,7 @@ export const RESOURCE_CONFIG: Record<string, any> = {
       // Observations with none of the categories below stay here
       category: 'Other Observations',
       categoryRules: [
+        { category: 'Patient Story', match: hasObservationCategory('patient-story') },
         { category: 'Pregnancies', match: isPregnancy },
         { category: 'Vital Signs', match: hasObservationCategory('vital-signs') },
         { category: 'Lab Results', match: hasObservationCategory('laboratory') },
