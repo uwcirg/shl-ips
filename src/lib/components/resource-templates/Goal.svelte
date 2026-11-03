@@ -39,14 +39,15 @@
 <!-- Display priority if available -->
 {#if resource.priority}
   <Badge color="primary">
-    priority:
+    priority: 
     {#if resource.priority.text}
       {resource.priority.text}
     {:else if resource.priority.coding}
       {#each resource.priority.coding as code}
-        {code.system} : {code.code}
         {#if code.display}
-          ({code.display})
+          {code.display.toLowerCase()}
+        {:else if code.code}
+          {code.code.toLowerCase()}
         {/if}
       {/each}
     {/if}
@@ -56,21 +57,21 @@
 <!-- Display achievementStatus if available -->
 {#if resource.achievementStatus}
   <Badge color="primary">
-    achievement:
     {#if resource.achievementStatus.text}
       {resource.achievementStatus.text}
     {:else if resource.achievementStatus.coding}
       {#each resource.achievementStatus.coding as status}
-        {status.system} : {status.code}
         {#if status.display}
-          ({status.display})
+          {status.display.toLowerCase()}
+        {:else if status.code}
+          {status.code.toLowerCase()}
         {/if}
       {/each}
     {/if}
   </Badge>
 {/if}
 
-{#if resource.priority || resource.achievementStatus}
+{#if resource.lifecycleStatus || resource.priority || resource.achievementStatus}
   <br>
 {/if}
 
@@ -82,18 +83,16 @@
     {#each resource.description.coding as code}
       {code.system} : {code.code}
       {#if code.display}
-        <strong>({code.display})</strong>
+        <strong>{code.display}</strong>
+      {:else if code.code}
+        <strong>{code.code}</strong>
       {/if}
     {/each}
   {/if}
-{:else}
-  <em>No Description Provided</em>
 {/if}
 
 <!-- Display timeline -->
 <br>
-{#if startDate === '??' && dueDate === '??'}
-  <em>No timeline available.</em>
-{:else}
+{#if startDate !== '??' || dueDate !== '??'}
   <strong>Timeline:</strong> {startDate} ➔ {dueDate}
 {/if}
