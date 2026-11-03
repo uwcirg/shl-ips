@@ -1,6 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher, getContext } from 'svelte';
   import { Button, Icon, Input } from '@sveltestrap/sveltestrap';
+  import FilterCountBadge from '$lib/components/app/FilterCountBadge.svelte';
   import SourcePill from '$lib/components/app/SourcePill.svelte';
   import PillScroller from '$lib/components/app/PillScroller.svelte';
   import SourceSummary from '$lib/components/app/SourceSummary.svelte';
@@ -24,11 +25,17 @@
 </script>
 
 <h5 class="mb-3">Filters</h5>
-<h6 class="mb-1">Sources</h6>
+<div class="d-flex align-items-center gap-2 mb-1">
+  <h6 class="mb-0">Sources</h6>
+  <FilterCountBadge count={$filters.sources.size} label="sources" on:click={filters.clearSources} />
+</div>
 <SourceSummary class="mb-3" {filters} />
 
 {#if showSections}
-  <h6 class="mb-1">Sections</h6>
+  <div class="d-flex align-items-center gap-2 mb-1">
+    <h6 class="mb-0">Categories</h6>
+    <FilterCountBadge count={$filters.sections.size} label="categories" on:click={filters.clearSections} />
+  </div>
   <PillScroller class="mb-3" watch={[sectionNames, $filters.sections.size]}>
     <SourcePill name="All" selected={$filters.sections.size === 0} on:click={filters.clearSections} />
     {#each sectionNames as section (section)}
@@ -63,10 +70,10 @@
   {#if $filters.dateFrom || $filters.dateTo}
     <Button
       size="sm"
-      color="secondary"
+      color="danger"
       outline
       class="rounded-circle d-inline-flex align-items-center justify-content-center"
-      style="width: 2rem; height: 2rem; padding: 0;"
+      style="width: 2rem; height: 2rem; padding: 0; --bs-btn-bg: var(--bs-body-bg);"
       aria-label="Clear dates"
       on:click={filters.clearDates}
     >
