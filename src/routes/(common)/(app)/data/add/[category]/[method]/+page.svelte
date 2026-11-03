@@ -214,7 +214,7 @@
       <FormLoadingState
         active={waiting}
         label={$firstPassLoading ? 'Loading your data...' : 'Loading your saved information...'}
-        detail="You can edit this form as soon as it has loaded."
+        detail={$firstPassLoading ? '' : "You can edit this form as soon as it has loaded."}
       >
       <svelte:component
         this={form.component}
