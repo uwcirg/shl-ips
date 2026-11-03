@@ -69,6 +69,11 @@ export class FHIRDataService {
   demographics: Writable<UserDemographics>;
   patientLinks: Readable<Array<any>>;
   loading: Writable<boolean>;
+  // Progress of the background fetch of each dataset's full data after the initial seed: how many
+  // datasets are being synced, and how many of those have finished (successfully or not)
+  syncProgress: Writable<{ total: number, done: number }>;
+  // True from the start of loading until every dataset has finished syncing
+  syncing: Readable<boolean>;
 
   // Tail of the queue that serializes master patient read-modify-write updates
   private masterPatientWriteQueue: Promise<unknown> = Promise.resolve();
@@ -80,6 +85,11 @@ export class FHIRDataService {
     this.demographics = writable({});
     this.patientLinks = derived(this.masterPatient, ($masterPatient) => $masterPatient?.resource?.link ?? []);
     this.loading = writable(false);
+    this.syncProgress = writable({ total: 0, done: 0 });
+    this.syncing = derived(
+      [this.loading, this.syncProgress],
+      ([$loading, $progress]) => $loading || $progress.done < $progress.total
+    );
   }
 
   // Get the cached, fetched, or newly created master patient
@@ -126,9 +136,12 @@ export class FHIRDataService {
     this.loading.set(false);
     
     // Finish loading datasets
+    this.syncProgress.set({ total: resourceCollections.length, done: 0 });
     resourceCollections.forEach((collection) => {
       const { category, method, source } = collection.getTags();
-      this.syncDataset(category, method, source);
+      this.syncDataset(category, method, source).finally(() =>
+        this.syncProgress.update(({ total, done }) => ({ total, done: done + 1 }))
+      );
     });
     
   }
