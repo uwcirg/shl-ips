@@ -14,12 +14,14 @@ export const SYSTEM_NAME = env('VITE_SYSTEM_NAME');
 
 export const API_BASE = env('VITE_API_BASE');
 
+const SYSTEM_BASE = 'http://fhir.wahealthsummary.cirg.uw.edu';
 export const INTERMEDIATE_FHIR_SERVER_BASE = env('VITE_INTERMEDIATE_FHIR_SERVER_BASE');
 export const IDENTIFIER_SYSTEM = 'http://keycloak.cirg.uw.edu';
-export const CATEGORY_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-category';
-export const METHOD_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-method';
-export const PLACEHOLDER_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-placeholder';
-export const SOURCE_NAME_SYSTEM = 'http://fhir.wahealthsummary.cirg.uw.edu/CodeSystem/wahealthsummary-source-name';
+export const CATEGORY_SYSTEM = `${SYSTEM_BASE}/CodeSystem/wahealthsummary-category`;
+export const METHOD_SYSTEM = `${SYSTEM_BASE}/CodeSystem/wahealthsummary-method`;
+export const PLACEHOLDER_SYSTEM = `${SYSTEM_BASE}/CodeSystem/wahealthsummary-placeholder`;
+export const SOURCE_NAME_SYSTEM = `${SYSTEM_BASE}/CodeSystem/wahealthsummary-source-name`;
+export const OBSERVATION_CATEGORY_SYSTEM = `${SYSTEM_BASE}/CodeSystem/observation-category`;
 export const SOURCE_NAMESPACE = 'urn:wahealthsummary:source';
 
 export const DATA_CATEGORY_NAMES = {
