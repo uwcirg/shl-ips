@@ -216,7 +216,6 @@
       >
       <svelte:component
         this={form.component}
-        disabled={waiting}
         formData={$formData}
         processing={processing}
         on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
