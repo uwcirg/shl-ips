@@ -195,6 +195,7 @@ export const RESOURCE_CONFIG: Record<string, any> = {
 // Encounter or prescription points at), so the data views don't list them on their own: they show
 // only in advanced mode. Views of a dataset being imported show every resource.
 export const UTILITY_RESOURCE_TYPES: ReadonlySet<string> = new Set([
+  'Patient',
   'Practitioner',
   'PractitionerRole',
   'Location',
