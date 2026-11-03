@@ -32,9 +32,11 @@
   const userResources = fhirDataService.userResources;
   const firstPassLoading = fhirDataService.firstPassLoading;
   const datasetsLoading = fhirDataService.datasetsLoading(category, method);
-  // Load this page's own saved data ahead of the other datasets
-  const releasePriority = fhirDataService.prioritizeDatasets(category, method);
-  onDestroy(releasePriority);
+  // An editable form is pre-filled from its one dataset, so load that ahead of the others. Other
+  // pages leave loading alone.
+  if (form?.editable) {
+    onDestroy(fhirDataService.prioritizeDatasets(category, method));
+  }
   // Until the first pass shows which datasets exist, nothing is known. After that, an editable
   // form waits only for its own dataset (if there is one); unrelated datasets loading don't matter.
   let waiting: boolean;

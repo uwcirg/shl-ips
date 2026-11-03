@@ -59,9 +59,6 @@ export class MasterPatientWriteUncertainError extends FHIRServiceError {
   }
 }
 
-// How many datasets are fetched in full at once while loading in the background
-const SYNC_CONCURRENCY = 6;
-
 export class FHIRDataService {
   auth: IAuthService;
 
@@ -82,8 +79,10 @@ export class FHIRDataService {
   seeded: Writable<boolean>;
   // Datasets (as `category|method|source`) whose full data has not finished loading in yet
   private syncPending: Writable<Set<string>>;
+  // Datasets whose sync has not started yet
   private syncQueue: Array<{ category: string, method: string, source: string }> = [];
-  private activeSyncs = 0;
+  // Syncs of prioritized datasets that are in flight
+  private activePrioritySyncs = 0;
   // Datasets of these `category|method` pairs are synced ahead of the rest
   private priorities = new Map<string, number>();
 
@@ -187,25 +186,39 @@ export class FHIRDataService {
       const remaining = (this.priorities.get(key) ?? 1) - 1;
       if (remaining > 0) this.priorities.set(key, remaining);
       else this.priorities.delete(key);
+      // Without a priority, datasets that were held back no longer need to wait
+      this.pumpSyncQueue();
     };
   }
 
-  // Starts queued dataset syncs, up to a limit at a time, prioritized datasets first
+  // Starts queued dataset syncs. Prioritized datasets start right away, and the rest wait until
+  // those have finished, then all start at once. With no prioritized dataset, everything starts
+  // at once.
   private pumpSyncQueue(): void {
-    while (this.activeSyncs < SYNC_CONCURRENCY && this.syncQueue.length > 0) {
-      const priorityIndex = this.syncQueue.findIndex(({ category, method }) => this.priorities.has(`${category}|${method}`));
-      const [next] = this.syncQueue.splice(priorityIndex === -1 ? 0 : priorityIndex, 1);
-      this.activeSyncs++;
-      this.syncDataset(next.category, next.method, next.source).finally(() => {
-        this.activeSyncs--;
+    const isPriority = ({ category, method }: { category: string, method: string }) =>
+      this.priorities.has(`${category}|${method}`);
+    const start = (dataset: { category: string, method: string, source: string }, priority: boolean) => {
+      if (priority) this.activePrioritySyncs++;
+      this.syncDataset(dataset.category, dataset.method, dataset.source).finally(() => {
+        if (priority) this.activePrioritySyncs--;
         this.syncPending.update((pending) => {
           const remaining = new Set(pending);
-          remaining.delete(`${next.category}|${next.method}|${next.source}`);
+          remaining.delete(`${dataset.category}|${dataset.method}|${dataset.source}`);
           return remaining;
         });
         this.syncProgress.update(({ total, done }) => ({ total, done: done + 1 }));
         this.pumpSyncQueue();
       });
+    };
+
+    const priorityDatasets = this.syncQueue.filter(isPriority);
+    this.syncQueue = this.syncQueue.filter((dataset) => !isPriority(dataset));
+    priorityDatasets.forEach((dataset) => start(dataset, true));
+
+    if (this.priorities.size === 0 || this.activePrioritySyncs === 0) {
+      const rest = this.syncQueue;
+      this.syncQueue = [];
+      rest.forEach((dataset) => start(dataset, false));
     }
   }
 
