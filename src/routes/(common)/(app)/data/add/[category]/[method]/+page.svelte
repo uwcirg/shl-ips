@@ -5,7 +5,8 @@
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { writable, type Writable } from 'svelte/store';
-  import { getContext, onMount } from 'svelte';
+  import { getContext, onDestroy, onMount } from 'svelte';
+  import FormLoadingState from '$lib/components/app/FormLoadingState.svelte';
   import DatasetStatusLoader from '$lib/components/app/DatasetStatusLoader.svelte';
   import DatasetView from '$lib/components/app/DatasetView.svelte';
   import FHIRDataService, { type PreparedImport } from '$lib/utils/FHIRDataService';
@@ -29,7 +30,15 @@
 
   const fhirDataService: FHIRDataService = getContext('fhirDataService');
   const userResources = fhirDataService.userResources;
-  const loading = fhirDataService.loading;
+  const firstPassLoading = fhirDataService.firstPassLoading;
+  const datasetsLoading = fhirDataService.datasetsLoading(category, method);
+  // Load this page's own saved data ahead of the other datasets
+  const releasePriority = fhirDataService.prioritizeDatasets(category, method);
+  onDestroy(releasePriority);
+  // Until the first pass shows which datasets exist, nothing is known. After that, an editable
+  // form waits only for its own dataset (if there is one); unrelated datasets loading don't matter.
+  let waiting: boolean;
+  $: waiting = $firstPassLoading || (!!form?.editable && $datasetsLoading);
   const masterPatient = fhirDataService.masterPatient;
 
   let datasets;
@@ -200,15 +209,21 @@
           {/if}
         </Col>
       </Row>
+      <FormLoadingState
+        active={waiting}
+        label={$firstPassLoading ? 'Loading your data...' : 'Loading your saved information...'}
+        detail="You can edit this form as soon as it has loaded."
+      >
       <svelte:component
         this={form.component}
-        disabled={$loading}
+        disabled={waiting}
         formData={$formData}
         processing={processing}
         on:sof-auth-init={ async ({ detail }) => { preAuthRedirectHandler(detail) } }
         on:sof-auth-fail={ async ({ detail }) => { revertPreAuth(detail) }}
         on:update-resources={ async ({ detail }) => { handleNewResources(detail) } }
       />
+      </FormLoadingState>
     </CardBody>
   </Card>
   {#if $userResources?.[category]?.[method] && !form.editable}

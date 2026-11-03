@@ -59,6 +59,9 @@ export class MasterPatientWriteUncertainError extends FHIRServiceError {
   }
 }
 
+// How many datasets are fetched in full at once while loading in the background
+const SYNC_CONCURRENCY = 6;
+
 export class FHIRDataService {
   auth: IAuthService;
 
@@ -74,6 +77,15 @@ export class FHIRDataService {
   syncProgress: Writable<{ total: number, done: number }>;
   // True from the start of loading until every dataset has finished syncing
   syncing: Readable<boolean>;
+  // Whether the first pass (the datasets' patients and metadata) has finished, successfully or not.
+  // Until then it isn't known which datasets exist.
+  seeded: Writable<boolean>;
+  // Datasets (as `category|method|source`) whose full data has not finished loading in yet
+  private syncPending: Writable<Set<string>>;
+  private syncQueue: Array<{ category: string, method: string, source: string }> = [];
+  private activeSyncs = 0;
+  // Datasets of these `category|method` pairs are synced ahead of the rest
+  private priorities = new Map<string, number>();
 
   // Tail of the queue that serializes master patient read-modify-write updates
   private masterPatientWriteQueue: Promise<unknown> = Promise.resolve();
@@ -86,6 +98,8 @@ export class FHIRDataService {
     this.patientLinks = derived(this.masterPatient, ($masterPatient) => $masterPatient?.resource?.link ?? []);
     this.loading = writable(false);
     this.syncProgress = writable({ total: 0, done: 0 });
+    this.seeded = writable(false);
+    this.syncPending = writable(new Set());
     this.syncing = derived(
       [this.loading, this.syncProgress],
       ([$loading, $progress]) => $loading || $progress.done < $progress.total
@@ -129,21 +143,70 @@ export class FHIRDataService {
       // Load bare minimum for datasets to be operated on
       resourceCollections = await this.seedUserResources().catch((error) => {
         this.loading.set(false);
+        this.seeded.set(true);
         throw new FHIRServiceError('Unable to load health data', 'loadUserData', error);
       }) ?? [];
     }
     resourceCollections.map((collection) => this.addDatasetToUserResources(collection));
+
+    // Finish loading datasets. What is pending is recorded before the first pass is reported as
+    // done, so a page waiting on its own dataset never sees a gap between the two.
+    const datasets = resourceCollections.map((collection) => collection.getTags());
+    this.syncProgress.set({ total: datasets.length, done: 0 });
+    this.syncPending.set(new Set(datasets.map(({ category, method, source }) => `${category}|${method}|${source}`)));
     this.loading.set(false);
-    
-    // Finish loading datasets
-    this.syncProgress.set({ total: resourceCollections.length, done: 0 });
-    resourceCollections.forEach((collection) => {
-      const { category, method, source } = collection.getTags();
-      this.syncDataset(category, method, source).finally(() =>
-        this.syncProgress.update(({ total, done }) => ({ total, done: done + 1 }))
-      );
-    });
-    
+    this.seeded.set(true);
+    this.syncQueue.push(...datasets.map(({ category, method, source }) => ({ category, method, source })));
+    this.pumpSyncQueue();
+  }
+
+  /**
+   * Whether the first pass of loading has not finished yet, so it isn't known what data exists.
+   */
+  get firstPassLoading(): Readable<boolean> {
+    return derived([this.seeded, this.loading], ([$seeded, $loading]) => !$seeded || $loading);
+  }
+
+  /**
+   * Whether any dataset of the given category and method is still loading in. False once the
+   * first pass is done and there is no such dataset, or all of them have finished.
+   */
+  datasetsLoading(category: string, method: string): Readable<boolean> {
+    const prefix = `${category}|${method}|`;
+    return derived(this.syncPending, ($pending) => [...$pending].some((key) => key.startsWith(prefix)));
+  }
+
+  /**
+   * Syncs datasets of the given category and method ahead of the others, including ones whose
+   * sync has not started yet. Returns a function that removes the priority again.
+   */
+  prioritizeDatasets(category: string, method: string): () => void {
+    const key = `${category}|${method}`;
+    this.priorities.set(key, (this.priorities.get(key) ?? 0) + 1);
+    return () => {
+      const remaining = (this.priorities.get(key) ?? 1) - 1;
+      if (remaining > 0) this.priorities.set(key, remaining);
+      else this.priorities.delete(key);
+    };
+  }
+
+  // Starts queued dataset syncs, up to a limit at a time, prioritized datasets first
+  private pumpSyncQueue(): void {
+    while (this.activeSyncs < SYNC_CONCURRENCY && this.syncQueue.length > 0) {
+      const priorityIndex = this.syncQueue.findIndex(({ category, method }) => this.priorities.has(`${category}|${method}`));
+      const [next] = this.syncQueue.splice(priorityIndex === -1 ? 0 : priorityIndex, 1);
+      this.activeSyncs++;
+      this.syncDataset(next.category, next.method, next.source).finally(() => {
+        this.activeSyncs--;
+        this.syncPending.update((pending) => {
+          const remaining = new Set(pending);
+          remaining.delete(`${next.category}|${next.method}|${next.source}`);
+          return remaining;
+        });
+        this.syncProgress.update(({ total, done }) => ({ total, done: done + 1 }));
+        this.pumpSyncQueue();
+      });
+    }
   }
 
   private async seedUserResources(): Promise<Array<ResourceCollection> | undefined> {
