@@ -43,7 +43,7 @@
   <Collapse isOpen={panelOpen}>
     <Card class="mt-3 mb-3 shadow-sm">
       <CardBody>
-        <FilterPanel {filters} {categorizedStore} {showSections} on:done={() => (panelOpen = false)} />
+        <FilterPanel {filters} {categorizedStore} {showSections} open={panelOpen} on:done={() => (panelOpen = false)} />
       </CardBody>
     </Card>
   </Collapse>

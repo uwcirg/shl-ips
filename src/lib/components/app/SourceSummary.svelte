@@ -13,6 +13,9 @@
 
   // When given, pills toggle their source in the filter; with none selected, all sources show
   export let filters: ResourceFilterStore | undefined = undefined;
+  // Whether the pills are showing. With a filter, selected sources are moved to the front each time
+  // this becomes true and when the row is expanded or collapsed, but not while picking
+  export let open = true;
 
   let fhirDataService: FHIRDataService = getContext('fhirDataService');
   let loading;
@@ -20,14 +23,25 @@
   let displaySourceNames = derived(colorMap, ($colorMap) => {
     return Array.from($colorMap.keys());
   });
+  let frontSources = new Set<string>();
+  const refreshSourceOrder = () => (frontSources = new Set(filters ? $filters.sources : []));
+  $: if (open) refreshSourceOrder();
+  // Selected sources as of the last refresh come first, right after "All"
+  $: orderedSourceNames = [
+    ...$displaySourceNames.filter((source) => frontSources.has(source)),
+    ...$displaySourceNames.filter((source) => !frontSources.has(source))
+  ];
 </script>
 
 {#if $displaySourceNames}
-  <PillScroller class={className} loading={$loading} watch={[$displaySourceNames, $filters?.sources.size]}>
+  <PillScroller class={className} loading={$loading} watch={[orderedSourceNames, $filters?.sources.size]}
+    on:expand={refreshSourceOrder}
+    on:collapse={refreshSourceOrder}
+  >
     {#if filters}
       <SourcePill name="All" selected={$filters.sources.size === 0} on:click={filters.clearSources} />
     {/if}
-    {#each $displaySourceNames as source}
+    {#each orderedSourceNames as source (source)}
       <SourcePill
         name={source}
         color={$colorMap.get(source)}

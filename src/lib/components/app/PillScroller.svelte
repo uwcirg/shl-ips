@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, tick } from 'svelte';
+  import { createEventDispatcher, onMount, tick } from 'svelte';
   import { Card, CardBody, Col, Row, Spinner } from '@sveltestrap/sveltestrap';
 
   let className = '';
@@ -8,6 +8,9 @@
   export let loading = false;
   // Changes whenever the pills change, so overflow is re-measured
   export let watch: unknown = undefined;
+
+  // Fired when the user expands or collapses the row, so a host can reorder its pills then
+  const dispatch = createEventDispatcher<{ expand: void; collapse: void }>();
 
   // Pills (any elements) go in the default slot: one scrollable line, expandable to wrap
   let expanded = false;
@@ -74,12 +77,12 @@
           <div class="see-start-overlay" class:scrollbar-overlay={overlayScrollbars}></div>
         {/if}
         {#if !expanded && isOverflowing}
-          <button class="see-all-overlay" class:scrollbar-overlay={overlayScrollbars} on:click={() => (expanded = true)}>See all</button>
+          <button class="see-all-overlay" class:scrollbar-overlay={overlayScrollbars} on:click={() => { expanded = true; dispatch('expand'); }}>See all</button>
         {/if}
       </div>
       {#if expanded}
         <div class="d-flex justify-content-end mt-2">
-          <button class="collapse-btn" on:click={() => { expanded = false; scrollLeft = 0; tick().then(checkOverflow); }}>Collapse</button>
+          <button class="collapse-btn" on:click={() => { expanded = false; scrollLeft = 0; tick().then(checkOverflow); dispatch('collapse'); }}>Collapse</button>
         </div>
       {/if}
     {/if}

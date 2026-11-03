@@ -15,9 +15,21 @@
   export let categorizedStore: ReturnType<typeof createCategorizedStore> = getContext('categorizedStore');
   // Pages already scoped to one section have nothing to choose between
   export let showSections = true;
+  // Whether the panel is showing. Selected pills are moved to the front each time it opens, and
+  // when a row is expanded or collapsed, but never while picking, so the pills stay where they are
+  // while the user is clicking through them.
+  export let open = true;
 
   const unitsStore = categorizedStore.unitsStore;
   $: sectionNames = Object.keys($unitsStore).sort((a, b) => a.localeCompare(b));
+  let frontSections = new Set<string>();
+  const refreshSectionOrder = () => (frontSections = new Set($filters.sections));
+  $: if (open) refreshSectionOrder();
+  // Selected categories as of the last refresh come first, right after "All"
+  $: orderedSections = [
+    ...sectionNames.filter((section) => frontSections.has(section)),
+    ...sectionNames.filter((section) => !frontSections.has(section))
+  ];
   const isActive = filters.isActive;
 
   // The host (card or dropdown) closes itself on this
@@ -29,16 +41,19 @@
   <h6 class="mb-0">Sources</h6>
   <FilterCountBadge count={$filters.sources.size} label="sources" on:click={filters.clearSources} />
 </div>
-<SourceSummary class="mb-3" {filters} />
+<SourceSummary class="mb-3" {filters} {open} />
 
 {#if showSections}
   <div class="d-flex align-items-center gap-2 mb-1">
     <h6 class="mb-0">Categories</h6>
     <FilterCountBadge count={$filters.sections.size} label="categories" on:click={filters.clearSections} />
   </div>
-  <PillScroller class="mb-3" watch={[sectionNames, $filters.sections.size]}>
+  <PillScroller class="mb-3" watch={[orderedSections, $filters.sections.size]}
+    on:expand={refreshSectionOrder}
+    on:collapse={refreshSectionOrder}
+  >
     <SourcePill name="All" selected={$filters.sections.size === 0} on:click={filters.clearSections} />
-    {#each sectionNames as section (section)}
+    {#each orderedSections as section (section)}
       <SourcePill
         name={categoryTitle(section)}
         selected={$filters.sections.has(section)}
