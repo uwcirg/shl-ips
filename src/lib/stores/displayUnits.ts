@@ -18,8 +18,8 @@ import type { DeviceUseStatement, DiagnosticReport, Encounter, Observation } fro
 import {
   buildObservationPanels,
   buildObservationSeries,
+  chartScalesFor,
   getCodeLabel,
-  getDisplayUnit,
   type ChartLine
 } from '$lib/utils/observationSparkline';
 
@@ -58,11 +58,13 @@ export const unitItems = (unit: DisplayUnit): CategorizedResource[] =>
 export const OBSERVATION_SERIES = 'observationSeries';
 
 export interface ObservationSeriesData {
-  lines: ChartLine[]; // one line for a plain value series, one per component for a panel
+  // One line per unit scale (at most two) for a plain value series, one per component for a panel.
+  // A series' members can include points that are in neither scale, which have no point on a line.
+  lines: ChartLine[];
 }
 
-// Observations with a numeric value that share a code and unit with at least one other
-// Observation become a series. Panels (e.g. blood pressure) whose numeric values live in
+// Observations with a numeric value that share a code with at least one other Observation become
+// a series. Values in different units are charted on separate scales. Panels (e.g. blood pressure) whose numeric values live in
 // components group by panel code, with one line per component. Sources are merged; each
 // point carries its source.
 export const observationSeriesGrouper: Grouper<ObservationSeriesData> = {
@@ -74,15 +76,20 @@ export const observationSeriesGrouper: Grouper<ObservationSeriesData> = {
 
     for (const [key, series] of buildObservationSeries(seriesItems)) {
       if (series.length < 2) continue;
+      // Without a unit used by more than one observation there is nothing to chart
+      const scales = chartScalesFor(series);
+      if (scales.length === 0) continue;
       const members = series.map(point => byTempId.get(point.id)!);
       const first = members[0].rh.resource as Observation;
-      const line: ChartLine = {
-        key,
-        label: getCodeLabel(first.code),
-        unit: getDisplayUnit(first.valueQuantity),
-        points: series
-      };
-      results.push({ key, members, data: { lines: [line] } });
+      const label = getCodeLabel(first.code);
+      const lines: ChartLine[] = scales.map((scale, axis) => ({
+        key: `${key}|${scale.unit}`,
+        label,
+        unit: scale.unitLabel,
+        axis,
+        points: scale.points
+      }));
+      results.push({ key, members, data: { lines } });
     }
 
     for (const [key, panel] of buildObservationPanels(seriesItems)) {

@@ -2,8 +2,11 @@
   import { createEventDispatcher } from 'svelte';
   import type { ChartLine, SparklinePoint } from '$lib/utils/observationSparkline';
 
-  // One or more lines sharing a time axis and a y axis. Points are always coloured by source
-  // (colorFor). Lines stay neutral and are told apart by dash pattern, with a legend.
+  // One or more lines sharing a time axis. Points are always coloured by source (colorFor). Lines
+  // stay neutral and are told apart by dash pattern, with a legend.
+  // Lines normally share one y axis (labelled with `unit`). When some lines have `axis: 1` (the same
+  // measurement in a second unit), that axis is drawn on the right with its own scale and unit, and
+  // selecting a point highlights the axis it is read against.
   export let lines: ChartLine[] = [];
   export let selectedId: string | undefined = undefined;
   export let unit = '';
@@ -15,16 +18,32 @@
   const width = 360;
   const height = 140;
   const padLeft = 40;
-  const padRight = 12;
+  const padRightSingle = 12;
+  const padRightDual = 40;
   const padTop = 24;
   const padBottom = 26;
 
   $: multi = lines.length > 1;
+  $: dual = lines.some(line => (line.axis ?? 0) > 0);
+  $: padRight = dual ? padRightDual : padRightSingle;
   $: allPoints = lines.flatMap(line => line.points);
-  $: ys = allPoints.map(p => p.y);
-  $: minY = ys.length ? Math.min(...ys) : 0;
-  $: maxY = ys.length ? Math.max(...ys) : 0;
-  $: span = maxY - minY;
+  // The value range of each axis; one axis unless there is a second
+  $: ranges = [0, 1].slice(0, dual ? 2 : 1).map(axis => {
+    const axisYs = lines.filter(line => (line.axis ?? 0) === axis).flatMap(line => line.points.map(p => p.y));
+    const min = axisYs.length ? Math.min(...axisYs) : 0;
+    const max = axisYs.length ? Math.max(...axisYs) : 0;
+    return { min, max, span: max - min };
+  });
+  const axisUnit = (axis: number) =>
+    dual ? lines.find(line => (line.axis ?? 0) === axis)?.unit ?? '' : unit;
+  // The axis the selected point is read against
+  $: selected = (() => {
+    for (const line of lines) {
+      const point = line.points.find(p => p.id === selectedId);
+      if (point) return { point, axis: line.axis ?? 0, line };
+    }
+    return undefined;
+  })();
   $: times = allPoints.map(p => p.time);
   $: minT = times.length ? Math.min(...times) : 0;
   $: maxT = times.length ? Math.max(...times) : 0;
@@ -44,10 +63,11 @@
     return padLeft + ((rankById.get(p.id) ?? 0) * inner) / (count - 1);
   }
   // Higher value -> higher on the chart (smaller pixel y). Flat series centers.
-  function yFor(v: number): number {
+  function yFor(v: number, axis = 0): number {
     const inner = height - padTop - padBottom;
+    const { min, span } = ranges[axis] ?? ranges[0];
     if (span === 0) return padTop + inner / 2;
-    return padTop + inner - ((v - minY) / span) * inner;
+    return padTop + inner - ((v - min) / span) * inner;
   }
 
   function formatDate(time: number): string {
@@ -60,9 +80,10 @@
   const DASHES = [undefined, '7 4', '1 5', '8 3 1 3'];
   const dashFor = (i: number) => DASHES[i % DASHES.length];
   const pointColor = (p: SparklinePoint): string => colorFor(p.source) ?? NEUTRAL_COLOR;
+  const unitFor = (line: ChartLine) => (dual ? line.unit : unit);
   function tooltip(line: ChartLine, p: SparklinePoint): string {
     const parts = [multi ? `${line.label}: ${formatValue(p.y)}` : formatValue(p.y)];
-    if (unit) parts[0] += ` ${unit}`;
+    if (unitFor(line)) parts[0] += ` ${unitFor(line)}`;
     if (formatDate(p.time)) parts.push(formatDate(p.time));
     return parts.join(', ');
   }
@@ -77,7 +98,7 @@
             <svg class="legend-key" width="22" height="6" viewBox="0 0 22 6" aria-hidden="true">
               <line x1="1" y1="3" x2="21" y2="3" class="legend-line" stroke-dasharray={dashFor(i)} />
             </svg>
-            <span class="legend-label">{line.label}</span>
+            <span class="legend-label">{line.label}{dual && line.unit ? ` (${line.unit})` : ''}</span>
           </li>
         {/each}
       </ul>
@@ -89,21 +110,30 @@
       role="img"
       aria-label={`Trend of ${lines.map(l => l.label).filter(Boolean).join(', ') || 'values'}`}
     >
-      <line x1={padLeft} y1={padTop} x2={padLeft} y2={height - padBottom} class="axis" />
+      <line x1={padLeft} y1={padTop} x2={padLeft} y2={height - padBottom} class="axis" class:axis-active={dual && selected?.axis === 0} />
       <line x1={padLeft} y1={height - padBottom} x2={width - padRight} y2={height - padBottom} class="axis" />
-      <text x={padLeft - 4} y={yFor(maxY)} text-anchor="end" dominant-baseline="middle" font-size="9" class="axis-label">{formatValue(maxY)}</text>
-      {#if span !== 0}
-        <text x={padLeft - 4} y={yFor(minY)} text-anchor="end" dominant-baseline="middle" font-size="9" class="axis-label">{formatValue(minY)}</text>
+      {#if dual}
+        <line x1={width - padRight} y1={padTop} x2={width - padRight} y2={height - padBottom} class="axis" class:axis-active={selected?.axis === 1} />
       {/if}
-      {#if unit}
-        <text x="2" y="9" text-anchor="start" font-size="9" class="axis-label">{unit}</text>
-      {/if}
+      {#each ranges as range, axis}
+        {@const right = axis === 1}
+        {@const x = right ? width - padRight + 4 : padLeft - 4}
+        {@const anchor = right ? 'start' : 'end'}
+        {@const active = dual && selected?.axis === axis}
+        <text {x} y={yFor(range.max, axis)} text-anchor={anchor} dominant-baseline="middle" font-size="9" class="axis-label" class:axis-label-active={active} class:axis-label-dim={dual && selected && !active}>{formatValue(range.max)}</text>
+        {#if range.span !== 0}
+          <text {x} y={yFor(range.min, axis)} text-anchor={anchor} dominant-baseline="middle" font-size="9" class="axis-label" class:axis-label-active={active} class:axis-label-dim={dual && selected && !active}>{formatValue(range.min)}</text>
+        {/if}
+        {#if axisUnit(axis)}
+          <text x={right ? width - 2 : 2} y="9" text-anchor={right ? 'end' : 'start'} font-size="9" class="axis-label" class:axis-label-active={active} class:axis-label-dim={dual && selected && !active}>{axisUnit(axis)}</text>
+        {/if}
+      {/each}
       <text x={padLeft} y={height - 8} text-anchor="start" font-size="9" class="axis-label">{formatDate(minT)}</text>
       <text x={width - padRight} y={height - 8} text-anchor="end" font-size="9" class="axis-label">{formatDate(maxT)}</text>
 
       {#each lines as line, i}
         <polyline
-          points={line.points.map(p => `${xFor(p)},${yFor(p.y)}`).join(' ')}
+          points={line.points.map(p => `${xFor(p)},${yFor(p.y, line.axis ?? 0)}`).join(' ')}
           fill="none"
           class="series-line"
           stroke-dasharray={dashFor(i)}
@@ -117,7 +147,7 @@
           <!-- svelte-ignore a11y-click-events-have-key-events -->
           <circle
             cx={xFor(p)}
-            cy={yFor(p.y)}
+            cy={yFor(p.y, line.axis ?? 0)}
             r={p.id === selectedId ? 7 : 4}
             style:fill={pointColor(p)}
             class="point"
@@ -130,6 +160,17 @@
           </circle>
         {/each}
       {/each}
+      {#if dual && selected}
+        <!-- Says which scale the selected point is read against, in that scale's unit -->
+        <text
+          x={Math.min(Math.max(xFor(selected.point), padLeft + 14), width - padRight - 14)}
+          y={Math.max(yFor(selected.point.y, selected.axis) - 11, 10)}
+          text-anchor="middle"
+          font-size="10"
+          font-weight="600"
+          class="selected-label"
+        >{formatValue(selected.point.y)} {selected.line.unit}</text>
+      {/if}
     </svg>
   </div>
 {/if}
@@ -151,6 +192,18 @@
   }
   .axis-label {
     fill: var(--axis-text);
+  }
+  .axis-label-active,
+  .selected-label {
+    fill: var(--bs-primary, #0d6efd);
+    font-weight: 600;
+  }
+  .axis-label-dim {
+    opacity: 0.45;
+  }
+  .axis.axis-active {
+    stroke: var(--bs-primary, #0d6efd);
+    stroke-width: 2;
   }
   /* 2px ring in the surface colour keeps overlapping points legible */
   .point {

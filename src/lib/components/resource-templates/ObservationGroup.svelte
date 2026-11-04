@@ -28,6 +28,8 @@
   $: members = unit.members;
   $: primary = asObservation(members[0].rh);
   $: valueUnit = unit.data.lines[0]?.unit ?? '';
+  // Readings in a unit the chart has no scale for stay in the list but have no point on the chart
+  $: chartedIds = new Set(unit.data.lines.flatMap(line => line.points.map(point => point.id)));
 
   const INITIAL_READINGS = 3;
 
@@ -80,7 +82,12 @@
             <Date fields={choiceDTFields('effective', resource)} />
           {/if}
         </span>
-        <span class="reading-value">{getObservationDisplayValue(resource) ?? ''}</span>
+        <span class="reading-value">
+          {getObservationDisplayValue(resource) ?? ''}
+          {#if !chartedIds.has(id)}
+            <span class="reading-uncharted" title="Measured in a different unit than the values charted above">not displayed</span>
+          {/if}
+        </span>
         <span class="reading-source">
           {#if showSources && name}
             <GroupSourceDot source={member.source} />
@@ -139,6 +146,13 @@
   .reading-value {
     flex: 1 1 auto;
     font-weight: 600;
+  }
+  .reading-uncharted {
+    margin-left: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 400;
+    font-style: italic;
+    color: var(--bs-secondary-color, #6c757d);
   }
   .reading-source {
     display: flex;

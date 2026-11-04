@@ -41,19 +41,27 @@ export function getObservationNumericValue(observation: Observation | Observatio
   return undefined;
 }
 
-// The unit a numeric value is expressed in. Differing units must not share a
-// series, since the y values wouldn't be comparable.
+// The unit a numeric value is expressed in. Values in different units share a series but not a
+// scale: each unit is charted on its own axis (see chartScalesFor).
 function getObservationUnit(observation: Observation): string {
   const q = observation.valueQuantity;
   return q?.code ?? q?.unit ?? '';
 }
 
-// Key an Observation by its primary code coding and value unit (system|code|unit)
-// so that observations measuring the same thing in the same units group together.
+// The distinct system|code pairs an Observation is coded with, in order
+function getObservationCodes(observation: Observation): string[] {
+  const codes = (observation.code?.coding ?? [])
+    .filter(c => c.code)
+    .map(c => `${c.system ?? ''}|${c.code}`);
+  return [...new Set(codes)];
+}
+
+// Key an Observation by its primary code coding (system|code), so that observations measuring the
+// same thing group together whatever their unit.
+// This is the observation's own key; see buildObservationSeriesIndex for how an Observation
+// coded with only a secondary code of a multi-coded series joins that series instead.
 export function getObservationCodeKey(observation: Observation): string | undefined {
-  const coding = observation.code?.coding?.find(c => c.code);
-  if (!coding?.code) return undefined;
-  return `${coding.system ?? ''}|${coding.code}|${getObservationUnit(observation)}`;
+  return getObservationCodes(observation)[0];
 }
 
 export interface SparklinePoint {
@@ -61,6 +69,8 @@ export interface SparklinePoint {
   y: number;       // numeric value
   time: number;    // effective date in ms, for ordering
   source?: string; // source the observation came from, for per-point marking across merged sources
+  unit?: string;      // unit the value is expressed in (comparison form); points sharing it share a scale
+  unitLabel?: string; // the unit as displayed
 }
 
 export interface SeriesItem {
@@ -69,47 +79,139 @@ export interface SeriesItem {
   source?: string;
 }
 
-// Build a map from code-key to a date-sorted series of numeric points, across
-// all the given items.
-export function buildObservationSeries(
-  items: SeriesItem[]
-): Map<string, SparklinePoint[]> {
-  const groups = new Map<string, SparklinePoint[]>();
+export interface SeriesIndex {
+  // Date-sorted numeric points by series key
+  series: Map<string, SparklinePoint[]>;
+  // The series key an Observation was placed under, if it has a numeric value and a code
+  keyOf(resource: Resource): string | undefined;
+}
+
+// Build the date-sorted series of numeric points, across all the given items.
+//
+// Observations are keyed by their first code. An Observation coded with several codes
+// (e.g. height, body height, vital signs) defines a series by its first code; one coded with a
+// single code joins such a series when its code is among the series' codes, so "body height"
+// alone is charted with the observations that carry body height among others. Units don't split
+// a series: points carry their unit, and the chart gives each unit its own scale.
+// Only multi-coded observations are matched this way, so a broad code like "vital signs" that
+// appears alongside others can't pull in observations that merely share it: single-coded
+// observations are only matched on their one code.
+export function buildObservationSeriesIndex(items: SeriesItem[]): SeriesIndex {
+  interface Candidate {
+    id: string;
+    resource: Observation;
+    source?: string;
+    y: number;
+    time: number;
+    codes: string[];
+    unit: string;
+    unitLabel: string;
+  }
+  const candidates: Candidate[] = [];
   for (const { id, resource, source } of items) {
     if (resource.resourceType !== 'Observation') continue;
-    const key = getObservationCodeKey(resource);
-    if (!key) continue;
+    const codes = getObservationCodes(resource);
+    if (codes.length === 0) continue;
     const y = getObservationNumericValue(resource);
     if (y === undefined) continue;
     const date = getFHIRDateAndPrecision(resource, 'effective');
-    const time = date ? date.date.getTime() : 0;
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key)!.push({ id, y, time, source });
+    candidates.push({ id, resource, source, y, time: date ? date.date.getTime() : 0, codes, unit: getObservationUnit(resource), unitLabel: getDisplayUnit(resource.valueQuantity) });
   }
-  for (const series of groups.values()) {
-    series.sort((a, b) => a.time - b.time);
+
+  // The series defined by multi-coded observations, with every code their members carry
+  const multiCoded = new Map<string, { codes: Set<string>, count: number }>();
+  for (const { codes } of candidates) {
+    if (codes.length < 2) continue;
+    const group = multiCoded.get(codes[0]) ?? { codes: new Set(), count: 0 };
+    codes.forEach(code => group.codes.add(code));
+    group.count++;
+    multiCoded.set(codes[0], group);
   }
-  return groups;
+
+  function keyFor({ codes }: Candidate): string {
+    if (codes.length > 1) return codes[0];
+    // Of the multi-coded series this code belongs to, the best-populated one
+    let best: { key: string, count: number } | undefined;
+    for (const [key, group] of multiCoded) {
+      if (!group.codes.has(codes[0])) continue;
+      if (!best || group.count > best.count) best = { key, count: group.count };
+    }
+    return best?.key ?? codes[0];
+  }
+
+  const series = new Map<string, SparklinePoint[]>();
+  const keyByResource = new Map<Resource, string>();
+  const keyById = new Map<string, string>();
+  for (const candidate of candidates) {
+    const key = keyFor(candidate);
+    keyByResource.set(candidate.resource, key);
+    if (candidate.id !== undefined) keyById.set(candidate.id, key);
+    if (!series.has(key)) series.set(key, []);
+    series.get(key)!.push({
+      id: candidate.id,
+      y: candidate.y,
+      time: candidate.time,
+      source: candidate.source,
+      unit: candidate.unit,
+      unitLabel: candidate.unitLabel
+    });
+  }
+  for (const points of series.values()) {
+    points.sort((a, b) => a.time - b.time);
+  }
+  return {
+    series,
+    keyOf: (resource) => keyByResource.get(resource) ?? (resource.id !== undefined ? keyById.get(resource.id) : undefined)
+  };
+}
+
+// Just the series, by key
+export function buildObservationSeries(items: SeriesItem[]): Map<string, SparklinePoint[]> {
+  return buildObservationSeriesIndex(items).series;
 }
 
 // Convenience for callers that only have bare resources (keys points by resource.id).
-export function buildObservationSeriesMap(
-  resources: Resource[]
-): Map<string, SparklinePoint[]> {
-  return buildObservationSeries(resources.map(resource => ({ id: resource.id, resource })));
+export function buildObservationSeriesMap(resources: Resource[]): SeriesIndex {
+  return buildObservationSeriesIndex(resources.map(resource => ({ id: resource.id, resource })));
 }
 
 // The date-sorted series for a single value, or undefined when there aren't
 // enough shared-code points to draw a meaningful sparkline.
 export function sparklineSeriesFor(
   resource: Observation,
-  seriesMap: Map<string, SparklinePoint[]>
+  index: SeriesIndex
 ): SparklinePoint[] | undefined {
   if (resource.resourceType !== 'Observation') return undefined;
-  const key = getObservationCodeKey(resource);
+  const key = index.keyOf(resource) ?? getObservationCodeKey(resource);
   if (!key) return undefined;
-  const series = seriesMap.get(key);
+  // Only values in the observation's own unit are comparable with it
+  const unit = getObservationUnit(resource);
+  const series = index.series.get(key)?.filter(point => (point.unit ?? '') === unit);
   return series && series.length >= 2 ? series : undefined;
+}
+
+// A series' points split into scales, one per unit, with the most common units first. A chart has
+// room for two axes, and a unit only gets one when more than one observation uses it (a lone value
+// in its own unit can't draw a line against its own scale). Points in any other unit stay in the
+// list, without a point on the chart.
+export const MAX_CHART_SCALES = 2;
+export interface ChartScale {
+  unit: string;      // comparison form
+  unitLabel: string; // as displayed
+  points: SparklinePoint[];
+}
+export function chartScalesFor(points: SparklinePoint[]): ChartScale[] {
+  const scales = new Map<string, ChartScale>();
+  for (const point of points) {
+    const unit = point.unit ?? '';
+    if (!scales.has(unit)) scales.set(unit, { unit, unitLabel: point.unitLabel ?? unit, points: [] });
+    scales.get(unit)!.points.push(point);
+  }
+  // Array.prototype.sort is stable, so units with equally many points stay in order of first use
+  return [...scales.values()]
+    .filter(scale => scale.points.length >= 2)
+    .sort((a, b) => b.points.length - a.points.length)
+    .slice(0, MAX_CHART_SCALES);
 }
 
 // Find the value[x] field on an Observation (or Observation.component) and
@@ -153,6 +255,9 @@ export interface ChartLine {
   key: string;
   label: string;
   unit: string;  // display unit
+  // Which y axis the line is read against: 0 (left, the default) or 1 (right). Lines of one
+  // observation code in different units each get their own axis.
+  axis?: number;
   points: SparklinePoint[]; // date-sorted ascending
 }
 
@@ -206,17 +311,59 @@ export interface ObservationPanel {
 
 // Group Observations that have no numeric value of their own but have numeric
 // components, by panel code. Each component code becomes one line.
+//
+// As with series (see buildObservationSeriesIndex), a panel is defined by the first code of its
+// multi-coded observations, and a single-coded observation joins the panel whose codes include its
+// code. Here it must also share at least one numeric component code with that panel, so a code that
+// merely appears in a panel's code set can't pull in an observation of something else.
 export function buildObservationPanels(items: SeriesItem[]): Map<string, ObservationPanel> {
-  const panels = new Map<string, { lines: Map<string, ChartLine>, memberIds: Set<string>, unitCodes: Set<string> }>();
+  interface Candidate {
+    id: string;
+    resource: Observation;
+    source?: string;
+    time: number;
+    codes: string[];
+    componentValues: ComponentValue[];
+  }
+  const candidates: Candidate[] = [];
   for (const { id, resource, source } of items) {
     if (resource.resourceType !== 'Observation') continue;
     if (getObservationNumericValue(resource) !== undefined) continue;
-    const panelKey = codingKey(resource.code);
-    if (!panelKey) continue;
+    const codes = getObservationCodes(resource);
+    if (codes.length === 0) continue;
     const componentValues = getObservationComponentValues(resource);
     if (componentValues.length === 0) continue;
     const date = getFHIRDateAndPrecision(resource, 'effective');
-    const time = date ? date.date.getTime() : 0;
+    candidates.push({ id, resource, source, time: date ? date.date.getTime() : 0, codes, componentValues });
+  }
+
+  // The panels defined by multi-coded observations, with every code and numeric component code
+  // their members carry
+  const multiCoded = new Map<string, { codes: Set<string>, componentKeys: Set<string>, count: number }>();
+  for (const { codes, componentValues } of candidates) {
+    if (codes.length < 2) continue;
+    const group = multiCoded.get(codes[0]) ?? { codes: new Set(), componentKeys: new Set(), count: 0 };
+    codes.forEach(code => group.codes.add(code));
+    componentValues.forEach(cv => group.componentKeys.add(cv.key));
+    group.count++;
+    multiCoded.set(codes[0], group);
+  }
+
+  function panelKeyFor({ codes, componentValues }: Candidate): string {
+    if (codes.length > 1) return codes[0];
+    // Of the multi-coded panels this code belongs to, and that share a component, the best-populated
+    let best: { key: string, count: number } | undefined;
+    for (const [key, group] of multiCoded) {
+      if (!group.codes.has(codes[0]) || !componentValues.some(cv => group.componentKeys.has(cv.key))) continue;
+      if (!best || group.count > best.count) best = { key, count: group.count };
+    }
+    return best?.key ?? codes[0];
+  }
+
+  const panels = new Map<string, { lines: Map<string, ChartLine>, memberIds: Set<string>, unitCodes: Set<string> }>();
+  for (const candidate of candidates) {
+    const { id, source, time, componentValues } = candidate;
+    const panelKey = panelKeyFor(candidate);
     if (!panels.has(panelKey)) panels.set(panelKey, { lines: new Map(), memberIds: new Set(), unitCodes: new Set() });
     const panel = panels.get(panelKey)!;
     panel.memberIds.add(id);
