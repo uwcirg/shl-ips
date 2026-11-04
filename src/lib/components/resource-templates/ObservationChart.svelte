@@ -165,16 +165,33 @@
           </circle>
         {/each}
       {/each}
-      {#if dual && selected}
-        <!-- Says which scale the selected point is read against, in that scale's unit -->
-        <text
-          x={Math.min(Math.max(xFor(selected.point), padLeft + 14), width - padRight - 14)}
-          y={Math.max(yFor(selected.point.y, selected.axis) - 11, 10)}
-          text-anchor="middle"
-          font-size="10"
-          font-weight="600"
-          class="selected-label"
-        >{formatValue(selected.point.y)} {selected.line.unit}</text>
+      {#if selected}
+        <!-- The selected point's value, in the unit of the scale it is read against (which, with
+             two axes, also says which one applies), on a rounded box (no border) so it reads over the chart -->
+        {@const text = `${formatValue(selected.point.y)}${unitFor(selected.line) ? ` ${unitFor(selected.line)}` : ''}`}
+        {@const boxWidth = text.length * 6 + 2}
+        {@const boxHeight = 14}
+        {@const centerX = Math.min(Math.max(xFor(selected.point), boxWidth / 2 + 2), width - boxWidth / 2 - 2)}
+        {@const centerY = Math.max(yFor(selected.point.y, selected.axis) - 14, boxHeight / 2 + 1)}
+        <g class="selected-callout" pointer-events="none">
+          <rect
+            x={centerX - boxWidth / 2}
+            y={centerY - boxHeight / 2}
+            width={boxWidth}
+            height={boxHeight}
+            rx="4"
+            class="selected-box"
+          />
+          <text
+            x={centerX}
+            y={centerY}
+            text-anchor="middle"
+            dominant-baseline="central"
+            font-size="10"
+            font-weight="600"
+            class="selected-label"
+          >{text}</text>
+        </g>
       {/if}
     </svg>
   </div>
@@ -202,6 +219,9 @@
   .selected-label {
     fill: var(--bs-primary, #0d6efd);
     font-weight: 600;
+  }
+  .selected-box {
+    fill: var(--bs-body-bg, #fff);
   }
   .axis-label-dim {
     opacity: 0.45;
