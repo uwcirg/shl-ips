@@ -16,13 +16,16 @@
     let postfix = "";
     let periodStartOnly = period;
     let sameDay = false;
+    let endOnly = false;
     if (fields.period) {
       let start = formatDate(fields.period.start);
       let end = formatDate(fields.period.end);
       periodStartOnly = (periodStartOnly || fields.period.start) && !fields.period.end;
       // A period starting and ending on the same (formatted) date shows just that date
       sameDay = !!(fields.period.start && fields.period.end && start === end);
-      date = `${start}${fields.period.end && !sameDay ? ' - '+end : ""}`;
+      // A period with only an end shows as "Before X", like one with only a start shows "Since X"
+      endOnly = !!fields.period.end && !fields.period.start;
+      date = endOnly ? end : `${start}${fields.period.end && !sameDay ? ' - '+end : ""}`;
     } else if (fields.range) {
       periodStartOnly = periodStartOnly && !fields.range.high;
       date = `${fields.range.low ? fields.range.low.value + fields.range.low.unit : unk}${fields.range.high ? ` - ${fields.range.high+fields.range.high.unit}` : ''}`;
@@ -48,7 +51,9 @@
       );
     }
 
-    if (periodStartOnly) {
+    if (endOnly) {
+      prefix = 'Before ';
+    } else if (periodStartOnly) {
       prefix = `Since ${prefix}`;
     } else if (period && !sameDay) {
       prefix = `From ${prefix}`;
