@@ -6,7 +6,6 @@
   import { hasChoiceDTField } from '$lib/utils/util';
   import DiagnosticReportCard from '$lib/components/resource-templates/DiagnosticReportCard.svelte';
   import GroupShowMore from '$lib/components/resource-templates/GroupShowMore.svelte';
-  import GroupSourceDot from '$lib/components/resource-templates/GroupSourceDot.svelte';
   import ObservationTemplate from '$lib/components/resource-templates/Observation.svelte';
   import ResourceDisplay from '$lib/components/app/ResourceDisplay.svelte';
 
@@ -45,8 +44,6 @@
 
   {#each visibleResults as result (result.rh.tempId)}
     <div class="report-result">
-      <!-- Without source colours this is blank, which keeps the indent that sets results apart from the report -->
-      <GroupSourceDot source={result.source} placeholder class="report-result-marker" />
       <div class="report-result-content">
         {#if result.rh.resource.resourceType === 'Observation'}
           <ObservationTemplate
@@ -64,7 +61,6 @@
   {/each}
   {#each unit.data.unresolved as display}
     <div class="report-result text-muted">
-      <span class="report-result-marker"></span>
       <div class="report-result-content">{display}</div>
     </div>
   {/each}

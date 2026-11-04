@@ -8,8 +8,8 @@
   // Shared look for a DiagnosticReport and its results, used by both the grouped display
   // (DiagnosticReportGroup) and the single-resource template (DiagnosticReport).
   // Slots: "actions" (top right of the header) and the default slot for result rows, which
-  // should use the `report-result` / `report-result-content` classes, and lead with a
-  // `report-result-marker` (or a GroupSourceDot given that class) so results indent under the report.
+  // should use the `report-result` / `report-result-content` classes. The rows are indented under
+  // the report, with a vertical line down their left side marking them as parts of the report.
   // A GroupShowMore can follow the rows.
   export let report: DiagnosticReport;
 
@@ -47,9 +47,13 @@
     gap: 0.75rem;
     margin-bottom: 0.5rem;
   }
+  /* The line and indent show the results as sub-components of the report */
   .report-results {
     display: flex;
     flex-direction: column;
+    margin-left: 0.25rem;
+    padding-left: 0.75rem;
+    border-left: 2px solid var(--bs-gray-400, #ced4da);
   }
   /* Rows are slotted in by the parent, so they need :global to be styled from here */
   .report-card :global(.report-result) {
@@ -60,13 +64,6 @@
   }
   .report-card :global(.report-result + .report-result) {
     border-top: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, 0.1));
-  }
-  /* Empty marker with the size of the group's source dot, so rows indent the same way without one */
-  .report-card :global(.report-result-marker) {
-    flex: 0 0 auto;
-    width: 0.6rem;
-    height: 0.6rem;
-    margin-top: 0.35rem;
   }
   .report-card :global(.report-result-content) {
     flex: 1 1 auto;
