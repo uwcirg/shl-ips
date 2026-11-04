@@ -40,14 +40,13 @@
   $: axisUnits = ranges.map((_, axis) =>
     dual ? lines.find(line => (line.axis ?? 0) === axis)?.unit ?? '' : unit
   );
-  // The axis the selected point is read against
-  $: selected = (() => {
-    for (const line of lines) {
-      const point = line.points.find(p => p.id === selectedId);
-      if (point) return { point, axis: line.axis ?? 0, line };
-    }
-    return undefined;
-  })();
+  // The selected observation's points: one per line it has a value on (e.g. systolic and diastolic),
+  // highest on the chart first. Each is read against its line's axis.
+  $: selectedPoints = lines
+    .flatMap(line => line.points.filter(p => p.id === selectedId).map(point => ({ point, axis: line.axis ?? 0, line })))
+    .sort((a, b) => yFor(a.point.y, a.axis) - yFor(b.point.y, b.axis));
+  // The axes those points are read against, to highlight
+  $: selectedAxes = new Set(selectedPoints.map(sp => sp.axis));
   $: times = allPoints.map(p => p.time);
   $: minT = times.length ? Math.min(...times) : 0;
   $: maxT = times.length ? Math.max(...times) : 0;
@@ -115,22 +114,22 @@
       role="img"
       aria-label={`Trend of ${lines.map(l => l.label).filter(Boolean).join(', ') || 'values'}`}
     >
-      <line x1={padLeft} y1={padTop} x2={padLeft} y2={height - padBottom} class="axis" class:axis-active={dual && selected?.axis === 0} />
+      <line x1={padLeft} y1={padTop} x2={padLeft} y2={height - padBottom} class="axis" class:axis-active={dual && selectedAxes.has(0)} />
       <line x1={padLeft} y1={height - padBottom} x2={width - padRight} y2={height - padBottom} class="axis" />
       {#if dual}
-        <line x1={width - padRight} y1={padTop} x2={width - padRight} y2={height - padBottom} class="axis" class:axis-active={selected?.axis === 1} />
+        <line x1={width - padRight} y1={padTop} x2={width - padRight} y2={height - padBottom} class="axis" class:axis-active={selectedAxes.has(1)} />
       {/if}
       {#each ranges as range, axis}
         {@const right = axis === 1}
         {@const x = right ? width - padRight + 4 : padLeft - 4}
         {@const anchor = right ? 'start' : 'end'}
-        {@const active = dual && selected?.axis === axis}
-        <text {x} y={yFor(range.max, axis)} text-anchor={anchor} dominant-baseline="middle" font-size="9" class="axis-label" class:axis-label-active={active} class:axis-label-dim={dual && selected && !active}>{formatValue(range.max)}</text>
+        {@const active = dual && selectedAxes.has(axis)}
+        <text {x} y={yFor(range.max, axis)} text-anchor={anchor} dominant-baseline="middle" font-size="9" class="axis-label" class:axis-label-active={active} class:axis-label-dim={dual && selectedPoints.length > 0 && !active}>{formatValue(range.max)}</text>
         {#if range.span !== 0}
-          <text {x} y={yFor(range.min, axis)} text-anchor={anchor} dominant-baseline="middle" font-size="9" class="axis-label" class:axis-label-active={active} class:axis-label-dim={dual && selected && !active}>{formatValue(range.min)}</text>
+          <text {x} y={yFor(range.min, axis)} text-anchor={anchor} dominant-baseline="middle" font-size="9" class="axis-label" class:axis-label-active={active} class:axis-label-dim={dual && selectedPoints.length > 0 && !active}>{formatValue(range.min)}</text>
         {/if}
         {#if axisUnits[axis]}
-          <text x={right ? width - 2 : 2} y="9" text-anchor={right ? 'end' : 'start'} font-size="9" class="axis-label" class:axis-label-active={active} class:axis-label-dim={dual && selected && !active}>{axisUnits[axis]}</text>
+          <text x={right ? width - 2 : 2} y="9" text-anchor={right ? 'end' : 'start'} font-size="9" class="axis-label" class:axis-label-active={active} class:axis-label-dim={dual && selectedPoints.length > 0 && !active}>{axisUnits[axis]}</text>
         {/if}
       {/each}
       <text x={padLeft} y={height - 8} text-anchor="start" font-size="9" class="axis-label">{formatDate(minT)}</text>
@@ -165,14 +164,27 @@
           </circle>
         {/each}
       {/each}
-      {#if selected}
-        <!-- The selected point's value, in the unit of the scale it is read against (which, with
-             two axes, also says which one applies), on a rounded box (no border) so it reads over the chart -->
+      {#each selectedPoints as selected, index}
+        <!-- Each selected point's value, in the unit of the scale it is read against (which, with
+             two axes, also says which one applies), on a rounded box (no border) so it reads over
+             the chart. With several points (e.g. systolic and diastolic) the top one's label goes
+             above its point and the others' below theirs, so the labels don't overlap. -->
         {@const text = `${formatValue(selected.point.y)}${unitFor(selected.line) ? ` ${unitFor(selected.line)}` : ''}`}
         {@const boxWidth = text.length * 6 + 2}
         {@const boxHeight = 14}
-        {@const centerX = Math.min(Math.max(xFor(selected.point), boxWidth / 2 + 2), width - boxWidth / 2 - 2)}
-        {@const centerY = Math.max(yFor(selected.point.y, selected.axis) - 14, boxHeight / 2 + 1)}
+        {@const pointX = xFor(selected.point)}
+        {@const pointY = yFor(selected.point.y, selected.axis)}
+        <!-- Below its point when there is room above the x axis; otherwise beside the point, so
+             it covers neither the point nor the axis -->
+        {@const fitsBelow = pointY + 14 + boxHeight / 2 <= height - padBottom}
+        {@const beside = index > 0 && !fitsBelow}
+        {@const fitsRight = pointX + 8 + boxWidth <= width - 2}
+        {@const centerX = beside
+          ? (fitsRight ? pointX + 8 + boxWidth / 2 : pointX - 8 - boxWidth / 2)
+          : Math.min(Math.max(pointX, boxWidth / 2 + 2), width - boxWidth / 2 - 2)}
+        {@const centerY = index === 0
+          ? Math.max(pointY - 14, boxHeight / 2 + 1)
+          : beside ? pointY : pointY + 14}
         <g class="selected-callout" pointer-events="none">
           <rect
             x={centerX - boxWidth / 2}
@@ -192,7 +204,7 @@
             class="selected-label"
           >{text}</text>
         </g>
-      {/if}
+      {/each}
     </svg>
   </div>
 {/if}
