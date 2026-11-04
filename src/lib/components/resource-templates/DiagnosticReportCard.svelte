@@ -68,6 +68,10 @@
   .report-card :global(.report-result-content) {
     flex: 1 1 auto;
     min-width: 0;
-    overflow-x: auto;
+    /* Long text wraps instead of scrolling. A scroll bar here showed up for overflow of a pixel or
+       two, so the row clips rather than scrolls (with a little margin where supported) */
+    overflow-wrap: anywhere;
+    overflow-x: clip;
+    overflow-clip-margin: 0.25rem;
   }
 </style>
