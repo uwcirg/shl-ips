@@ -4,7 +4,7 @@
   import { choiceDTFields } from '$lib/utils/util';
   import ResourceDisplay from '$lib/components/app/ResourceDisplay.svelte';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
-  import Date from '$lib/components/resource-templates/Date.svelte';
+  import DateLine from '$lib/components/resource-templates/DateLine.svelte';
 
   // Shared look for an Encounter and the resources it references, used by both the grouped display
   // (EncounterGroup) and the single-resource template (Encounter). The provider, participants and
@@ -68,6 +68,8 @@
   }
 
   $: rows = relatedRows(encounter);
+  // Whether the Encounter's own details (above the divider) have anything to show
+  $: hasDetails = !!(encounter.class?.display || encounter.serviceType || encounter.reasonCode?.length || disposition);
 </script>
 
 <div class="encounter-card border rounded-4 p-3">
@@ -76,12 +78,16 @@
       {#if types.length > 0}
         <strong>{types.join(', ')}</strong>
       {/if}
+      {#if encounter.period}
+        <DateLine fields={choiceDTFields('period', encounter)} />
+      {/if}
     </div>
     <div class="encounter-actions">
       <slot name="actions" />
     </div>
   </div>
 
+  {#if hasDetails}
   <div class="encounter-rows">
     {#if encounter.class?.display}
       <div class="encounter-row">
@@ -95,18 +101,13 @@
         <div class="encounter-value">{conceptText(encounter.serviceType)}</div>
       </div>
     {/if}
-    {#each encounter.reasonCode ?? [] as reason}
+    {#each encounter.reasonCode ?? [] as reason, index}
       <div class="encounter-row">
-        <span class="encounter-label">Reason</span>
+        <!-- Repeated entries are labelled once; the empty label keeps the values lined up -->
+        <span class="encounter-label">{index === 0 ? 'Reason' : ''}</span>
         <div class="encounter-value"><CodeableConcept codeableConcept={reason} bold={false} /></div>
       </div>
     {/each}
-    {#if encounter.period}
-      <div class="encounter-row">
-        <span class="encounter-label">Date</span>
-        <div class="encounter-value"><Date fields={choiceDTFields('period', encounter)} /></div>
-      </div>
-    {/if}
     {#if disposition}
       <div class="encounter-row">
         <span class="encounter-label">Discharge</span>
@@ -114,13 +115,16 @@
       </div>
     {/if}
   </div>
+  {/if}
 
   {#if rows.length > 0}
-    <div class="encounter-rows encounter-divided">
-      {#each rows as row}
+    <!-- The divider only separates this from details above it, so it is left out when there are none -->
+    <div class="encounter-rows" class:encounter-divided={hasDetails}>
+      {#each rows as row, index}
         {@const resolved = row.reference ? related[row.reference] : undefined}
         <div class="encounter-row">
-          <span class="encounter-label">{row.label}</span>
+          <!-- Consecutive rows with the same label (e.g. several locations) are labelled once -->
+          <span class="encounter-label">{index > 0 && rows[index - 1].label === row.label ? '' : row.label}</span>
           <div class="encounter-value">
             {#if resolved}
               <ResourceDisplay resource={resolved.rh.resource} renderInfo={resolved.renderInfo} />
@@ -149,8 +153,9 @@
     align-items: flex-start;
     gap: 0.75rem;
   }
+  /* A little space between the title and date above and the fields below */
   .encounter-header + .encounter-rows {
-    margin-top: 0.25rem;
+    margin-top: 0.6rem;
   }
   /* Details of the Encounter itself, then the resources it references as a separate block */
   .encounter-divided {
