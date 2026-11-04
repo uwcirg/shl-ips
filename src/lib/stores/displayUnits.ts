@@ -14,7 +14,7 @@ lives on the resource, so every appearance of it stays in sync.
 
 import type { CategorizedResource } from '$lib/stores/categorizedResources';
 import type { ReferenceIndex } from '$lib/utils/referenceIndex';
-import type { DeviceUseStatement, DiagnosticReport, Encounter, Observation } from 'fhir/r4';
+import type { DeviceUseStatement, DiagnosticReport, Encounter, MedicationRequest, MedicationStatement, Observation } from 'fhir/r4';
 import {
   buildObservationPanels,
   buildObservationSeries,
@@ -193,6 +193,40 @@ export const diagnosticReportGrouper: Grouper<DiagnosticReportData> = {
   }
 };
 
+export const MEDICATION = 'medication';
+
+export interface MedicationData {
+  parent: CategorizedResource;     // the MedicationStatement or MedicationRequest
+  medication: CategorizedResource;
+}
+
+// A MedicationStatement or MedicationRequest plus the Medication it references. The statement or
+// request is the anchor: it carries the clinical record (status, dosage, dates), so the group sorts
+// and is categorized as it. A Medication shared by several is shown under each. Ones whose
+// medication can't be resolved (a contained one, or only a code) stay single rows.
+export const medicationGrouper: Grouper<MedicationData> = {
+  type: MEDICATION,
+  group(items, index) {
+    const byTempId = new Map(items.map(item => [item.rh.tempId, item]));
+    const results: GroupResult<MedicationData>[] = [];
+    for (const item of items) {
+      const type = item.rh.resource.resourceType;
+      if (type !== 'MedicationStatement' && type !== 'MedicationRequest') continue;
+      const reference = (item.rh.resource as MedicationStatement | MedicationRequest).medicationReference?.reference;
+      const target = reference ? index.resolve(reference, item.source) : undefined;
+      const medication = target ? byTempId.get(target.rh.tempId) : undefined;
+      if (medication?.rh.resource.resourceType !== 'Medication') continue;
+      results.push({
+        key: `medication:${item.rh.tempId}`,
+        members: [item, medication],
+        anchor: item,
+        data: { parent: item, medication }
+      });
+    }
+    return results;
+  }
+};
+
 export const DEVICE_USE_STATEMENT = 'deviceUseStatement';
 
 export interface DeviceUseStatementData {
@@ -289,6 +323,7 @@ export const defaultGroupers: Grouper[] = [
   diagnosticReportGrouper,
   observationSeriesGrouper,
   observationMembersGrouper,
+  medicationGrouper,
   deviceUseStatementGrouper,
   encounterGrouper
 ];
