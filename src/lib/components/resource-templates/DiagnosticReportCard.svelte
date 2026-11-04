@@ -1,17 +1,19 @@
 <script lang="ts">
   import { Badge } from '@sveltestrap/sveltestrap';
-  import type { DiagnosticReport } from 'fhir/r4';
+  import type { DiagnosticReport, Observation } from 'fhir/r4';
   import { choiceDTFields, hasChoiceDTField } from '$lib/utils/util';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
   import DateLine from '$lib/components/resource-templates/DateLine.svelte';
 
   // Shared look for a DiagnosticReport and its results, used by both the grouped display
   // (DiagnosticReportGroup) and the single-resource template (DiagnosticReport).
-  // Slots: "actions" (top right of the header) and the default slot for result rows, which
+  // Slots: "actions" (top right of the header), "details" (under the date, for more about the
+  // report) and the default slot for result rows, which
   // should use the `report-result` / `report-result-content` classes. The rows are indented under
   // the report, with a vertical line down their left side marking them as parts of the report.
   // A GroupShowMore can follow the rows.
-  export let report: DiagnosticReport;
+  // An Observation that has member Observations is shown the same way, under the same header
+  export let report: DiagnosticReport | Observation;
 
   $: category = report.category?.[0]?.coding?.[0];
 </script>
@@ -25,6 +27,7 @@
       {#if hasChoiceDTField('effective', report)}
         <DateLine fields={choiceDTFields('effective', report)} />
       {/if}
+      <slot name="details" />
     </div>
     <div class="report-actions">
       <slot name="actions" />

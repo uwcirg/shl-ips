@@ -23,6 +23,7 @@ import Practitioner from '$lib/components/resource-templates/Practitioner.svelte
 import Procedure from '$lib/components/resource-templates/Procedure.svelte';
 import QuestionnaireResponse from '$lib/components/resource-templates/QuestionnaireResponse.svelte';
 import ObservationGroup from '$lib/components/resource-templates/ObservationGroup.svelte';
+import ObservationMembersGroup from '$lib/components/resource-templates/ObservationMembersGroup.svelte';
 import DiagnosticReportGroup from '$lib/components/resource-templates/DiagnosticReportGroup.svelte';
 import DeviceUseStatementGroup from '$lib/components/resource-templates/DeviceUseStatementGroup.svelte';
 import EncounterGroup from '$lib/components/resource-templates/EncounterGroup.svelte';
@@ -227,6 +228,7 @@ export const isUtilityResourceType = (resourceType: string) => UTILITY_RESOURCE_
 // Unlike RESOURCE_CONFIG these take `unit` rather than `content`.
 export const GROUP_COMPONENTS: Record<string, ComponentType> = {
   observationSeries: ObservationGroup,
+  observationMembers: ObservationMembersGroup,
   diagnosticReport: DiagnosticReportGroup,
   deviceUseStatement: DeviceUseStatementGroup,
   encounter: EncounterGroup,

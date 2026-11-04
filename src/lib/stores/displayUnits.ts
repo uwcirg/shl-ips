@@ -69,34 +69,82 @@ export interface ObservationSeriesData {
 // point carries its source.
 export const observationSeriesGrouper: Grouper<ObservationSeriesData> = {
   type: OBSERVATION_SERIES,
-  group(items) {
+  group: (items) => observationChartGroups(items)
+};
+
+// The charts that observationSeriesGrouper makes, also used to tell which Observations are in one
+function observationChartGroups(items: CategorizedResource[]): GroupResult<ObservationSeriesData>[] {
+  const byTempId = new Map(items.map(item => [item.rh.tempId, item]));
+  const seriesItems = items.map(item => ({ id: item.rh.tempId, resource: item.rh.resource, source: item.source }));
+  const results: GroupResult<ObservationSeriesData>[] = [];
+
+  for (const [key, series] of buildObservationSeries(seriesItems)) {
+    if (series.length < 2) continue;
+    // Without a unit used by more than one observation there is nothing to chart
+    const scales = chartScalesFor(series);
+    if (scales.length === 0) continue;
+    const members = series.map(point => byTempId.get(point.id)!);
+    const first = members[0].rh.resource as Observation;
+    const label = getCodeLabel(first.code);
+    const lines: ChartLine[] = scales.map((scale, axis) => ({
+      key: `${key}|${scale.unit}`,
+      label,
+      unit: scale.unitLabel,
+      axis,
+      points: scale.points
+    }));
+    results.push({ key, members, data: { lines } });
+  }
+
+  for (const [key, panel] of buildObservationPanels(seriesItems)) {
+    // Components in different units can't share one axis, so leave those as single rows
+    if (panel.memberIds.size < 2 || panel.unitCodes.size > 1) continue;
+    const members = [...panel.memberIds].map(id => byTempId.get(id)!);
+    results.push({ key: `panel:${key}`, members, data: { lines: panel.lines } });
+  }
+  return results;
+}
+
+export const OBSERVATION_MEMBERS = 'observationMembers';
+
+export interface ObservationMembersData {
+  parent: CategorizedResource;
+  members: CategorizedResource[]; // the referenced Observations, in the parent's own hasMember order
+  unresolved: string[];           // display text of members that couldn't be resolved
+}
+
+// An Observation that points at others with hasMember (e.g. a panel or battery) plus the
+// Observations it references, which are shown under it. The parent is the anchor, so the group sorts
+// and categorizes as the parent. An Observation that is already in a chart keeps that display, and a
+// parent none of whose members resolve stays a single row.
+export const observationMembersGrouper: Grouper<ObservationMembersData> = {
+  type: OBSERVATION_MEMBERS,
+  group(items, index) {
     const byTempId = new Map(items.map(item => [item.rh.tempId, item]));
-    const seriesItems = items.map(item => ({ id: item.rh.tempId, resource: item.rh.resource, source: item.source }));
-    const results: GroupResult<ObservationSeriesData>[] = [];
-
-    for (const [key, series] of buildObservationSeries(seriesItems)) {
-      if (series.length < 2) continue;
-      // Without a unit used by more than one observation there is nothing to chart
-      const scales = chartScalesFor(series);
-      if (scales.length === 0) continue;
-      const members = series.map(point => byTempId.get(point.id)!);
-      const first = members[0].rh.resource as Observation;
-      const label = getCodeLabel(first.code);
-      const lines: ChartLine[] = scales.map((scale, axis) => ({
-        key: `${key}|${scale.unit}`,
-        label,
-        unit: scale.unitLabel,
-        axis,
-        points: scale.points
-      }));
-      results.push({ key, members, data: { lines } });
-    }
-
-    for (const [key, panel] of buildObservationPanels(seriesItems)) {
-      // Components in different units can't share one axis, so leave those as single rows
-      if (panel.memberIds.size < 2 || panel.unitCodes.size > 1) continue;
-      const members = [...panel.memberIds].map(id => byTempId.get(id)!);
-      results.push({ key: `panel:${key}`, members, data: { lines: panel.lines } });
+    const charted = new Set(observationChartGroups(items).flatMap(result => result.members.map(m => m.rh.tempId)));
+    const results: GroupResult<ObservationMembersData>[] = [];
+    for (const item of items) {
+      if (item.rh.resource.resourceType !== 'Observation' || charted.has(item.rh.tempId)) continue;
+      const hasMember = (item.rh.resource as Observation).hasMember ?? [];
+      const members = new Map<string, CategorizedResource>();
+      const unresolved: string[] = [];
+      for (const ref of hasMember) {
+        const target = ref.reference ? index.resolve(ref.reference, item.source) : undefined;
+        const resolved = target ? byTempId.get(target.rh.tempId) : undefined;
+        if (resolved?.rh.resource.resourceType === 'Observation') {
+          members.set(resolved.rh.tempId, resolved);
+        } else if (ref.display) {
+          unresolved.push(ref.display);
+        }
+      }
+      if (members.size === 0) continue;
+      const memberItems = [...members.values()];
+      results.push({
+        key: `members:${item.rh.tempId}`,
+        members: [item, ...memberItems],
+        anchor: item,
+        data: { parent: item, members: memberItems, unresolved }
+      });
     }
     return results;
   }
@@ -240,6 +288,7 @@ export const encounterGrouper: Grouper<EncounterData> = {
 export const defaultGroupers: Grouper[] = [
   diagnosticReportGrouper,
   observationSeriesGrouper,
+  observationMembersGrouper,
   deviceUseStatementGrouper,
   encounterGrouper
 ];
