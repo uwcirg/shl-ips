@@ -3,7 +3,7 @@
   import type { DiagnosticReport } from 'fhir/r4';
   import { choiceDTFields, hasChoiceDTField } from '$lib/utils/util';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
-  import Date from '$lib/components/resource-templates/Date.svelte';
+  import DateLine from '$lib/components/resource-templates/DateLine.svelte';
 
   // Shared look for a DiagnosticReport and its results, used by both the grouped display
   // (DiagnosticReportGroup) and the single-resource template (DiagnosticReport).
@@ -23,7 +23,7 @@
         <CodeableConcept codeableConcept={report.code} />
       {/if}
       {#if hasChoiceDTField('effective', report)}
-        <span class="report-date">Effective: <Date fields={choiceDTFields('effective', report)} /></span>
+        <DateLine fields={choiceDTFields('effective', report)} />
       {/if}
     </div>
     <div class="report-actions">
@@ -46,11 +46,6 @@
     align-items: flex-start;
     gap: 0.75rem;
     margin-bottom: 0.5rem;
-  }
-  .report-date {
-    margin-left: 0.5rem;
-    font-size: 0.85rem;
-    color: var(--bs-secondary-color, #6c757d);
   }
   .report-results {
     display: flex;

@@ -3,6 +3,7 @@
   import { Badge } from '@sveltestrap/sveltestrap';
   import type { Goal } from 'fhir/r4';
   import type { ResourceTemplateParams } from '$lib/utils/types';
+  import DateLine from '$lib/components/resource-templates/DateLine.svelte';
   import StatusBadge from '$lib/components/resource-templates/StatusBadge.svelte';
 
   export let content: ResourceTemplateParams<Goal>;
@@ -92,7 +93,6 @@
 {/if}
 
 <!-- Display timeline -->
-<br>
 {#if startDate !== '??' || dueDate !== '??'}
-  <strong>Timeline:</strong> {startDate} ➔ {dueDate}
+  <DateLine>{startDate} ➔ {dueDate}</DateLine>
 {/if}

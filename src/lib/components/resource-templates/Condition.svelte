@@ -3,7 +3,7 @@
   import type { Condition } from 'fhir/r4';
   import type { ResourceTemplateParams } from '$lib/utils/types';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
-  import Date from '$lib/components/resource-templates/Date.svelte';
+  import DateLine from '$lib/components/resource-templates/DateLine.svelte';
   import StatusBadge from '$lib/components/resource-templates/StatusBadge.svelte';
   import { hasChoiceDTField, choiceDTFields } from '$lib/utils/util';
 
@@ -54,11 +54,11 @@
   Site: {resource.bodySite[0]?.coding?.[0]?.display}<br>
 {/if}
 {#if hasChoiceDTField("onset", resource)}
-  Onset: <Date fields={choiceDTFields("onset", resource)} /><br>
+  <DateLine label="Onset" fields={choiceDTFields("onset", resource)} />
 {/if}
 {#if hasChoiceDTField("abatement", resource)}
-  Abatement: <Date fields={choiceDTFields("abatement", resource)} /><br>
+  <DateLine label="Abatement" fields={choiceDTFields("abatement", resource)} />
 {/if}
 {#if resource.recordedDate}
-  Recorded: <Date fields={choiceDTFields("recordedDate", resource)} /><br>
+  <DateLine label="Recorded" fields={choiceDTFields("recordedDate", resource)} />
 {/if}

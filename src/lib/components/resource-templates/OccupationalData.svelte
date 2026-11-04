@@ -1,9 +1,9 @@
 <script lang="ts">
-    import type { Observation } from "fhir/r4";
+  import type { Observation } from "fhir/r4";
     import type { ResourceTemplateParams } from '$lib/utils/types';
     import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
-    import Date from '$lib/components/resource-templates/Date.svelte';
-    import { hasChoiceDTField, choiceDTFields } from "$lib/utils/util";
+    import DateLine from '$lib/components/resource-templates/DateLine.svelte';
+      import { hasChoiceDTField, choiceDTFields } from "$lib/utils/util";
     
     export let content: ResourceTemplateParams<Observation>; // Define a prop to pass the data to the component
     let resource: Observation;
@@ -15,18 +15,17 @@
         <strong>Employment Status</strong><br>
         <CodeableConcept codeableConcept={resource.valueCodeableConcept} />
         {#if hasChoiceDTField("effective", resource)}
-            <Date period fields={choiceDTFields("effective", resource)} />
+            <DateLine period fields={choiceDTFields("effective", resource)} />
         {/if}
     {:else if resource.code.coding[0].code === "87510-4"}
         <strong>Retired</strong>
         {#if resource.valueDateTime}
-            <br><Date period fields={{dateTime: resource.valueDateTime}} />
+            <DateLine period fields={{dateTime: resource.valueDateTime}} />
         {/if}
-        <br>
     {:else if resource.code.coding[0].code === "87511-2"}
-        <strong>Combat Zone/Hazardous Work Period</strong><br>
+        <strong>Combat Zone/Hazardous Work Period</strong>
         {#if resource.valuePeriod}
-            <Date period fields={{period: resource.valuePeriod}} /><br>
+            <DateLine period fields={{period: resource.valuePeriod}} />
         {/if}
     {:else if resource.code.coding[0].code === "11341-5"}
         <strong>
@@ -35,9 +34,6 @@
                 return e.url === "http://hl7.org/fhir/us/odh/StructureDefinition/odh-isCurrentJob-extension" && e.valueBoolean;
             }) ? " (Current)" : "(Past)"}
         </strong><br>
-        {#if hasChoiceDTField("effective", resource)}
-            <Date period fields={choiceDTFields("effective", resource)} /><br>
-        {/if}
         <CodeableConcept codeableConcept={resource.valueCodeableConcept} />
         {#if resource.component}
             {#each resource.component as component}
@@ -58,6 +54,9 @@
                     }{component.valueString}
                 {/if}
             {/each}
+        {/if}
+        {#if hasChoiceDTField("effective", resource)}
+            <DateLine period fields={choiceDTFields("effective", resource)} />
         {/if}
     <!-- {:else if resource.code.coding[0].code === "21843-8"} -->
         

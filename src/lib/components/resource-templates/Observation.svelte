@@ -6,7 +6,7 @@
   import OccupationalData from '$lib/components/resource-templates/OccupationalData.svelte';
   import { hasChoiceDTField, choiceDTFields } from '$lib/utils/util';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
-  import Date from '$lib/components/resource-templates/Date.svelte';
+  import DateLine from '$lib/components/resource-templates/DateLine.svelte';
   import { buildObservationSeriesMap, type SparklinePoint, sparklineSeriesFor, getValueString } from '$lib/utils/observationSparkline';
   import ObservationSparkline from '$lib/components/resource-templates/ObservationSparkline.svelte';
   
@@ -138,7 +138,7 @@
         {/if}
       {/if}
       {#if !contained && hasChoiceDTField("effective", resource)}
-        Date: <Date fields={choiceDTFields("effective", resource)} />
+        <DateLine fields={choiceDTFields("effective", resource)} />
       {/if}
     {/if}
   </div>

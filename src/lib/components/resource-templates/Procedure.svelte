@@ -2,7 +2,7 @@
   import type { Procedure } from "fhir/r4";
   import type { ResourceTemplateParams } from '$lib/utils/types';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
-  import Date from '$lib/components/resource-templates/Date.svelte';
+  import DateLine from '$lib/components/resource-templates/DateLine.svelte';
   import { choiceDTFields, hasChoiceDTField } from '$lib/utils/util';
   
   export let content: ResourceTemplateParams<Procedure>; // Define a prop to pass the data to the component
@@ -14,5 +14,5 @@
   <CodeableConcept codeableConcept={resource.code} />
 {/if}
 {#if hasChoiceDTField("performed", resource)}
-  Performed: <Date fields={choiceDTFields("performed", resource)} />
+  <DateLine fields={choiceDTFields("performed", resource)} />
 {/if}

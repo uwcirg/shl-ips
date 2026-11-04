@@ -2,7 +2,7 @@
   import type { Resource } from 'fhir/r4';
   import type { ResourceTemplateParams } from '$lib/utils/types';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
-  import Date from '$lib/components/resource-templates/Date.svelte';
+  import DateLine from '$lib/components/resource-templates/DateLine.svelte';
   import StatusBadge, { GENERIC_STATUSES } from '$lib/components/resource-templates/StatusBadge.svelte';
   import { formatDate, choiceDTFields } from '$lib/utils/util';
 
@@ -112,16 +112,16 @@
       <CodeableConcept codeableConcept={c} />
     {/each}
   {/if}
-  {#if dateField}
-    <div class="text-secondary small"><Date fields={choiceDTFields(dateField, resource)} /></div>
-  {:else if periodField}
-    <div class="text-secondary small"><Date period fields={choiceDTFields(periodField, resource)} /></div>
-  {/if}
   {#if otherFields.length > 0}
     <ul class="list-unstyled small text-secondary mb-1">
       {#each otherFields as [key, value]}
         <li><span class="fw-semibold">{humanize(key)}:</span> {value}</li>
       {/each}
     </ul>
+  {/if}
+  {#if dateField}
+    <DateLine fields={choiceDTFields(dateField, resource)} />
+  {:else if periodField}
+    <DateLine period fields={choiceDTFields(periodField, resource)} />
   {/if}
 </div>

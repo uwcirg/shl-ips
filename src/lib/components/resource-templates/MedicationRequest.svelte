@@ -3,7 +3,7 @@
   import type { BundleEntry, Medication, MedicationRequest } from 'fhir/r4';
   import type { ResourceTemplateParams } from '$lib/utils/types';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
-  import Date from '$lib/components/resource-templates/Date.svelte';
+  import DateLine from '$lib/components/resource-templates/DateLine.svelte';
   import Dosage from '$lib/components/resource-templates/Dosage.svelte';
   import MedicationTemplate from '$lib/components/resource-templates/Medication.svelte';
   import StatusBadge from '$lib/components/resource-templates/StatusBadge.svelte';
@@ -43,11 +43,11 @@
   <br>
 {/if}
 
+<Dosage dosages={resource.dosageInstruction} />
+
 {#if resource.authoredOn}
-  Authored: <Date fields={choiceDTFields("authoredOn", resource)} /><br>
+  <DateLine label="Authored" fields={choiceDTFields("authoredOn", resource)} />
 {/if}
 {#if resource.dispenseRequest?.validityPeriod}
-  Valid: <Date period fields={{ period: resource.dispenseRequest.validityPeriod }} /><br>
+  <DateLine label="Valid" period fields={{ period: resource.dispenseRequest.validityPeriod }} />
 {/if}
-
-<Dosage dosages={resource.dosageInstruction} />

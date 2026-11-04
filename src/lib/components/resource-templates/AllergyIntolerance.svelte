@@ -4,7 +4,7 @@
   import type { ResourceTemplateParams } from '$lib/utils/types';
   import { hasChoiceDTField, choiceDTFields } from '$lib/utils/util';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
-  import Date from '$lib/components/resource-templates/Date.svelte';
+  import DateLine from '$lib/components/resource-templates/DateLine.svelte';
   import StatusBadge from '$lib/components/resource-templates/StatusBadge.svelte';
   
   export let content: ResourceTemplateParams<AllergyIntolerance>; // Define a prop to pass the data to the component
@@ -40,8 +40,8 @@
   <CodeableConcept codeableConcept={resource.code} />
 {/if}
 {#if hasChoiceDTField("onset", resource)}
-  <Date period fields={choiceDTFields("onset", resource)} />
+  <DateLine period fields={choiceDTFields("onset", resource)} />
 {/if}
 {#if resource.lastOccurrence}
-  <br>Last occurrence: <Date fields={choiceDTFields("lastOccurrence", resource)} />
+  <DateLine label="Last occurrence" fields={choiceDTFields("lastOccurrence", resource)} />
 {/if}

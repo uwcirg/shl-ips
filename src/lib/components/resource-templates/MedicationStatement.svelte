@@ -1,10 +1,10 @@
 <script lang="ts">
-  import StatusBadge from '$lib/components/resource-templates/StatusBadge.svelte';
   import type { BundleEntry, Medication, MedicationStatement } from "fhir/r4";
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
-  import Date from '$lib/components/resource-templates/Date.svelte';
+  import DateLine from '$lib/components/resource-templates/DateLine.svelte';
   import Dosage from '$lib/components/resource-templates/Dosage.svelte';
   import MedicationTemplate from '$lib/components/resource-templates/Medication.svelte';
+  import StatusBadge from '$lib/components/resource-templates/StatusBadge.svelte';
   import { getEntry, choiceDTFields, hasChoiceDTField } from '$lib/utils/util';
   import type { ResourceTemplateParams } from '$lib/utils/types';
 
@@ -52,5 +52,5 @@
 {/if}
 
 {#if hasChoiceDTField("effective", resource)}
-  Effective: <Date fields={choiceDTFields("effective", resource)} />
+  <DateLine label="Effective" fields={choiceDTFields("effective", resource)} />
 {/if}

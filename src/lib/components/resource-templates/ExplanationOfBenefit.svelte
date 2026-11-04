@@ -4,6 +4,7 @@
   import type { ResourceTemplateParams } from '$lib/utils/types';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
   import Date from '$lib/components/resource-templates/Date.svelte';
+  import DateLine from '$lib/components/resource-templates/DateLine.svelte';
   import StatusBadge from '$lib/components/resource-templates/StatusBadge.svelte';
   import { hasChoiceDTField, choiceDTFields } from '$lib/utils/util';
 
@@ -64,12 +65,6 @@
   </Badge>
   <!-- Add disposition dropdown -->
   <br>
-{/if}
-{#if resource.created}
-  <b>Created</b> <Date fields={choiceDTFields("created", resource)} /><br>
-{/if}
-{#if resource.billablePeriod}
-  <b>Billable for</b> <Date fields={choiceDTFields("billablePeriod", resource)} /><br>
 {/if}
 {#if resource.insurance && resource.insurance?.[0]?.coverage?.display}
   Insurance: {resource.insurance[0].coverage.display}<br>
@@ -162,9 +157,6 @@
     </table>
   {/if}
 {/if}
-{#if hasChoiceDTField("period", resource)}
-  <Date fields={choiceDTFields("period", resource)} /><br>
-{/if}
 {#if resource.class}
   <table class="table table-bordered table-sm">
     <thead>
@@ -189,4 +181,13 @@
 {/if}
 {#if resource.network}
   Network: {resource.network}<br>
+{/if}
+{#if resource.created}
+  <DateLine label="Created" fields={choiceDTFields("created", resource)} />
+{/if}
+{#if resource.billablePeriod}
+  <DateLine label="Billable for" fields={choiceDTFields("billablePeriod", resource)} />
+{/if}
+{#if hasChoiceDTField("period", resource)}
+  <DateLine fields={choiceDTFields("period", resource)} />
 {/if}

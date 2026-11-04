@@ -2,7 +2,7 @@
   import type { Coverage } from 'fhir/r4';
   import type { ResourceTemplateParams } from '$lib/utils/types';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
-  import Date from '$lib/components/resource-templates/Date.svelte';
+  import DateLine from '$lib/components/resource-templates/DateLine.svelte';
   import StatusBadge from '$lib/components/resource-templates/StatusBadge.svelte';
   import { hasChoiceDTField, choiceDTFields } from '$lib/utils/util';
 
@@ -16,9 +16,6 @@
 <StatusBadge status={resource.status} br />
 {#if resource.type}
   <CodeableConcept codeableConcept={resource.type} />
-{/if}
-{#if hasChoiceDTField("period", resource)}
-  <Date fields={choiceDTFields("period", resource)} /><br>
 {/if}
 {#if resource.class}
   <table class="table table-bordered table-sm">
@@ -44,4 +41,7 @@
 {/if}
 {#if resource.network}
   Network: {resource.network}<br>
+{/if}
+{#if hasChoiceDTField("period", resource)}
+  <DateLine fields={choiceDTFields("period", resource)} />
 {/if}

@@ -2,7 +2,7 @@
   import type { CodeableConcept as CodeableConceptType, Device, DeviceUseStatement } from 'fhir/r4';
   import { choiceDTFields, formatDate, hasChoiceDTField } from '$lib/utils/util';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
-  import Date from '$lib/components/resource-templates/Date.svelte';
+  import DateLine from '$lib/components/resource-templates/DateLine.svelte';
   import StatusBadge from '$lib/components/resource-templates/StatusBadge.svelte';
 
   // Shared look for a DeviceUseStatement and its Device, used by both the grouped display
@@ -66,7 +66,7 @@
         <strong>{title}</strong>
       {/if}
       {#if hasChoiceDTField('timing', statement)}
-        <span class="device-timing">Timing: <Date fields={choiceDTFields('timing', statement)} /></span>
+        <DateLine label="Timing" fields={choiceDTFields('timing', statement)} />
       {/if}
     </div>
     <div class="device-actions">
@@ -129,11 +129,6 @@
     justify-content: space-between;
     align-items: flex-start;
     gap: 0.75rem;
-  }
-  .device-timing {
-    margin-left: 0.5rem;
-    font-size: 0.85rem;
-    color: var(--bs-secondary-color, #6c757d);
   }
   /* The device and the statement's own details are separate blocks under the header */
   .device-divided {
