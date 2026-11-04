@@ -6,6 +6,7 @@
   import Date from '$lib/components/resource-templates/Date.svelte';
   import Dosage from '$lib/components/resource-templates/Dosage.svelte';
   import MedicationTemplate from '$lib/components/resource-templates/Medication.svelte';
+  import StatusBadge from '$lib/components/resource-templates/StatusBadge.svelte';
   import { getEntry, choiceDTFields } from '$lib/utils/util';
 
   export let content: ResourceTemplateParams<MedicationRequest>; // Define a prop to pass the data to the component
@@ -30,10 +31,7 @@
   }
 </script>
 
-<Badge color="secondary">{resource.intent ? resource.intent : ''}</Badge>
-<Badge color={resource.status === 'stopped' ? 'secondary' : 'primary'}>
-  {resource.status ? `${resource.status}` : ''}
-</Badge><br>
+<StatusBadge status={resource.status} br />
 {#if resource.medicationCodeableConcept}
   <CodeableConcept codeableConcept={resource.medicationCodeableConcept} />
 {/if}

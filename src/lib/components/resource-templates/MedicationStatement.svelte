@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Badge } from '@sveltestrap/sveltestrap';
+  import StatusBadge from '$lib/components/resource-templates/StatusBadge.svelte';
   import type { BundleEntry, Medication, MedicationStatement } from "fhir/r4";
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
   import Date from '$lib/components/resource-templates/Date.svelte';
@@ -30,11 +30,7 @@
   }
 </script>
 
-{#if resource.status}
-  <Badge color={resource.status === "unknown" || resource.status === "stopped" ? "secondary" : "primary"}>
-    {resource.status}
-  </Badge><br>
-{/if}
+<StatusBadge status={resource.status} br />
 
 {#if resource.medicationCodeableConcept}
   <CodeableConcept codeableConcept={resource.medicationCodeableConcept} />

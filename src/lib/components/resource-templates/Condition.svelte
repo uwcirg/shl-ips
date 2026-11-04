@@ -4,50 +4,49 @@
   import type { ResourceTemplateParams } from '$lib/utils/types';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
   import Date from '$lib/components/resource-templates/Date.svelte';
+  import StatusBadge from '$lib/components/resource-templates/StatusBadge.svelte';
   import { hasChoiceDTField, choiceDTFields } from '$lib/utils/util';
 
   export let content: ResourceTemplateParams<Condition>; // Define a prop to pass the data to the component
 
   let resource: Condition;
+  let clinicalStatusShown = false;
+  let verificationStatusShown = false;
   $: if (content) resource = content.resource;
 
   function severityBadgeColor(severity: string) {
     if (severity) {
-      if (severity == 'Severe') {
+      if (severity === 'severe' || severity === 'critical' || severity === 'high') {
         return 'danger';
       } else {
-        return 'primary';
+        return 'warning';
       }
     } else {
       return 'secondary';
     }
   }
 
-  function statusBadgeColor(status: string) {
-    if (status == 'inactive') {
-      return 'secondary';
-    } else {
-      return 'primary';
-    }
-  }
 </script>
 
-{#if resource.clinicalStatus || resource.verificationStatus}
-  <Badge color={statusBadgeColor(resource.clinicalStatus?.coding?.[0].code ?? '')}>
-    {resource.clinicalStatus?.coding?.[0].code ?? ''}
-    {resource.clinicalStatus &&
-      resource.verificationStatus
-        ? '/'
-        : ''}
-    {resource.verificationStatus?.coding?.[0].code ?? ''}
-  </Badge>
+<StatusBadge
+  status={resource.clinicalStatus?.coding?.[0]?.code}
+  bind:visible={clinicalStatusShown}
+/>
+<StatusBadge
+  status={resource.verificationStatus?.coding?.[0]?.code}
+  bind:visible={verificationStatusShown}
+/>
+{#if resource.severity}
+{@const severity = (resource.severity?.coding?.[0].display ?? resource.severity?.text ?? undefined)?.toLowerCase()}
+  {#if severity}
+    <Badge color={severityBadgeColor(severity)}>
+      severity: {severity}
+    </Badge>
+  {/if}
 {/if}
-{#if resource.severity?.text}
-<Badge color={severityBadgeColor(resource.severity?.coding?.[0].display ?? '')}>
-  severity: {resource.severity?.text.toLowerCase()}
-</Badge>
+{#if clinicalStatusShown || verificationStatusShown || resource.severity?.text}
+  <br>
 {/if}
-<br>
 {#if resource.code}
   <CodeableConcept codeableConcept={resource.code} />
 {/if}

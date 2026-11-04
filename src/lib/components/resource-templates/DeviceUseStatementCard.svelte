@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { Badge } from '@sveltestrap/sveltestrap';
   import type { CodeableConcept as CodeableConceptType, Device, DeviceUseStatement } from 'fhir/r4';
   import { choiceDTFields, formatDate, hasChoiceDTField } from '$lib/utils/util';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
   import Date from '$lib/components/resource-templates/Date.svelte';
+  import StatusBadge from '$lib/components/resource-templates/StatusBadge.svelte';
 
   // Shared look for a DeviceUseStatement and its Device, used by both the grouped display
   // (DeviceUseStatementGroup) and the single-resource template (DeviceUseStatement).
@@ -61,9 +61,7 @@
 <div class="device-card border rounded-4 p-3">
   <div class="device-header">
     <div>
-      {#if statement.status}
-        <Badge color={statement.status === 'stopped' ? 'secondary' : 'primary'} class="mb-1">{statement.status}</Badge><br>
-      {/if}
+      <StatusBadge status={statement.status} class="mb-1" br />
       {#if title}
         <strong>{title}</strong>
       {/if}

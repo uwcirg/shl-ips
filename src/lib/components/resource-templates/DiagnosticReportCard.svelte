@@ -19,9 +19,6 @@
 <div class="report-card border rounded-4 p-3">
   <div class="report-header">
     <div>
-      {#if category}
-        <Badge color="primary" class="mb-1">{category.display ?? category.code}</Badge><br>
-      {/if}
       {#if report.code}
         <CodeableConcept codeableConcept={report.code} />
       {/if}

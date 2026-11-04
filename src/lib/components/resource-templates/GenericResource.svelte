@@ -1,9 +1,9 @@
 <script lang="ts">
   import type { Resource } from 'fhir/r4';
-  import { Badge } from '@sveltestrap/sveltestrap';
   import type { ResourceTemplateParams } from '$lib/utils/types';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
   import Date from '$lib/components/resource-templates/Date.svelte';
+  import StatusBadge, { GENERIC_STATUSES } from '$lib/components/resource-templates/StatusBadge.svelte';
   import { formatDate, choiceDTFields } from '$lib/utils/util';
 
   export let content: ResourceTemplateParams<Resource>; // Define a prop to pass the data to the component
@@ -47,6 +47,7 @@
   }
 
   let status: string | undefined;
+  let statusShown = false;
   let title: string | undefined;
   let titleConcept: any;
   let concept: any;
@@ -94,11 +95,10 @@
 </script>
 
 <div class="generic-resource">
-  {#if status}
-    <div class="d-flex flex-wrap align-items-center gap-1 mb-1">
-      <Badge color="primary">{status}</Badge>
-    </div>
-  {/if}
+  <!-- Empty and widthless unless the status is worth a badge -->
+  <div class="d-flex flex-wrap align-items-center gap-1" class:mb-1={statusShown}>
+    <StatusBadge {status} usual={GENERIC_STATUSES} bind:visible={statusShown} />
+  </div>
   {#if title}
     {#if typeof(title) === 'string'}
       <div class="fw-bold">{title}</div>

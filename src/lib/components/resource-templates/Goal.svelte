@@ -3,12 +3,14 @@
   import { Badge } from '@sveltestrap/sveltestrap';
   import type { Goal } from 'fhir/r4';
   import type { ResourceTemplateParams } from '$lib/utils/types';
+  import StatusBadge from '$lib/components/resource-templates/StatusBadge.svelte';
 
   export let content: ResourceTemplateParams<Goal>;
 
   let startDate = '??';
   let dueDate = '??';
   let resource: Goal;
+  let lifecycleShown = false;
   $: if (content) {
     resource = content.resource;
     // Extract start and due dates
@@ -31,10 +33,8 @@
   }
 </script>
 
-<!-- Display resource type and lifecycle status -->
-<Badge color="primary">
-  {resource.lifecycleStatus}
-</Badge>
+<!-- Display lifecycle status, unless it is the usual active -->
+<StatusBadge status={resource.lifecycleStatus} bind:visible={lifecycleShown} />
 
 <!-- Display priority if available -->
 {#if resource.priority}
@@ -71,7 +71,7 @@
   </Badge>
 {/if}
 
-{#if resource.lifecycleStatus || resource.priority || resource.achievementStatus}
+{#if lifecycleShown || resource.priority || resource.achievementStatus}
   <br>
 {/if}
 

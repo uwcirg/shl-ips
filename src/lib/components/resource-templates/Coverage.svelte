@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { Badge } from '@sveltestrap/sveltestrap';
   import type { Coverage } from 'fhir/r4';
   import type { ResourceTemplateParams } from '$lib/utils/types';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
   import Date from '$lib/components/resource-templates/Date.svelte';
+  import StatusBadge from '$lib/components/resource-templates/StatusBadge.svelte';
   import { hasChoiceDTField, choiceDTFields } from '$lib/utils/util';
 
   export let content: ResourceTemplateParams<Coverage>; // Define a prop to pass the data to the component
@@ -11,23 +11,9 @@
   let resource: Coverage;
   $: if (content) resource = content.resource;
 
-  function statusBadgeColor(status: string) {
-    if (status == 'cancelled' || status == 'draft') {
-      return 'secondary';
-    } else if (status == 'entered-in-error') {
-      return 'danger';
-    } else {
-      return 'primary';
-    }
-  }
 </script>
 
-{#if resource.status}
-  <Badge color={statusBadgeColor(resource.status ?? '')}>
-    {resource.status ?? ''}
-  </Badge>
-  <br>
-{/if}
+<StatusBadge status={resource.status} br />
 {#if resource.type}
   <CodeableConcept codeableConcept={resource.type} />
 {/if}

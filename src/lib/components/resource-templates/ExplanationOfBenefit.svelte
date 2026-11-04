@@ -4,6 +4,7 @@
   import type { ResourceTemplateParams } from '$lib/utils/types';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
   import Date from '$lib/components/resource-templates/Date.svelte';
+  import StatusBadge from '$lib/components/resource-templates/StatusBadge.svelte';
   import { hasChoiceDTField, choiceDTFields } from '$lib/utils/util';
 
   export let content: ResourceTemplateParams<ExplanationOfBenefit>; // Define a prop to pass the data to the component
@@ -11,18 +12,9 @@
   let resource: ExplanationOfBenefit;
   $: if (content) resource = content.resource;
 
+  let statusShown = false;
   let showProcedures = false;
   let showServices = false;
-
-  function statusBadgeColor(status: string) {
-    if (status == 'active') {
-      return 'primary';
-    } else if (status == 'entered-in-error') {
-      return 'danger';
-    } else {
-      return 'secondary';
-    }
-  }
 
   function outcomeBadgeColor(outcome: string) {
     if (outcome == 'complete') {
@@ -52,11 +44,7 @@
   }
 </script>
 
-{#if resource.status}
-  <Badge color={statusBadgeColor(resource.status)}>
-    {resource.status}
-  </Badge>
-{/if}
+<StatusBadge status={resource.status} bind:visible={statusShown} />
 {#if resource.outcome}
   <Badge color={outcomeBadgeColor(resource.outcome)}>
     {resource.outcome}
@@ -67,7 +55,9 @@
     {resource.use}
   </Badge>
 {/if}
-<br>
+{#if statusShown || resource.outcome || resource.use}
+  <br>
+{/if}
 {#if resource.decision?.coding[0]?.code}
   <Badge color={decisionBadgeColor(resource.decision.coding[0].code)}>
     {resource.decision.coding[0].code}

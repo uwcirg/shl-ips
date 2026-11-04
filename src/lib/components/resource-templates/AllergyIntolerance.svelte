@@ -5,6 +5,7 @@
   import { hasChoiceDTField, choiceDTFields } from '$lib/utils/util';
   import CodeableConcept from '$lib/components/resource-templates/CodeableConcept.svelte';
   import Date from '$lib/components/resource-templates/Date.svelte';
+  import StatusBadge from '$lib/components/resource-templates/StatusBadge.svelte';
   
   export let content: ResourceTemplateParams<AllergyIntolerance>; // Define a prop to pass the data to the component
 
@@ -16,7 +17,7 @@
       if (criticality == 'high') {
         return 'danger';
       } else {
-        return 'primary';
+        return 'warning';
       }
     } else {
       return 'secondary';
@@ -24,20 +25,17 @@
   }
 </script>
 
-{#if resource.clinicalStatus || resource.verificationStatus}
-  <Badge color="primary">
-    {resource.clinicalStatus?.coding?.[0].code ?? ''}
-    {resource.clinicalStatus &&
-      resource.verificationStatus
-        ? '/'
-        : ''}
-    {resource.verificationStatus?.coding?.[0].code ?? ''}
-  </Badge>
-{/if}
+<StatusBadge
+  status={resource.clinicalStatus?.coding?.[0]?.code}
+/>
+<StatusBadge
+  status={resource.verificationStatus?.coding?.[0]?.code}
+/>
+{#if resource.criticality}
 <Badge color={badgeColor(resource.criticality ?? '')}>
-  {resource.type ? `${resource.type} - ` : ''}
-  criticality: {resource.criticality ?? 'unknown'}
+  criticality: {resource.criticality}
 </Badge><br>
+{/if}
 {#if resource.code}
   <CodeableConcept codeableConcept={resource.code} />
 {/if}
