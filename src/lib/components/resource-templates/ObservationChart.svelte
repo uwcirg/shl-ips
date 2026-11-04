@@ -34,8 +34,12 @@
     const max = axisYs.length ? Math.max(...axisYs) : 0;
     return { min, max, span: max - min };
   });
-  const axisUnit = (axis: number) =>
-    dual ? lines.find(line => (line.axis ?? 0) === axis)?.unit ?? '' : unit;
+  // The unit label of each axis. Computed reactively (not by a plain function the template calls):
+  // the template only re-reads a value when something it names changes, so a helper reading `unit`,
+  // `dual` and `lines` from inside would leave a stale label when the chart is reused for other data.
+  $: axisUnits = ranges.map((_, axis) =>
+    dual ? lines.find(line => (line.axis ?? 0) === axis)?.unit ?? '' : unit
+  );
   // The axis the selected point is read against
   $: selected = (() => {
     for (const line of lines) {
@@ -63,12 +67,12 @@
     return padLeft + ((rankById.get(p.id) ?? 0) * inner) / (count - 1);
   }
   // Higher value -> higher on the chart (smaller pixel y). Flat series centers.
-  function yFor(v: number, axis = 0): number {
+  $: yFor = (v: number, axis = 0): number => {
     const inner = height - padTop - padBottom;
     const { min, span } = ranges[axis] ?? ranges[0];
     if (span === 0) return padTop + inner / 2;
     return padTop + inner - ((v - min) / span) * inner;
-  }
+  };
 
   function formatDate(time: number): string {
     return time > 0 ? new Date(time).toLocaleDateString() : '';
@@ -80,13 +84,14 @@
   const DASHES = [undefined, '7 4', '1 5', '8 3 1 3'];
   const dashFor = (i: number) => DASHES[i % DASHES.length];
   const pointColor = (p: SparklinePoint): string => colorFor(p.source) ?? NEUTRAL_COLOR;
-  const unitFor = (line: ChartLine) => (dual ? line.unit : unit);
-  function tooltip(line: ChartLine, p: SparklinePoint): string {
+  // Reactive, like axisUnits, because they read `unit`, `dual` and `multi`
+  $: unitFor = (line: ChartLine) => (dual ? line.unit : unit);
+  $: tooltip = (line: ChartLine, p: SparklinePoint): string => {
     const parts = [multi ? `${line.label}: ${formatValue(p.y)}` : formatValue(p.y)];
     if (unitFor(line)) parts[0] += ` ${unitFor(line)}`;
     if (formatDate(p.time)) parts.push(formatDate(p.time));
     return parts.join(', ');
-  }
+  };
 </script>
 
 {#if allPoints.length >= 2}
@@ -124,8 +129,8 @@
         {#if range.span !== 0}
           <text {x} y={yFor(range.min, axis)} text-anchor={anchor} dominant-baseline="middle" font-size="9" class="axis-label" class:axis-label-active={active} class:axis-label-dim={dual && selected && !active}>{formatValue(range.min)}</text>
         {/if}
-        {#if axisUnit(axis)}
-          <text x={right ? width - 2 : 2} y="9" text-anchor={right ? 'end' : 'start'} font-size="9" class="axis-label" class:axis-label-active={active} class:axis-label-dim={dual && selected && !active}>{axisUnit(axis)}</text>
+        {#if axisUnits[axis]}
+          <text x={right ? width - 2 : 2} y="9" text-anchor={right ? 'end' : 'start'} font-size="9" class="axis-label" class:axis-label-active={active} class:axis-label-dim={dual && selected && !active}>{axisUnits[axis]}</text>
         {/if}
       {/each}
       <text x={padLeft} y={height - 8} text-anchor="start" font-size="9" class="axis-label">{formatDate(minT)}</text>
