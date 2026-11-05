@@ -27,7 +27,7 @@
   {#if advanced && onView}
     <div class="d-flex flex-column gap-1">
       <Button size="sm" color="secondary" outline on:click={() => onView?.(parent.rh)}>View</Button>
-      <Button size="sm" color="secondary" outline on:click={() => onView?.(medication.rh)}>View medication</Button>
+      <Button size="sm" color="secondary" outline on:click={() => onView?.(medication.rh)}>Med</Button>
     </div>
   {/if}
 </div>
