@@ -44,7 +44,7 @@
   }
 </script>
 
-<Card class="{category}-dataset h-100 w-100" style="border-left: .4rem solid {$colorMap.get(getFriendlySourceNameBySource(sourceName))}">
+<Card class="{category}-dataset h-100 w-100" style="border-left: .4rem solid {$colorMap.get(getFriendlySourceNameBySource(sourceName)) ?? ""}">
   <CardHeader>
     <Row class="align-items-center">
       <Col>

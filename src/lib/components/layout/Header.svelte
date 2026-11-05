@@ -183,7 +183,7 @@
       {:then headerImageUrl}
       <!-- <NavbarBrand class="flex-shrink-1"> <img id="nav-image" style="height: 60px;"/> </NavbarBrand> -->
       <NavbarBrand class="flex-shrink-1">
-        <img id="nav-image" alt="Washington State Department of Health Logo" style="height: 43px; vertical-align: left" src={headerImageUrl}/>
+        <img id="nav-image" alt="Washington State Department of Health Logo" style="height: 43px" src={headerImageUrl}/>
       </NavbarBrand>
       {/await}
       <div class="flex-grow-1 d-flex align-items-center justify-content-end">
@@ -300,7 +300,6 @@
     max-width: 440px;
     min-width: 220px;
     height: 50px;
-    vertical-align: left;
     object-fit: contain;
     -webkit-transition: all 0.06s linear;
     -moz-transition: all 0.06s linear;
