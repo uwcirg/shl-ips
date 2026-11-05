@@ -11,7 +11,7 @@ import { INSTANCE_CONFIG } from '$lib/config/instance_config';
 const disallowedEndpoints = INSTANCE_CONFIG.disallowedEndpoints;
 const authenticatedAPIs = ['/api'];
 
-const SKIP_AUTH_PREFIXES = ['/_app', '/favicon', '/images', INSTANCE_CONFIG.imgPath].filter(Boolean);
+const SKIP_AUTH_PREFIXES = ['/_app', '/favicon', '/images', '/manifest.json', '/offline.html', INSTANCE_CONFIG.imgPath].filter(Boolean);
 
 function isStaticAsset(pathname: string) {
   return SKIP_AUTH_PREFIXES.some((prefix) => pathname.startsWith(prefix));

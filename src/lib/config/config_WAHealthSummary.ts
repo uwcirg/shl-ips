@@ -23,6 +23,20 @@ import AboutMeTitle from '$lib/components/app/AboutMeTitle.svelte';
 export default {
   title: "WA Health Summary",
   imgPath: "/img/wa-health-summary",
+  // Shown in the browser's install dialog (see the manifest). Placeholder text, to be replaced.
+  pwaDescription: "Collect your health information from your providers and share it securely, all in one place.",
+  // Screenshots for the browser's richer install dialog (see the manifest); sizes are the real
+  // pixel sizes of the files
+  pwaScreenshots: [
+    { src: "/img/screenshot-wide-home.png", sizes: "1635x918", type: "image/png", form_factor: "wide", label: "Home" },
+    { src: "/img/screenshot-wide-add.png", sizes: "1633x917", type: "image/png", form_factor: "wide", label: "Add health data" },
+    { src: "/img/screenshot-wide-review.png", sizes: "1632x917", type: "image/png", form_factor: "wide", label: "Review your data" },
+    { src: "/img/screenshot-wide-share.png", sizes: "1634x917", type: "image/png", form_factor: "wide", label: "Share your data" },
+    { src: "/img/screenshot-narrow-home.png", sizes: "401x872", type: "image/png", form_factor: "narrow", label: "Home" },
+    { src: "/img/screenshot-narrow-add.png", sizes: "401x872", type: "image/png", form_factor: "narrow", label: "Add health data" },
+    { src: "/img/screenshot-narrow-review.png", sizes: "401x872", type: "image/png", form_factor: "narrow", label: "Review your data" },
+    { src: "/img/screenshot-narrow-share.png", sizes: "398x871", type: "image/png", form_factor: "narrow", label: "Share your data" }
+  ],
   header: {
     logo: "logo-60h.png",
     logo_width: "200",
