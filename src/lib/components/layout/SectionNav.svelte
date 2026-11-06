@@ -194,7 +194,7 @@
 <svelte:window on:click={onWindowClick} on:keydown={onKeydown} />
 
 <nav class="section-nav" class:signed-in={signedIn} class:inset aria-label={label}>
-  <ul class="list-unstyled mb-0">
+  <ul class="section-nav-list list-unstyled mb-0">
     {#each sections as { title, element, count }}
       <li>
         <button
@@ -227,7 +227,7 @@
   >
     {#if open}
       <div class="section-nav-menu shadow rounded-4" id={menuId}>
-        <ul class="list-unstyled mb-0">
+        <ul class="section-nav-list list-unstyled mb-0">
           {#each sections as { title, element, count }}
             <li>
               <button
@@ -251,7 +251,7 @@
     {/if}
     <button
       type="button"
-      class="section-nav-toggle shadow rounded-pill"
+      class="section-nav-toggle rounded-pill"
       aria-expanded={open}
       aria-controls={open ? menuId : undefined}
       on:click={() => (open = !open)}
@@ -276,17 +276,20 @@
   }
   /* Shown from md up; below md the pill takes over */
   @media (min-width: 768px) {
+    /* Only the section list scrolls (.section-nav-list), so "Back to top" stays at the bottom of
+       the column, and the inset below stays put instead of scrolling away */
     .section-nav {
-      display: block;
+      display: flex;
+      flex-direction: column;
       position: sticky;
       top: calc(var(--section-nav-overlay) + 1rem);
       align-self: start;
       max-height: calc(100vh - var(--section-nav-overlay) - 2rem);
-      overflow-y: auto;
     }
-    /* Height of the floating compact filters plus a gap */
+    /* Height of the floating compact filters plus a gap: the list starts below them, so its
+       sections never scroll underneath them */
     .section-nav.inset {
-      padding-top: 3.5rem;
+      padding-top: 3rem;
     }
   }
   /* Below md: the collapsed pill */
@@ -324,15 +327,22 @@
     align-items: center;
     gap: 0.5rem;
     max-width: 100%;
-    padding: 0.65rem 1.15rem;
-    border: 1px solid var(--bs-border-color, #dee2e6);
-    background-color: var(--bs-body-bg, #fff);
-    color: var(--bs-body-color);
+    padding: 0.7rem 1.25rem;
+    /* Filled with the primary color, with a stronger shadow, so it stands out from the content
+       it floats over */
+    border: 1px solid var(--bs-primary);
+    background-color: var(--bs-primary);
+    color: #fff;
     font-size: 1rem;
+    box-shadow: var(--bs-box-shadow-lg);
     cursor: pointer;
   }
   .section-nav-toggle:hover {
-    background-color: var(--bs-tertiary-bg, #f8f9fa);
+    filter: brightness(0.92);
+  }
+  .section-nav-toggle:focus-visible {
+    outline: 3px solid var(--bs-primary-border-subtle, #9ec5fe);
+    outline-offset: 2px;
   }
   .section-nav-current {
     min-width: 0;
@@ -352,7 +362,10 @@
     width: 18rem;
     max-width: calc(100vw - 2rem);
     max-height: calc(100vh - 9rem - var(--header-height, 64px));
-    overflow-y: auto;
+    /* Only the section list scrolls, so "Back to top" is always visible at the bottom */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     padding: 0.4rem;
     border: 1px solid var(--bs-border-color, #dee2e6);
     background-color: var(--bs-body-bg, #fff);
@@ -361,6 +374,11 @@
     .section-nav-chevron {
       transition: none;
     }
+  }
+  .section-nav-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
   }
   .section-nav-item {
     display: flex;
@@ -388,6 +406,7 @@
   }
   /* Sits apart from the section list, at the bottom of the menu */
   .section-nav-top {
+    flex: 0 0 auto;
     margin-top: 0.4rem;
     border-top: 1px solid var(--bs-border-color, #dee2e6);
     border-top-left-radius: 0;
