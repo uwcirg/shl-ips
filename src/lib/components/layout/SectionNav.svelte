@@ -12,13 +12,15 @@
 <script lang="ts">
   import { getContext, onMount } from 'svelte';
   import { readable, type Readable } from 'svelte/store';
+  import { fly } from 'svelte/transition';
   import type { IAuthService } from '$lib/utils/types';
 
   // A table of contents for a long page: lists sections, highlights the one in view, and jumps
   // to one on click. From md up it is a column beside the content that sticks below the app's
   // header. Below md it collapses to a small floating pill at the bottom of the viewport showing
   // the section in view (a "you are here" indicator); tapping it opens the full list upward, and
-  // picking a section jumps there and collapses it again. On signed-in phones the pill rides
+  // picking a section jumps there and collapses it again. The pill sits at the right edge so it
+  // stays out of the middle of the content and grows leftward. On signed-in phones the pill rides
   // just above the app's bottom tab bar.
   //
   //   <SectionNav sections={[{ title: 'Medications', element: medsEl, count: 4 }, ...]} />
@@ -29,6 +31,9 @@
   export let label = 'Sections';
   // Leaves room at the top for something floated over it (e.g. the compact filters)
   export let inset = false;
+  // Whether the lone "Back to top" circle (shown when there is a single section) is in view. It
+  // slides in from the right edge when this turns true, e.g. in step with the compact filters.
+  export let revealed = true;
 
   // --- Offsets ------------------------------------------------------------------------------
   // When signed in, the app shows a floating tab bar over the top of the viewport while scrolling
@@ -144,6 +149,8 @@
   let pillEl: HTMLElement;
   const menuId = `section-nav-menu-${Math.random().toString(36).slice(2, 8)}`;
 
+  // With a single section there is nothing to choose between: the nav is just "Back to top"
+  $: single = sections.length === 1;
   $: activeIndex = sections.findIndex(({ element }) => !!element && element === activeElement);
   $: activeItem = activeIndex >= 0 ? sections[activeIndex] : undefined;
 
@@ -163,12 +170,19 @@
     jumpTo(element);
   }
 
+  // Not smooth in the installed app (pwaMode): a smooth scroll there leaves the fixed bottom tab bar
+  // and the pill untappable on iOS until the next touch scroll
+  const scrollBehavior = (): ScrollBehavior =>
+    pwaMode || window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth';
+
   // Scrolls to the top of the page; the section in view then updates as the scroll passes
   function scrollToTop() {
     lockUntil = 0;
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+    window.scrollTo({ top: 0, behavior: scrollBehavior() });
   }
+
+  const slideDuration = () =>
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 200;
 
   function topFromMenu() {
     open = false;
@@ -181,18 +195,19 @@
     activeElement = element;
     lockUntil = performance.now() + 800;
     const top = element.getBoundingClientRect().top + window.scrollY - jumpOffset();
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    window.scrollTo({ top: Math.max(0, top), behavior: reduceMotion ? 'auto' : 'smooth' });
+    window.scrollTo({ top: Math.max(0, top), behavior: scrollBehavior() });
     // Move focus with the view so keyboard and screen reader users land on the section: its
     // heading if it has one, else the element itself
     const target = element.querySelector<HTMLElement>('h1, h2, h3, h4, h5, h6') ?? element;
     if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+    target.setAttribute('data-section-nav-target', '');
     target.focus({ preventScroll: true });
   }
 </script>
 
 <svelte:window on:click={onWindowClick} on:keydown={onKeydown} />
 
+{#if !single}
 <nav class="section-nav" class:signed-in={signedIn} class:inset aria-label={label}>
   <ul class="section-nav-list list-unstyled mb-0">
     {#each sections as { title, element, count }}
@@ -215,6 +230,7 @@
     <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V3M3.5 7.5L8 3l4.5 4.5" /></svg>
   </button>
 </nav>
+{/if}
 
 {#if sections.length > 0}
   <nav
@@ -222,9 +238,24 @@
     class:signed-in={signedIn}
     class:pwa={pwaMode}
     class:open
+    class:single
     aria-label={label}
     bind:this={pillEl}
   >
+    {#if single}
+      {#if revealed}
+        <button
+          type="button"
+          class="section-nav-toggle section-nav-circle rounded-circle"
+          aria-label="Scroll to top"
+          on:click={scrollToTop}
+          in:fly={{ x: 80, duration: slideDuration() }}
+          out:fly={{ x: 80, duration: slideDuration() }}
+        >
+          <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l5-5 5 5" /></svg>
+        </button>
+      {/if}
+    {:else}
     {#if open}
       <div class="section-nav-menu shadow rounded-4" id={menuId}>
         <ul class="section-nav-list list-unstyled mb-0">
@@ -259,11 +290,16 @@
       <span class="section-nav-current" aria-live="polite">{activeItem?.title ?? label}</span>
       <svg class="section-nav-chevron" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l5-5 5 5" /></svg>
     </button>
+    {/if}
   </nav>
 {/if}
 
 
 <style>
+  /* Section titles aren't interactive, so don't draw a focus box around them */
+  :global([data-section-nav-target]:focus) {
+    outline: none;
+  }
   .section-nav {
     /* Space the floating app tab bar takes at the top of the viewport while scrolling */
     --section-nav-overlay: 0px;
@@ -297,13 +333,12 @@
     /* Clearance above the viewport's bottom edge; signed-in phones add the app's bottom tab bar */
     --section-nav-bottom: 1.75rem;
     position: fixed;
-    left: 50%;
+    right: calc(1rem + env(safe-area-inset-right, 0px));
     bottom: calc(var(--section-nav-bottom) + env(safe-area-inset-bottom, 0px));
-    transform: translateX(-50%);
     z-index: 1020; /* under the app's tab bars (1030) */
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-end;
     gap: 0.8rem;
     width: max-content;
     max-width: calc(100vw - 2rem);
@@ -318,7 +353,8 @@
     }
   }
   @media (min-width: 768px) {
-    .section-nav-pill {
+    /* The lone "Back to top" circle stays at every width: there is no sidebar to take over */
+    .section-nav-pill:not(.single) {
       display: none;
     }
   }
@@ -336,6 +372,16 @@
     font-size: 1rem;
     box-shadow: var(--bs-box-shadow-lg);
     cursor: pointer;
+  }
+  /* The lone "Back to top" button: a circle instead of a pill */
+  .section-nav-circle {
+    justify-content: center;
+    flex: none;
+    width: 3rem;
+    height: 3rem;
+    /* Not the toggle's 100%: against the pill's shrink-to-fit width that resolves to 0 */
+    max-width: none;
+    padding: 0;
   }
   .section-nav-toggle:hover {
     filter: brightness(0.92);

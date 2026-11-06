@@ -170,8 +170,8 @@
     <StickyFilters {filters} {categorizedStore} showSections={categories.length === 0} withNav={shownCategories.length > 1} bind:stuck={filtersStuck} />
   {/if}
   <div class="category-layout" class:with-nav={shownCategories.length > 1}>
-  {#if shownCategories.length > 1}
-    <SectionNav sections={navSections} label="Categories" inset={filtersStuck} />
+  {#if shownCategories.length > 0}
+    <SectionNav sections={navSections} label="Categories" inset={filtersStuck} revealed={!stickyFilters || filtersStuck} />
   {/if}
   <div class="category-list">
   <!-- Keyed by category: categories can appear in the middle of the list as data loads, and an
