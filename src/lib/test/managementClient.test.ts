@@ -177,7 +177,7 @@ describe('SHLClient', () => {
       fetchMock.mockResolvedValue({
         ok: true,
         headers: jsonHeaders(),
-        json: vi.fn().mockResolvedValue(true)
+        text: vi.fn().mockResolvedValue('true')
       });
 
       const result = await client.isActive('shl-1');
@@ -190,7 +190,7 @@ describe('SHLClient', () => {
 
     it('returns false when the response has no body', async () => {
       const client = new SHLClient(fakeAuth());
-      fetchMock.mockResolvedValue({ ok: true, headers: emptyHeaders() });
+      fetchMock.mockResolvedValue({ ok: true, headers: emptyHeaders(), text: vi.fn().mockResolvedValue('') });
 
       const result = await client.isActive('shl-1');
 
@@ -199,7 +199,7 @@ describe('SHLClient', () => {
 
     it('returns false for a 404 with no message', async () => {
       const client = new SHLClient(fakeAuth());
-      fetchMock.mockResolvedValue({ ok: false, status: 404, headers: emptyHeaders() });
+      fetchMock.mockResolvedValue({ ok: false, status: 404, headers: emptyHeaders(), text: vi.fn().mockResolvedValue('') });
 
       const result = await client.isActive('shl-1');
 
@@ -212,7 +212,7 @@ describe('SHLClient', () => {
         ok: false,
         status: 404,
         headers: jsonHeaders(),
-        json: vi.fn().mockResolvedValue({ message: 'Deleted' })
+        text: vi.fn().mockResolvedValue(JSON.stringify({ message: 'Deleted' }))
       });
 
       await expect(client.isActive('shl-1')).rejects.toThrow('Deleted');
@@ -220,7 +220,7 @@ describe('SHLClient', () => {
 
     it('returns false for a non-404 error status', async () => {
       const client = new SHLClient(fakeAuth());
-      fetchMock.mockResolvedValue({ ok: false, status: 500, headers: emptyHeaders() });
+      fetchMock.mockResolvedValue({ ok: false, status: 500, headers: emptyHeaders(), text: vi.fn().mockResolvedValue('') });
 
       const result = await client.isActive('shl-1');
 

@@ -11,6 +11,7 @@ import type {
 } from '$lib/utils/types';
 import { VIEWER_BASE } from '$lib/config/config';
 import { getUserShls } from '$lib/utils/shlServerUtils';
+import { fetchParsed } from '$lib/utils/requestUtils';
 
 export class SHLClient {
   // TODO: commit to jwt auth
@@ -84,27 +85,16 @@ export class SHLClient {
   }
 
   async isActive(id: string): Promise<boolean> {
-    const res = await fetch(`${API_BASE}/shl/${id}/active`, {
+    const res = await fetchParsed<boolean | { message?: string }>(`${API_BASE}/shl/${id}/active`, {
       method: 'GET'
     });
-    let content;
-    const contentLength = res.headers.get('Content-Length');
-    if (contentLength && parseInt(contentLength) > 0) {
-      const contentType = res.headers.get('Content-Type');
-  
-      // Check if the content type indicates JSON
-      if (contentType && contentType.includes('application/json')) {
-        content = await res.json();
-      } else {
-        content = await res.text();
-      }
-    }
-    if (res.ok && content !==undefined) {
+    const content = res.body === '' ? undefined : res.body;
+    if (res.ok && content !== undefined) {
       return content as boolean;
     }
     if (!res.ok) {
       if (res.status === 404) {
-        if (content !== undefined && "message" in content && content.message === "Deleted") {
+        if (content !== undefined && content !== null && typeof content === 'object' && content.message === "Deleted") {
           throw Error(content.message);
         }
         return false;
@@ -176,7 +166,7 @@ export class SHLClient {
         }
       }).join('&');
     const query = `?${urlParams}`;
-    const res = await fetch(`${API_BASE}/shl/${shlId}/${path}${query}`, {
+    const res = await fetchParsed<T[]>(`${API_BASE}/shl/${shlId}/${path}${query}`, {
       method: 'GET',
       headers: {
         "Authorization": `Bearer ${await this.auth.getAccessToken()}`
@@ -185,7 +175,7 @@ export class SHLClient {
     if (!res.ok) {
       throw new Error(`Failed to fetch ${path} for SHL ${shlId}: ${res.status}`);
     }
-    return await res.json();
+    return res.body as T[];
   }
 
   async getAccessLog(shlId: string, viewer?: string, limit?: number): Promise<AccessLogEntry[]> {
