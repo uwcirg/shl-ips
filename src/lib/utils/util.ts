@@ -3,6 +3,7 @@ import * as pako from 'pako';
 import issuerKeys from '$lib/utils/issuer.private.jwks.json';
 import type { Bundle, BundleEntry, Composition, Extension, Identifier, Patient, Resource } from 'fhir/r4';
 import type { UserDemographics, DateTimeFields, SHCFile } from '$lib/utils/types';
+import { fetchParsed } from '$lib/utils/requestUtils';
 
 export const base64url = jose.base64url;
 
@@ -300,14 +301,18 @@ export async function fetchEverything(reqUrl: string, options: RequestInit): Pro
   let url = reqUrl;
 
   while (url) {
-    const response = await fetch(url, options);
+    // Each page is a read, so retry it on network failures rather than losing every page collected so far
+    const response = await fetchParsed<Bundle>(url, options, { idempotent: true });
 
     if (!response.ok) {
-      const errText = await response.text();
+      const errText = typeof response.body === 'string' ? response.body : JSON.stringify(response.body);
       throw new Error(`FHIR request failed: ${response.status} ${errText}`);
     }
 
-    const bundle = await response.json();
+    if (typeof response.body === 'string') {
+      throw new Error(`FHIR request returned a non-JSON response: ${response.body.slice(0, 200)}`);
+    }
+    const bundle = response.body;
 
     if (bundle.entry) {
       bundle.entry.forEach(e => collected.push(e.resource));

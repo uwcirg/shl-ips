@@ -660,16 +660,16 @@ describe('fetchEverything', () => {
     fetchMock
       .mockResolvedValueOnce({
         ok: true,
-        json: vi.fn().mockResolvedValue({
+        text: vi.fn().mockResolvedValue(JSON.stringify({
           entry: [{ resource: { resourceType: 'Observation', id: 'obs-1' } }],
           link: [{ relation: 'next', url: 'https://fhir.example.com/page2' }]
-        })
+        }))
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: vi.fn().mockResolvedValue({
+        text: vi.fn().mockResolvedValue(JSON.stringify({
           entry: [{ resource: { resourceType: 'Observation', id: 'obs-2' } }]
-        })
+        }))
       });
 
     const result = await fetchEverything('https://fhir.example.com/page1', {});
@@ -686,12 +686,12 @@ describe('fetchEverything', () => {
     fetchMock
       .mockResolvedValueOnce({
         ok: true,
-        json: vi.fn().mockResolvedValue({
+        text: vi.fn().mockResolvedValue(JSON.stringify({
           entry: [],
           link: [{ relation: 'next', url: 'http://fhir.example.com/page2' }]
-        })
+        }))
       })
-      .mockResolvedValueOnce({ ok: true, json: vi.fn().mockResolvedValue({ entry: [] }) });
+      .mockResolvedValueOnce({ ok: true, text: vi.fn().mockResolvedValue(JSON.stringify({ entry: [] })) });
 
     await fetchEverything('https://fhir.example.com/page1', {});
 
