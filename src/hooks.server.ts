@@ -7,6 +7,11 @@
 import { error, type Handle } from '@sveltejs/kit';
 import { SERVER_API_BASE } from '$lib/server/config';
 import { INSTANCE_CONFIG } from '$lib/config/instance_config';
+import { fetchParsed } from '$lib/utils/requestUtils';
+
+// authcheck only validates a token, so it is safe to repeat. Keep attempts low since
+// these run in the request path of every authenticated request.
+const AUTHCHECK_RETRY = { idempotent: true, attempts: 2 } as const;
 
 const disallowedEndpoints = INSTANCE_CONFIG.disallowedEndpoints;
 const authenticatedAPIs = ['/api'];
@@ -24,24 +29,24 @@ async function checkAuth(request: Request) {
     console.log('Unauthorized');
     throw error(401, { message: 'Unauthorized' });
   }
-  return await fetch(`${SERVER_API_BASE}/authcheck`, {
+  return await fetchParsed(`${SERVER_API_BASE}/authcheck`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: auth
     }
-  });
+  }, AUTHCHECK_RETRY);
 }
 
 async function checkCookieAuth(token: string) {
   console.log('Checking cookie auth');
-  const response = await fetch(`${SERVER_API_BASE}/authcheck`, {
+  const response = await fetchParsed(`${SERVER_API_BASE}/authcheck`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`
     }
-  });
+  }, AUTHCHECK_RETRY);
   console.log(response);
   return response.ok;
 }
@@ -69,7 +74,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     const authorized = await checkAuth(request);
     if (!authorized.ok) {
       console.log('Authorization check failed');
-      console.log(authorized.status, authorized.statusText, await authorized.text());
+      console.log(authorized.status, authorized.statusText, authorized.body);
       throw error(401, { message: 'Authorization check failed' });
     }
   } else if (!isStaticAsset(url.pathname)) {
