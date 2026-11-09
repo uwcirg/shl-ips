@@ -7,6 +7,7 @@ import {
 import { getReferences, isIPSBundle } from '$lib/utils/util';
 import type { BundleEntry, Resource } from 'fhir/r4';
 import { getEntries } from './importNormalization';
+import { fetchParsed, retry } from '$lib/utils/requestUtils';
 
 export { authorize, endSession, getResources, activePatient, constructResourceUrl };
 
@@ -70,7 +71,8 @@ function endSession() {
 
 async function requestResources(client: any, resourceType: string): Promise<any> {
     let endpoint = constructResourceUrl(resourceType, client.getPatientId());
-    return client.request(endpoint, { flat: true }).then((result: Resource[]) => {
+    // Searches are reads, so retry transient network failures (including truncated responses)
+    return retry(() => client.request(endpoint, { flat: true })).then((result: Resource[]) => {
         let resourcesToPass: Resource[] = [];
         if (Array.isArray(result)) {
             result.forEach(resource => {
@@ -113,7 +115,7 @@ async function getResources() {
         || (client.state.serverUrl === "https://connectathon.epic.com/Interconnect-Fhir-OAuth/api/FHIR/R4"
         || (client.state.serverUrl === "https://ihe.epic.com/Interconnect-FHIR/api/FHIR/R4")
         )){
-        resources = await client.request(`Patient/${pid}/$summary`).then((result: Resource | Resource[]) => {
+        resources = await retry(() => client.request(`Patient/${pid}/$summary`)).then((result: Resource | Resource[]) => {
             let resourcesToPass = [];
             if (Array.isArray(result)) {
                 result.forEach(resource => {
@@ -171,20 +173,25 @@ export async function completeConfidentialClientAuth(host: string, resourceList:
                 }
             });
     } else {
-        let patient = await fetch(`${sofToken.serverUrl}/Patient/${patientId}`, {
+        let patient = await fetchParsed(`${sofToken.serverUrl}/Patient/${patientId}`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         })
-          .then(response => response.json())
+          .then(response => {
+            if (typeof response.body === 'string') {
+              throw Error(`Patient request failed: ${response.status}`);
+            }
+            return response.body;
+          })
           .then(patientData => {
             console.log('Patient Data:', patientData);
             return patientData;
           });
             
         resources = (await Promise.allSettled(resourceList.map((resourceType: string) => {
-          return fetch(`${sofToken.serverUrl}/${resourceType}?patient=${patientId}`, {
+          return fetchParsed<any>(`${sofToken.serverUrl}/${resourceType}?patient=${patientId}`, {
             headers: { Authorization: `Bearer ${accessToken}` },
           })
-          .then(response => response.json())
+          .then(response => response.body)
           .then(data => {
             console.log(`${resourceType} Data:`, data);
             if (data.resourceType === 'Bundle') {
@@ -225,13 +232,13 @@ async function getResourceReferences(resources: Resource[], allowedResourceTypes
             let headers: HeadersInit = {};
             headers.authorization = `Bearer ${token}`;
             fetchFunc = (reference: string) => {
-                return fetch(`${url}/${reference}`, {
+                return fetchParsed<any>(`${url}/${reference}`, {
                     headers: headers
-                }).then(response => response.json());
+                }).then(response => response.body);
             };
         } else {
             fetchFunc = (reference: string) => {
-                return client.request(reference, { flat: true });
+                return retry(() => client.request(reference, { flat: true }));
             };
         }
         resources = (await Promise.allSettled(referencedResourcesToFetch.map(fetchFunc)))
