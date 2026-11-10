@@ -84,9 +84,9 @@ export function createAutocoderHandler(options: AutocoderHandlerOptions): Reques
 			return failure(503, UNAVAILABLE);
 		}
 
-		const endpoint = `${apiUrl}?n=${maxResults}${occupation ? '&o=' + occupation : ''}${
-			industry ? '&i=' + industry : ''
-		}`;
+		const endpoint = `${apiUrl}?n=${maxResults}${
+			occupation ? '&o=' + encodeURIComponent(occupation) : ''
+		}${industry ? '&i=' + encodeURIComponent(industry) : ''}`;
 
 		let response: Response;
 		try {

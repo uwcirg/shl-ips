@@ -116,7 +116,7 @@
     controller = new AbortController();
     const { signal } = controller;
 
-    let url = `${endpoint}?${mode === "Occupation" ? "o" : "i"}=${input}&c=0`;
+    let url = `${endpoint}?${mode === "Occupation" ? "o" : "i"}=${encodeURIComponent(input)}&c=0`;
 
     const token = getAccessToken ? getAccessToken() : Promise.resolve(undefined);
     return token.then((token) => fetch(url, {

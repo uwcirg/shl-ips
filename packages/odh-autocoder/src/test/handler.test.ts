@@ -55,6 +55,18 @@ describe('createAutocoderHandler: request mapping', () => {
 		expect(fetch.mock.calls[0][0]).toBe(`${DEFAULT_AUTOCODER_API_URL}?n=6&o=nurse&i=hospital`);
 	});
 
+	it('encodes the text so punctuation reaches the autocoder intact', async () => {
+		const fetch = upstream();
+		await get(`?o=${encodeURIComponent('R&D manager #2')}&i=${encodeURIComponent('A+B 100%')}`, fetch);
+		const endpoint = fetch.mock.calls[0][0];
+		expect(endpoint).toBe(
+			`${DEFAULT_AUTOCODER_API_URL}?n=6&o=R%26D%20manager%20%232&i=A%2BB%20100%25`
+		);
+		const params = new URL(endpoint).searchParams;
+		expect(params.get('o')).toBe('R&D manager #2');
+		expect(params.get('i')).toBe('A+B 100%');
+	});
+
 	it('uses the configured API URL, result count and key getter', async () => {
 		const fetch = upstream();
 		await get('?o=nurse', fetch, {

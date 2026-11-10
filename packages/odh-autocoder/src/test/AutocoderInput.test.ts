@@ -81,6 +81,18 @@ describe('AutocoderInput', () => {
 		expect(await screen.findByTitle('Hospitals')).toBeInTheDocument();
 	});
 
+	it('encodes the typed text in the request URL', async () => {
+		const fetch = mockFetch({ ok: true, status: 200, body: JSON.stringify(suggestions) });
+		renderInput();
+
+		await type('R&D manager #2');
+
+		await waitFor(() => expect(fetch).toHaveBeenCalled());
+		const url = fetch.mock.calls[0][0];
+		expect(url).toBe('/api/nio-autocoder?o=R%26D%20manager%20%232&c=0');
+		expect(new URL(url, 'http://localhost').searchParams.get('o')).toBe('R&D manager #2');
+	});
+
 	it('sends no Authorization header without getAccessToken', async () => {
 		const fetch = mockFetch({ ok: true, status: 200, body: JSON.stringify(suggestions) });
 		renderInput();
