@@ -3,6 +3,8 @@ FROM node:24 AS base-deps
 WORKDIR /opt/app
 
 COPY package*.json .
+# npm workspaces: every workspace's package.json must be present for `npm clean-install`
+COPY packages/odh-autocoder/package.json packages/odh-autocoder/
 RUN npm clean-install
 
 FROM base-deps AS deps
@@ -47,6 +49,8 @@ FROM node:24-slim AS prod
 WORKDIR /opt/app
 
 COPY --from=build /opt/app/node_modules ./node_modules
+# node_modules links workspace packages here; keep the links from dangling
+COPY --from=build /opt/app/packages ./packages
 COPY --from=build /opt/app/build ./build
 
 COPY ./entrypoint.sh ./
@@ -83,6 +87,8 @@ ENV VITE_INSTANCE_ID=$VITE_INSTANCE_ID
 ENV NODE_ENV=production
 
 COPY --from=deps /opt/app/node_modules ./node_modules
+# Workspace packages (built by the prebuild script before the app)
+COPY --from=deps /opt/app/packages ./packages
 COPY --from=deps /opt/app/src ./src
 COPY --from=deps /opt/app/static ./static
 COPY --from=deps /opt/app/package.json ./package.json
