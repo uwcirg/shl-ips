@@ -12,6 +12,7 @@
 		"build:pkg": "npm run package --workspace=odh-autocoder",
 		"dev:pkg": "npm run package:watch --workspace=odh-autocoder",
 		"test:pkg": "npm run test --workspace=odh-autocoder",
+		"lint:pkg": "npm run lint --workspace=odh-autocoder",
 		"predev": "npm run build:pkg",
 		"dev": "vite dev",
 		"prebuild": "npm run build:pkg",
