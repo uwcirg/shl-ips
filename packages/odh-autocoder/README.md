@@ -78,7 +78,7 @@ It never logs request or response contents (occupation text can be sensitive), a
 | `getAccessToken` | none | `() => Promise<string \| undefined>`. If set, autocoder requests carry `Authorization: Bearer <token>`. |
 | `subject` | none | A FHIR `Reference` (for example `{ reference: 'Patient/123' }`) set as every saved resource's `subject`. Without it, resources have no subject. |
 
-Also exported: `AutocoderInput` (one coded field: `mode="Occupation" | "Industry"`, `bind:value`, `id`, `endpoint`, `getAccessToken`) and `MonthInput` (`bind:value` as `YYYY-MM`).
+Also exported: `AutocoderInput` (one coded field: `mode="Occupation" | "Industry"`, `bind:value`, `id`, `endpoint`, `getAccessToken`) and `MonthInput` (`bind:value` as `YYYY-MM`, or `YYYY` for a year-only date).
 
 #### Page requirements
 
@@ -152,5 +152,4 @@ Then publish it (for example to GitHub Packages, with a scope added to the name)
 
 These behaviors were kept as they were in the original code:
 
-- Year-only dates on existing resources (such as `2009`) are dropped when edited, because the month inputs hold `YYYY-MM`.
 - Occupation text is sent in the query string, so it can show up in proxy access logs.

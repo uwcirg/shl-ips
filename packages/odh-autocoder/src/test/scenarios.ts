@@ -82,8 +82,7 @@ export const SCENARIOS: Scenario[] = [
 	},
 	{
 		name: 'round-trip',
-		// Known issue (kept for now): a year-only date such as '2009' doesn't fit the month
-		// inputs' YYYY-MM format, so it is dropped on the way through the form.
+		// Dates finer than a month are cut to YYYY-MM; a year-only date such as '2009' is kept
 		description: 'existing ODH resources of every kind',
 		resources: [
 			employmentStatus('Employed'),

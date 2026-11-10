@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Input } from '@sveltestrap/sveltestrap';
 
-  // Value is "YYYY-MM", or "" when empty or incomplete
+  // Value is "YYYY-MM", "YYYY" (year only), or "" when empty or incomplete
   export let value: string = "";
 
   // Browsers without month inputs (e.g. Firefox) coerce type="month" to a text input. A date input
@@ -18,13 +18,27 @@
   let month = "";
   let year = "";
 
+  // A month input can't show a year without a month, so a year-only value is shown (and edited)
+  // with the month select and year field instead. Once shown that way, the field stays that way.
+  let hasShownYearOnly = false;
+  $: if (/^\d{4}$/.test(value ?? "")) {
+    hasShownYearOnly = true;
+  }
+  $: useMonthInput = supportsMonthInput && !hasShownYearOnly;
+
+  // A year without a month is a year-only date
   function compose(y: string, m: string) {
-    return /^\d{4}$/.test(y) && m ? `${y}-${m}` : "";
+    if (!/^\d{4}$/.test(y)) {
+      return "";
+    }
+    return m ? `${y}-${m}` : y;
   }
 
   // Sync from the bound value, without clearing a half-filled month/year while value is still ""
-  $: if (!supportsMonthInput && value !== compose(year, month)) {
-    [year = "", month = ""] = value?.match(/^(\d{4})-(\d{2})/)?.slice(1) ?? [];
+  $: if (!useMonthInput && value !== compose(year, month)) {
+    const [, y = "", m = ""] = value?.match(/^(\d{4})(?:-(\d{2}))?/) ?? [];
+    year = y;
+    month = m;
   }
 
   function update() {
@@ -33,7 +47,7 @@
 </script>
 
 <div class="month-input d-flex gap-2">
-  {#if supportsMonthInput}
+  {#if useMonthInput}
     <Input type="month" bind:value />
   {:else}
     <select

@@ -312,7 +312,10 @@
           ]
         }
       }
-    ]
+    ],
+    "effectivePeriod": {
+      "end": "2009"
+    }
   },
   {
     "resourceType": "Observation",

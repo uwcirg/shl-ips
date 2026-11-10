@@ -4,10 +4,10 @@ import { ODH_BLANK_ENTRIES, copyOf, type OdhFormValues } from './values.js';
 
 // Reads existing ODH resources back into form values, so saved work info can be edited.
 
-// Month inputs hold "YYYY-MM", but stored dates can have any FHIR precision (year, year-month,
-// date, or dateTime), so fit the stored value to month precision.
+// Month inputs hold "YYYY-MM" or "YYYY", but stored dates can have any FHIR precision (year,
+// year-month, date, or dateTime): keep a year as is, and cut finer dates down to the month.
 function toInputValue(value: string | undefined): string {
-	return value?.match(/^\d{4}-\d{2}/)?.[0] ?? '';
+	return value?.match(/^\d{4}(-\d{2})?/)?.[0] ?? '';
 }
 
 function withLoincCode(resources: Observation[], code: string): any[] {
