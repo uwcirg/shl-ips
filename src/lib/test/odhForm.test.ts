@@ -7,10 +7,10 @@ import { ResourceHelper } from '$lib/utils/ResourceHelper';
 import { fakeAuth } from '$lib/test/mocks';
 import type { IResourceCollection, ResourceRetrieveEvent } from '$lib/utils/types';
 
-// Characterization tests: these capture the FHIR resources the form emits today, so the
-// extraction into the odh-autocoder package can prove its output is unchanged. The fixture
-// files under fixtures/odh are the reference; the package's builder tests compare against
-// the same files.
+// Characterization tests: these capture the FHIR resources the form emits, so the extraction
+// into the odh-autocoder package can prove its output is unchanged. The fixtures live in the
+// package (its builder tests compare against the same files); this test moves there with the
+// form component.
 
 const ODH_JOB_PROFILE = 'http://hl7.org/fhir/us/odh/StructureDefinition/odh-PastOrPresentJob';
 const IS_CURRENT_JOB = 'http://hl7.org/fhir/us/odh/StructureDefinition/odh-isCurrentJob-extension';
@@ -89,7 +89,7 @@ async function saveAndCapture(resources?: Observation[]): Promise<ResourceRetrie
 }
 
 function fixture(name: string) {
-  return `./fixtures/odh/${name}.json`;
+  return `../../../packages/odh-autocoder/src/test/fixtures/odh/${name}.json`;
 }
 
 async function expectFixture(event: ResourceRetrieveEvent, name: string) {

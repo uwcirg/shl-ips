@@ -16,7 +16,9 @@ const upstreamBody = {
 };
 
 function mockFetch(body: unknown = upstreamBody) {
-  const fetch = vi.fn(async () => new Response(JSON.stringify(body), { status: 200 }));
+  const fetch = vi.fn(
+    async (_url: string, _init?: RequestInit) => new Response(JSON.stringify(body), { status: 200 })
+  );
   // The route currently calls the global fetch; after extraction it uses event.fetch. Supplying
   // the same mock both ways keeps these tests valid across the change.
   vi.stubGlobal('fetch', fetch);

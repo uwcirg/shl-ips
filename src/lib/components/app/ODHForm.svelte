@@ -1,13 +1,20 @@
 <script lang="ts">
   import { Accordion, AccordionItem, Button, Col, FormGroup, Icon, Input, Row, Spinner } from '@sveltestrap/sveltestrap';
-  import { createEventDispatcher, onMount, getContext } from 'svelte';
+  import { createEventDispatcher } from 'svelte';
   import MonthInput from '$lib/components/form/MonthInput.svelte';
   import NIOAutoCoderInput from '$lib/components/form/NIOAutoCoderInput.svelte';
-  import type { IOResponse, IResourceCollection, ResourceRetrieveEvent } from '$lib/utils/types';
+  import type { IResourceCollection, ResourceRetrieveEvent } from '$lib/utils/types';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
   import { ResourceHelper } from '$lib/utils/ResourceHelper';
   import type { Observation } from 'fhir/r4';
-  import { copyOf, getUniqueResourceObject } from '$lib/utils/util';
+  import {
+    EMPLOYMENT_STATUSES,
+    ODH_BLANK_ENTRIES,
+    applyOdhResources,
+    buildOdhResources,
+    copyOf,
+    defaultOdhFormValues
+  } from 'odh-autocoder';
 
   export let formData: IResourceCollection | undefined;
   export let processing: boolean = false;
@@ -31,198 +38,41 @@
     name: 'My Work Info'
   };
 
-  // Month inputs hold "YYYY-MM", but stored dates can have any FHIR precision (year, year-month,
-  // date, or dateTime), so fit the stored value to month precision.
-  function toInputValue(value: string | undefined): string {
-    return value?.match(/^\d{4}-\d{2}/)?.[0] ?? "";
-  }
+  let statuses = EMPLOYMENT_STATUSES;
 
-  let statuses: Record<string, string> = {
-    Employed: 'Employed',
-    Unemployed: 'Unemployed',
-    'Not in labor force': 'NotInLaborForce'
-  };
-
-  // Defaults
-  let defaults = {
-    status: 'Employed',
-    isWorking: true,
-    wasWorkingPast: false,
-    isRetired: false,
-    wasInCombat: false,
-    currentWork: {
-      occupation: undefined as IOResponse | undefined,
-      industry: undefined as IOResponse | undefined,
-      start: ""
-    },
-    pastWork: {
-      occupation: undefined as IOResponse | undefined,
-      industry: undefined as IOResponse | undefined,
-      start: "",
-      end: "",
-    },
-    retirementDate: {
-      start: ""
-    },
-    combatPeriod: {
-      start: "",
-      end: ""
-    }
-  }
-
-  let defaultValues = {
-    status: defaults.status,
-    isWorking: defaults.isWorking,
-    wasWorkingPast: defaults.wasWorkingPast,
-    isRetired: defaults.isRetired,
-    wasInCombat: defaults.wasInCombat,
-    currentWork: [defaults.currentWork],
-    pastWork: [] as (typeof defaults.pastWork)[],
-    retirementDates: [] as (typeof defaults.retirementDate)[],
-    combatPeriods: [] as (typeof defaults.combatPeriod)[]
-  };
   // Form values
-  let values = copyOf(defaultValues);
-
-  function getJobHistoryResources(rhs: ResourceHelper[]) {
-    return rhs?.filter(rh => rh.resource.code?.coding?.find(c => c.code === '11341-5' && c.system === 'http://loinc.org')).map(r => r.resource);
-  }
-
-  function getCurrentJobResources(rhs: ResourceHelper[]) {
-    const jhrs = getJobHistoryResources(rhs);
-    return jhrs.filter(r => r.extension.find(e => e.url === 'http://hl7.org/fhir/us/odh/StructureDefinition/odh-isCurrentJob-extension' && e.valueBoolean));
-  }
-
-  function getPastJobResources(rhs: ResourceHelper[]) {
-    const jhrs = getJobHistoryResources(rhs);
-    return jhrs.filter(r => r.extension.find(e => e.url === 'http://hl7.org/fhir/us/odh/StructureDefinition/odh-isCurrentJob-extension' && !e.valueBoolean));
-  }
-
-  function getEmploymentStatusResource(rhs: ResourceHelper[]) {
-    return rhs?.filter(rh => rh.resource.code?.coding?.find(c => c.code === '74165-2' && c.system === 'http://loinc.org')).map(r => r.resource).pop();
-  }
-
-  function getRetirementDateResources(rhs: ResourceHelper[]) {
-    return rhs?.filter(r => r.resource.code?.coding?.find(c => c.code === '87510-4' && c.system === 'http://loinc.org')).map(r => r.resource);
-  }
-  
-  function getCombatPeriodResources(rhs: ResourceHelper[]) {
-    return rhs?.filter(r => r.resource.code?.coding?.find(c => c.code === '87511-2' && c.system === 'http://loinc.org')).map(r => r.resource);
-  }
-
-  function initializeCurrentJobFields(rhs: ResourceHelper[]) {
-    const currentJobResources = getCurrentJobResources(rhs);
-    if (currentJobResources.length === 0) { return; }
-    values.isWorking = true;
-    values.currentWork = [];
-    for (const resource of currentJobResources) {
-      const jobValues = copyOf(defaults.currentWork);
-      jobValues.occupation = resource.valueCodeableConcept?.coding[0]?.code ? 
-        {
-          Code: resource.valueCodeableConcept.coding[0].code,
-          Title: resource.valueCodeableConcept?.coding[0]?.display ?? "Unknown Occupation",
-          Score: 1
-        } : undefined;
-      jobValues.industry = resource.component[0].valueCodeableConcept?.coding[0]?.code ? 
-        {
-          Code: resource.component[0].valueCodeableConcept.coding[0].code,
-          Title: resource.component[0].valueCodeableConcept?.coding[0]?.display ?? "Unknown Industry",
-          Score: 1
-        } : undefined;
-      jobValues.start = toInputValue(resource.effectivePeriod?.start),
-      values.currentWork.push(jobValues);
-    }
-  }
-
-  function initializePastJobFields(rhs: ResourceHelper[]) {
-    const pastJobResources = getPastJobResources(rhs);
-    if (pastJobResources.length === 0) { return; }
-    values.wasWorkingPast = true;
-    values.pastWork = [];
-    for (const resource of pastJobResources) {
-      const jobValues = copyOf(defaults.currentWork);
-      jobValues.occupation = resource.valueCodeableConcept?.coding[0]?.code ? 
-        {
-          Code: resource.valueCodeableConcept.coding[0].code,
-          Title: resource.valueCodeableConcept?.coding[0]?.display ?? "Unknown Occupation",
-          Score: 1
-        } : undefined;
-      jobValues.industry = resource.component[0].valueCodeableConcept?.coding[0]?.code ? 
-        {
-          Code: resource.component[0].valueCodeableConcept.coding[0].code,
-          Title: resource.component[0].valueCodeableConcept?.coding[0]?.display ?? "Unknown Industry",
-          Score: 1
-        } : undefined;
-      jobValues.start = toInputValue(resource.effectivePeriod?.start),
-      jobValues.end = toInputValue(resource.effectivePeriod?.end),
-      values.pastWork.push(jobValues);
-    }
-  }
-
-  function initializeEmploymentStatusFields(rhs: ResourceHelper[]) {
-    const employmentStatusResource = getEmploymentStatusResource(rhs);
-    if (employmentStatusResource) {
-      values.status = employmentStatusResource.valueCodeableConcept?.coding[0]?.display ?? 'Employed';
-    }
-  }
-
-  function initializeRetirementDateFields(rhs: ResourceHelper[]) {
-    const retirementDateResources = getRetirementDateResources(rhs);
-    values.retirementDates = [];
-    for (const resource of retirementDateResources) {
-      const retirementDate = {
-        start: toInputValue(resource.valueDateTime)
-      };
-      values.retirementDates.push(retirementDate);
-    }
-  }
-
-  function initializeCombatPeriodFields(rhs: ResourceHelper[]) {
-    const combatPeriodResources = getCombatPeriodResources(rhs);
-    values.combatPeriods = [];
-    for (const resource of combatPeriodResources) {
-      const combatPeriod = {
-        start: toInputValue(resource.valuePeriod?.start),
-        end: toInputValue(resource.valuePeriod?.end),
-      };
-      values.combatPeriods.push(combatPeriod)
-    }
-  }
+  let values = defaultOdhFormValues();
 
   function initializeFieldsForFormData() {
     if (!$resources) { return; }
 
-    const resources = Object.values($resources) as ResourceHelper[];
+    const resources = (Object.values($resources) as ResourceHelper[]).map(rh => rh.resource as Observation);
     if (!resources?.length) { return; }
-    
-    initializeCurrentJobFields(resources);
-    initializePastJobFields(resources);
-    initializeEmploymentStatusFields(resources);
-    initializeRetirementDateFields(resources);
-    initializeCombatPeriodFields(resources);
+
+    values = applyOdhResources(values, resources);
   }
 
   function initializeDefaultFields() {
-    values = copyOf(defaultValues);
+    values = defaultOdhFormValues();
   }
 
   function addCurrentJob() {
-    values.currentWork.push(copyOf(defaults.currentWork));
+    values.currentWork.push(copyOf(ODH_BLANK_ENTRIES.currentWork));
     values=values;
   }
-  
+
   function addPastJob() {
-    values.pastWork.push(copyOf(defaults.pastWork));
+    values.pastWork.push(copyOf(ODH_BLANK_ENTRIES.pastWork));
     values=values;
   }
-  
+
   function addRetirementDate() {
-    values.retirementDates.push(copyOf(defaults.retirementDate));
+    values.retirementDates.push(copyOf(ODH_BLANK_ENTRIES.retirementDate));
     values=values;
   }
-  
+
   function addCombatPeriod() {
-    values.combatPeriods.push(copyOf(defaults.combatPeriod));
+    values.combatPeriods.push(copyOf(ODH_BLANK_ENTRIES.combatPeriod));
     values=values;
   }
 
@@ -254,394 +104,14 @@
     }
   }
 
-  // Present job resource template
-  let currentJobTemplate = {
-    resourceType: 'Observation',
-    id: '',
-    meta: {
-      profile: ['http://hl7.org/fhir/us/odh/StructureDefinition/odh-PastOrPresentJob']
-    },
-    extension: [
-      {
-        url: 'http://hl7.org/fhir/us/odh/StructureDefinition/odh-isCurrentJob-extension',
-        valueBoolean: true
-      }
-    ],
-    status: 'final',
-    category: [
-      {
-        coding: [
-          {
-            system: 'http://terminology.hl7.org/CodeSystem/observation-category',
-            code: 'social-history'
-          }
-        ]
-      }
-    ],
-    code: {
-      coding: [
-        {
-          system: 'http://loinc.org',
-          code: '11341-5',
-          display: 'History of Occupation'
-        }
-      ]
-    },
-    subject: {
-      reference: 'Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299'
-    },
-    valueCodeableConcept: {
-      coding: []
-    },
-    component: [
-      {
-        code: {
-          coding: [
-            {
-              system: 'http://loinc.org',
-              code: '86188-0',
-              display: 'History of Occupation Industry'
-            }
-          ]
-        },
-        valueCodeableConcept: {
-          coding: []
-        }
-      }
-    ]
-  };
-
-  // Employment status resource template
-  let employmentStatusTemplate = {
-    resourceType: 'Observation',
-    id: '',
-    meta: {
-      profile: ['http://hl7.org/fhir/us/odh/StructureDefinition/odh-EmploymentStatus']
-    },
-    status: 'final',
-    category: [
-      {
-        coding: [
-          {
-            system: 'http://terminology.hl7.org/CodeSystem/observation-category',
-            code: 'social-history'
-          }
-        ]
-      }
-    ],
-    code: {
-      coding: [
-        {
-          system: 'http://loinc.org',
-          code: '74165-2',
-          display: 'History of employment status NIOSH'
-        }
-      ]
-    },
-    subject: {
-      reference: 'Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299'
-    },
-    valueCodeableConcept: {
-      coding: [
-        {
-          system: 'http://terminology.hl7.org/CodeSystem/v3-ObservationValue',
-          code: 'Employed',
-          display: 'Employed'
-        }
-      ]
-    }
-  };
-
-  // Past job resource template
-  let pastJobTemplate = {
-    resourceType: 'Observation',
-    id: '',
-    meta: {
-      profile: ['http://hl7.org/fhir/us/odh/StructureDefinition/odh-PastOrPresentJob']
-    },
-    extension: [
-      {
-        url: 'http://hl7.org/fhir/us/odh/StructureDefinition/odh-isCurrentJob-extension',
-        valueBoolean: false
-      }
-    ],
-    status: 'final',
-    category: [
-      {
-        coding: [
-          {
-            system: 'http://terminology.hl7.org/CodeSystem/observation-category',
-            code: 'social-history'
-          }
-        ]
-      }
-    ],
-    code: {
-      coding: [
-        {
-          system: 'http://loinc.org',
-          code: '11341-5',
-          display: 'History of Occupation'
-        }
-      ]
-    },
-    subject: {
-      reference: 'Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299'
-    },
-    valueCodeableConcept: {
-      coding: []
-    },
-    component: [
-      {
-        code: {
-          coding: [
-            {
-              system: 'http://loinc.org',
-              code: '86188-0',
-              display: 'History of Occupation Industry'
-            }
-          ]
-        },
-        valueCodeableConcept: {
-          coding: []
-        }
-      }
-    ]
-  };
-
-  // Retirement date resource template
-  let retirementDateTemplate = {
-    resourceType: 'Observation',
-    id: '126e7704-b9dc-4559-ad88-138ad7a3f237',
-    meta: {
-      profile: ['http://hl7.org/fhir/us/odh/StructureDefinition/odh-RetirementDate']
-    },
-    status: 'final',
-    category: [
-      {
-        coding: [
-          {
-            system: 'http://terminology.hl7.org/CodeSystem/observation-category',
-            code: 'social-history'
-          }
-        ]
-      }
-    ],
-    code: {
-      coding: [
-        {
-          system: 'http://loinc.org',
-          code: '87510-4',
-          display: 'Date of Retirement'
-        }
-      ]
-    },
-    subject: {
-      reference: 'Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299'
-    },
-    valueDateTime: ''
-  };
-
-  // Combat zone period resource template
-  let combatPeriodTemplate = {
-    resourceType: 'Observation',
-    id: '',
-    meta: {
-      profile: ['http://hl7.org/fhir/us/odh/StructureDefinition/odh-CombatZonePeriod']
-    },
-    status: 'final',
-    category: [
-      {
-        coding: [
-          {
-            system: 'http://terminology.hl7.org/CodeSystem/observation-category',
-            code: 'social-history'
-          }
-        ]
-      }
-    ],
-    code: {
-      coding: [
-        {
-          system: 'http://loinc.org',
-          code: '87511-2',
-          display: 'Combat zone AndOr hazardous duty work dates'
-        }
-      ]
-    },
-    subject: {
-      reference: 'Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299'
-    },
-    valuePeriod: {
-      start: '',
-      end: ''
-    }
-  };
-
   $: {
     if (values.status) {
       values.isWorking = values.status === 'Employed';
     }
   }
 
-  function sortObjectKeys(obj: any): any {
-    return Object.keys(obj).sort().reduce((result: any, key: any) => {
-      result[key] = obj[key];
-      return result;
-    }, {});
-  }
-
-  function deduplicateObjectList(arr: any[]): any[] {
-    const seen = new Set();
-    return arr.filter((item: any) => {
-      const strItem = JSON.stringify(sortObjectKeys(item));
-      const duplicate = seen.has(strItem);
-      seen.add(strItem);
-      return !duplicate;
-    });
-  }
-
-  function generateCurrentJobResources(): Observation[] {
-    const currentJobResources: Observation[] = [];
-    if (!values.isWorking) { return currentJobResources; } // Don't add current job data if not working
-    const uniqueJobs = deduplicateObjectList(values.currentWork);
-    for (const [i, jobValue] of uniqueJobs.entries()) {
-      const currentJobResource = getUniqueResourceObject(currentJobTemplate);
-      currentJobResource.id = `odh-current-job-${i}`;
-      if (jobValue.start) {
-        let period: any = { start: jobValue.start };
-        currentJobResource.effectivePeriod = period;
-      }
-      if (jobValue.occupation) {
-        currentJobResource.valueCodeableConcept.coding = [{
-          system: jobValue.occupation.Code.indexOf('-') >= 0 ?
-            'http://hl7.org/fhir/us/odh/CodeSystem/PHOccupationalDataForHealthODH' 
-            : 'urn:oid:2.16.840.1.113883.2.9.6.2.7',
-          code: jobValue.occupation.Code,
-          display: jobValue.occupation.Title
-        }];
-      }
-      if (jobValue.industry) {
-        currentJobResource.component[0].valueCodeableConcept.coding = [{
-          system: 'http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH',
-          code: jobValue.industry.Code,
-          display: jobValue.industry.Title
-        }];
-      }
-      currentJobResources.push(currentJobResource);
-    }
-    return currentJobResources;
-  }
-
-  function generatePastJobResources(): Observation[] {
-    const pastJobResources: Observation[] = [];
-    const uniqueJobs = deduplicateObjectList(values.pastWork);
-    for (const [i, jobValue] of uniqueJobs.entries()) {
-      const pastJobResource = getUniqueResourceObject(pastJobTemplate);
-      pastJobResource.id = `odh-past-job-${i}`;
-      if (jobValue.start || jobValue.end) {
-        let period: any = {};
-        if (jobValue.start) {
-          period.start = jobValue.start;
-        }
-        if (jobValue.end) {
-          period.end = jobValue.end;
-        }
-        pastJobResource.effectivePeriod = period;
-      }
-      if (jobValue.occupation) {
-        pastJobResource.valueCodeableConcept.coding = [{
-          system: jobValue.occupation.Code.indexOf('-') >= 0 ?
-            'http://hl7.org/fhir/us/odh/CodeSystem/PHOccupationalDataForHealthODH' 
-            : 'urn:oid:2.16.840.1.113883.2.9.6.2.7',
-          code: jobValue.occupation.Code,
-          display: jobValue.occupation.Title
-        }];
-      }
-      if (jobValue.industry) {
-        pastJobResource.component[0].valueCodeableConcept.coding = [{
-          system: 'http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH',
-          code: jobValue.industry.Code,
-          display: jobValue.industry.Title
-        }];
-      }
-      pastJobResources.push(pastJobResource);
-    }
-    return pastJobResources;
-  }
-
-  function generateRetirementDateResources(): Observation[] {
-    const retirementDateResources: Observation[] = [];
-    const uniqueRetirementDates = deduplicateObjectList(values.retirementDates);
-    const validRetirementDates = uniqueRetirementDates.filter((retirementDate: any) => retirementDate.start);
-    for (const [i, retirementDate] of validRetirementDates.entries()) {
-      const retirementDateResource = getUniqueResourceObject(retirementDateTemplate);
-      retirementDateResource.id = `odh-retirement-date-${i}`;
-      if (retirementDate.start) {
-        retirementDateResource.valueDateTime = retirementDate.start;
-      }
-      retirementDateResources.push(retirementDateResource);
-    }
-    return retirementDateResources;
-  }
-
-  function generateCombatPeriodResources(): Observation[] {
-    const combatPeriodResources: Observation[] = [];
-    const uniqueCombatPeriods = deduplicateObjectList(values.combatPeriods);
-    const validCombatPeriods = uniqueCombatPeriods.filter((combatPeriod: any) => combatPeriod.start || combatPeriod.end);
-    for (const [i, combatPeriod] of validCombatPeriods.entries()) {
-      const combatPeriodResource = getUniqueResourceObject(combatPeriodTemplate);
-      combatPeriodResource.id = `odh-combat-period-${i}`;
-      if (combatPeriod.start || combatPeriod.end) {
-        let period: any = {};
-        if (combatPeriod.start) {
-          period.start = combatPeriod.start;
-        }
-        if (combatPeriod.end) {
-          period.end = combatPeriod.end;
-        }
-        combatPeriodResource.valuePeriod = period;
-      }
-      combatPeriodResources.push(combatPeriodResource);
-    }
-    return combatPeriodResources;
-  }
-
-  function generateEmploymentStatusResources(): Observation[] {
-    const employmentStatusResource = getUniqueResourceObject(employmentStatusTemplate);
-    employmentStatusResource.id = `odh-employment-status`;
-    employmentStatusResource.valueCodeableConcept.coding[0].code = statuses[values.status];
-    employmentStatusResource.valueCodeableConcept.coding[0].display = values.status;
-    let minDate: string | null = null;
-    for (const jobValue of values.currentWork) {
-      if (minDate === null || minDate > jobValue.start) {
-        minDate = jobValue.start;
-      }
-    }
-    if (minDate) {
-      employmentStatusResource.effectivePeriod = {
-        start: minDate
-      };
-    } else {
-      delete employmentStatusResource.effectivePeriod;
-    }
-    return [employmentStatusResource];
-  }
-
   function updateOdhSection() {
-    const employmentStatusResources = generateEmploymentStatusResources();
-    const currentJobResources = generateCurrentJobResources();
-    const pastJobResources = generatePastJobResources();
-    const retirementDateResources = generateRetirementDateResources();
-    const combatPeriodResources = generateCombatPeriodResources();
-
-    const resources = [
-      ...employmentStatusResources,
-      ...currentJobResources,
-      ...pastJobResources,
-      ...retirementDateResources,
-      ...combatPeriodResources
-    ]
+    const resources = buildOdhResources(values);
     let result: ResourceRetrieveEvent = {
       resources,
       category: CATEGORY,

@@ -75,16 +75,7 @@ export interface ResourceTemplateParams<T> {
   entries?: BundleEntry[];
 }
 
-export interface IOResponse {
-  Code: string;
-  Title: string;
-  Score: number;
-}
-export interface NIOAutoCoderResponse {
-  Industry: IOResponse[];
-  Occupation: IOResponse[];
-  Scheme: string;
-}
+export type { IOResponse, AutocoderResponse as NIOAutoCoderResponse } from 'odh-autocoder';
 
 export interface ResourceRetrieveEvent {
   resources: Resource[] | BundleEntry[] | undefined;
