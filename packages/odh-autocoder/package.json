@@ -52,6 +52,7 @@
 		"@sveltejs/package": "^2.5.8",
 		"@sveltestrap/sveltestrap": "^6.2.8",
 		"@testing-library/jest-dom": "^7.0.1",
+		"bootstrap": "^5.3.8",
 		"@testing-library/svelte": "^5.4.2",
 		"jsdom": "^24.0.0",
 		"publint": "^0.2.12",
