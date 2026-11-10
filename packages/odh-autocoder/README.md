@@ -76,6 +76,7 @@ It never logs request or response contents (occupation text can be sensitive), a
 | `processing` | `false` | Shows the save button as busy |
 | `endpoint` | `/api/nio-autocoder` | Where the inputs send autocoder requests (the route from step 2) |
 | `getAccessToken` | none | `() => Promise<string \| undefined>`. If set, autocoder requests carry `Authorization: Bearer <token>`. |
+| `subject` | none | A FHIR `Reference` (for example `{ reference: 'Patient/123' }`) set as every saved resource's `subject`. Without it, resources have no subject. |
 
 Also exported: `AutocoderInput` (one coded field: `mode="Occupation" | "Industry"`, `bind:value`, `id`, `endpoint`, `getAccessToken`) and `MonthInput` (`bind:value` as `YYYY-MM`).
 
@@ -95,9 +96,11 @@ import { buildOdhResources, applyOdhResources, defaultOdhFormValues } from 'odh-
 const values = applyOdhResources(defaultOdhFormValues(), existingObservations);
 const observations = buildOdhResources(values);
 // employment status, current jobs, past jobs, retirement dates, combat zone periods
+
+buildOdhResources(values, { subject: { reference: 'Patient/123' } }); // with a subject
 ```
 
-`buildOdhResources` also has one builder per resource kind (`buildCurrentJobResources`, ...). Types: `OdhFormValues`, `CurrentJobValues`, `PastJobValues`, `IOResponse`, `AutocoderResponse`, `CodingMode`. Constants: `EMPLOYMENT_STATUSES`, `NOT_CODED`.
+`buildOdhResources` also has one builder per resource kind (`buildCurrentJobResources`, ...), each taking the same options. Types: `OdhBuildOptions`, `OdhFormValues`, `CurrentJobValues`, `PastJobValues`, `IOResponse`, `AutocoderResponse`, `CodingMode`. Constants: `EMPLOYMENT_STATUSES`, `NOT_CODED`.
 
 ## Developing
 
@@ -149,6 +152,5 @@ Then publish it (for example to GitHub Packages, with a scope added to the name)
 
 These behaviors were kept as they were in the original code:
 
-- Every resource's `subject` is a fixed placeholder, `Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299`.
 - Year-only dates on existing resources (such as `2009`) are dropped when edited, because the month inputs hold `YYYY-MM`.
 - Occupation text is sent in the query string, so it can show up in proxy access logs.
