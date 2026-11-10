@@ -10,7 +10,7 @@ The package contains:
 
 It doesn't do auth, persistence, routing or app config. The app that uses it passes those in.
 
-Used by the main app at the repository root and by [`apps/lite-app`](../../apps/lite-app).
+Used by the main app at the repository root and by [`apps/odh-app`](../../apps/odh-app).
 
 ## Using it in an app
 

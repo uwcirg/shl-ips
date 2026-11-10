@@ -67,7 +67,7 @@ npm run test:e2e
 The repository is an npm workspace. The main app is at the root, and alongside it:
 
 - [`packages/odh-autocoder`](packages/odh-autocoder): the health-related work info (ODH) form, the NIO autocoder endpoint handler, and the FHIR builders. The main app uses it in `src/lib/components/app/ODHForm.svelte` and `src/routes/(common)/api/nio-autocoder/+server.ts`.
-- [`apps/lite-app`](apps/lite-app): a standalone app with just that form.
+- [`apps/odh-app`](apps/odh-app): a standalone app with just that form.
 
 Work on the ODH form in the package, not the app. The main app consumes the package's built `dist/`, which `npm run dev`, `build`, `test` and `check` rebuild first. For live changes, run `npm run dev:pkg` (watch mode) next to `npm run dev`.
 

@@ -25,7 +25,7 @@ From the repository root (this also builds the package):
 ```bash
 npm install
 npm run dev:lite      # http://localhost:5190
-npm run build:lite    # production build in apps/lite-app/build
+npm run build:lite    # production build in apps/odh-app/build
 npm run test:lite
 ```
 
@@ -46,7 +46,7 @@ node --env-file=.env build    # or set the variables in the environment; PORT de
 The app depends on `odh-autocoder` by version (`^0.1.0`), not by path. Once the package is published somewhere the new repository can install from, split this directory out:
 
 ```bash
-git subtree split --prefix=apps/lite-app -b odh-lite
+git subtree split --prefix=apps/odh-app -b odh-lite
 ```
 
 Then add a registry config (`.npmrc`) if needed.
