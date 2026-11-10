@@ -1,0 +1,116 @@
+[
+  {
+    "resourceType": "Observation",
+    "id": "odh-employment-status",
+    "meta": {
+      "profile": [
+        "http://hl7.org/fhir/us/odh/StructureDefinition/odh-EmploymentStatus"
+      ]
+    },
+    "status": "final",
+    "category": [
+      {
+        "coding": [
+          {
+            "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+            "code": "social-history"
+          }
+        ]
+      }
+    ],
+    "code": {
+      "coding": [
+        {
+          "system": "http://loinc.org",
+          "code": "74165-2",
+          "display": "History of employment status NIOSH"
+        }
+      ]
+    },
+    "subject": {
+      "reference": "Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299"
+    },
+    "valueCodeableConcept": {
+      "coding": [
+        {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationValue",
+          "code": "NotInLaborForce",
+          "display": "Not in labor force"
+        }
+      ]
+    }
+  },
+  {
+    "resourceType": "Observation",
+    "id": "odh-past-job-0",
+    "meta": {
+      "profile": [
+        "http://hl7.org/fhir/us/odh/StructureDefinition/odh-PastOrPresentJob"
+      ]
+    },
+    "extension": [
+      {
+        "url": "http://hl7.org/fhir/us/odh/StructureDefinition/odh-isCurrentJob-extension",
+        "valueBoolean": false
+      }
+    ],
+    "status": "final",
+    "category": [
+      {
+        "coding": [
+          {
+            "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+            "code": "social-history"
+          }
+        ]
+      }
+    ],
+    "code": {
+      "coding": [
+        {
+          "system": "http://loinc.org",
+          "code": "11341-5",
+          "display": "History of Occupation"
+        }
+      ]
+    },
+    "subject": {
+      "reference": "Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299"
+    },
+    "valueCodeableConcept": {
+      "coding": [
+        {
+          "system": "http://hl7.org/fhir/us/odh/CodeSystem/PHOccupationalDataForHealthODH",
+          "code": "35-2014",
+          "display": "Cooks, Restaurant"
+        }
+      ]
+    },
+    "component": [
+      {
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "86188-0",
+              "display": "History of Occupation Industry"
+            }
+          ]
+        },
+        "valueCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH",
+              "code": "722511",
+              "display": "Full-Service Restaurants"
+            }
+          ]
+        }
+      }
+    ],
+    "effectivePeriod": {
+      "start": "2010-01",
+      "end": "2014-12"
+    }
+  }
+]
