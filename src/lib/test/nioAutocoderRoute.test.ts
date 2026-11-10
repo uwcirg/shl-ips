@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('$lib/server/config', () => ({ AUTOCODER_API_KEY: 'test-api-key' }));
+// vitest.config.ts resolves the browser export condition (for component tests), under which
+// esm-env reports BROWSER and odh-autocoder/server refuses to load. This file tests server code.
+vi.mock('esm-env', () => ({ BROWSER: false, DEV: true, NODE: true }));
 
 import { GET } from '../../routes/(common)/api/nio-autocoder/+server';
 

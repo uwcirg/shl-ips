@@ -5,4 +5,8 @@ if (BROWSER) {
 	throw new Error('odh-autocoder/server must not be imported in the browser');
 }
 
-export {};
+export {
+	createAutocoderHandler,
+	DEFAULT_AUTOCODER_API_URL,
+	type AutocoderHandlerOptions
+} from './handler.js';
