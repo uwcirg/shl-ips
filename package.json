@@ -16,6 +16,7 @@
 		"dev:lite": "npm run build:pkg && npm run dev --workspace=odh-lite",
 		"build:lite": "npm run build:pkg && npm run build --workspace=odh-lite",
 		"test:lite": "npm run test --workspace=odh-lite",
+		"test:all": "npm test && npm run test:pkg && npm run test:lite",
 		"predev": "npm run build:pkg",
 		"dev": "vite dev",
 		"prebuild": "npm run build:pkg",

@@ -2,6 +2,44 @@
 name: Test
 on: [push]
 jobs:
+  # The odh-autocoder package and the lite app (the main app is tested in the Docker job below
+  # and built by build-deliver.yaml)
+  workspaces:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout git commit
+        uses: actions/checkout@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm clean-install
+
+      - name: Build odh-autocoder (svelte-package + publint)
+        run: npm run build:pkg
+
+      - name: Lint odh-autocoder (package boundary)
+        run: npm run lint:pkg
+
+      - name: Type-check odh-autocoder
+        run: npm run check --workspace=odh-autocoder
+
+      - name: Test odh-autocoder
+        run: npm run test:pkg
+
+      - name: Type-check lite app
+        run: npm run check --workspace=odh-lite
+
+      - name: Test lite app
+        run: npm run test:lite
+
+      - name: Build lite app
+        run: npm run build --workspace=odh-lite
+
   test:
     runs-on: ubuntu-latest
     steps:
