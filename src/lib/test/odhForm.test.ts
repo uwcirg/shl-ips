@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import { writable } from 'svelte/store';
-import type { Observation } from 'fhir/r4';
+import type { Observation, Patient } from 'fhir/r4';
 import ODHForm from '$lib/components/app/ODHForm.svelte';
 import { ResourceHelper } from '$lib/utils/ResourceHelper';
 import { fakeAuth } from '$lib/test/mocks';
@@ -44,15 +45,21 @@ function formDataFor(resources: Observation[]): IResourceCollection {
   return { resources: writable(map) } as unknown as IResourceCollection;
 }
 
+const MASTER_PATIENT: Patient = { resourceType: 'Patient', id: 'master-1' };
+
 function renderForm(formData?: IResourceCollection) {
   const auth = fakeAuth();
+  const masterPatient = writable<ResourceHelper | null>(new ResourceHelper(MASTER_PATIENT));
   const events: ResourceRetrieveEvent[] = [];
   const { component } = render(ODHForm, {
     props: { formData },
-    context: new Map([['authService', auth]])
+    context: new Map<string, unknown>([
+      ['authService', auth],
+      ['fhirDataService', { masterPatient }]
+    ])
   });
   component.$on('update-resources', (e: CustomEvent<ResourceRetrieveEvent>) => events.push(e.detail));
-  return { auth, events };
+  return { auth, events, masterPatient };
 }
 
 async function save() {
@@ -79,17 +86,26 @@ describe('ODHForm', () => {
     ]);
   });
 
-  it('gives every resource a subject, so the import keeps them with the patient', async () => {
+  it("makes the user's master patient the subject, so the import keeps the resources", async () => {
     const { events } = renderForm(formDataFor([currentJob]));
     await save();
 
     const resources = events[0].resources as Observation[];
-    expect(resources.every(r => r.subject?.reference)).toBe(true);
+    expect(resources.map(r => r.subject)).toEqual(resources.map(() => ({ reference: 'Patient/master-1' })));
 
     // Resources without a patient reference are dropped on import (pruneUnlinkedEntries)
-    const entries = prepareImportedResources(events[0], { resourceType: 'Patient', id: 'master' });
+    const entries = prepareImportedResources(events[0], MASTER_PATIENT);
     const kept = pruneUnlinkedEntries(entries).map(e => e.resource.id);
     expect(kept).toEqual(expect.arrayContaining(resources.map(r => r.id)));
+  });
+
+  it('uses the master patient current at save time', async () => {
+    const { events, masterPatient } = renderForm();
+    masterPatient.set(new ResourceHelper({ resourceType: 'Patient', id: 'master-2' }));
+    await tick();
+    await save();
+
+    expect((events[0].resources as Observation[])[0].subject).toEqual({ reference: 'Patient/master-2' });
   });
 
   it('edits the resources in the dataset being edited', async () => {

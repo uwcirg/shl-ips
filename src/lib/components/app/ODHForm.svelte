@@ -1,8 +1,9 @@
 <script lang="ts">
   import { createEventDispatcher, getContext } from 'svelte';
-  import type { Observation } from 'fhir/r4';
+  import type { Observation, Reference } from 'fhir/r4';
   import { OdhForm } from 'odh-autocoder';
   import type { IAuthService, IResourceCollection, ResourceRetrieveEvent } from '$lib/utils/types';
+  import type { FHIRDataService } from '$lib/utils/FHIRDataService';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
   import { ResourceHelper } from '$lib/utils/ResourceHelper';
 
@@ -14,6 +15,7 @@
   export let processing: boolean = false;
 
   const authService: IAuthService = getContext('authService');
+  const fhirDataService: FHIRDataService = getContext('fhirDataService');
 
   let resourceStore;
   $: resourceStore = formData?.resources;
@@ -30,10 +32,14 @@
     name: 'My Work Info'
   };
 
-  // The import pipeline replaces every resource's subject with the dataset's Patient
-  // (assignPatientReference) and drops resources that have none (pruneUnlinkedEntries), so the
-  // resources need a subject. This placeholder is the one the package's templates used to hold.
-  const SUBJECT = { reference: 'Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299' };
+  // The saved resources describe the user, so their subject is the user's master patient. The
+  // import pipeline also needs a subject: it replaces it with the dataset's Patient
+  // (assignPatientReference) and drops resources that have none (pruneUnlinkedEntries).
+  const masterPatient = fhirDataService.masterPatient;
+  let subject: Reference | undefined;
+  $: subject = $masterPatient?.resource?.id
+    ? { reference: `Patient/${$masterPatient.resource.id}` }
+    : undefined;
 
   function getAccessToken() {
     return authService.getAccessToken();
@@ -56,6 +62,6 @@
   {processing}
   endpoint="/api/nio-autocoder"
   {getAccessToken}
-  subject={SUBJECT}
+  {subject}
   onsave={save}
 />
