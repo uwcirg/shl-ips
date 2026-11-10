@@ -4,7 +4,8 @@ export {
 	buildCurrentJobResources,
 	buildPastJobResources,
 	buildRetirementDateResources,
-	buildCombatPeriodResources
+	buildCombatPeriodResources,
+	type OdhBuildOptions
 } from './build.js';
 export { applyOdhResources } from './parse.js';
 export {

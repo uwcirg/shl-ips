@@ -1,4 +1,4 @@
-import type { Observation } from 'fhir/r4';
+import type { Observation, Reference } from 'fhir/r4';
 import {
 	combatPeriodTemplate,
 	currentJobTemplate,
@@ -11,9 +11,29 @@ import { EMPLOYMENT_STATUSES, type OdhFormValues } from './values.js';
 // Builds ODH FHIR resources from the form's values. Pure: resource ids come from each entry's
 // position, so the same values always produce the same resources.
 
+export interface OdhBuildOptions {
+	/**
+	 * Subject of every resource, e.g. the patient they describe. Resources have no subject when
+	 * it isn't given.
+	 */
+	subject?: Reference;
+}
+
 // Builders fill in templates through paths the Observation type marks optional
-function fromTemplate(template: Observation): any {
-	return JSON.parse(JSON.stringify(template));
+function fromTemplate(template: Observation, { subject }: OdhBuildOptions = {}): any {
+	const resource = JSON.parse(JSON.stringify(template));
+	if (!subject) {
+		return resource;
+	}
+	// Placed after code, where FHIR (and the templates, originally) put it
+	const withSubject: any = {};
+	for (const [key, value] of Object.entries(resource)) {
+		withSubject[key] = value;
+		if (key === 'code') {
+			withSubject.subject = JSON.parse(JSON.stringify(subject));
+		}
+	}
+	return withSubject;
 }
 
 function sortObjectKeys(obj: any): any {
@@ -43,14 +63,14 @@ function occupationSystem(code: string) {
 
 const INDUSTRY_SYSTEM = 'http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH';
 
-export function buildCurrentJobResources(values: OdhFormValues): Observation[] {
+export function buildCurrentJobResources(values: OdhFormValues, options: OdhBuildOptions = {}): Observation[] {
 	const currentJobResources: Observation[] = [];
 	if (!values.isWorking) {
 		return currentJobResources;
 	} // Don't add current job data if not working
 	const uniqueJobs = deduplicateObjectList(values.currentWork);
 	for (const [i, jobValue] of uniqueJobs.entries()) {
-		const currentJobResource = fromTemplate(currentJobTemplate);
+		const currentJobResource = fromTemplate(currentJobTemplate, options);
 		currentJobResource.id = `odh-current-job-${i}`;
 		if (jobValue.start) {
 			let period: any = { start: jobValue.start };
@@ -79,11 +99,11 @@ export function buildCurrentJobResources(values: OdhFormValues): Observation[] {
 	return currentJobResources;
 }
 
-export function buildPastJobResources(values: OdhFormValues): Observation[] {
+export function buildPastJobResources(values: OdhFormValues, options: OdhBuildOptions = {}): Observation[] {
 	const pastJobResources: Observation[] = [];
 	const uniqueJobs = deduplicateObjectList(values.pastWork);
 	for (const [i, jobValue] of uniqueJobs.entries()) {
-		const pastJobResource = fromTemplate(pastJobTemplate);
+		const pastJobResource = fromTemplate(pastJobTemplate, options);
 		pastJobResource.id = `odh-past-job-${i}`;
 		if (jobValue.start || jobValue.end) {
 			let period: any = {};
@@ -118,12 +138,12 @@ export function buildPastJobResources(values: OdhFormValues): Observation[] {
 	return pastJobResources;
 }
 
-export function buildRetirementDateResources(values: OdhFormValues): Observation[] {
+export function buildRetirementDateResources(values: OdhFormValues, options: OdhBuildOptions = {}): Observation[] {
 	const retirementDateResources: Observation[] = [];
 	const uniqueRetirementDates = deduplicateObjectList(values.retirementDates);
 	const validRetirementDates = uniqueRetirementDates.filter((retirementDate) => retirementDate.start);
 	for (const [i, retirementDate] of validRetirementDates.entries()) {
-		const retirementDateResource = fromTemplate(retirementDateTemplate);
+		const retirementDateResource = fromTemplate(retirementDateTemplate, options);
 		retirementDateResource.id = `odh-retirement-date-${i}`;
 		if (retirementDate.start) {
 			retirementDateResource.valueDateTime = retirementDate.start;
@@ -133,14 +153,14 @@ export function buildRetirementDateResources(values: OdhFormValues): Observation
 	return retirementDateResources;
 }
 
-export function buildCombatPeriodResources(values: OdhFormValues): Observation[] {
+export function buildCombatPeriodResources(values: OdhFormValues, options: OdhBuildOptions = {}): Observation[] {
 	const combatPeriodResources: Observation[] = [];
 	const uniqueCombatPeriods = deduplicateObjectList(values.combatPeriods);
 	const validCombatPeriods = uniqueCombatPeriods.filter(
 		(combatPeriod) => combatPeriod.start || combatPeriod.end
 	);
 	for (const [i, combatPeriod] of validCombatPeriods.entries()) {
-		const combatPeriodResource = fromTemplate(combatPeriodTemplate);
+		const combatPeriodResource = fromTemplate(combatPeriodTemplate, options);
 		combatPeriodResource.id = `odh-combat-period-${i}`;
 		if (combatPeriod.start || combatPeriod.end) {
 			let period: any = {};
@@ -157,8 +177,8 @@ export function buildCombatPeriodResources(values: OdhFormValues): Observation[]
 	return combatPeriodResources;
 }
 
-export function buildEmploymentStatusResources(values: OdhFormValues): Observation[] {
-	const employmentStatusResource = fromTemplate(employmentStatusTemplate);
+export function buildEmploymentStatusResources(values: OdhFormValues, options: OdhBuildOptions = {}): Observation[] {
+	const employmentStatusResource = fromTemplate(employmentStatusTemplate, options);
 	employmentStatusResource.id = `odh-employment-status`;
 	employmentStatusResource.valueCodeableConcept.coding[0].code = EMPLOYMENT_STATUSES[values.status];
 	employmentStatusResource.valueCodeableConcept.coding[0].display = values.status;
@@ -186,12 +206,12 @@ export function buildEmploymentStatusResources(values: OdhFormValues): Observati
  * All ODH resources for the form's values: employment status, then current jobs, past jobs,
  * retirement dates and combat zone periods.
  */
-export function buildOdhResources(values: OdhFormValues): Observation[] {
+export function buildOdhResources(values: OdhFormValues, options: OdhBuildOptions = {}): Observation[] {
 	return [
-		...buildEmploymentStatusResources(values),
-		...buildCurrentJobResources(values),
-		...buildPastJobResources(values),
-		...buildRetirementDateResources(values),
-		...buildCombatPeriodResources(values)
+		...buildEmploymentStatusResources(values, options),
+		...buildCurrentJobResources(values, options),
+		...buildPastJobResources(values, options),
+		...buildRetirementDateResources(values, options),
+		...buildCombatPeriodResources(values, options)
 	];
 }

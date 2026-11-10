@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Accordion, AccordionItem, Button, Col, FormGroup, Icon, Input, Row, Spinner } from '@sveltestrap/sveltestrap';
-  import type { Observation } from 'fhir/r4';
+  import type { Observation, Reference } from 'fhir/r4';
   import MonthInput from './MonthInput.svelte';
   import AutocoderInput from './AutocoderInput.svelte';
   import {
@@ -20,6 +20,8 @@
   export let endpoint: string = '/api/nio-autocoder';
   /** When set, autocoder requests carry an Authorization: Bearer header with its token */
   export let getAccessToken: (() => Promise<string | undefined>) | undefined = undefined;
+  /** Subject of the saved resources (e.g. the patient); they have none when not given */
+  export let subject: Reference | undefined = undefined;
   /** Called with the ODH resources built from the form when the user saves */
   export let onsave: ((resources: Observation[]) => void) | undefined = undefined;
 
@@ -102,7 +104,7 @@
   }
 
   function updateOdhSection() {
-    onsave?.(buildOdhResources(values));
+    onsave?.(buildOdhResources(values, { subject }));
   }
 </script>
 

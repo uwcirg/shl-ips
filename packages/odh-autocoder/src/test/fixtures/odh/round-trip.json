@@ -27,9 +27,6 @@
         }
       ]
     },
-    "subject": {
-      "reference": "Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299"
-    },
     "valueCodeableConcept": {
       "coding": [
         {
@@ -76,9 +73,6 @@
           "display": "History of Occupation"
         }
       ]
-    },
-    "subject": {
-      "reference": "Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299"
     },
     "valueCodeableConcept": {
       "coding": [
@@ -149,9 +143,6 @@
         }
       ]
     },
-    "subject": {
-      "reference": "Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299"
-    },
     "valueCodeableConcept": {
       "coding": [
         {
@@ -220,9 +211,6 @@
           "display": "History of Occupation"
         }
       ]
-    },
-    "subject": {
-      "reference": "Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299"
     },
     "valueCodeableConcept": {
       "coding": [
@@ -294,9 +282,6 @@
         }
       ]
     },
-    "subject": {
-      "reference": "Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299"
-    },
     "valueCodeableConcept": {
       "coding": [
         {
@@ -357,9 +342,6 @@
         }
       ]
     },
-    "subject": {
-      "reference": "Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299"
-    },
     "valueDateTime": "2015-01"
   },
   {
@@ -389,9 +371,6 @@
           "display": "Combat zone AndOr hazardous duty work dates"
         }
       ]
-    },
-    "subject": {
-      "reference": "Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299"
     },
     "valuePeriod": {
       "start": "2005-02",
@@ -425,9 +404,6 @@
           "display": "Combat zone AndOr hazardous duty work dates"
         }
       ]
-    },
-    "subject": {
-      "reference": "Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299"
     },
     "valuePeriod": {
       "start": "2007-04"

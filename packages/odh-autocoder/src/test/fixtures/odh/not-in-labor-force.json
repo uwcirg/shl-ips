@@ -27,9 +27,6 @@
         }
       ]
     },
-    "subject": {
-      "reference": "Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299"
-    },
     "valueCodeableConcept": {
       "coding": [
         {
@@ -73,9 +70,6 @@
           "display": "History of Occupation"
         }
       ]
-    },
-    "subject": {
-      "reference": "Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299"
     },
     "valueCodeableConcept": {
       "coding": [

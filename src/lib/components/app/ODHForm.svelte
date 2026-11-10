@@ -30,6 +30,11 @@
     name: 'My Work Info'
   };
 
+  // The import pipeline replaces every resource's subject with the dataset's Patient
+  // (assignPatientReference) and drops resources that have none (pruneUnlinkedEntries), so the
+  // resources need a subject. This placeholder is the one the package's templates used to hold.
+  const SUBJECT = { reference: 'Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299' };
+
   function getAccessToken() {
     return authService.getAccessToken();
   }
@@ -51,5 +56,6 @@
   {processing}
   endpoint="/api/nio-autocoder"
   {getAccessToken}
+  subject={SUBJECT}
   onsave={save}
 />

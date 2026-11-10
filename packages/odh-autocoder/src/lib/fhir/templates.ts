@@ -1,7 +1,8 @@
 import type { Observation } from 'fhir/r4';
 
 // Resource templates for the Occupational Data for Health (ODH) IG profiles.
-// Builders deep-copy these and fill in the values.
+// Builders deep-copy these and fill in the values. They have no subject: builders add one
+// only when the app supplies it (see OdhBuildOptions).
 
 export const ODH_IS_CURRENT_JOB_EXTENSION =
 	'http://hl7.org/fhir/us/odh/StructureDefinition/odh-isCurrentJob-extension';
@@ -45,9 +46,6 @@ export const currentJobTemplate: Observation = {
 				display: 'History of Occupation'
 			}
 		]
-	},
-	subject: {
-		reference: 'Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299'
 	},
 	valueCodeableConcept: {
 		coding: []
@@ -97,9 +95,6 @@ export const employmentStatusTemplate: Observation = {
 			}
 		]
 	},
-	subject: {
-		reference: 'Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299'
-	},
 	valueCodeableConcept: {
 		coding: [
 			{
@@ -143,9 +138,6 @@ export const pastJobTemplate: Observation = {
 				display: 'History of Occupation'
 			}
 		]
-	},
-	subject: {
-		reference: 'Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299'
 	},
 	valueCodeableConcept: {
 		coding: []
@@ -195,9 +187,6 @@ export const retirementDateTemplate: Observation = {
 			}
 		]
 	},
-	subject: {
-		reference: 'Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299'
-	},
 	valueDateTime: ''
 };
 
@@ -227,9 +216,6 @@ export const combatPeriodTemplate: Observation = {
 				display: 'Combat zone AndOr hazardous duty work dates'
 			}
 		]
-	},
-	subject: {
-		reference: 'Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299'
 	},
 	valuePeriod: {
 		start: '',

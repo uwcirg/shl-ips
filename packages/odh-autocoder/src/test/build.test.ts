@@ -38,6 +38,23 @@ describe('buildOdhResources', () => {
 		expect(second).toEqual(first);
 	});
 
+	it('leaves out the subject unless one is given', () => {
+		const resources = buildOdhResources(formValuesFor(SCENARIOS[1].resources));
+		expect(resources.every((r) => !('subject' in r))).toBe(true);
+	});
+
+	it('adds the given subject to every resource, after code', () => {
+		const subject = { reference: 'Patient/123', display: 'Pat' };
+		const resources = buildOdhResources(formValuesFor(SCENARIOS[1].resources), { subject });
+		expect(resources.length).toBeGreaterThan(5);
+		for (const resource of resources) {
+			expect(resource.subject).toEqual(subject);
+			expect(resource.subject).not.toBe(subject);
+			const keys = Object.keys(resource);
+			expect(keys.indexOf('subject')).toBe(keys.indexOf('code') + 1);
+		}
+	});
+
 	it('does not modify the templates', () => {
 		const values = defaultOdhFormValues();
 		values.currentWork[0].occupation = { Code: '29-1141', Title: 'Registered Nurses', Score: 1 };

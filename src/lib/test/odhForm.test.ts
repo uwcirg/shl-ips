@@ -6,6 +6,16 @@ import ODHForm from '$lib/components/app/ODHForm.svelte';
 import { ResourceHelper } from '$lib/utils/ResourceHelper';
 import { fakeAuth } from '$lib/test/mocks';
 import type { IResourceCollection, ResourceRetrieveEvent } from '$lib/utils/types';
+import { prepareImportedResources, pruneUnlinkedEntries } from '$lib/utils/importNormalization';
+
+// importNormalization reads the instance config at load time
+vi.mock('$lib/config/config', () => ({
+  SOURCE_NAMESPACE: 'urn:test:source',
+  PLACEHOLDER_SYSTEM: 'http://test.example.com/placeholder',
+  CATEGORY_SYSTEM: 'http://test.example.com/category',
+  METHOD_SYSTEM: 'http://test.example.com/method',
+  SOURCE_NAME_SYSTEM: 'http://test.example.com/source-name'
+}));
 
 // ODHForm adapts the odh-autocoder package's form to this app. The form itself, and the FHIR
 // it produces, are tested in packages/odh-autocoder. These tests cover the app wiring: the
@@ -67,6 +77,19 @@ describe('ODHForm', () => {
       'odh-employment-status',
       'odh-current-job-0'
     ]);
+  });
+
+  it('gives every resource a subject, so the import keeps them with the patient', async () => {
+    const { events } = renderForm(formDataFor([currentJob]));
+    await save();
+
+    const resources = events[0].resources as Observation[];
+    expect(resources.every(r => r.subject?.reference)).toBe(true);
+
+    // Resources without a patient reference are dropped on import (pruneUnlinkedEntries)
+    const entries = prepareImportedResources(events[0], { resourceType: 'Patient', id: 'master' });
+    const kept = pruneUnlinkedEntries(entries).map(e => e.resource.id);
+    expect(kept).toEqual(expect.arrayContaining(resources.map(r => r.id)));
   });
 
   it('edits the resources in the dataset being edited', async () => {
