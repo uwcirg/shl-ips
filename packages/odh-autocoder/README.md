@@ -109,7 +109,7 @@ From the repository root:
 ```bash
 npm run dev:pkg     # rebuild dist/ on change (svelte-package --watch)
 npm run dev         # in another terminal: the main app, using the rebuilt package
-npm run dev:lite    # or the lite app
+npm run dev:odh    # or the ODH app
 ```
 
 Apps use the built `dist/`. Root `dev`, `build`, `test` and `check` build the package first.

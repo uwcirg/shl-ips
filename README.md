@@ -74,8 +74,8 @@ Work on the ODH form in the package, not the app. The main app consumes the pack
 | Command | |
 |---|---|
 | `npm run test:pkg` / `npm run lint:pkg` | Package tests / package boundary lint |
-| `npm run dev:lite` / `npm run build:lite` / `npm run test:lite` | Lite app |
-| `npm run test:all` | Main app, package and lite app tests |
+| `npm run dev:odh` / `npm run build:odh` / `npm run test:odh` | ODH app (`apps/odh-app`) |
+| `npm run test:all` | Main app, package and ODH app tests |
 
 # Test Branch Rebuild Workflow
 

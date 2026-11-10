@@ -2,7 +2,7 @@
 name: Test
 on: [push]
 jobs:
-  # The odh-autocoder package and the lite app (the main app is tested in the Docker job below
+  # The odh-autocoder package and the ODH app (the main app is tested in the Docker job below
   # and built by build-deliver.yaml)
   workspaces:
     runs-on: ubuntu-latest
@@ -31,13 +31,13 @@ jobs:
       - name: Test odh-autocoder
         run: npm run test:pkg
 
-      - name: Type-check lite app
+      - name: Type-check ODH app
         run: npm run check --workspace=odh-lite
 
-      - name: Test lite app
-        run: npm run test:lite
+      - name: Test ODH app
+        run: npm run test:odh
 
-      - name: Build lite app
+      - name: Build ODH app
         run: npm run build --workspace=odh-lite
 
   test:

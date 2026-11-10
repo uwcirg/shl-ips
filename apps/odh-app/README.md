@@ -24,9 +24,9 @@ From the repository root (this also builds the package):
 
 ```bash
 npm install
-npm run dev:lite      # http://localhost:5190
-npm run build:lite    # production build in apps/odh-app/build
-npm run test:lite
+npm run dev:odh      # http://localhost:5190
+npm run build:odh    # production build in apps/odh-app/build
+npm run test:odh
 ```
 
 Or in this directory, once the package is built: `npm run dev`, `npm run build`, `npm test`, `npm run check`.
