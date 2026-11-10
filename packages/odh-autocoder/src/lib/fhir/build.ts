@@ -162,10 +162,14 @@ export function buildEmploymentStatusResources(values: OdhFormValues): Observati
 	employmentStatusResource.id = `odh-employment-status`;
 	employmentStatusResource.valueCodeableConcept.coding[0].code = EMPLOYMENT_STATUSES[values.status];
 	employmentStatusResource.valueCodeableConcept.coding[0].display = values.status;
+	// Employed since the earliest current job that has a start date. Other statuses get no
+	// effective period: when a current job started says nothing about when they began.
 	let minDate: string | null = null;
-	for (const jobValue of values.currentWork) {
-		if (minDate === null || minDate > jobValue.start) {
-			minDate = jobValue.start;
+	if (values.isWorking) {
+		for (const jobValue of values.currentWork) {
+			if (jobValue.start && (minDate === null || minDate > jobValue.start)) {
+				minDate = jobValue.start;
+			}
 		}
 	}
 	if (minDate) {

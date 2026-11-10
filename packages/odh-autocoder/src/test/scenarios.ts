@@ -118,8 +118,7 @@ export const SCENARIOS: Scenario[] = [
 	},
 	{
 		name: 'first-job-no-start',
-		// Known issue (to be fixed): the employment status loses its effective period when the
-		// first current job has no start date, even though a later job has one.
+		// Employed since the earliest current job with a start date (jobs without one are skipped)
 		description: 'a first current job without a start date',
 		resources: [
 			employmentStatus('Employed'),
@@ -129,8 +128,7 @@ export const SCENARIOS: Scenario[] = [
 	},
 	{
 		name: 'unemployed-with-current-job',
-		// Known issue (to be fixed): the employment status takes its effective period from
-		// current jobs even when the status isn't Employed (no current jobs are emitted).
+		// Only Employed takes an effective period from current jobs (none are emitted otherwise)
 		description: 'unemployed with a current job on file',
 		resources: [
 			employmentStatus('Unemployed'),

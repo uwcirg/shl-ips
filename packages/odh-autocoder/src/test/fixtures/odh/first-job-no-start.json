@@ -38,6 +38,9 @@
           "display": "Employed"
         }
       ]
+    },
+    "effectivePeriod": {
+      "start": "2020-02"
     }
   },
   {
