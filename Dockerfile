@@ -5,6 +5,7 @@ WORKDIR /opt/app
 COPY package*.json .
 # npm workspaces: every workspace's package.json must be present for `npm clean-install`
 COPY packages/odh-autocoder/package.json packages/odh-autocoder/
+COPY apps/lite-app/package.json apps/lite-app/
 RUN npm clean-install
 
 FROM base-deps AS deps
