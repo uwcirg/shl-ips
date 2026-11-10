@@ -154,9 +154,10 @@
         manual = true;
         codingOptions = defaults;
         fetchError = 'Coding service unavailable. Please enter ' + mode.toLowerCase() + ' manually.';
+        // Keep the user's text, under this field's not-coded code
         setValue({
-          Code: "00-0000",
-          Title: codingOptionTitle ?? "Not Coded – Occupation",
+          Code: defaults[mode][0].Code,
+          Title: codingOptionTitle ?? defaults[mode][0].Title,
           Score: 1
         });
         isOpen = false;

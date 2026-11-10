@@ -149,8 +149,6 @@ Then publish it (for example to GitHub Packages, with a scope added to the name)
 
 These behaviors were kept as they were in the original code:
 
-- If the coding service fails, an industry entered manually is stored with the occupation "not coded" code `00-0000`.
-- Industry codings use the system `http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH`, while occupation codings use `http://hl7.org/fhir/us/odh/CodeSystem/PHOccupationalDataForHealthODH`.
 - Every resource's `subject` is a fixed placeholder, `Patient/98549f1a-e0d5-4454-849c-f5b97d3ed299`.
 - Year-only dates on existing resources (such as `2009`) are dropped when edited, because the month inputs hold `YYYY-MM`.
 - Occupation text is sent in the query string, so it can show up in proxy access logs.

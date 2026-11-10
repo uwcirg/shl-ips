@@ -43,6 +43,35 @@ describe('OdhForm', () => {
 		expect(screen.getByRole('button', { name: 'Saving...' })).toBeDisabled();
 	});
 
+	it("saves manually entered text under each field's not-coded code when coding fails", async () => {
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(async () => ({ ok: false, status: 502, text: async () => 'Bad Gateway' }))
+		);
+		const onsave = vi.fn();
+		render(OdhForm, { props: { onsave } });
+
+		await fireEvent.input(screen.getByPlaceholderText('Search occupation...'), {
+			target: { value: 'night nurse' }
+		});
+		await screen.findByText('Coding service unavailable. Please enter occupation manually.');
+		await fireEvent.input(screen.getByPlaceholderText('Search industry...'), {
+			target: { value: 'county hospital' }
+		});
+		await screen.findByText('Coding service unavailable. Please enter industry manually.');
+		await fireEvent.click(screen.getByRole('button', { name: 'Save work info' }));
+
+		const job = (onsave.mock.calls[0][0] as Observation[]).find((r) => r.id === 'odh-current-job-0');
+		expect(job?.valueCodeableConcept?.coding?.[0]).toMatchObject({
+			code: '00-0000',
+			display: 'night nurse'
+		});
+		expect(job?.component?.[0].valueCodeableConcept?.coding?.[0]).toMatchObject({
+			code: '000000',
+			display: 'county hospital'
+		});
+	});
+
 	it('sends autocoder requests to the given endpoint with the given token', async () => {
 		const fetch = vi.fn(async (_url: string, _init?: RequestInit) => ({
 			ok: true,
