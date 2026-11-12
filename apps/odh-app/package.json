@@ -1,5 +1,5 @@
 {
-	"name": "odh-lite",
+	"name": "odh-app",
 	"version": "0.1.0",
 	"private": true,
 	"description": "Standalone occupational data for health (ODH) form: code work history with the NIOSH autocoder and download it as FHIR",

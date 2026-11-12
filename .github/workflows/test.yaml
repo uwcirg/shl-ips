@@ -32,13 +32,13 @@ jobs:
         run: npm run test:pkg
 
       - name: Type-check ODH app
-        run: npm run check --workspace=odh-lite
+        run: npm run check --workspace=odh-app
 
       - name: Test ODH app
         run: npm run test:odh
 
       - name: Build ODH app
-        run: npm run build --workspace=odh-lite
+        run: npm run build --workspace=odh-app
 
   test:
     runs-on: ubuntu-latest

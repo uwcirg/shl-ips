@@ -1,4 +1,4 @@
-# odh-lite
+# odh-app
 
 A standalone page for recording health-related work information. The user describes their current and past jobs in their own words. Each one is matched to standard occupation and industry codes by the NIOSH autocoder, and the user reviews the codes before saving. The result can be downloaded as a FHIR R4 Bundle of [Occupational Data for Health](http://hl7.org/fhir/us/odh/) Observations.
 
@@ -46,7 +46,7 @@ node --env-file=.env build    # or set the variables in the environment; PORT de
 The app depends on `odh-autocoder` by version (`^0.1.0`), not by path. Once the package is published somewhere the new repository can install from, split this directory out:
 
 ```bash
-git subtree split --prefix=apps/odh-app -b odh-lite
+git subtree split --prefix=apps/odh-app -b odh-app
 ```
 
 Then add a registry config (`.npmrc`) if needed.

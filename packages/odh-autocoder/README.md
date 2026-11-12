@@ -133,7 +133,7 @@ In this directory:
 `eslint.config.js` fails `npm run lint` when package code imports:
 
 - anything outside this directory
-- an app's aliases or package name (`$config`, `$theme`, `shlips`, `odh-lite`)
+- an app's aliases or package name (`$config`, `$theme`, `shlips`, `odh-app`)
 - `$env/*` or `$app/*` from `src/lib` (the playground in `src/routes` may use them)
 
 Apps pass in what the package needs through props and handler options.

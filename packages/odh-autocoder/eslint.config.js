@@ -10,7 +10,7 @@ import svelteParser from 'svelte-eslint-parser';
 const PACKAGE_ROOT = path.dirname(fileURLToPath(import.meta.url));
 
 // Module aliases and package names that belong to the apps using this package
-const APP_MODULES = [/^\$config$/, /^\$theme$/, /^shlips(\/|$)/, /^odh-lite(\/|$)/];
+const APP_MODULES = [/^\$config$/, /^\$theme$/, /^shlips(\/|$)/, /^odh-app(\/|$)/];
 // SvelteKit modules that read app state or config; library code takes these as props/options
 const APP_RUNTIME_MODULES = [/^\$env\//, /^\$app\//];
 
