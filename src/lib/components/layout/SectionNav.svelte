@@ -11,7 +11,7 @@
 </script>
 
 <script lang="ts">
-  import { getContext, onMount } from 'svelte';
+  import { getContext, onMount, tick } from 'svelte';
   import { readable, type Readable } from 'svelte/store';
   import { fly } from 'svelte/transition';
   import type { IAuthService } from '$lib/utils/types';
@@ -218,6 +218,34 @@
     };
   }
 
+  // Keeps the active entry in view within a list that scrolls on its own (the sidebar column, or
+  // the pill's menu), clear of the edge fades. Scrolls only the list, never the page.
+  let navList: HTMLElement | undefined;
+  let menuList: HTMLElement | undefined;
+
+  function revealActive(list: HTMLElement | undefined, behavior: ScrollBehavior) {
+    const item = list?.querySelector<HTMLElement>('[aria-current="true"]');
+    // A list that is hidden (the sidebar below md) has no size to scroll within
+    if (!list || !item || list.clientHeight === 0) return;
+    const itemTop = item.getBoundingClientRect().top - list.getBoundingClientRect().top + list.scrollTop;
+    const itemBottom = itemTop + item.offsetHeight;
+    if (itemTop - FADE_PX < list.scrollTop) {
+      list.scrollTo({ top: Math.max(0, itemTop - FADE_PX), behavior });
+    } else if (itemBottom + FADE_PX > list.scrollTop + list.clientHeight) {
+      list.scrollTo({ top: itemBottom + FADE_PX - list.clientHeight, behavior });
+    }
+  }
+
+  // Follow the active section as the page scrolls (after the DOM has marked the new item current)
+  $: if (activeElement !== undefined && typeof window !== 'undefined') {
+    tick().then(() => {
+      revealActive(navList, scrollBehavior());
+      revealActive(menuList, scrollBehavior());
+    });
+  }
+  // The pill's menu is built when opened: start it already showing the active entry
+  $: if (menuList) revealActive(menuList, 'instant');
+
   function jumpTo(element: HTMLElement | null | undefined) {
     if (!element) return;
     activeElement = element;
@@ -237,7 +265,7 @@
 
 {#if !single}
 <nav class="section-nav" class:signed-in={signedIn} class:inset aria-label={label}>
-  <ul class="section-nav-list list-unstyled mb-0" use:scrollFade>
+  <ul class="section-nav-list list-unstyled mb-0" use:scrollFade bind:this={navList}>
     {#each sections as { title, element, count }}
       <li>
         <button
@@ -286,7 +314,7 @@
     {:else}
     {#if open}
       <div class="section-nav-menu shadow rounded-4" id={menuId}>
-        <ul class="section-nav-list list-unstyled mb-0" use:scrollFade>
+        <ul class="section-nav-list list-unstyled mb-0" use:scrollFade bind:this={menuList}>
           {#each sections as { title, element, count }}
             <li>
               <button
