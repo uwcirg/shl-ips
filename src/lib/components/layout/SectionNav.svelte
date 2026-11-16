@@ -191,6 +191,33 @@
     pillEl?.querySelector<HTMLElement>('.section-nav-toggle')?.focus({ preventScroll: true });
   }
 
+  // Fades the edges of a scrolling list that have more content beyond them. Each fade grows from
+  // nothing to full over its first FADE_PX of scrolling, so it eases in and out with the scroll;
+  // the CSS reads the sizes from --fade-top and --fade-bottom.
+  const FADE_PX = 24;
+
+  function scrollFade(node: HTMLElement) {
+    function update() {
+      const hiddenBelow = node.scrollHeight - node.clientHeight - node.scrollTop;
+      node.style.setProperty('--fade-top', `${Math.min(node.scrollTop, FADE_PX)}px`);
+      node.style.setProperty('--fade-bottom', `${Math.max(0, Math.min(hiddenBelow, FADE_PX))}px`);
+    }
+    node.addEventListener('scroll', update, { passive: true });
+    // The list's box resizes with the viewport; its contents change as sections come and go
+    const resize = new ResizeObserver(update);
+    resize.observe(node);
+    const mutation = new MutationObserver(update);
+    mutation.observe(node, { childList: true, subtree: true, characterData: true });
+    update();
+    return {
+      destroy() {
+        node.removeEventListener('scroll', update);
+        resize.disconnect();
+        mutation.disconnect();
+      }
+    };
+  }
+
   function jumpTo(element: HTMLElement | null | undefined) {
     if (!element) return;
     activeElement = element;
@@ -210,7 +237,7 @@
 
 {#if !single}
 <nav class="section-nav" class:signed-in={signedIn} class:inset aria-label={label}>
-  <ul class="section-nav-list list-unstyled mb-0">
+  <ul class="section-nav-list list-unstyled mb-0" use:scrollFade>
     {#each sections as { title, element, count }}
       <li>
         <button
@@ -259,7 +286,7 @@
     {:else}
     {#if open}
       <div class="section-nav-menu shadow rounded-4" id={menuId}>
-        <ul class="section-nav-list list-unstyled mb-0">
+        <ul class="section-nav-list list-unstyled mb-0" use:scrollFade>
           {#each sections as { title, element, count }}
             <li>
               <button
@@ -446,6 +473,21 @@
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
+    /* Fade out the edges that have more list beyond them (sizes set by scrollFade) */
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      #000 var(--fade-top, 0px),
+      #000 calc(100% - var(--fade-bottom, 0px)),
+      transparent
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      #000 var(--fade-top, 0px),
+      #000 calc(100% - var(--fade-bottom, 0px)),
+      transparent
+    );
   }
   .section-nav-item {
     display: flex;
