@@ -17,7 +17,6 @@ export const LOINC = {
 // Present job resource template
 export const currentJobTemplate: Observation = {
 	resourceType: 'Observation',
-	id: '',
 	meta: {
 		profile: ['http://hl7.org/fhir/us/odh/StructureDefinition/odh-PastOrPresentJob']
 	},
@@ -71,7 +70,6 @@ export const currentJobTemplate: Observation = {
 // Employment status resource template
 export const employmentStatusTemplate: Observation = {
 	resourceType: 'Observation',
-	id: '',
 	meta: {
 		profile: ['http://hl7.org/fhir/us/odh/StructureDefinition/odh-EmploymentStatus']
 	},
@@ -109,7 +107,6 @@ export const employmentStatusTemplate: Observation = {
 // Past job resource template
 export const pastJobTemplate: Observation = {
 	resourceType: 'Observation',
-	id: '',
 	meta: {
 		profile: ['http://hl7.org/fhir/us/odh/StructureDefinition/odh-PastOrPresentJob']
 	},
@@ -163,7 +160,6 @@ export const pastJobTemplate: Observation = {
 // Retirement date resource template
 export const retirementDateTemplate: Observation = {
 	resourceType: 'Observation',
-	id: '126e7704-b9dc-4559-ad88-138ad7a3f237',
 	meta: {
 		profile: ['http://hl7.org/fhir/us/odh/StructureDefinition/odh-RetirementDate']
 	},
@@ -193,7 +189,6 @@ export const retirementDateTemplate: Observation = {
 // Combat zone period resource template
 export const combatPeriodTemplate: Observation = {
 	resourceType: 'Observation',
-	id: '',
 	meta: {
 		profile: ['http://hl7.org/fhir/us/odh/StructureDefinition/odh-CombatZonePeriod']
 	},
