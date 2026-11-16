@@ -79,7 +79,7 @@
       </div>
       {#if expanded}
         <div class="d-flex justify-content-end mt-2">
-          <button class="collapse-btn" on:click={() => { expanded = false; scrollLeft = 0; tick().then(checkOverflow); }}>Collapse</button>
+          <button class="btn btn-primary collapse-btn" on:click={() => { expanded = false; scrollLeft = 0; tick().then(checkOverflow); }}>Collapse</button>
         </div>
       {/if}
     {/if}
@@ -151,23 +151,15 @@
   }
 
   .collapse-btn {
-    background: none;
-    border: 1px solid #ccc;
     border-radius: 20px;
     padding: 2px 16px;
     font-size: 0.8rem;
     font-weight: 500;
-    color: #555;
-    cursor: pointer;
   }
 
   @media (hover: hover) {
     .see-all-overlay:hover {
       color: #000;
-    }
-    
-    .collapse-btn:hover {
-      background-color: #f0f0f0;
     }
   }
 </style>
