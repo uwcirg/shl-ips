@@ -1,4 +1,5 @@
 <script context="module" lang="ts">
+  import { Icon } from '@sveltestrap/sveltestrap';
   export interface SectionNavItem {
     title: string;
     // The element a click scrolls to. Leave unset until it exists (e.g. before mount); items
@@ -227,7 +228,7 @@
   </ul>
   <button type="button" class="section-nav-item section-nav-top" on:click={scrollToTop}>
     <span>Back to top</span>
-    <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V3M3.5 7.5L8 3l4.5 4.5" /></svg>
+    <Icon class="section-nav-icon" name="chevron-up" />
   </button>
 </nav>
 {/if}
@@ -252,7 +253,7 @@
           in:fly={{ x: 80, duration: slideDuration() }}
           out:fly={{ x: 80, duration: slideDuration() }}
         >
-          <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l5-5 5 5" /></svg>
+          <Icon class="section-nav-icon section-nav-icon-lg" name="chevron-up" />
         </button>
       {/if}
     {:else}
@@ -276,7 +277,7 @@
         </ul>
         <button type="button" class="section-nav-item section-nav-top" on:click={topFromMenu}>
           <span>Back to top</span>
-          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V3M3.5 7.5L8 3l4.5 4.5" /></svg>
+          <Icon class="section-nav-icon" name="chevron-up" />
         </button>
       </div>
     {/if}
@@ -288,7 +289,7 @@
       on:click={() => (open = !open)}
     >
       <span class="section-nav-current" aria-live="polite">{activeItem?.title ?? label}</span>
-      <svg class="section-nav-chevron" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l5-5 5 5" /></svg>
+      <Icon class="section-nav-icon section-nav-chevron" name="chevron-up" />
     </button>
     {/if}
   </nav>
@@ -397,11 +398,31 @@
     white-space: nowrap;
     font-weight: 600;
   }
-  .section-nav-chevron {
+  /* Bootstrap icon chevrons:
+    Center and remove the font baseline offset
+    Thicken the text stroke
+  */
+  :global(.section-nav-icon) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     flex: 0 0 auto;
+    font-size: 1.15em;
+    line-height: 1;
+    -webkit-text-stroke: 1px currentColor;
+  }
+  :global(.section-nav-icon::before) {
+    vertical-align: 0;
+    line-height: 1;
+  }
+  :global(.section-nav-icon-lg) {
+    font-size: 1.2rem;
+    -webkit-text-stroke: 1.3px currentColor;
+  }
+  :global(.section-nav-chevron) {
     transition: transform 0.2s;
   }
-  .open .section-nav-chevron {
+  .open :global(.section-nav-chevron) {
     transform: rotate(180deg);
   }
   .section-nav-menu {
@@ -417,7 +438,7 @@
     background-color: var(--bs-body-bg, #fff);
   }
   @media (prefers-reduced-motion: reduce) {
-    .section-nav-chevron {
+    :global(.section-nav-chevron) {
       transition: none;
     }
   }
