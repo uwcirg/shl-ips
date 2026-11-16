@@ -7,3 +7,8 @@ docker-compose.*
 Dockerfile
 node_modules
 README.md
+# Workspace packages and apps
+**/node_modules
+**/.svelte-kit
+packages/*/dist
+apps/*/build

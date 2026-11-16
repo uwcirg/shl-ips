@@ -11,32 +11,22 @@
     Icon,
     Spinner
   } from '@sveltestrap/sveltestrap';
-  import { getContext } from 'svelte';
-  import type { IAuthService, IOResponse, NIOAutoCoderResponse } from '$lib/utils/types';
   import { onDestroy, onMount } from 'svelte';
+  import { NOT_CODED, type AutocoderResponse, type CodingMode, type IOResponse } from '../types.js';
+  import { copyOf } from '../fhir/values.js';
 
-  export let mode: "Occupation" | "Industry";
+  export let mode: CodingMode;
   export let value: IOResponse | undefined;
   export let id: string = "";
-
-  let authService: IAuthService = getContext('authService');
+  /** The app's autocoder endpoint (see createAutocoderHandler in odh-autocoder/server) */
+  export let endpoint: string = '/api/nio-autocoder';
+  /** When set, requests carry an Authorization: Bearer header with the token it returns */
+  export let getAccessToken: (() => Promise<string | undefined>) | undefined = undefined;
 
   let fetchError: string = '';
   let manual = false;
 
-  let defaults: NIOAutoCoderResponse = {
-    Industry: [{
-      Code: "000000",
-      Title: "Not Coded – Industry",
-      Score: 1
-    }],
-    Occupation: [{
-      Code: "00-0000",
-      Title: "Not Coded – Occupation",
-      Score: 1
-    }],
-    Scheme: "NAICS 2017 and SOC 2018"
-  };
+  let defaults: AutocoderResponse = copyOf(NOT_CODED);
 
   let isOpen = false;
   $: icon = 'search';
@@ -58,7 +48,7 @@
       codingOptionTitle = value.Title;
     }
   }
-  let codingOptions: NIOAutoCoderResponse | undefined = defaults;
+  let codingOptions: AutocoderResponse | undefined = defaults;
 
   onMount(() => {
     updateMenuPosition();
@@ -80,7 +70,7 @@
       isOpen = false;
     }
   }
-  
+
   function updateMenuPosition() {
     if (!toggleRef) return;
     const rect = toggleRef.getBoundingClientRect();
@@ -102,6 +92,14 @@
     }
   }
 
+  function selectInputText() {
+    (document.getElementById(id) as HTMLInputElement | null)?.select();
+  }
+
+  function requestHeaders(token: string | undefined): Record<string, string> {
+    return getAccessToken ? { "Authorization": `Bearer ${token}` } : {};
+  }
+
   let controller: AbortController | undefined = undefined;
   async function fetchCode(input: string) {
     processing = true;
@@ -118,15 +116,13 @@
     controller = new AbortController();
     const { signal } = controller;
 
-    let api = `/api/nio-autocoder`;
-    let url = `${api}?${mode === "Occupation" ? "o" : "i"}=${input}&c=0`;
+    let url = `${endpoint}?${mode === "Occupation" ? "o" : "i"}=${encodeURIComponent(input)}&c=0`;
 
-    return authService.getAccessToken().then((token) => fetch(url, {
+    const token = getAccessToken ? getAccessToken() : Promise.resolve(undefined);
+    return token.then((token) => fetch(url, {
       signal,
       method: "GET",
-      headers: {
-        "Authorization": `Bearer ${token}`
-      }
+      headers: requestHeaders(token)
     })).then(async (response) => {
       if (response.ok) {
         return response.text();
@@ -143,7 +139,7 @@
       if (!content) {
         return defaults;
       }
-      content[mode] = content[mode].filter((v) => v.Code !== "000000" && v.Code !== "00-0000");
+      content[mode] = content[mode].filter((v: IOResponse) => v.Code !== "000000" && v.Code !== "00-0000");
       content[mode].push(defaults[mode][0]);
       codingOptions = content;
       updateMenuPosition();
@@ -158,9 +154,10 @@
         manual = true;
         codingOptions = defaults;
         fetchError = 'Coding service unavailable. Please enter ' + mode.toLowerCase() + ' manually.';
+        // Keep the user's text, under this field's not-coded code
         setValue({
-          Code: "00-0000",
-          Title: codingOptionTitle ?? "Not Coded – Occupation",
+          Code: defaults[mode][0].Code,
+          Title: codingOptionTitle ?? defaults[mode][0].Title,
           Score: 1
         });
         isOpen = false;
@@ -193,7 +190,7 @@
             }
           }}
           on:focus={() => {
-            document.getElementById(id)?.select();
+            selectInputText();
             if (inputValue) {
               fetchCode(inputValue);
             }

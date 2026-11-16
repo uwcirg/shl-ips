@@ -1,26 +1,5 @@
-// import fetch from 'node-fetch';
-import { json } from '@sveltejs/kit';
-import {
-  AUTOCODER_API_KEY
-} from '$lib/server/config';
+import { createAutocoderHandler } from 'odh-autocoder/server';
+import { AUTOCODER_API_KEY } from '$lib/server/config';
 
-export const GET = async ({ request, url }: { request: Request; url: URL; }) => {
-  let occupation = url.searchParams.get("o");
-  let industry = url.searchParams.get("i");
-  // let api = "https://wwwn.cdc.gov/nioccs/iocode?n=6";
-  let api = "https://apistg.cdc.gov/nioautocoder/1.1.0/code?n=6"; // Staging NIOCCS API instance
-  let endpoint = `${api}${occupation ? "&o="+occupation : ""}${industry ? "&i="+industry : ""}`;
-
-  let response = await fetch(endpoint, {
-    method: "GET",
-    headers: {
-      "Ocp-Apim-Subscription-Key": AUTOCODER_API_KEY
-    }
-  });
-
-  let content = await response.json();
-  console.log(content);
-  console.log(response.status);
-
-  return json(content);
-};
+// Access is checked in hooks.server.ts, which requires a valid bearer token for /api/*.
+export const GET = createAutocoderHandler({ apiKey: AUTOCODER_API_KEY });

@@ -15,7 +15,12 @@ export default defineConfig(({ mode }) => {
       host: true,
       allowedHosts: [process.env.SERVER_NAME ?? 'localhost'],
       port: process.env.DEV_SERVER_PORT ? process.env.DEV_SERVER_PORT : 3000,
-      strictPort: true
+      strictPort: true,
+      fs: {
+        // node_modules/odh-autocoder links to the workspace package, which is outside the folders
+        // SvelteKit lets the dev server read (src, node_modules, .svelte-kit)
+        allow: ['packages/odh-autocoder']
+      }
     },
     build: {
       sourcemap: process.env.DEBUG ?? false
