@@ -204,7 +204,7 @@
 {#if showInfo}
   <Row class="text-info">{infoMessage}</Row>
 {/if}
-<div class="ips-layout">
+<div class="ips-layout" class:with-nav={navSections.length > 1}>
   <SectionNav sections={navSections} />
 
   <div class="ips-sections">
@@ -291,7 +291,7 @@
   }
   /* The SectionNav column; the nav itself is shown from md up */
   @media (min-width: 768px) {
-    .ips-layout {
+    .ips-layout.with-nav {
       grid-template-columns: var(--section-nav-width, 13.5rem) minmax(0, 1fr);
     }
   }

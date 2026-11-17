@@ -1,4 +1,5 @@
 <script context="module" lang="ts">
+  import { Icon } from '@sveltestrap/sveltestrap';
   export interface SectionNavItem {
     title: string;
     // The element a click scrolls to. Leave unset until it exists (e.g. before mount); items
@@ -10,15 +11,17 @@
 </script>
 
 <script lang="ts">
-  import { getContext, onMount } from 'svelte';
+  import { getContext, onMount, tick } from 'svelte';
   import { readable, type Readable } from 'svelte/store';
+  import { fly } from 'svelte/transition';
   import type { IAuthService } from '$lib/utils/types';
 
   // A table of contents for a long page: lists sections, highlights the one in view, and jumps
   // to one on click. From md up it is a column beside the content that sticks below the app's
   // header. Below md it collapses to a small floating pill at the bottom of the viewport showing
   // the section in view (a "you are here" indicator); tapping it opens the full list upward, and
-  // picking a section jumps there and collapses it again. On signed-in phones the pill rides
+  // picking a section jumps there and collapses it again. The pill sits at the right edge so it
+  // stays out of the middle of the content and grows leftward. On signed-in phones the pill rides
   // just above the app's bottom tab bar.
   //
   //   <SectionNav sections={[{ title: 'Medications', element: medsEl, count: 4 }, ...]} />
@@ -29,6 +32,9 @@
   export let label = 'Sections';
   // Leaves room at the top for something floated over it (e.g. the compact filters)
   export let inset = false;
+  // Whether the lone "Back to top" circle (shown when there is a single section) is in view. It
+  // slides in from the right edge when this turns true, e.g. in step with the compact filters.
+  export let revealed = true;
 
   // --- Offsets ------------------------------------------------------------------------------
   // When signed in, the app shows a floating tab bar over the top of the viewport while scrolling
@@ -144,6 +150,8 @@
   let pillEl: HTMLElement;
   const menuId = `section-nav-menu-${Math.random().toString(36).slice(2, 8)}`;
 
+  // With a single section there is nothing to choose between: the nav is just "Back to top"
+  $: single = sections.length === 1;
   $: activeIndex = sections.findIndex(({ element }) => !!element && element === activeElement);
   $: activeItem = activeIndex >= 0 ? sections[activeIndex] : undefined;
 
@@ -163,12 +171,19 @@
     jumpTo(element);
   }
 
+  // Not smooth in the installed app (pwaMode): a smooth scroll there leaves the fixed bottom tab bar
+  // and the pill untappable on iOS until the next touch scroll
+  const scrollBehavior = (): ScrollBehavior =>
+    pwaMode || window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth';
+
   // Scrolls to the top of the page; the section in view then updates as the scroll passes
   function scrollToTop() {
     lockUntil = 0;
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+    window.scrollTo({ top: 0, behavior: scrollBehavior() });
   }
+
+  const slideDuration = () =>
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 200;
 
   function topFromMenu() {
     open = false;
@@ -176,25 +191,81 @@
     pillEl?.querySelector<HTMLElement>('.section-nav-toggle')?.focus({ preventScroll: true });
   }
 
+  // Fades the edges of a scrolling list that have more content beyond them. Each fade grows from
+  // nothing to full over its first FADE_PX of scrolling, so it eases in and out with the scroll;
+  // the CSS reads the sizes from --fade-top and --fade-bottom.
+  const FADE_PX = 24;
+
+  function scrollFade(node: HTMLElement) {
+    function update() {
+      const hiddenBelow = node.scrollHeight - node.clientHeight - node.scrollTop;
+      node.style.setProperty('--fade-top', `${Math.min(node.scrollTop, FADE_PX)}px`);
+      node.style.setProperty('--fade-bottom', `${Math.max(0, Math.min(hiddenBelow, FADE_PX))}px`);
+    }
+    node.addEventListener('scroll', update, { passive: true });
+    // The list's box resizes with the viewport; its contents change as sections come and go
+    const resize = new ResizeObserver(update);
+    resize.observe(node);
+    const mutation = new MutationObserver(update);
+    mutation.observe(node, { childList: true, subtree: true, characterData: true });
+    update();
+    return {
+      destroy() {
+        node.removeEventListener('scroll', update);
+        resize.disconnect();
+        mutation.disconnect();
+      }
+    };
+  }
+
+  // Keeps the active entry in view within a list that scrolls on its own (the sidebar column, or
+  // the pill's menu), clear of the edge fades. Scrolls only the list, never the page.
+  let navList: HTMLElement | undefined;
+  let menuList: HTMLElement | undefined;
+
+  function revealActive(list: HTMLElement | undefined, behavior: ScrollBehavior) {
+    const item = list?.querySelector<HTMLElement>('[aria-current="true"]');
+    // A list that is hidden (the sidebar below md) has no size to scroll within
+    if (!list || !item || list.clientHeight === 0) return;
+    const itemTop = item.getBoundingClientRect().top - list.getBoundingClientRect().top + list.scrollTop;
+    const itemBottom = itemTop + item.offsetHeight;
+    if (itemTop - FADE_PX < list.scrollTop) {
+      list.scrollTo({ top: Math.max(0, itemTop - FADE_PX), behavior });
+    } else if (itemBottom + FADE_PX > list.scrollTop + list.clientHeight) {
+      list.scrollTo({ top: itemBottom + FADE_PX - list.clientHeight, behavior });
+    }
+  }
+
+  // Follow the active section as the page scrolls (after the DOM has marked the new item current)
+  $: if (activeElement !== undefined && typeof window !== 'undefined') {
+    tick().then(() => {
+      revealActive(navList, scrollBehavior());
+      revealActive(menuList, scrollBehavior());
+    });
+  }
+  // The pill's menu is built when opened: start it already showing the active entry
+  $: if (menuList) revealActive(menuList, 'instant');
+
   function jumpTo(element: HTMLElement | null | undefined) {
     if (!element) return;
     activeElement = element;
     lockUntil = performance.now() + 800;
     const top = element.getBoundingClientRect().top + window.scrollY - jumpOffset();
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    window.scrollTo({ top: Math.max(0, top), behavior: reduceMotion ? 'auto' : 'smooth' });
+    window.scrollTo({ top: Math.max(0, top), behavior: scrollBehavior() });
     // Move focus with the view so keyboard and screen reader users land on the section: its
     // heading if it has one, else the element itself
     const target = element.querySelector<HTMLElement>('h1, h2, h3, h4, h5, h6') ?? element;
     if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+    target.setAttribute('data-section-nav-target', '');
     target.focus({ preventScroll: true });
   }
 </script>
 
 <svelte:window on:click={onWindowClick} on:keydown={onKeydown} />
 
+{#if !single}
 <nav class="section-nav" class:signed-in={signedIn} class:inset aria-label={label}>
-  <ul class="list-unstyled mb-0">
+  <ul class="section-nav-list list-unstyled mb-0" use:scrollFade bind:this={navList}>
     {#each sections as { title, element, count }}
       <li>
         <button
@@ -212,9 +283,10 @@
   </ul>
   <button type="button" class="section-nav-item section-nav-top" on:click={scrollToTop}>
     <span>Back to top</span>
-    <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V3M3.5 7.5L8 3l4.5 4.5" /></svg>
+    <Icon class="section-nav-icon" name="chevron-up" />
   </button>
 </nav>
+{/if}
 
 {#if sections.length > 0}
   <nav
@@ -222,12 +294,27 @@
     class:signed-in={signedIn}
     class:pwa={pwaMode}
     class:open
+    class:single
     aria-label={label}
     bind:this={pillEl}
   >
+    {#if single}
+      {#if revealed}
+        <button
+          type="button"
+          class="section-nav-toggle section-nav-circle rounded-circle"
+          aria-label="Scroll to top"
+          on:click={scrollToTop}
+          in:fly={{ x: 80, duration: slideDuration() }}
+          out:fly={{ x: 80, duration: slideDuration() }}
+        >
+          <Icon class="section-nav-icon section-nav-icon-lg" name="chevron-up" />
+        </button>
+      {/if}
+    {:else}
     {#if open}
       <div class="section-nav-menu shadow rounded-4" id={menuId}>
-        <ul class="list-unstyled mb-0">
+        <ul class="section-nav-list list-unstyled mb-0" use:scrollFade bind:this={menuList}>
           {#each sections as { title, element, count }}
             <li>
               <button
@@ -245,25 +332,30 @@
         </ul>
         <button type="button" class="section-nav-item section-nav-top" on:click={topFromMenu}>
           <span>Back to top</span>
-          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 13V3M3.5 7.5L8 3l4.5 4.5" /></svg>
+          <Icon class="section-nav-icon" name="chevron-up" />
         </button>
       </div>
     {/if}
     <button
       type="button"
-      class="section-nav-toggle shadow rounded-pill"
+      class="section-nav-toggle rounded-pill"
       aria-expanded={open}
       aria-controls={open ? menuId : undefined}
       on:click={() => (open = !open)}
     >
       <span class="section-nav-current" aria-live="polite">{activeItem?.title ?? label}</span>
-      <svg class="section-nav-chevron" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l5-5 5 5" /></svg>
+      <Icon class="section-nav-icon section-nav-chevron" name="chevron-up" />
     </button>
+    {/if}
   </nav>
 {/if}
 
 
 <style>
+  /* Section titles aren't interactive, so don't draw a focus box around them */
+  :global([data-section-nav-target]:focus) {
+    outline: none;
+  }
   .section-nav {
     /* Space the floating app tab bar takes at the top of the viewport while scrolling */
     --section-nav-overlay: 0px;
@@ -276,17 +368,20 @@
   }
   /* Shown from md up; below md the pill takes over */
   @media (min-width: 768px) {
+    /* Only the section list scrolls (.section-nav-list), so "Back to top" stays at the bottom of
+       the column, and the inset below stays put instead of scrolling away */
     .section-nav {
-      display: block;
+      display: flex;
+      flex-direction: column;
       position: sticky;
       top: calc(var(--section-nav-overlay) + 1rem);
       align-self: start;
       max-height: calc(100vh - var(--section-nav-overlay) - 2rem);
-      overflow-y: auto;
     }
-    /* Height of the floating compact filters plus a gap */
+    /* Height of the floating compact filters plus a gap: the list starts below them, so its
+       sections never scroll underneath them */
     .section-nav.inset {
-      padding-top: 3.5rem;
+      padding-top: 3rem;
     }
   }
   /* Below md: the collapsed pill */
@@ -294,13 +389,12 @@
     /* Clearance above the viewport's bottom edge; signed-in phones add the app's bottom tab bar */
     --section-nav-bottom: 1.75rem;
     position: fixed;
-    left: 50%;
+    right: calc(1rem + env(safe-area-inset-right, 0px));
     bottom: calc(var(--section-nav-bottom) + env(safe-area-inset-bottom, 0px));
-    transform: translateX(-50%);
     z-index: 1020; /* under the app's tab bars (1030) */
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-end;
     gap: 0.8rem;
     width: max-content;
     max-width: calc(100vw - 2rem);
@@ -315,7 +409,8 @@
     }
   }
   @media (min-width: 768px) {
-    .section-nav-pill {
+    /* The lone "Back to top" circle stays at every width: there is no sidebar to take over */
+    .section-nav-pill:not(.single) {
       display: none;
     }
   }
@@ -324,15 +419,32 @@
     align-items: center;
     gap: 0.5rem;
     max-width: 100%;
-    padding: 0.65rem 1.15rem;
-    border: 1px solid var(--bs-border-color, #dee2e6);
-    background-color: var(--bs-body-bg, #fff);
-    color: var(--bs-body-color);
+    padding: 0.7rem 1.25rem;
+    /* Filled with the primary color, with a stronger shadow, so it stands out from the content
+       it floats over */
+    border: 1px solid var(--bs-primary);
+    background-color: var(--bs-primary);
+    color: #fff;
     font-size: 1rem;
+    box-shadow: var(--bs-box-shadow-lg);
     cursor: pointer;
   }
+  /* The lone "Back to top" button: a circle instead of a pill */
+  .section-nav-circle {
+    justify-content: center;
+    flex: none;
+    width: 3rem;
+    height: 3rem;
+    /* Not the toggle's 100%: against the pill's shrink-to-fit width that resolves to 0 */
+    max-width: none;
+    padding: 0;
+  }
   .section-nav-toggle:hover {
-    background-color: var(--bs-tertiary-bg, #f8f9fa);
+    filter: brightness(0.92);
+  }
+  .section-nav-toggle:focus-visible {
+    outline: 3px solid var(--bs-primary-border-subtle, #9ec5fe);
+    outline-offset: 2px;
   }
   .section-nav-current {
     min-width: 0;
@@ -341,26 +453,69 @@
     white-space: nowrap;
     font-weight: 600;
   }
-  .section-nav-chevron {
+  /* Bootstrap icon chevrons:
+    Center and remove the font baseline offset
+    Thicken the text stroke
+  */
+  :global(.section-nav-icon) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     flex: 0 0 auto;
+    font-size: 1.15em;
+    line-height: 1;
+    -webkit-text-stroke: 1px currentColor;
+  }
+  :global(.section-nav-icon::before) {
+    vertical-align: 0;
+    line-height: 1;
+  }
+  :global(.section-nav-icon-lg) {
+    font-size: 1.2rem;
+    -webkit-text-stroke: 1.3px currentColor;
+  }
+  :global(.section-nav-chevron) {
     transition: transform 0.2s;
   }
-  .open .section-nav-chevron {
+  .open :global(.section-nav-chevron) {
     transform: rotate(180deg);
   }
   .section-nav-menu {
     width: 18rem;
     max-width: calc(100vw - 2rem);
     max-height: calc(100vh - 9rem - var(--header-height, 64px));
-    overflow-y: auto;
+    /* Only the section list scrolls, so "Back to top" is always visible at the bottom */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     padding: 0.4rem;
     border: 1px solid var(--bs-border-color, #dee2e6);
     background-color: var(--bs-body-bg, #fff);
   }
   @media (prefers-reduced-motion: reduce) {
-    .section-nav-chevron {
+    :global(.section-nav-chevron) {
       transition: none;
     }
+  }
+  .section-nav-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    /* Fade out the edges that have more list beyond them (sizes set by scrollFade) */
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      #000 var(--fade-top, 0px),
+      #000 calc(100% - var(--fade-bottom, 0px)),
+      transparent
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      #000 var(--fade-top, 0px),
+      #000 calc(100% - var(--fade-bottom, 0px)),
+      transparent
+    );
   }
   .section-nav-item {
     display: flex;
@@ -388,6 +543,7 @@
   }
   /* Sits apart from the section list, at the bottom of the menu */
   .section-nav-top {
+    flex: 0 0 auto;
     margin-top: 0.4rem;
     border-top: 1px solid var(--bs-border-color, #dee2e6);
     border-top-left-radius: 0;
