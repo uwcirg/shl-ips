@@ -9,6 +9,16 @@ html {
   height: auto;
 }
 
+/* No smooth scrolling in the installed app: in iOS PWAs a smooth scroll leaves position:fixed
+   elements (bottom tab bar, section pill) untappable until the next touch scroll. This undoes
+   Bootstrap's smooth :root default for the scroll reset after a page switch. Keep the query in
+   step with pwaMode in Header and SectionNav. */
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  :root {
+    scroll-behavior: auto;
+  }
+}
+
 body {
   position: relative; /* establishes the containing block */
   min-height: 100vh;  /* at least fill the viewport */
