@@ -23,6 +23,7 @@
     ModalHeader,
     ModalFooter,
     Row,
+    Spinner,
     Table
   } from '@sveltestrap/sveltestrap';
   import { goto } from '$app/navigation';
@@ -92,8 +93,10 @@
   const ACTIVITY_LIMIT = 10;
   let activity: ActivityEntry[] = [];
   let activityError = false;
+  let activityLoading = true;
 
   async function loadActivity() {
+    activityLoading = true;
     try {
       const accessLog: AccessLogEntry[] = await shlClient.getAccessLog(shl.id, 'other', ACTIVITY_LIMIT);
       const history: EventLogEntry[] = await shlClient.getHistory(shl.id, ACTIVITY_LIMIT);
@@ -113,6 +116,8 @@
     } catch (e) {
       console.error(e);
       activityError = true;
+    } finally {
+      activityLoading = false;
     }
   }
 
@@ -315,7 +320,13 @@
         {/if}
       </CardHeader>
       <CardBody>
-        {#await qrCodeImage then dataUrl}
+        {#await qrCodeImage}
+          <div class="qr-skeleton placeholder-glow" aria-hidden="true">
+            <span class="placeholder qr-sk-header"></span>
+            <span class="placeholder qr-sk-body"></span>
+            <span class="placeholder qr-sk-footer"></span>
+          </div>
+        {:then dataUrl}
           <CardImg class="img-fluid" alt="QR Code for SHL" src={dataUrl} style="background-color: white"/>
         {/await}
       </CardBody>
@@ -509,7 +520,12 @@
 <Row class="mt-3">
   <Col>
     <div style="border-bottom: 1px solid rgb(204, 204, 204); margin-bottom: 1em"><h3>Recent Activity</h3></div>
-    {#if activityError}
+    {#if activityLoading}
+      <div class="d-flex align-items-center text-muted py-3 px-3" role="status">
+        <Spinner color="primary" size="sm" class="me-2" />
+        <span>Loading recent activity...</span>
+      </div>
+    {:else if activityError}
       <Alert color="warning" fade={false}>
         <Icon name="exclamation-triangle-fill" />&nbsp;Could not load activity.
       </Alert>
@@ -540,6 +556,27 @@
 </Row>
 
 <style>
+  /* Matches the composed QR image's aspect ratio (1346 x ~1670 for the default banners) */
+  .qr-skeleton {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1346 / 1670;
+    background-color: white;
+    /* placeholders fill with currentColor, so a lighter text color lightens them */
+    color: var(--bs-gray-400);
+  }
+  .qr-skeleton > * {
+    position: absolute;
+    display: block;
+    min-height: 0;
+  }
+  .qr-sk-header, .qr-sk-footer, .qr-sk-body {
+    left: 4.46%;
+    width: 91.08%;
+  }
+  .qr-sk-header { top: 2.4%; height: 8.1%; }
+  .qr-sk-footer { top: 88.7%; height: 8.9%; width: 50%; left: 25%; }
+  .qr-sk-body { top: 12.9%; height: 73.4%; }
   :global(.activity-card) {
     border: 0;
     border-radius: 0.75rem;
