@@ -1,4 +1,5 @@
 import type { Observation, Reference } from 'fhir/r4';
+import { NOT_CODED, type IOResponse } from '../types.js';
 import {
 	combatPeriodTemplate,
 	currentJobTemplate,
@@ -6,10 +7,22 @@ import {
 	pastJobTemplate,
 	retirementDateTemplate
 } from './templates.js';
-import { EMPLOYMENT_STATUSES, type OdhFormValues } from './values.js';
+import {
+	EMPLOYMENT_STATUSES,
+	ODH_SECTIONS,
+	isWorking,
+	type CombatPeriodEntry,
+	type CurrentJobEntry,
+	type EmploymentStatusEntry,
+	type OdhFormValues,
+	type OdhSectionKey,
+	type PastJobEntry,
+	type RetirementDateEntry
+} from './values.js';
 
-// Builds ODH FHIR resources from the form's values. Pure: resource ids come from each entry's
-// position, so the same values always produce the same resources.
+// Builds ODH FHIR resources from form entries, one resource per entry. Pure: the same entries
+// always give the same resources. A resource's id is its entry's id, and it has none when the
+// entry has none.
 
 export interface OdhBuildOptions {
 	/**
@@ -19,40 +32,34 @@ export interface OdhBuildOptions {
 	subject?: Reference;
 }
 
+export interface OdhFormBuildOptions extends OdhBuildOptions {
+	/** Sections to build. Defaults to all of them. */
+	sections?: readonly OdhSectionKey[];
+}
+
+export interface EmploymentStatusBuildOptions extends OdhBuildOptions {
+	/** Start of the status's effective period; usually the earliest current job's start */
+	employedSince?: string;
+}
+
 // Builders fill in templates through paths the Observation type marks optional
-function fromTemplate(template: Observation, { subject }: OdhBuildOptions = {}): any {
-	const resource = JSON.parse(JSON.stringify(template));
-	if (!subject) {
-		return resource;
-	}
-	// Placed after code, where FHIR (and the templates, originally) put it
-	const withSubject: any = {};
-	for (const [key, value] of Object.entries(resource)) {
-		withSubject[key] = value;
-		if (key === 'code') {
-			withSubject.subject = JSON.parse(JSON.stringify(subject));
+function fromTemplate(
+	template: Observation,
+	id: string | undefined,
+	{ subject }: OdhBuildOptions = {}
+): any {
+	// id goes after resourceType and subject after code, the usual FHIR order
+	const resource: any = {};
+	for (const [key, value] of Object.entries(JSON.parse(JSON.stringify(template)))) {
+		resource[key] = value;
+		if (key === 'resourceType' && id) {
+			resource.id = id;
+		}
+		if (key === 'code' && subject) {
+			resource.subject = JSON.parse(JSON.stringify(subject));
 		}
 	}
-	return withSubject;
-}
-
-function sortObjectKeys(obj: any): any {
-	return Object.keys(obj)
-		.sort()
-		.reduce((result: any, key: any) => {
-			result[key] = obj[key];
-			return result;
-		}, {});
-}
-
-function deduplicateObjectList<T>(arr: T[]): T[] {
-	const seen = new Set();
-	return arr.filter((item: any) => {
-		const strItem = JSON.stringify(sortObjectKeys(item));
-		const duplicate = seen.has(strItem);
-		seen.add(strItem);
-		return !duplicate;
-	});
+	return resource;
 }
 
 function occupationSystem(code: string) {
@@ -63,155 +70,146 @@ function occupationSystem(code: string) {
 
 const INDUSTRY_SYSTEM = 'http://terminology.hl7.org/CodeSystem/PHOccupationalDataForHealthODH';
 
-export function buildCurrentJobResources(values: OdhFormValues, options: OdhBuildOptions = {}): Observation[] {
-	const currentJobResources: Observation[] = [];
-	if (!values.isWorking) {
-		return currentJobResources;
-	} // Don't add current job data if not working
-	const uniqueJobs = deduplicateObjectList(values.currentWork);
-	for (const [i, jobValue] of uniqueJobs.entries()) {
-		const currentJobResource = fromTemplate(currentJobTemplate, options);
-		currentJobResource.id = `odh-current-job-${i}`;
-		if (jobValue.start) {
-			let period: any = { start: jobValue.start };
-			currentJobResource.effectivePeriod = period;
-		}
-		if (jobValue.occupation) {
-			currentJobResource.valueCodeableConcept.coding = [
-				{
-					system: occupationSystem(jobValue.occupation.Code),
-					code: jobValue.occupation.Code,
-					display: jobValue.occupation.Title
-				}
-			];
-		}
-		if (jobValue.industry) {
-			currentJobResource.component[0].valueCodeableConcept.coding = [
-				{
-					system: INDUSTRY_SYSTEM,
-					code: jobValue.industry.Code,
-					display: jobValue.industry.Title
-				}
-			];
-		}
-		currentJobResources.push(currentJobResource);
-	}
-	return currentJobResources;
+function period(start: string, end?: string) {
+	return { ...(start ? { start } : {}), ...(end ? { end } : {}) };
 }
 
-export function buildPastJobResources(values: OdhFormValues, options: OdhBuildOptions = {}): Observation[] {
-	const pastJobResources: Observation[] = [];
-	const uniqueJobs = deduplicateObjectList(values.pastWork);
-	for (const [i, jobValue] of uniqueJobs.entries()) {
-		const pastJobResource = fromTemplate(pastJobTemplate, options);
-		pastJobResource.id = `odh-past-job-${i}`;
-		if (jobValue.start || jobValue.end) {
-			let period: any = {};
-			if (jobValue.start) {
-				period.start = jobValue.start;
-			}
-			if (jobValue.end) {
-				period.end = jobValue.end;
-			}
-			pastJobResource.effectivePeriod = period;
-		}
-		if (jobValue.occupation) {
-			pastJobResource.valueCodeableConcept.coding = [
-				{
-					system: occupationSystem(jobValue.occupation.Code),
-					code: jobValue.occupation.Code,
-					display: jobValue.occupation.Title
-				}
-			];
-		}
-		if (jobValue.industry) {
-			pastJobResource.component[0].valueCodeableConcept.coding = [
-				{
-					system: INDUSTRY_SYSTEM,
-					code: jobValue.industry.Code,
-					display: jobValue.industry.Title
-				}
-			];
-		}
-		pastJobResources.push(pastJobResource);
+function buildJob(
+	template: Observation,
+	job: CurrentJobEntry,
+	effectivePeriod: { start?: string; end?: string },
+	options: OdhBuildOptions
+): Observation {
+	const resource = fromTemplate(template, job.id, options);
+	if (effectivePeriod.start || effectivePeriod.end) {
+		resource.effectivePeriod = effectivePeriod;
 	}
-	return pastJobResources;
+	const occupation: IOResponse = job.occupation ?? NOT_CODED.Occupation[0];
+	resource.valueCodeableConcept.coding = [
+		{ system: occupationSystem(occupation.Code), code: occupation.Code, display: occupation.Title }
+	];
+	const industry: IOResponse = job.industry ?? NOT_CODED.Industry[0];
+	resource.component[0].valueCodeableConcept.coding = [
+		{ system: INDUSTRY_SYSTEM, code: industry.Code, display: industry.Title }
+	];
+	return resource;
 }
 
-export function buildRetirementDateResources(values: OdhFormValues, options: OdhBuildOptions = {}): Observation[] {
-	const retirementDateResources: Observation[] = [];
-	const uniqueRetirementDates = deduplicateObjectList(values.retirementDates);
-	const validRetirementDates = uniqueRetirementDates.filter((retirementDate) => retirementDate.start);
-	for (const [i, retirementDate] of validRetirementDates.entries()) {
-		const retirementDateResource = fromTemplate(retirementDateTemplate, options);
-		retirementDateResource.id = `odh-retirement-date-${i}`;
-		if (retirementDate.start) {
-			retirementDateResource.valueDateTime = retirementDate.start;
-		}
-		retirementDateResources.push(retirementDateResource);
-	}
-	return retirementDateResources;
+/** One current job. An uncoded occupation or industry is saved as not coded. */
+export function buildCurrentJob(job: CurrentJobEntry, options: OdhBuildOptions = {}): Observation {
+	return buildJob(currentJobTemplate, job, period(job.start), options);
 }
 
-export function buildCombatPeriodResources(values: OdhFormValues, options: OdhBuildOptions = {}): Observation[] {
-	const combatPeriodResources: Observation[] = [];
-	const uniqueCombatPeriods = deduplicateObjectList(values.combatPeriods);
-	const validCombatPeriods = uniqueCombatPeriods.filter(
-		(combatPeriod) => combatPeriod.start || combatPeriod.end
-	);
-	for (const [i, combatPeriod] of validCombatPeriods.entries()) {
-		const combatPeriodResource = fromTemplate(combatPeriodTemplate, options);
-		combatPeriodResource.id = `odh-combat-period-${i}`;
-		if (combatPeriod.start || combatPeriod.end) {
-			let period: any = {};
-			if (combatPeriod.start) {
-				period.start = combatPeriod.start;
-			}
-			if (combatPeriod.end) {
-				period.end = combatPeriod.end;
-			}
-			combatPeriodResource.valuePeriod = period;
-		}
-		combatPeriodResources.push(combatPeriodResource);
-	}
-	return combatPeriodResources;
+/** One past job. An uncoded occupation or industry is saved as not coded. */
+export function buildPastJob(job: PastJobEntry, options: OdhBuildOptions = {}): Observation {
+	return buildJob(pastJobTemplate, job, period(job.start, job.end), options);
 }
 
-export function buildEmploymentStatusResources(values: OdhFormValues, options: OdhBuildOptions = {}): Observation[] {
-	const employmentStatusResource = fromTemplate(employmentStatusTemplate, options);
-	employmentStatusResource.id = `odh-employment-status`;
-	employmentStatusResource.valueCodeableConcept.coding[0].code = EMPLOYMENT_STATUSES[values.status];
-	employmentStatusResource.valueCodeableConcept.coding[0].display = values.status;
-	// Employed since the earliest current job that has a start date. Other statuses get no
-	// effective period: when a current job started says nothing about when they began.
-	let minDate: string | null = null;
-	if (values.isWorking) {
-		for (const jobValue of values.currentWork) {
-			if (jobValue.start && (minDate === null || minDate > jobValue.start)) {
-				minDate = jobValue.start;
-			}
-		}
+export function buildRetirementDate(
+	entry: RetirementDateEntry,
+	options: OdhBuildOptions = {}
+): Observation {
+	const resource = fromTemplate(retirementDateTemplate, entry.id, options);
+	resource.valueDateTime = entry.start;
+	return resource;
+}
+
+export function buildCombatPeriod(
+	entry: CombatPeriodEntry,
+	options: OdhBuildOptions = {}
+): Observation {
+	const resource = fromTemplate(combatPeriodTemplate, entry.id, options);
+	resource.valuePeriod = period(entry.start, entry.end);
+	return resource;
+}
+
+export function buildEmploymentStatus(
+	entry: EmploymentStatusEntry,
+	{ employedSince, ...options }: EmploymentStatusBuildOptions = {}
+): Observation {
+	const resource = fromTemplate(employmentStatusTemplate, entry.id, options);
+	resource.valueCodeableConcept.coding[0].code = EMPLOYMENT_STATUSES[entry.status];
+	resource.valueCodeableConcept.coding[0].display = entry.status;
+	if (employedSince) {
+		resource.effectivePeriod = { start: employedSince };
 	}
-	if (minDate) {
-		employmentStatusResource.effectivePeriod = {
-			start: minDate
-		};
-	} else {
-		delete employmentStatusResource.effectivePeriod;
-	}
-	return [employmentStatusResource];
+	return resource;
 }
 
 /**
- * All ODH resources for the form's values: employment status, then current jobs, past jobs,
- * retirement dates and combat zone periods.
+ * Builds each entry, leaving out entries whose resource duplicates an earlier one's (ignoring
+ * ids, so the first entry's id is kept)
  */
-export function buildOdhResources(values: OdhFormValues, options: OdhBuildOptions = {}): Observation[] {
+function buildUnique<E>(entries: E[], build: (entry: E) => Observation): Observation[] {
+	const seen = new Set<string>();
+	const resources: Observation[] = [];
+	for (const entry of entries) {
+		const resource = build(entry);
+		const key = JSON.stringify({ ...resource, id: undefined });
+		if (!seen.has(key)) {
+			seen.add(key);
+			resources.push(resource);
+		}
+	}
+	return resources;
+}
+
+export function buildCurrentJobs(jobs: CurrentJobEntry[], options: OdhBuildOptions = {}) {
+	return buildUnique(jobs, (job) => buildCurrentJob(job, options));
+}
+
+export function buildPastJobs(jobs: PastJobEntry[], options: OdhBuildOptions = {}) {
+	return buildUnique(jobs, (job) => buildPastJob(job, options));
+}
+
+/** Retirement dates; entries without a date are left out */
+export function buildRetirementDates(entries: RetirementDateEntry[], options: OdhBuildOptions = {}) {
+	return buildUnique(
+		entries.filter((entry) => entry.start),
+		(entry) => buildRetirementDate(entry, options)
+	);
+}
+
+/** Combat zone periods; entries without a start or end are left out */
+export function buildCombatPeriods(entries: CombatPeriodEntry[], options: OdhBuildOptions = {}) {
+	return buildUnique(
+		entries.filter((entry) => entry.start || entry.end),
+		(entry) => buildCombatPeriod(entry, options)
+	);
+}
+
+/** The earliest start among jobs that have one */
+export function earliestStart(jobs: CurrentJobEntry[]): string | undefined {
+	return jobs
+		.map((job) => job.start)
+		.filter(Boolean)
+		.reduce<string | undefined>((min, start) => (min === undefined || start < min ? start : min), undefined);
+}
+
+/**
+ * The ODH resources for a whole form, in section order: employment status, current jobs, past
+ * jobs, retirement dates and combat zone periods. Applies the rules between sections: current
+ * jobs are only included while Employed, and then date the employment status (employed since
+ * the earliest one's start).
+ */
+export function buildOdhResources(
+	values: OdhFormValues,
+	{ sections = ODH_SECTIONS, ...options }: OdhFormBuildOptions = {}
+): Observation[] {
+	const included = new Set(sections);
+	const currentJobs = included.has('currentWork') && isWorking(values) ? values.currentWork : [];
 	return [
-		...buildEmploymentStatusResources(values, options),
-		...buildCurrentJobResources(values, options),
-		...buildPastJobResources(values, options),
-		...buildRetirementDateResources(values, options),
-		...buildCombatPeriodResources(values, options)
+		...(included.has('employmentStatus')
+			? [
+					buildEmploymentStatus(values.employmentStatus, {
+						...options,
+						employedSince: earliestStart(currentJobs)
+					})
+			  ]
+			: []),
+		...buildCurrentJobs(currentJobs, options),
+		...(included.has('pastWork') ? buildPastJobs(values.pastWork, options) : []),
+		...(included.has('retirementDates') ? buildRetirementDates(values.retirementDates, options) : []),
+		...(included.has('combatPeriods') ? buildCombatPeriods(values.combatPeriods, options) : [])
 	];
 }

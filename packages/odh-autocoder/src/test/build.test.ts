@@ -1,30 +1,24 @@
 import { describe, expect, it } from 'vitest';
-import { applyOdhResources, buildOdhResources, defaultOdhFormValues, NOT_CODED } from '$lib';
-import { SCENARIOS, fixturePath } from './scenarios.js';
+import {
+	buildCombatPeriods,
+	buildCurrentJob,
+	buildOdhResources,
+	buildPastJobs,
+	buildRetirementDates,
+	defaultOdhFormValues,
+	NOT_CODED,
+	readOdhValues
+} from '$lib';
+import { SCENARIOS, counterIds, fixturePath } from './scenarios.js';
 
-// The form's values as they stand when the user saves without editing: seeded from existing
-// resources, with the form's reactive rules applied.
-function formValuesFor(resources: Parameters<typeof applyOdhResources>[1] | undefined) {
-	const values = defaultOdhFormValues();
-	if (resources) {
-		applyOdhResources(values, resources);
-	}
-	// The form only includes current jobs when the status is Employed
-	values.isWorking = values.status === 'Employed';
-	// Each rendered autocoder input sets an empty value to its not-coded default when it mounts.
-	// Current jobs are only rendered while working.
-	const renderedJobs = [...(values.isWorking ? values.currentWork : []), ...values.pastWork];
-	for (const job of renderedJobs) {
-		job.occupation ??= NOT_CODED.Occupation[0];
-		job.industry ??= NOT_CODED.Industry[0];
-	}
-	return values;
-}
+const NURSE = { Code: '29-1141', Title: 'Registered Nurses', Score: 1 };
+const HOSPITALS = { Code: '622000', Title: 'General Medical and Surgical Hospitals', Score: 1 };
 
 describe('buildOdhResources', () => {
 	for (const scenario of SCENARIOS) {
 		it(`matches the ${scenario.name} fixture (${scenario.description})`, async () => {
-			const resources = buildOdhResources(formValuesFor(scenario.resources));
+			const values = readOdhValues(scenario.resources, { createId: counterIds() });
+			const resources = buildOdhResources(values);
 			await expect(JSON.stringify(resources, null, 2) + '\n').toMatchFileSnapshot(
 				fixturePath(scenario.name)
 			);
@@ -33,19 +27,26 @@ describe('buildOdhResources', () => {
 
 	it('is deterministic', () => {
 		const scenario = SCENARIOS.find((s) => s.name === 'round-trip')!;
-		const first = buildOdhResources(formValuesFor(scenario.resources));
-		const second = buildOdhResources(formValuesFor(scenario.resources));
-		expect(second).toEqual(first);
+		const build = () => buildOdhResources(readOdhValues(scenario.resources, { createId: counterIds() }));
+		expect(build()).toEqual(build());
+	});
+
+	it('gives resources no id when their entries have none', () => {
+		const scenario = SCENARIOS.find((s) => s.name === 'round-trip')!;
+		const values = readOdhValues(scenario.resources, { getId: () => undefined });
+		const resources = buildOdhResources(values);
+		expect(resources.length).toBeGreaterThan(5);
+		expect(resources.every((r) => !('id' in r))).toBe(true);
 	});
 
 	it('leaves out the subject unless one is given', () => {
-		const resources = buildOdhResources(formValuesFor(SCENARIOS[1].resources));
+		const resources = buildOdhResources(readOdhValues(SCENARIOS[1].resources));
 		expect(resources.every((r) => !('subject' in r))).toBe(true);
 	});
 
 	it('adds the given subject to every resource, after code', () => {
 		const subject = { reference: 'Patient/123', display: 'Pat' };
-		const resources = buildOdhResources(formValuesFor(SCENARIOS[1].resources), { subject });
+		const resources = buildOdhResources(readOdhValues(SCENARIOS[1].resources), { subject });
 		expect(resources.length).toBeGreaterThan(5);
 		for (const resource of resources) {
 			expect(resource.subject).toEqual(subject);
@@ -55,19 +56,79 @@ describe('buildOdhResources', () => {
 		}
 	});
 
+	it('builds only the given sections', () => {
+		const values = readOdhValues(SCENARIOS[1].resources);
+		const resources = buildOdhResources(values, { sections: ['employmentStatus', 'pastWork'] });
+		expect(resources.map((r) => r.code?.coding?.[0].code)).toEqual(['74165-2', '11341-5', '11341-5']);
+		// Without current work, nothing dates the employment status
+		expect(resources[0].effectivePeriod).toBeUndefined();
+	});
+
 	it('does not modify the templates', () => {
 		const values = defaultOdhFormValues();
-		values.currentWork[0].occupation = { Code: '29-1141', Title: 'Registered Nurses', Score: 1 };
+		values.currentWork[0].occupation = NURSE;
 		buildOdhResources(values);
 		const fresh = buildOdhResources(defaultOdhFormValues());
-		expect(fresh[1].valueCodeableConcept?.coding).toEqual([]);
+		expect(fresh[1].valueCodeableConcept?.coding?.[0].code).toBe(NOT_CODED.Occupation[0].Code);
 	});
 });
 
-describe('applyOdhResources', () => {
-	it('leaves values unchanged when there are no resources', () => {
-		const values = defaultOdhFormValues();
-		values.status = 'Unemployed';
-		expect(applyOdhResources(values, [])).toEqual({ ...defaultOdhFormValues(), status: 'Unemployed' });
+describe('entry and section builders', () => {
+	it('saves an uncoded occupation and industry as not coded', () => {
+		const resource = buildCurrentJob({ start: '' });
+		expect(resource.valueCodeableConcept?.coding?.[0]).toMatchObject({
+			code: '00-0000',
+			display: NOT_CODED.Occupation[0].Title
+		});
+		expect(resource.component?.[0].valueCodeableConcept?.coding?.[0]).toMatchObject({
+			code: '000000',
+			display: NOT_CODED.Industry[0].Title
+		});
+	});
+
+	it("uses the entry's id, and leaves it out when there is none", () => {
+		expect(buildCurrentJob({ id: 'job-a', occupation: NURSE, start: '' }).id).toBe('job-a');
+		expect('id' in buildCurrentJob({ occupation: NURSE, start: '' })).toBe(false);
+	});
+
+	it("leaves out duplicates, keeping the first entry's id, whatever their key order", () => {
+		const resources = buildPastJobs([
+			{ id: 'first', occupation: NURSE, industry: HOSPITALS, start: '2010-01', end: '2012-01' },
+			{
+				end: '2012-01',
+				start: '2010-01',
+				industry: { Score: 1, Title: HOSPITALS.Title, Code: HOSPITALS.Code },
+				occupation: { Title: NURSE.Title, Code: NURSE.Code, Score: 1 },
+				id: 'second'
+			}
+		]);
+		expect(resources.map((r) => r.id)).toEqual(['first']);
+	});
+
+	it('leaves out empty retirement dates and combat periods', () => {
+		expect(buildRetirementDates([{ id: 'a', start: '' }, { id: 'b', start: '2015' }])).toHaveLength(1);
+		expect(buildCombatPeriods([{ start: '', end: '' }, { start: '', end: '2006-08' }])).toHaveLength(1);
+	});
+});
+
+describe('readOdhValues', () => {
+	it('gives a new form for no resources, with ids from createId', () => {
+		expect(readOdhValues([], { createId: counterIds() })).toEqual({
+			employmentStatus: { id: 'id-1', status: 'Employed' },
+			currentWork: [{ id: 'id-2', start: '' }],
+			pastWork: [],
+			retirementDates: [],
+			combatPeriods: []
+		});
+	});
+
+	it('reads ids with getId, defaulting to resource ids', () => {
+		const scenario = SCENARIOS.find((s) => s.name === 'round-trip')!;
+		expect(readOdhValues(scenario.resources).pastWork.map((job) => job.id)).toEqual([
+			'seed-2',
+			'seed-3'
+		]);
+		const values = readOdhValues(scenario.resources, { getId: (r) => r.id && `source-${r.id}` });
+		expect(values.currentWork.map((job) => job.id)).toEqual(['source-seed-0', 'source-seed-1']);
 	});
 });

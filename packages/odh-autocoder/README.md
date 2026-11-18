@@ -6,7 +6,7 @@ The package contains:
 
 - **Components**: the form and its inputs (Svelte 4, Bootstrap via sveltestrap)
 - **Server handler**: a SvelteKit request handler that calls the autocoder with your API key, so the key stays on the server
-- **FHIR builders**: pure functions between form values and ODH resources
+- **FHIR builders**: pure functions between form entries and ODH resources
 
 It doesn't do auth, persistence, routing or app config. The app that uses it passes those in.
 
@@ -54,6 +54,8 @@ It never logs request or response contents (occupation text can be sensitive), a
 
 ### 3. Render the form
 
+The quickest way is the ready-made `OdhForm`: every section in an accordion, with **Save work info** and **Clear changes** buttons.
+
 ```svelte
 <script lang="ts">
   import { OdhForm } from 'odh-autocoder';
@@ -66,7 +68,7 @@ It never logs request or response contents (occupation text can be sensitive), a
   }
 </script>
 
-<OdhForm {resources} {onsave} />
+<OdhForm {resources} {onsave} createId={() => crypto.randomUUID()} />
 ```
 
 | Prop | Default | |
@@ -74,33 +76,98 @@ It never logs request or response contents (occupation text can be sensitive), a
 | `resources` | `undefined` | Existing ODH Observations to edit. `undefined` gives a new, empty form. |
 | `onsave` | none | Called with the built resources when the user clicks **Save work info** |
 | `processing` | `false` | Shows the save button as busy |
-| `endpoint` | `/api/nio-autocoder` | Where the inputs send autocoder requests (the route from step 2) |
+| `endpoint` | `/api/nio-autocoder` | Where coders send autocoder requests (the route from step 2) |
 | `getAccessToken` | none | `() => Promise<string \| undefined>`. If set, autocoder requests carry `Authorization: Bearer <token>`. |
 | `subject` | none | A FHIR `Reference` (for example `{ reference: 'Patient/123' }`) set as every saved resource's `subject`. Without it, resources have no subject. |
+| `createId` | none | Makes ids for new entries. See [Resource ids](#resource-ids). |
+| `getId` | `resource.id` | The id for an entry read from a resource. See [Resource ids](#resource-ids). |
+| `sections` | all five | Which sections to show, and save, in order: `employmentStatus`, `currentWork`, `pastWork`, `retirementDates`, `combatPeriods` |
+| `jobCoder` | `JobFieldsCoder` | Codes each job's occupation and industry. See [Coders](#coders). |
+| `fieldCoder` | `AutocoderSearchInput` | The field coder `JobFieldsCoder` uses for each field |
+| `entryForms` | defaults | Replaces a section's per-entry form, e.g. `{ pastWork: MyPastJobForm }` |
 
-Also exported: `AutocoderInput` (one coded field: `mode="Occupation" | "Industry"`, `bind:value`, `id`, `endpoint`, `getAccessToken`) and `MonthInput` (`bind:value` as `YYYY-MM`, or `YYYY` for a year-only date).
+#### Your own layout
+
+`OdhForm` is a layout over pieces you can use directly:
+
+```
+OdhFormProvider          state, ids, submit/reset; renders no markup of its own
+└─ PastWorkSection       the list: one entry form per entry, Add and Delete
+   └─ PastJobForm        one job: a job coder + start and end dates      (entryForm prop)
+      └─ JobFieldsCoder  occupation + industry                           (jobCoder prop)
+         └─ AutocoderSearchInput ×2   one field each                     (fieldCoder prop)
+```
+
+`OdhFormProvider` takes the same data props as `OdhForm` (`resources`, `onsave`, `subject`, `createId`, `getId`, `endpoint`, `getAccessToken`, `processing`). Its slot gets `submit`, `reset`, `values`, `isWorking` and `processing`, and you write the markup:
+
+```svelte
+<OdhFormProvider {resources} {onsave} {createId} let:submit let:reset let:isWorking>
+  <h2>Your job</h2>
+  <EmploymentStatusSection />
+  {#if isWorking}
+    <CurrentWorkSection jobCoder={JobDescriptionCoder} />
+  {/if}
+  <button on:click={submit}>Save</button>
+  <button on:click={reset}>Start over</button>
+</OdhFormProvider>
+```
+
+- **Only the sections in the layout are saved.** A section registers with the provider when it first appears, and stays registered if an `{#if}` hides it later. Pass `sections` to the provider to choose them yourself instead.
+- **Each section can appear once per form.** Showing one twice logs an error.
+- **Cross-section rules** live in the builder, not the layout. Current jobs are saved only while the status is Employed, and they date the employment status.
+- **Sections**: `EmploymentStatusSection` (exactly one status, no Add or Delete), `CurrentWorkSection`, `PastWorkSection`, `RetirementDateSection`, `CombatPeriodSection`. They have no headings or accordion. Label text can be changed with `labels`.
+- **Entry forms**: `CurrentJobForm`, `PastJobForm`, `RetirementDateForm`, `CombatPeriodForm`. Props: `bind:entry`, `idPrefix`, `labels`, plus `jobCoder` and `fieldCoder` for jobs. An `actions` slot at the end of the last row holds the section's Delete button.
+- **Without a provider**, a section edits what you bind: `<PastWorkSection bind:entries {createId} />`, `<EmploymentStatusSection bind:entry />`.
+- **No components at all**: `createOdhFormState()` is the same state as a Svelte store. Its actions are `add`, `remove`, `setStatus`, `load`, `reset` and `toResources`.
+
+#### Coders
+
+There are two levels, and each can be swapped with a prop:
+
+- A **job coder** codes a job's occupation and industry. Props: `bind:occupation`, `bind:industry` (`IOResponse | undefined`), `idPrefix`, `tense` (`'current' | 'past'`), `labels`. It also gets `fieldCoder` when the app sets one.
+  - `JobFieldsCoder` (the default): a labeled field coder for each field.
+  - `JobDescriptionCoder` (experimental): one free-text description, coded as both occupation and industry in one request. The user then picks from each list of suggestions.
+- A **field coder** codes one field. Props: `mode` (`'Occupation' | 'Industry'`), `bind:value`, `id`.
+  - `AutocoderSearchInput` (the default): searches as the user types, and they pick a suggestion. Also exported under its old name, `AutocoderInput`.
+
+Leave a value `undefined` when nothing has been picked; the builders save it as not coded (`00-0000` or `000000`). To call the autocoder, a coder uses `getAutocoderClient()`. The provider sets it up from `endpoint` and `getAccessToken`. `client.code({ occupation?, industry? })` codes one or both fields in one request. `withoutNotCoded`, `notCoded` and `isNotCoded` help with the suggestion lists.
+
+`MonthInput` is also exported (`bind:value` as `YYYY-MM`, or `YYYY` for a year-only date).
 
 #### Page requirements
 
 - **Client-only:** render the components with `export const ssr = false` (for example in `+layout.ts`). `MonthInput` checks browser support while it's being created.
-- **Styles:** load Bootstrap 5 CSS (for example `import 'bootstrap/dist/css/bootstrap.min.css'`) and the [Bootstrap Icons](https://icons.getbootstrap.com/) stylesheet. The form adds a few `:global` layout rules for its own `.inline-form-group` and `.odh-section` classes.
+- **Styles:** load Bootstrap 5 CSS (for example `import 'bootstrap/dist/css/bootstrap.min.css'`) and the [Bootstrap Icons](https://icons.getbootstrap.com/) stylesheet. The entry forms import `odh-layout.css`, which styles the `.odh-*` classes they use. `OdhForm` adds a `:global` rule for its `.odh-section` accordion items.
 - **Vite:** in dev, add `optimizeDeps: { include: ['@sveltestrap/sveltestrap'] }`. Otherwise Vite discovers sveltestrap on the first page load and reloads partway through rendering.
+
+### Resource ids
+
+Each form entry (one job, one date, the status) becomes one resource, and an entry's `id` becomes its resource's `id`. Ids are optional and come from the app:
+
+- `createId()` makes the id for each entry the user adds, and for a new form's defaults. Without it, those resources have no `id`.
+- `getId(resource)` gives the id for an entry read from an existing resource. It defaults to `resource.id`.
+
+An entry keeps its id while it's edited, and deleting one entry doesn't change the others. So an app can match each saved resource to the one it came from. The main app saves new entries under random UUIDs, and reads back the source identifier it recorded for each resource when it was first saved.
 
 ### FHIR builders
 
-These are pure and deterministic: no I/O, no clock, and ids come from each entry's position.
+Pure functions between entries and resources: no I/O and no clock.
 
 ```ts
-import { buildOdhResources, applyOdhResources, defaultOdhFormValues } from 'odh-autocoder';
+import { readOdhValues, buildOdhResources } from 'odh-autocoder';
 
-const values = applyOdhResources(defaultOdhFormValues(), existingObservations);
-const observations = buildOdhResources(values);
+const values = readOdhValues(existingObservations, { getId, createId });
+const observations = buildOdhResources(values, { subject: { reference: 'Patient/123' } });
 // employment status, current jobs, past jobs, retirement dates, combat zone periods
 
-buildOdhResources(values, { subject: { reference: 'Patient/123' } }); // with a subject
+buildOdhResources(values, { sections: ['pastWork'] }); // only some sections
 ```
 
-`buildOdhResources` also has one builder per resource kind (`buildCurrentJobResources`, ...), each taking the same options. Types: `OdhBuildOptions`, `OdhFormValues`, `CurrentJobValues`, `PastJobValues`, `IOResponse`, `AutocoderResponse`, `CodingMode`. Constants: `EMPLOYMENT_STATUSES`, `NOT_CODED`.
+- **One entry**: `buildEmploymentStatus`, `buildCurrentJob`, `buildPastJob`, `buildRetirementDate`, `buildCombatPeriod`.
+- **One section**: `buildCurrentJobs`, `buildPastJobs`, `buildRetirementDates`, `buildCombatPeriods`. They leave out duplicates (keeping the first entry's id), and empty dates and periods.
+- **Reading**: `readOdhValues`, or per section `readEmploymentStatus`, `readCurrentJobs`, `readPastJobs`, `readRetirementDates`, `readCombatPeriods`.
+- **Types**: `OdhFormValues`, `EmploymentStatusEntry`, `CurrentJobEntry`, `PastJobEntry`, `RetirementDateEntry`, `CombatPeriodEntry`, `OdhSectionKey`, `OdhBuildOptions`, `OdhReadOptions`, `IOResponse`, `AutocoderResponse`, `CodingMode`.
+- **Constants**: `EMPLOYMENT_STATUSES`, `NOT_CODED`, `ODH_SECTIONS`.
 
 ## Developing
 
@@ -118,7 +185,7 @@ In this directory:
 
 | Command | |
 |---|---|
-| `npm run dev` | Playground at http://localhost:5180: the form, wired to the real handler and a local mock autocoder. Put `AUTOCODER_API_KEY` in `packages/odh-autocoder/.env` to use the real API. `src/routes` isn't published. |
+| `npm run dev` | Playground at http://localhost:5180: the form, wired to the real handler and a local mock autocoder, and at `/custom` a custom layout, the description coder and a standalone section. Put `AUTOCODER_API_KEY` in `packages/odh-autocoder/.env` to use the real API. `src/routes` isn't published. |
 | `npm run package` | Build `dist/` and check the package's exports with publint |
 | `npm test` | Vitest: builders against fixtures, handler, components |
 | `npm run check` | svelte-check |
@@ -126,7 +193,9 @@ In this directory:
 
 ### Fixtures
 
-`src/test/fixtures/odh/*.json` hold the resources the main app's form produced before the extraction. The builder and component tests must reproduce them exactly. If you change the output on purpose, update the fixtures in the same commit (`npx vitest run -u`) and review the diff.
+`src/test/fixtures/odh/*.json` hold the resources the main app's form produced before the extraction. The only difference is the ids: tests use a counting `createId` (`id-1`, `id-2`, ...), and keep the ids of the resources they read in. The builder and `OdhForm` tests must reproduce them exactly. If you change the output on purpose, update the fixtures in the same commit (`npx vitest run -u`) and review the diff.
+
+On Windows, run the tests from PowerShell or cmd. Under Git Bash, vitest loads twice through differently-cased drive paths, and every test file fails in `setup.ts` with "Cannot read properties of undefined (reading 'on')".
 
 ### Package boundary
 

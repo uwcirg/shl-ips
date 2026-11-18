@@ -1,7 +1,6 @@
 [
   {
     "resourceType": "Observation",
-    "id": "odh-employment-status",
     "meta": {
       "profile": [
         "http://hl7.org/fhir/us/odh/StructureDefinition/odh-EmploymentStatus"

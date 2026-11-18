@@ -1,0 +1,40 @@
+/* Layout shared by the entry forms and coders. A label and its input stay together; the input
+   drops below the label (or the whole group below the previous one) rather than overflowing on
+   narrow screens. */
+.col-auto.odh-inline-group {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+	flex: 0 1 auto;
+	min-width: 0;
+	max-width: 100%;
+}
+
+/* Fields that fill the row (the coders): the label stays level with the input itself rather than
+   centering on the taller column (the search coder has a "Using ..." caption below) */
+.col-auto.odh-inline-group.odh-grow {
+	flex: 1 1 auto;
+	align-items: flex-start;
+}
+
+.odh-control {
+	flex: 1 1 14rem;
+	min-width: 0;
+}
+
+.odh-status-control {
+	flex: 0 1 auto;
+	max-width: 300px;
+}
+
+.odh-label {
+	flex: 0 1 auto;
+}
+
+.odh-grow > .odh-label {
+	display: flex;
+	align-items: center;
+	/* Height of a single-line form control */
+	min-height: calc(1.5em + 0.75rem + 2px);
+}

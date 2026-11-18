@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
-import AutocoderInput from '$lib/components/AutocoderInput.svelte';
+import AutocoderSearchInput from '$lib/components/coders/AutocoderSearchInput.svelte';
+import { createAutocoderClient } from '$lib/autocoder/client.js';
 
 // Typing sends the text to the app's endpoint, suggestions appear, and picking one sets the
 // value. A failed request falls back to manual entry.
@@ -26,7 +27,7 @@ function mockFetch(response: { ok: boolean; status: number; body: string }) {
 }
 
 function renderInput(props: Record<string, unknown> = {}) {
-	return render(AutocoderInput, {
+	return render(AutocoderSearchInput, {
 		props: { mode: 'Occupation', value: undefined, id: 'occ', ...props }
 	});
 }
@@ -41,7 +42,7 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
-describe('AutocoderInput', () => {
+describe('AutocoderSearchInput', () => {
 	it('starts out using the not-coded value', () => {
 		renderInput();
 		expect(screen.getByText('Using "Not Coded – Occupation"')).toBeInTheDocument();
@@ -49,7 +50,7 @@ describe('AutocoderInput', () => {
 
 	it('fetches suggestions as the user types and applies the chosen one', async () => {
 		const fetch = mockFetch({ ok: true, status: 200, body: JSON.stringify(suggestions) });
-		renderInput({ getAccessToken: async () => 'access-token-1' });
+		renderInput({ client: createAutocoderClient({ getAccessToken: async () => 'access-token-1' }) });
 
 		await type('nurse');
 
@@ -72,7 +73,7 @@ describe('AutocoderInput', () => {
 			status: 200,
 			body: JSON.stringify({ ...suggestions, Industry: [{ Code: '622000', Title: 'Hospitals', Score: 1 }] })
 		});
-		renderInput({ mode: 'Industry', endpoint: '/coder' });
+		renderInput({ mode: 'Industry', client: createAutocoderClient({ endpoint: '/coder' }) });
 
 		await type('hospital', 'industry');
 

@@ -12,27 +12,33 @@
     Spinner
   } from '@sveltestrap/sveltestrap';
   import { onDestroy, onMount } from 'svelte';
-  import { NOT_CODED, type AutocoderResponse, type CodingMode, type IOResponse } from '../types.js';
-  import { copyOf } from '../fhir/values.js';
+  import type { CodingMode, IOResponse } from '../../types.js';
+  import {
+    getAutocoderClient,
+    isNotCoded,
+    notCoded,
+    withoutNotCoded,
+    type AutocoderClient
+  } from '../../autocoder/client.js';
+
+  // Field coder: codes one field (occupation or industry) as the user types, and they pick a
+  // suggestion from a list. value stays undefined until they pick one (saved as not coded).
 
   export let mode: CodingMode;
   export let value: IOResponse | undefined;
   export let id: string = "";
-  /** The app's autocoder endpoint (see createAutocoderHandler in odh-autocoder/server) */
-  export let endpoint: string = '/api/nio-autocoder';
-  /** When set, requests carry an Authorization: Bearer header with the token it returns */
-  export let getAccessToken: (() => Promise<string | undefined>) | undefined = undefined;
+  /** Defaults to the client from context (see setAutocoderClient) */
+  export let client: AutocoderClient = getAutocoderClient();
 
   let fetchError: string = '';
   let manual = false;
 
-  let defaults: AutocoderResponse = copyOf(NOT_CODED);
+  $: notCodedValue = notCoded(mode);
 
   let isOpen = false;
-  $: icon = 'search';
   let processing = false;
 
-  let inputValue = "";
+  let inputValue = value?.Title ?? "";
   let codingOptionTitle: string;
   $: codingOptionTitle = inputValue;
 
@@ -42,21 +48,15 @@
   }
 
   $: if (value && codingOptionTitle === "") {
-    if (value.Title === defaults[mode][0].Title) {
-      codingOptionTitle = "";
-    } else {
-      codingOptionTitle = value.Title;
-    }
+    codingOptionTitle = isNotCoded(value) ? "" : value.Title;
   }
-  let codingOptions: AutocoderResponse | undefined = defaults;
+  let codingOptions: IOResponse[] = [notCoded(mode)];
 
   onMount(() => {
     updateMenuPosition();
     window.addEventListener('resize', updateMenuPosition);
     window.addEventListener('scroll', updateMenuPosition, true);
     document.addEventListener('click', handleOutsideClick);
-    inputValue = value?.Title ?? "";
-    value = value ?? defaults[mode][0];
   });
   onDestroy(() => {
     window.removeEventListener('resize', updateMenuPosition);
@@ -84,10 +84,10 @@
     `;
   }
 
-  function setValue(v: IOResponse) {
+  function setValue(v: IOResponse | undefined) {
     value = v;
-    codingOptionTitle = v.Title;
-    if (!manual) {
+    codingOptionTitle = v?.Title ?? "";
+    if (v && !manual) {
       inputValue = v.Title;
     }
   }
@@ -96,74 +96,41 @@
     (document.getElementById(id) as HTMLInputElement | null)?.select();
   }
 
-  function requestHeaders(token: string | undefined): Record<string, string> {
-    return getAccessToken ? { "Authorization": `Bearer ${token}` } : {};
-  }
-
   let controller: AbortController | undefined = undefined;
   async function fetchCode(input: string) {
     processing = true;
-    if (controller) {
-      controller.abort();
-    }
+    controller?.abort();
 
     if (input.trim() === "") {
-      codingOptions = defaults;
+      codingOptions = [notCoded(mode)];
       processing = false;
-      return defaults;
+      return;
     }
 
     controller = new AbortController();
-    const { signal } = controller;
-
-    let url = `${endpoint}?${mode === "Occupation" ? "o" : "i"}=${encodeURIComponent(input)}&c=0`;
-
-    const token = getAccessToken ? getAccessToken() : Promise.resolve(undefined);
-    return token.then((token) => fetch(url, {
-      signal,
-      method: "GET",
-      headers: requestHeaders(token)
-    })).then(async (response) => {
-      if (response.ok) {
-        return response.text();
-      } else {
-        const body = response.text();
-        throw new Error(response.status + " " + await body);
-      }
-    }).then((text) => {
-      if (!text || text === "") {
-        return defaults;
-      }
-      return JSON.parse(text);
-    }).then((content) => {
-      if (!content) {
-        return defaults;
-      }
-      content[mode] = content[mode].filter((v: IOResponse) => v.Code !== "000000" && v.Code !== "00-0000");
-      content[mode].push(defaults[mode][0]);
-      codingOptions = content;
+    const query = mode === "Occupation" ? { occupation: input } : { industry: input };
+    try {
+      const content = await client.code(query, { signal: controller.signal });
+      codingOptions = [...withoutNotCoded(content[mode]), notCoded(mode)];
       updateMenuPosition();
       manual = false;
       processing = false;
-      return content;
-    }).catch((e) => {
-      if (e.name === "AbortError") {
-        return Promise.resolve(defaults);
-      } else {
-        processing = false;
-        manual = true;
-        codingOptions = defaults;
-        fetchError = 'Coding service unavailable. Please enter ' + mode.toLowerCase() + ' manually.';
-        // Keep the user's text, under this field's not-coded code
-        setValue({
-          Code: defaults[mode][0].Code,
-          Title: codingOptionTitle ?? defaults[mode][0].Title,
-          Score: 1
-        });
-        isOpen = false;
-        return Promise.resolve(codingOptions);
+    } catch (e: any) {
+      if (e?.name === "AbortError") {
+        return;
       }
-    })
+      processing = false;
+      manual = true;
+      codingOptions = [notCoded(mode)];
+      fetchError = 'Coding service unavailable. Please enter ' + mode.toLowerCase() + ' manually.';
+      // Keep the user's text, under this field's not-coded code
+      setValue({
+        Code: notCodedValue.Code,
+        Title: codingOptionTitle || notCodedValue.Title,
+        Score: 1
+      });
+      isOpen = false;
+    }
   }
 </script>
 
@@ -186,7 +153,7 @@
             isOpen = !manual && true;
             fetchCode(inputValue);
             if (!isOpen && inputValue.length === 0) {
-              setValue(defaults[mode][0]);
+              setValue(undefined);
             }
           }}
           on:focus={() => {
@@ -203,7 +170,7 @@
             right: 10px;
             color: rgb(50, 50, 50);"/>
         {:else}
-          <Icon name={icon}
+          <Icon name="search"
             style="position: absolute;
             height: 25px;
             width: 15px;
@@ -215,32 +182,26 @@
     </DropdownToggle>
     <Portal>
       <DropdownMenu style={`${menuStyle}`}>
-        {#if codingOptions}
-          {#if codingOptions[mode].length === 0}
-            Empty
-          {:else}
-            {#each codingOptions[mode] as codingOption, index}
-              {#if codingOptions[mode].length > 1 && (codingOption.Code === "000000" || codingOption.Code === "00-0000")}
-                <DropdownItem divider />
-              {/if}
-              <DropdownItem
-                disabled={processing}
-                style="overflow:hidden; text-overflow:ellipsis"
-                title={codingOption.Title}
-                on:click={() => {
-                  isOpen = false;
-                  setValue(codingOption);
-                }}>
-                {codingOption.Title}
-              </DropdownItem>
-            {/each}
+        {#each codingOptions as codingOption}
+          {#if codingOptions.length > 1 && isNotCoded(codingOption)}
+            <DropdownItem divider />
           {/if}
-        {/if}
+          <DropdownItem
+            disabled={processing}
+            style="overflow:hidden; text-overflow:ellipsis"
+            title={codingOption.Title}
+            on:click={() => {
+              isOpen = false;
+              setValue(codingOption);
+            }}>
+            {codingOption.Title}
+          </DropdownItem>
+        {/each}
       </DropdownMenu>
     </Portal>
   </Dropdown>
   {#if fetchError}
     <span class="mb-0 mx-1 text-danger">{fetchError}</span><br>
   {/if}
-  <Label class="mb-0 mx-1">{`Using "${value?.Title ?? defaults[mode][0].Title}"`}</Label>
+  <Label class="mb-0 mx-1">{`Using "${value?.Title ?? notCodedValue.Title}"`}</Label>
 </FormGroup>

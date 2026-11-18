@@ -2,14 +2,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import type { Observation } from 'fhir/r4';
 import OdhForm from '$lib/components/OdhForm.svelte';
-import { SCENARIOS, fixturePath } from './scenarios.js';
+import { SCENARIOS, counterIds, fixturePath } from './scenarios.js';
 
 // The form as a user meets it: seeded from existing resources (or empty), saved without edits.
 // Output must match the fixtures captured from the main app before extraction.
 
 async function renderAndSave(resources?: Observation[]) {
 	const onsave = vi.fn();
-	render(OdhForm, { props: { resources, onsave } });
+	render(OdhForm, { props: { resources, onsave, createId: counterIds() } });
 	await fireEvent.click(screen.getByRole('button', { name: 'Save work info' }));
 	expect(onsave).toHaveBeenCalledTimes(1);
 	return onsave.mock.calls[0][0] as Observation[];
@@ -61,7 +61,7 @@ describe('OdhForm', () => {
 		await screen.findByText('Coding service unavailable. Please enter industry manually.');
 		await fireEvent.click(screen.getByRole('button', { name: 'Save work info' }));
 
-		const job = (onsave.mock.calls[0][0] as Observation[]).find((r) => r.id === 'odh-current-job-0');
+		const job = (onsave.mock.calls[0][0] as Observation[]).find((r) => r.code?.coding?.[0].code === '11341-5');
 		expect(job?.valueCodeableConcept?.coding?.[0]).toMatchObject({
 			code: '00-0000',
 			display: 'night nurse'

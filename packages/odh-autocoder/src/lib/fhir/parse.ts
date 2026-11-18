@@ -1,8 +1,28 @@
 import type { Observation } from 'fhir/r4';
+import type { IOResponse } from '../types.js';
 import { LOINC, ODH_IS_CURRENT_JOB_EXTENSION } from './templates.js';
-import { ODH_BLANK_ENTRIES, copyOf, type OdhFormValues } from './values.js';
+import {
+	blankEntry,
+	defaultOdhFormValues,
+	employmentStatusEntry,
+	type CombatPeriodEntry,
+	type CurrentJobEntry,
+	type EmploymentStatusEntry,
+	type OdhFormValues,
+	type OdhIdOptions,
+	type PastJobEntry,
+	type RetirementDateEntry
+} from './values.js';
 
-// Reads existing ODH resources back into form values, so saved work info can be edited.
+// Reads existing ODH resources back into form entries, so saved work info can be edited.
+
+export interface OdhReadOptions {
+	/**
+	 * The id to give the entry read from a resource, which becomes the id of the resource it's
+	 * saved as. Defaults to the resource's own id.
+	 */
+	getId?: (resource: Observation) => string | undefined;
+}
 
 // Month inputs hold "YYYY-MM" or "YYYY", but stored dates can have any FHIR precision (year,
 // year-month, date, or dateTime): keep a year as is, and cut finer dates down to the month.
@@ -10,129 +30,119 @@ function toInputValue(value: string | undefined): string {
 	return value?.match(/^\d{4}(-\d{2})?/)?.[0] ?? '';
 }
 
-function withLoincCode(resources: Observation[], code: string): any[] {
-	return resources?.filter((r) =>
+function withLoincCode(resources: Observation[], code: string): Observation[] {
+	return (resources ?? []).filter((r) =>
 		r.code?.coding?.find((c) => c.code === code && c.system === 'http://loinc.org')
 	);
 }
 
-function getJobHistoryResources(resources: Observation[]) {
-	return withLoincCode(resources, LOINC.HISTORY_OF_OCCUPATION);
-}
-
-function getCurrentJobResources(resources: Observation[]) {
-	const jhrs = getJobHistoryResources(resources);
-	return jhrs.filter((r) =>
-		r.extension.find((e: any) => e.url === ODH_IS_CURRENT_JOB_EXTENSION && e.valueBoolean)
+// A job without the isCurrentJob flag counts as a past job
+function isCurrentJob(resource: Observation): boolean {
+	return (
+		resource.extension?.find((e) => e.url === ODH_IS_CURRENT_JOB_EXTENSION)?.valueBoolean === true
 	);
 }
 
-function getPastJobResources(resources: Observation[]) {
-	const jhrs = getJobHistoryResources(resources);
-	return jhrs.filter((r) =>
-		r.extension.find((e: any) => e.url === ODH_IS_CURRENT_JOB_EXTENSION && !e.valueBoolean)
+function idOf(resource: Observation, { getId = (r) => r.id }: OdhReadOptions): { id?: string } {
+	const id = getId(resource);
+	return id ? { id } : {};
+}
+
+function readCode(
+	coding: { code?: string; display?: string } | undefined,
+	fallbackTitle: string
+): IOResponse | undefined {
+	return coding?.code ? { Code: coding.code, Title: coding.display ?? fallbackTitle, Score: 1 } : undefined;
+}
+
+function readJob(resource: Observation, options: OdhReadOptions): CurrentJobEntry {
+	const occupation = readCode(resource.valueCodeableConcept?.coding?.[0], 'Unknown Occupation');
+	const industry = readCode(
+		resource.component?.[0]?.valueCodeableConcept?.coding?.[0],
+		'Unknown Industry'
+	);
+	return {
+		...idOf(resource, options),
+		...(occupation ? { occupation } : {}),
+		...(industry ? { industry } : {}),
+		start: toInputValue(resource.effectivePeriod?.start)
+	};
+}
+
+function jobResources(resources: Observation[], current: boolean) {
+	return withLoincCode(resources, LOINC.HISTORY_OF_OCCUPATION).filter(
+		(r) => isCurrentJob(r) === current
 	);
 }
 
-function getEmploymentStatusResource(resources: Observation[]) {
-	return withLoincCode(resources, LOINC.EMPLOYMENT_STATUS).pop();
+export function readCurrentJobs(
+	resources: Observation[],
+	options: OdhReadOptions = {}
+): CurrentJobEntry[] {
+	return jobResources(resources, true).map((r) => readJob(r, options));
 }
 
-function getRetirementDateResources(resources: Observation[]) {
-	return withLoincCode(resources, LOINC.RETIREMENT_DATE);
+export function readPastJobs(resources: Observation[], options: OdhReadOptions = {}): PastJobEntry[] {
+	return jobResources(resources, false).map((r) => ({
+		...readJob(r, options),
+		end: toInputValue(r.effectivePeriod?.end)
+	}));
 }
 
-function getCombatPeriodResources(resources: Observation[]) {
-	return withLoincCode(resources, LOINC.COMBAT_ZONE_PERIOD);
-}
-
-function readJob(resource: any) {
-	const jobValues: any = copyOf(ODH_BLANK_ENTRIES.currentWork);
-	jobValues.occupation = resource.valueCodeableConcept?.coding[0]?.code
-		? {
-				Code: resource.valueCodeableConcept.coding[0].code,
-				Title: resource.valueCodeableConcept?.coding[0]?.display ?? 'Unknown Occupation',
-				Score: 1
-		  }
-		: undefined;
-	jobValues.industry = resource.component[0].valueCodeableConcept?.coding[0]?.code
-		? {
-				Code: resource.component[0].valueCodeableConcept.coding[0].code,
-				Title: resource.component[0].valueCodeableConcept?.coding[0]?.display ?? 'Unknown Industry',
-				Score: 1
-		  }
-		: undefined;
-	jobValues.start = toInputValue(resource.effectivePeriod?.start);
-	return jobValues;
-}
-
-function applyCurrentJobs(values: OdhFormValues, resources: Observation[]) {
-	const currentJobResources = getCurrentJobResources(resources);
-	if (currentJobResources.length === 0) {
-		return;
+/** The last employment status resource's entry, or undefined when there is none */
+export function readEmploymentStatus(
+	resources: Observation[],
+	options: OdhReadOptions = {}
+): EmploymentStatusEntry | undefined {
+	const resource = withLoincCode(resources, LOINC.EMPLOYMENT_STATUS).pop();
+	if (!resource) {
+		return undefined;
 	}
-	values.isWorking = true;
-	values.currentWork = [];
-	for (const resource of currentJobResources) {
-		values.currentWork.push(readJob(resource));
-	}
+	return {
+		...idOf(resource, options),
+		status: resource.valueCodeableConcept?.coding?.[0]?.display ?? 'Employed'
+	};
 }
 
-function applyPastJobs(values: OdhFormValues, resources: Observation[]) {
-	const pastJobResources = getPastJobResources(resources);
-	if (pastJobResources.length === 0) {
-		return;
-	}
-	values.wasWorkingPast = true;
-	values.pastWork = [];
-	for (const resource of pastJobResources) {
-		const jobValues = readJob(resource);
-		jobValues.end = toInputValue(resource.effectivePeriod?.end);
-		values.pastWork.push(jobValues);
-	}
+export function readRetirementDates(
+	resources: Observation[],
+	options: OdhReadOptions = {}
+): RetirementDateEntry[] {
+	return withLoincCode(resources, LOINC.RETIREMENT_DATE).map((r) => ({
+		...idOf(r, options),
+		start: toInputValue(r.valueDateTime)
+	}));
 }
 
-function applyEmploymentStatus(values: OdhFormValues, resources: Observation[]) {
-	const employmentStatusResource = getEmploymentStatusResource(resources);
-	if (employmentStatusResource) {
-		values.status = employmentStatusResource.valueCodeableConcept?.coding[0]?.display ?? 'Employed';
-	}
-}
-
-function applyRetirementDates(values: OdhFormValues, resources: Observation[]) {
-	const retirementDateResources = getRetirementDateResources(resources);
-	values.retirementDates = [];
-	for (const resource of retirementDateResources) {
-		values.retirementDates.push({
-			start: toInputValue(resource.valueDateTime)
-		});
-	}
-}
-
-function applyCombatPeriods(values: OdhFormValues, resources: Observation[]) {
-	const combatPeriodResources = getCombatPeriodResources(resources);
-	values.combatPeriods = [];
-	for (const resource of combatPeriodResources) {
-		values.combatPeriods.push({
-			start: toInputValue(resource.valuePeriod?.start),
-			end: toInputValue(resource.valuePeriod?.end)
-		});
-	}
+export function readCombatPeriods(
+	resources: Observation[],
+	options: OdhReadOptions = {}
+): CombatPeriodEntry[] {
+	return withLoincCode(resources, LOINC.COMBAT_ZONE_PERIOD).map((r) => ({
+		...idOf(r, options),
+		start: toInputValue(r.valuePeriod?.start),
+		end: toInputValue(r.valuePeriod?.end)
+	}));
 }
 
 /**
- * Applies existing ODH resources to form values, in place. Sections without matching
- * resources keep their current values, except retirement dates and combat zone periods, which
- * are replaced. With no resources at all, the values are left unchanged.
+ * A form's values read from existing ODH resources. Sections without resources get the new
+ * form's defaults: Employed, with one blank current job (ids for those come from createId).
  */
-export function applyOdhResources(values: OdhFormValues, resources: Observation[]): OdhFormValues {
+export function readOdhValues(
+	resources: Observation[] | undefined,
+	options: OdhReadOptions & OdhIdOptions = {}
+): OdhFormValues {
 	if (!resources?.length) {
-		return values;
+		return defaultOdhFormValues(options);
 	}
-	applyCurrentJobs(values, resources);
-	applyPastJobs(values, resources);
-	applyEmploymentStatus(values, resources);
-	applyRetirementDates(values, resources);
-	applyCombatPeriods(values, resources);
-	return values;
+	const currentWork = readCurrentJobs(resources, options);
+	return {
+		employmentStatus:
+			readEmploymentStatus(resources, options) ?? employmentStatusEntry('Employed', options),
+		currentWork: currentWork.length ? currentWork : [blankEntry('currentWork', options)],
+		pastWork: readPastJobs(resources, options),
+		retirementDates: readRetirementDates(resources, options),
+		combatPeriods: readCombatPeriods(resources, options)
+	};
 }
