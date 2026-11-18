@@ -81,7 +81,7 @@ export function createCategorizedStore(
     referenceIndex: Readable<ReferenceIndex>,
     unitsStore: Readable<UnitMap>,
     getRenderInfo: (resource: Resource) => ResourceRenderInfo
-    sortResources: (a: Resource, b: Resource) => number
+    sortResources: (a: CategorizedResource, b: CategorizedResource) => number
     sortUnits: (a: DisplayUnit, b: DisplayUnit) => number
   } {
   const config = options.config ?? defaultResourceConfig;

@@ -52,7 +52,7 @@
     }
   );
   
-  const { store: categorizedResourceStore, sortResources, unitsStore } = createCategorizedStore(categorizerInput);
+  const { store: categorizedResourceStore, sortUnits, unitsStore } = createCategorizedStore(categorizerInput);
 
   let patientStore: Record<string, CategorizedResource>;
   let patientBadgeColor: string = 'danger';
@@ -172,7 +172,7 @@
   </Accordion>
   {:else}
     <!-- All resources in one list, regardless of category -->
-    {@const allResources = Object.values($unitsStore).flatMap((category) => Object.values(category).sort(sortResources))}
+    {@const allResources = Object.values($unitsStore).flat().sort(sortUnits)}
     {#if allResources.length > 0}
       <div
         class="resource-content bg-body border rounded p-3 w-100"
