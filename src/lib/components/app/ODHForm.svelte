@@ -6,6 +6,7 @@
   import type { FHIRDataService } from '$lib/utils/FHIRDataService';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
   import { ResourceHelper } from '$lib/utils/ResourceHelper';
+  import { sourceIdentifierValue } from '$lib/utils/importNormalization';
 
   // Adapts the odh-autocoder package's form to this app: reads the dataset being edited from
   // its resource store, authenticates autocoder requests with the user's token, and tags the
@@ -45,6 +46,18 @@
     return authService.getAccessToken();
   }
 
+  // Each form entry keeps the id its resource was first saved with, which the import records as
+  // the resource's source identifier (preserveSourceIdentifiers). Saving again under that id lets
+  // the import match each resource to the stored one (matchBySourceIdentifier), so editing or
+  // deleting one entry changes only that resource.
+  function getId(resource: Observation) {
+    return sourceIdentifierValue(resource, SOURCE.url);
+  }
+
+  function createId() {
+    return crypto.randomUUID();
+  }
+
   function save(resources: Observation[]) {
     let result: ResourceRetrieveEvent = {
       resources,
@@ -62,6 +75,8 @@
   {processing}
   endpoint="/api/nio-autocoder"
   {getAccessToken}
+  {getId}
+  {createId}
   {subject}
   onsave={save}
 />

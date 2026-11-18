@@ -136,7 +136,8 @@ export function sourceIdSystem(source: string, resourceType: string) {
 
 const toArray = <T>(value: T | T[] | undefined): T[] => value === undefined ? [] : Array.isArray(value) ? value : [value];
 
-function sourceIdentifierValue(resource: Resource, source: string): string | undefined {
+// The id a resource had in the source it was imported from (see preserveSourceIdentifiers)
+export function sourceIdentifierValue(resource: Resource, source: string): string | undefined {
   const system = sourceIdSystem(source, resource.resourceType);
   return toArray((resource as any).identifier as Identifier | Identifier[] | undefined)
     .find(identifier => identifier.system === system)?.value;
