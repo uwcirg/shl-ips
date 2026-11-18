@@ -20,17 +20,20 @@ async function get(
 	fetch: ReturnType<typeof upstream>,
 	options: Partial<Parameters<typeof createAutocoderHandler>[0]> = {}
 ) {
+	vi.stubGlobal('fetch', fetch);
 	const handler = createAutocoderHandler({ apiKey: 'test-api-key', ...options });
 	const url = new URL(`http://localhost/api/nio-autocoder${query}`);
-	return handler({ request: new Request(url), url, fetch } as any);
+	const response = await handler({ request: new Request(url), url } as any);
+	return response;
 }
 
 afterEach(() => {
 	vi.restoreAllMocks();
+	vi.unstubAllGlobals();
 });
 
 describe('createAutocoderHandler: request mapping', () => {
-	it('codes an occupation with the API key, through event.fetch', async () => {
+	it('codes an occupation with the API key', async () => {
 		const fetch = upstream();
 		await get('?o=nurse&c=0', fetch);
 
@@ -87,6 +90,19 @@ describe('createAutocoderHandler: response mapping', () => {
 		const response = await get('?o=nurse', upstream());
 		expect(response.status).toBe(200);
 		expect(await response.json()).toEqual(upstreamBody);
+	});
+
+	it('returns a real autocoder response unchanged', async () => {
+		const real = {
+			Industry: [
+				{ Code: '339999', Title: 'All Other Miscellaneous Manufacturing', Score: 0.931903064250946 }
+			],
+			Occupation: [{ Code: '00-0000', Title: 'Not Coded - Occupation', Score: 0.9864293336868286 }],
+			Scheme: 'NAICS 2017 and SOC 2018'
+		};
+		const response = await get('?o=x&i=y', upstream(real));
+		expect(response.status).toBe(200);
+		expect(await response.json()).toEqual(real);
 	});
 
 	it('drops fields the UI does not use', async () => {
@@ -148,6 +164,23 @@ describe('createAutocoderHandler: errors', () => {
 		const text = await response.text();
 		expect(JSON.parse(text)).toEqual({ message: 'Coding service unavailable' });
 		expect(text).not.toMatch(/denied|gateway|nope|ECONNREFUSED/);
+	});
+
+	it('logs the shape of an unexpected response, without its values', async () => {
+		const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+		await get('?o=nurse', upstream({ results: [{ Title: 'secret-title' }], message: 'secret' }));
+		const logged = error.mock.calls.flat().join('\n');
+		expect(logged).toContain('content-type: text/plain;charset=UTF-8');
+		expect(logged).toContain('shape: { results: array, message: string }');
+		expect(logged).not.toContain('secret');
+	});
+
+	it('logs when the response is not JSON', async () => {
+		const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+		await get('?o=nurse', upstream('<html>secret</html>'));
+		const logged = error.mock.calls.flat().join('\n');
+		expect(logged).toContain('not JSON');
+		expect(logged).not.toContain('secret');
 	});
 
 	it('never logs request or response contents', async () => {

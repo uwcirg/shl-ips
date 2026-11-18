@@ -1,21 +1,44 @@
 export {
 	buildOdhResources,
-	buildEmploymentStatusResources,
-	buildCurrentJobResources,
-	buildPastJobResources,
-	buildRetirementDateResources,
-	buildCombatPeriodResources,
-	type OdhBuildOptions
+	buildEmploymentStatus,
+	buildCurrentJob,
+	buildCurrentJobs,
+	buildPastJob,
+	buildPastJobs,
+	buildRetirementDate,
+	buildRetirementDates,
+	buildCombatPeriod,
+	buildCombatPeriods,
+	earliestStart,
+	type EmploymentStatusBuildOptions,
+	type OdhBuildOptions,
+	type OdhFormBuildOptions
 } from './build.js';
-export { applyOdhResources } from './parse.js';
+export {
+	readOdhValues,
+	readEmploymentStatus,
+	readCurrentJobs,
+	readPastJobs,
+	readRetirementDates,
+	readCombatPeriods,
+	type OdhReadOptions
+} from './parse.js';
 export {
 	EMPLOYMENT_STATUSES,
-	ODH_BLANK_ENTRIES,
+	ODH_SECTIONS,
+	blankEntry,
 	copyOf,
 	defaultOdhFormValues,
-	type CombatPeriodValues,
-	type CurrentJobValues,
+	employmentStatusEntry,
+	isWorking,
+	type CombatPeriodEntry,
+	type CurrentJobEntry,
+	type EmploymentStatusEntry,
+	type OdhEntry,
 	type OdhFormValues,
-	type PastJobValues,
-	type RetirementDateValues
+	type OdhIdOptions,
+	type OdhListSectionKey,
+	type OdhSectionKey,
+	type PastJobEntry,
+	type RetirementDateEntry
 } from './values.js';

@@ -7,85 +7,116 @@ export const EMPLOYMENT_STATUSES: Record<string, string> = {
 	'Not in labor force': 'NotInLaborForce'
 };
 
-export interface CurrentJobValues {
-	occupation: IOResponse | undefined;
-	industry: IOResponse | undefined;
-	/** "YYYY-MM", or "" */
+// Each entry becomes one FHIR resource. id is optional and comes from the app (see OdhIdOptions):
+// when set, it's the resource's id, so the app can match a saved resource to the one it was
+// read from.
+
+export interface EmploymentStatusEntry {
+	id?: string;
+	/** A key of EMPLOYMENT_STATUSES */
+	status: string;
+}
+
+export interface CurrentJobEntry {
+	id?: string;
+	/** Undefined when not coded; saved as the not-coded occupation */
+	occupation?: IOResponse;
+	/** Undefined when not coded; saved as the not-coded industry */
+	industry?: IOResponse;
+	/** "YYYY-MM", "YYYY", or "" */
 	start: string;
 }
 
-export interface PastJobValues extends CurrentJobValues {
-	/** "YYYY-MM", or "" */
+export interface PastJobEntry extends CurrentJobEntry {
+	/** "YYYY-MM", "YYYY", or "" */
 	end: string;
 }
 
-export interface RetirementDateValues {
+export interface RetirementDateEntry {
+	id?: string;
+	/** "YYYY-MM", "YYYY", or "" */
 	start: string;
 }
 
-export interface CombatPeriodValues {
+export interface CombatPeriodEntry {
+	id?: string;
 	start: string;
 	end: string;
 }
 
 /** The ODH form's state, from which the FHIR resources are built */
 export interface OdhFormValues {
-	/** A key of EMPLOYMENT_STATUSES */
-	status: string;
-	/** Whether current jobs are included; true when status is Employed */
-	isWorking: boolean;
-	wasWorkingPast: boolean;
-	isRetired: boolean;
-	wasInCombat: boolean;
-	currentWork: CurrentJobValues[];
-	pastWork: PastJobValues[];
-	retirementDates: RetirementDateValues[];
-	combatPeriods: CombatPeriodValues[];
+	/** Always exactly one */
+	employmentStatus: EmploymentStatusEntry;
+	currentWork: CurrentJobEntry[];
+	pastWork: PastJobEntry[];
+	retirementDates: RetirementDateEntry[];
+	combatPeriods: CombatPeriodEntry[];
 }
 
-/** Blank entries for each repeating section */
-export const ODH_BLANK_ENTRIES = {
-	currentWork: {
-		occupation: undefined,
-		industry: undefined,
-		start: ''
-	} as CurrentJobValues,
-	pastWork: {
-		occupation: undefined,
-		industry: undefined,
-		start: '',
-		end: ''
-	} as PastJobValues,
-	retirementDate: {
-		start: ''
-	} as RetirementDateValues,
-	combatPeriod: {
-		start: '',
-		end: ''
-	} as CombatPeriodValues
+export type OdhSectionKey = keyof OdhFormValues;
+/** Sections holding a list of entries */
+export type OdhListSectionKey = Exclude<OdhSectionKey, 'employmentStatus'>;
+export type OdhEntry<K extends OdhListSectionKey> = OdhFormValues[K][number];
+
+/** All sections, in the order their resources are built */
+export const ODH_SECTIONS: readonly OdhSectionKey[] = [
+	'employmentStatus',
+	'currentWork',
+	'pastWork',
+	'retirementDates',
+	'combatPeriods'
+];
+
+export interface OdhIdOptions {
+	/**
+	 * Makes an id for each new entry (added, or a new form's defaults). Without it, new entries
+	 * and their resources have no id.
+	 */
+	createId?: () => string;
+}
+
+const BLANK_ENTRIES: { [K in OdhListSectionKey]: () => OdhEntry<K> } = {
+	currentWork: () => ({ start: '' }),
+	pastWork: () => ({ start: '', end: '' }),
+	retirementDates: () => ({ start: '' }),
+	combatPeriods: () => ({ start: '', end: '' })
 };
 
-const DEFAULT_VALUES: OdhFormValues = {
-	status: 'Employed',
-	isWorking: true,
-	wasWorkingPast: false,
-	isRetired: false,
-	wasInCombat: false,
-	currentWork: [ODH_BLANK_ENTRIES.currentWork],
-	pastWork: [],
-	retirementDates: [],
-	combatPeriods: []
-};
+function withId<T extends object>(entry: T, { createId }: OdhIdOptions): T & { id?: string } {
+	return createId ? { id: createId(), ...entry } : entry;
+}
 
-/**
- * Deep copy through JSON. Properties holding undefined are dropped, which affects key order
- * when they are set again later; the duplicate detection in the builders depends on it.
- */
+/** A new, empty entry for a list section */
+export function blankEntry<K extends OdhListSectionKey>(
+	section: K,
+	options: OdhIdOptions = {}
+): OdhEntry<K> {
+	return withId(BLANK_ENTRIES[section](), options) as OdhEntry<K>;
+}
+
+/** A new employment status entry */
+export function employmentStatusEntry(status = 'Employed', options: OdhIdOptions = {}) {
+	return withId({ status }, options) as EmploymentStatusEntry;
+}
+
+/** A new form's values: employed, with one blank current job */
+export function defaultOdhFormValues(options: OdhIdOptions = {}): OdhFormValues {
+	return {
+		employmentStatus: employmentStatusEntry('Employed', options),
+		currentWork: [blankEntry('currentWork', options)],
+		pastWork: [],
+		retirementDates: [],
+		combatPeriods: []
+	};
+}
+
+/** Current jobs only apply (are shown and saved) while the status is Employed */
+export function isWorking(values: Pick<OdhFormValues, 'employmentStatus'>): boolean {
+	return values.employmentStatus.status === 'Employed';
+}
+
+/** Deep copy through JSON (entries hold only JSON values) */
 export function copyOf<T>(a: T): T {
 	return JSON.parse(JSON.stringify(a));
-}
-
-/** A fresh copy of the form's default values: employed, with one blank current job */
-export function defaultOdhFormValues(): OdhFormValues {
-	return copyOf(DEFAULT_VALUES);
 }

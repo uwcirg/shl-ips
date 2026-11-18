@@ -18,6 +18,7 @@
 
 <main class="container my-4">
 	<h1 class="h3">odh-autocoder playground</h1>
+	<p><a href="/custom">Custom layout, description coder, and a standalone section</a></p>
 	<p class="text-secondary">
 		Codes against a local mock unless <code>AUTOCODER_API_KEY</code> is set. Try "nurse",
 		"cook", or "hospital".

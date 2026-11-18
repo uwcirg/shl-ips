@@ -53,6 +53,21 @@ function toAutocoderResponse(content: any): Partial<AutocoderResponse> | undefin
 	};
 }
 
+/** Type and top-level keys of a response, without any values, so it's safe to log */
+function describeShape(content: unknown): string {
+	if (Array.isArray(content)) {
+		return `array(${content.length})`;
+	}
+	if (content === null || typeof content !== 'object') {
+		return content === null ? 'null' : typeof content;
+	}
+	const fields = Object.entries(content).map(
+		([key, value]) =>
+			`${key}: ${Array.isArray(value) ? 'array' : value === null ? 'null' : typeof value}`
+	);
+	return `{ ${fields.join(', ')} }`;
+}
+
 /**
  * Creates a GET handler that codes free-text occupation (?o=) and/or industry (?i=) with the
  * NIOSH autocoder, keeping the API key on the server. Mount it in a +server.ts:
@@ -90,7 +105,7 @@ export function createAutocoderHandler(options: AutocoderHandlerOptions): Reques
 
 		let response: Response;
 		try {
-			response = await event.fetch(endpoint, {
+			response = await fetch(endpoint, {
 				method: 'GET',
 				headers: {
 					'Ocp-Apim-Subscription-Key': apiKey
@@ -106,14 +121,25 @@ export function createAutocoderHandler(options: AutocoderHandlerOptions): Reques
 			return failure(502, UNAVAILABLE);
 		}
 
-		let body: Partial<AutocoderResponse> | undefined;
+		const contentType = response.headers.get('content-type') ?? 'none';
+		let content: unknown;
+		let text = '';
 		try {
-			body = toAutocoderResponse(await response.json());
+			text = await response.text();
+			content = JSON.parse(text);
 		} catch {
-			body = undefined;
+			console.error(
+				`odh-autocoder: autocoder response is not JSON (status: ${response.status}, content-type: ${contentType}, length: ${text.length})`
+			);
+			return failure(502, UNAVAILABLE);
 		}
+		const body = toAutocoderResponse(content);
 		if (!body) {
-			console.error('odh-autocoder: unexpected autocoder response');
+			console.error(
+				`odh-autocoder: unexpected autocoder response (content-type: ${contentType}, shape: ${describeShape(
+					content
+				)})`
+			);
 			return failure(502, UNAVAILABLE);
 		}
 

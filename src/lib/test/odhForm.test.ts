@@ -7,7 +7,13 @@ import ODHForm from '$lib/components/app/ODHForm.svelte';
 import { ResourceHelper } from '$lib/utils/ResourceHelper';
 import { fakeAuth } from '$lib/test/mocks';
 import type { IResourceCollection, ResourceRetrieveEvent } from '$lib/utils/types';
-import { prepareImportedResources, pruneUnlinkedEntries } from '$lib/utils/importNormalization';
+import {
+  diffDataset,
+  matchBySourceIdentifier,
+  prepareImportedResources,
+  pruneUnlinkedEntries,
+  sourceIdSystem
+} from '$lib/utils/importNormalization';
 
 // importNormalization reads the instance config at load time
 vi.mock('$lib/config/config', () => ({
@@ -80,10 +86,11 @@ describe('ODHForm', () => {
     expect(events[0].method).toBe('occupational-data-for-health-form');
     expect(events[0].source).toBe(window.location.origin);
     expect(events[0].sourceName).toBe('My Work Info');
-    expect((events[0].resources as Observation[]).map(r => r.id)).toEqual([
-      'odh-employment-status',
-      'odh-current-job-0'
-    ]);
+    // A new form's entries get new ids
+    const ids = (events[0].resources as Observation[]).map(r => r.id);
+    expect(ids).toHaveLength(2);
+    expect(ids.every(id => /^[0-9a-f-]{36}$/.test(id!))).toBe(true);
+    expect(new Set(ids).size).toBe(2);
   });
 
   it("makes the user's master patient the subject, so the import keeps the resources", async () => {
@@ -112,10 +119,60 @@ describe('ODHForm', () => {
     const { events } = renderForm(formDataFor([currentJob]));
     await save();
 
-    const job = (events[0].resources as Observation[]).find(r => r.id === 'odh-current-job-0');
+    const job = (events[0].resources as Observation[]).find(r => r.code?.coding?.[0].code === '11341-5');
     expect(job?.effectivePeriod).toEqual({ start: '2019-03' });
     expect(job?.valueCodeableConcept?.coding?.[0].code).toBe('29-1141');
     expect(job?.component?.[0].valueCodeableConcept?.coding?.[0].code).toBe('622000');
+  });
+
+  it('saves each entry under the id it was first saved with, so deleting one removes only it', async () => {
+    const SOURCE = window.location.origin;
+    // As stored after an earlier save: server ids, with the form's ids as source identifiers
+    const stored = (resource: Observation, serverId: string, sourceId: string): Observation => ({
+      ...resource,
+      id: serverId,
+      identifier: [{ system: sourceIdSystem(SOURCE, 'Observation'), value: sourceId }],
+      subject: { reference: 'Patient/dataset-patient' }
+    });
+    const pastJob = (occupation: string): Observation => ({
+      ...currentJob,
+      extension: [{ ...currentJob.extension![0], valueBoolean: false }],
+      effectivePeriod: { start: '2010-01', end: '2012-01' },
+      valueCodeableConcept: { coding: [{ code: occupation, display: occupation }] }
+    });
+    const existing = [
+      stored(
+        {
+          resourceType: 'Observation',
+          status: 'final',
+          code: { coding: [{ system: 'http://loinc.org', code: '74165-2' }] },
+          valueCodeableConcept: { coding: [{ code: 'Employed', display: 'Employed' }] }
+        },
+        'srv-1',
+        'status-1'
+      ),
+      stored(currentJob, 'srv-2', 'job-current'),
+      stored(pastJob('35-2014'), 'srv-3', 'job-a'),
+      stored(pastJob('47-2061'), 'srv-4', 'job-b')
+    ];
+    const { events } = renderForm(formDataFor(existing));
+
+    // The first past job (job-a): Delete buttons are for the current job, then past jobs
+    await fireEvent.click(screen.getAllByRole('button', { name: 'Delete' })[1]);
+    await save();
+
+    const saved = events[0].resources as Observation[];
+    expect(saved.map(r => r.id)).toEqual(['status-1', 'job-current', 'job-b']);
+
+    const incoming = prepareImportedResources(events[0], MASTER_PATIENT).map(e => e.resource);
+    const diff = diffDataset(incoming, existing, matchBySourceIdentifier(SOURCE));
+    expect(diff.added).toEqual([]);
+    expect(diff.removed.map(r => r.id)).toEqual(['srv-3']);
+    expect([...diff.updated, ...diff.unchanged].map(m => m.existing.id).sort()).toEqual([
+      'srv-1',
+      'srv-2',
+      'srv-4'
+    ]);
   });
 
   it("calls this app's autocoder endpoint with the user's token", async () => {

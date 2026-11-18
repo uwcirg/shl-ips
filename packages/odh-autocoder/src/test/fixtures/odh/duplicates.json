@@ -1,7 +1,6 @@
 [
   {
     "resourceType": "Observation",
-    "id": "odh-employment-status",
     "meta": {
       "profile": [
         "http://hl7.org/fhir/us/odh/StructureDefinition/odh-EmploymentStatus"
@@ -42,7 +41,7 @@
   },
   {
     "resourceType": "Observation",
-    "id": "odh-current-job-0",
+    "id": "seed-4",
     "meta": {
       "profile": [
         "http://hl7.org/fhir/us/odh/StructureDefinition/odh-PastOrPresentJob"
@@ -111,7 +110,7 @@
   },
   {
     "resourceType": "Observation",
-    "id": "odh-past-job-0",
+    "id": "seed-5",
     "meta": {
       "profile": [
         "http://hl7.org/fhir/us/odh/StructureDefinition/odh-PastOrPresentJob"
@@ -181,7 +180,6 @@
   },
   {
     "resourceType": "Observation",
-    "id": "odh-retirement-date-0",
     "meta": {
       "profile": [
         "http://hl7.org/fhir/us/odh/StructureDefinition/odh-RetirementDate"

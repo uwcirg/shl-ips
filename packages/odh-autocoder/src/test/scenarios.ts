@@ -139,3 +139,9 @@ export const SCENARIOS: Scenario[] = [
 export function fixturePath(name: string) {
 	return `./fixtures/odh/${name}.json`;
 }
+
+/** A createId that counts: id-1, id-2, ... (a new sequence per call) */
+export function counterIds() {
+	let next = 1;
+	return () => `id-${next++}`;
+}
