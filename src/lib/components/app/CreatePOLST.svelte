@@ -319,6 +319,10 @@
   };
 
   function submit() {
+    // Only a generated preview can be saved (the form also submits on Enter in a text field)
+    if (!finalizedEncoding) {
+      return;
+    }
     processing = true;
     let resource = JSON.parse(JSON.stringify(resourceTemplate));
     documentId ??= createEntryId();
@@ -470,7 +474,7 @@
   </FormGroup>
   <Row>
     <Col xs="auto">
-      <Button color="primary" style="width:fit-content" disabled={processing} on:click={generatePreview}>
+      <Button type="button" color="primary" style="width:fit-content" disabled={processing} on:click={generatePreview}>
         {#if !processing}
           Generate Preview
         {:else}
@@ -494,7 +498,7 @@
     </Row>
     <Row class="my-4">
       <Col xs="auto">
-        <Button color="primary" style="width:fit-content" disabled={processing || disabled} on:click={submit}>
+        <Button type="submit" color="primary" style="width:fit-content" disabled={processing || disabled}>
           {processing ? processingText : buttonText}
         </Button>
       </Col>
