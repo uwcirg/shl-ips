@@ -18,6 +18,7 @@
   import type { ResourceRetrieveEvent } from '$lib/utils/types';
   import FHIRDataService from '$lib/utils/FHIRDataService';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
+  import { createEntryId } from '$lib/utils/formEntryIds';
 
   export let disabled = false;
   export let processing = false;
@@ -51,6 +52,10 @@
   }
   let pdfPreviewSrc: string;
   let finalizedEncoding: string;
+  // The id the previewed document is saved under (see formEntryIds). A preview is a new document,
+  // so each gets its own id, but submitting the same preview again saves the same resource
+  // instead of a duplicate.
+  let documentId: string | undefined;
 
   let conditionsAndGoals: string;
   let cpr: ('yes' | 'no') = 'yes';
@@ -124,6 +129,7 @@
   }
   
   async function generatePreview() {
+    documentId = createEntryId();
     if (pdfPreviewSrc) {
       window.URL.revokeObjectURL(pdfPreviewSrc);
     }
@@ -315,6 +321,8 @@
   function submit() {
     processing = true;
     let resource = JSON.parse(JSON.stringify(resourceTemplate));
+    documentId ??= createEntryId();
+    resource.id = documentId;
     resource.content[0].attachment.data = finalizedEncoding;
     let createdDate = new Date().toISOString();
     resource.content[0].attachment.creation = createdDate;

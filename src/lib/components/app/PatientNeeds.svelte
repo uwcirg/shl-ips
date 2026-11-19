@@ -13,7 +13,7 @@
   import type { CodeableConcept, Condition } from 'fhir/r4';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
   import { ResourceHelper } from '$lib/utils/ResourceHelper';
-  import { copyOf, getUniqueResourceObject } from '$lib/utils/util';
+  import { createEntryId, entryIdFromResource, resourceFromTemplate, today, withoutEmptyValues } from '$lib/utils/formEntryIds';
   
   export let disabled = false;
   export let formData: IResourceCollection | undefined;
@@ -40,7 +40,9 @@
 
   let fetchError = '';
   
-  interface ConditionOption { checked: boolean, code: CodeableConcept };
+  // An option's id is the id its resource is saved under (see formEntryIds). It is set when the
+  // option is read from a stored resource, or when the option is first saved.
+  interface ConditionOption { checked: boolean, code: CodeableConcept, id?: string, date?: string };
   let conditions: Record<string, ConditionOption> = {
     // Concerns
     concern_visual: {
@@ -232,6 +234,8 @@
   };
 
   let additionalInfo = '';
+  let additionalInfoId: string | undefined;
+  let additionalInfoDate: string | undefined;
 
   let conditionTemplate: Condition = {
     resourceType: "Condition",
@@ -262,11 +266,15 @@
     for (const resource of conditionResources) {
       if (resource.code?.text && !resource.code?.system && !resource.code?.code) { 
         additionalInfo = resource.code.text;
+        additionalInfoId = entryIdFromResource(resource, SOURCE.url);
+        additionalInfoDate = resource.recordedDate;
         continue;
       }
       let formCondition = Object.values(conditions).find(c => c.code.system === resource.code?.coding?.[0]?.system && c.code.code === resource.code?.coding?.[0]?.code);
       if (formCondition) {
         formCondition.checked = true;
+        formCondition.id = entryIdFromResource(resource, SOURCE.url);
+        formCondition.date = resource.recordedDate;
       }
     }
   }
@@ -283,25 +291,34 @@
   function initializeDefaultFields() {
     for(const condition of Object.values(conditions)) {
       condition.checked = false;
+      condition.id = undefined;
+      condition.date = undefined;
     }
     additionalInfo = '';
+    additionalInfoId = undefined;
+    additionalInfoDate = undefined;
     conditions = conditions;
   }
 
   function prepareConditionResource(conditionOption: ConditionOption) {
-    let condition = getUniqueResourceObject(conditionTemplate);
+    conditionOption.id ??= createEntryId();
+    let condition = resourceFromTemplate(conditionTemplate, conditionOption.id);
     condition.code.coding.push(conditionOption.code);
-    condition.recordedDate = new Date().toISOString().slice(0, 10);
-    return condition;
+    // An option keeps the date it was first saved with
+    conditionOption.date ||= today();
+    condition.recordedDate = conditionOption.date;
+    return withoutEmptyValues(condition);
   }
 
   function prepareIps() {
     const resources = Object.values(conditions).filter(c => c.checked).map(prepareConditionResource);
     if (additionalInfo.trim() !== '') {
-      let infoCondition = getUniqueResourceObject(conditionTemplate);
+      additionalInfoId ??= createEntryId();
+      let infoCondition = resourceFromTemplate(conditionTemplate, additionalInfoId);
       infoCondition.code.text = additionalInfo;
-      infoCondition.recordedDate = new Date().toISOString().slice(0, 10);
-      resources.push(infoCondition);
+      additionalInfoDate ||= today();
+      infoCondition.recordedDate = additionalInfoDate;
+      resources.push(withoutEmptyValues(infoCondition));
     }
     const result = {
       resources: resources,

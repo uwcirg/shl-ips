@@ -13,7 +13,8 @@
   import type { CodeableConcept, Condition, MedicationStatement } from 'fhir/r4';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
   import { ResourceHelper } from '$lib/utils/ResourceHelper';
-  import { copyOf, getUniqueResourceObject } from '$lib/utils/util';
+  import { copyOf } from '$lib/utils/util';
+  import { createEntryId, entryIdFromResource, resourceFromTemplate, today, withoutEmptyValues } from '$lib/utils/formEntryIds';
 
   export let disabled = false;
   export let formData: IResourceCollection | undefined;
@@ -40,7 +41,9 @@
   
   let fetchError = '';
 
+  // Each entry keeps the id its resource is saved under (see formEntryIds)
   interface HealthHistoryEntry {
+    id: string;
     name: string;
     detail: string;
     date: string;
@@ -52,13 +55,19 @@
     history: {name: '', detail: '', date: ''}
   }
   
-  let defaultValues: Record<string, HealthHistoryEntry[]> = {
-    problems: [copyOf(defaults.problem)],
-    medications: [copyOf(defaults.medication)],
-    history: [copyOf(defaults.history)]
+  function newEntry(type: keyof typeof defaults): HealthHistoryEntry {
+    return {...copyOf(defaults[type]), id: createEntryId()};
   }
-  
-  let values = copyOf(defaultValues);
+
+  function createDefaultValues(): Record<string, HealthHistoryEntry[]> {
+    return {
+      problems: [newEntry('problem')],
+      medications: [newEntry('medication')],
+      history: [newEntry('history')]
+    };
+  }
+
+  let values = createDefaultValues();
 
   let issueSeverityOptions: Record<string, CodeableConcept|undefined> = {
     '': undefined,
@@ -158,6 +167,7 @@
     let problems = [];
     for (const resource of problemResources) {
       const problem = {
+        id: entryIdFromResource(resource, SOURCE.url),
         name: resource.code?.text ?? defaults.problem.name,
         detail: resource.severity?.text ?? defaults.problem.detail,
         date: resource.recordedDate ?? defaults.problem.date
@@ -167,7 +177,7 @@
     if (problems.length > 0) {
       values.problems = problems;
     } else {
-      values.problems = [copyOf(defaults.problem)];
+      values.problems = [newEntry('problem')];
     }
   }
 
@@ -176,6 +186,7 @@
     let medications = [];
     for (const resource of medicationResources) {
       const medication = {
+        id: entryIdFromResource(resource, SOURCE.url),
         name: resource.medicationCodeableConcept.text ?? defaults.medication.name,
         detail: resource.dosage?.[0]?.text ?? defaults.medication.detail,
         date: resource.effectiveDateTime ?? defaults.medication.date
@@ -185,7 +196,7 @@
     if (medications.length > 0) {
       values.medications = medications;
     } else {
-      values.medications = [copyOf(defaults.medication)];
+      values.medications = [newEntry('medication')];
     }
   }
   
@@ -194,6 +205,7 @@
     let histories = [];
     for (const resource of historyResources) {
       const history = {
+        id: entryIdFromResource(resource, SOURCE.url),
         name: resource.code?.text ?? defaults.problem.name,
         detail: resource.onsetString ?? defaults.problem.detail,
         date: resource.recordedDate ?? defaults.problem.date
@@ -203,7 +215,7 @@
     if (histories.length > 0) {
       values.history = histories;
     } else {
-      values.history = [copyOf(defaults.history)];
+      values.history = [newEntry('history')];
     }
   }
   
@@ -219,35 +231,39 @@
   }
   
   function initializeDefaultFields() {
-    values = copyOf(defaultValues);
+    values = createDefaultValues();
   }
 
   function prepareProblemResource(entry: HealthHistoryEntry) {
     if (entry.name === '' && entry.detail === '') return;
-    let currentCondition = getUniqueResourceObject(currentConditionTemplate);
+    let currentCondition = resourceFromTemplate(currentConditionTemplate, entry.id);
     currentCondition.code.text = entry.name;
     currentCondition.severity.coding.push(issueSeverityOptions[entry.detail]);
     currentCondition.severity.text = entry.detail;
-    currentCondition.recordedDate = new Date().toISOString().slice(0, 10);
-    return currentCondition;
+    // An entry keeps the date it was first saved with
+    entry.date ||= today();
+    currentCondition.recordedDate = entry.date;
+    return withoutEmptyValues(currentCondition);
   }
 
   function prepareMedicationResource(entry: HealthHistoryEntry) {
     if (entry.name === '' && entry.detail === '') return;
-    let medication = getUniqueResourceObject(medicationTemplate);
+    let medication = resourceFromTemplate(medicationTemplate, entry.id);
     medication.medicationCodeableConcept.text = entry.name;
     medication.dosage[0].text = entry.detail;
-    medication.effectiveDateTime = new Date().toISOString().slice(0, 10);
-    return medication;
+    entry.date ||= today();
+    medication.effectiveDateTime = entry.date;
+    return withoutEmptyValues(medication);
   }
 
   function prepareHistoryResource(entry: HealthHistoryEntry) {
     if (entry.name === '' && entry.detail === '') return;
-    let pastCondition = getUniqueResourceObject(pastConditionTemplate);
+    let pastCondition = resourceFromTemplate(pastConditionTemplate, entry.id);
     pastCondition.code.text = entry.name;
     pastCondition.onsetString = entry.detail;
-    pastCondition.recordedDate = new Date().toISOString().slice(0, 10);
-    return pastCondition;
+    entry.date ||= today();
+    pastCondition.recordedDate = entry.date;
+    return withoutEmptyValues(pastCondition);
   }
 
   function prepareIps() {
@@ -265,8 +281,14 @@
     resourceDispatch('update-resources', result);
   }
 
+  const entryTypes: Record<string, keyof typeof defaults> = {
+    problems: 'problem',
+    medications: 'medication',
+    history: 'history'
+  };
+
   function addEntry(type: string) {
-    values[type] = [...values[type], {name: '', detail: ''}];
+    values[type] = [...values[type], newEntry(entryTypes[type])];
   }
 
   function removeEntry(type: string, i: number) {

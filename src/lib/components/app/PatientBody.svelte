@@ -14,7 +14,8 @@
   import type { CodeableConcept, Condition } from 'fhir/r4';
   import { METHODS, CATEGORIES } from '$lib/config/tags';
   import { ResourceHelper } from '$lib/utils/ResourceHelper';
-  import { copyOf, getUniqueResourceObject } from '$lib/utils/util';
+  import { copyOf } from '$lib/utils/util';
+  import { createEntryId, entryIdFromResource, resourceFromTemplate, today, withoutEmptyValues } from '$lib/utils/formEntryIds';
 
   export let disabled = false;
   export let formData: IResourceCollection | undefined;
@@ -41,7 +42,9 @@
 
   let fetchError = '';
 
+  // Each entry keeps the id its resource is saved under (see formEntryIds)
   interface BodyConcernEntry {
+    id: string;
     bodyPart: string;
     side: string;
     concern: string;
@@ -52,11 +55,15 @@
     bodyPartConcern: {bodyPart: '', side: '', concern: '', date: ''}
   }
 
-  let defaultValues: Record<string, BodyConcernEntry[]> = {
-    bodyPartConcerns: [copyOf(defaults.bodyPartConcern)]
-  };
+  function newEntry(): BodyConcernEntry {
+    return {...copyOf(defaults.bodyPartConcern), id: createEntryId()};
+  }
 
-  let values = copyOf(defaultValues);
+  function createDefaultValues(): Record<string, BodyConcernEntry[]> {
+    return { bodyPartConcerns: [newEntry()] };
+  }
+
+  let values = createDefaultValues();
 
   let bodyPartOptions: Record<string, Record<string, CodeableConcept>> = {
     "": {},
@@ -399,17 +406,16 @@
         }
       ]
     },
-    category: {
-      coding: [
-        {
-          system: "http://terminology.hl7.org/CodeSystem/condition-category",
-          code: "problem-list-item",
-        }
-      ]
-    },
-    bodySite: {
-      coding: []
-    },
+    category: [
+      {
+        coding: [
+          {
+            system: "http://terminology.hl7.org/CodeSystem/condition-category",
+            code: "problem-list-item",
+          }
+        ]
+      }
+    ],
     subject: {
       reference: "Patient/pat1"
     },
@@ -423,30 +429,27 @@
     return rhs?.filter(rh => rh.resource.resourceType === 'Condition').map(r => r.resource);
   }
   
-  function initializeConditionFields(rhs: ResourceHelper[]) {
-    const conditionResources = getConditionResources(rhs);
-    let conditions = [];
-    let bodyPartEntries = Object.entries(bodyPartOptions);
-    for (const [bodyPart, sides] of bodyPartEntries) {
-      let availableCodings = Object.entries(sides);
-      for (const [side, coding] of availableCodings) {
-        for (const condition of conditionResources) {
-          if (condition.bodySite?.[0]?.coding?.[0]?.code === coding.code) {
-            conditions.push({
-              bodyPart: bodyPart ?? defaults.bodyPartConcern.bodyPart,
-              side: side ?? defaults.bodyPartConcern.side,
-              concern: condition.code?.text ?? defaults.bodyPartConcern.concern,
-              date: condition.recordedDate ?? defaults.bodyPartConcern.date
-            });
-          }
+  // The form's body part and side for a stored body site code. A condition with no body site, or
+  // one that isn't an option here, is still an entry, with no body part chosen.
+  function findBodyPart(code: string | undefined): { bodyPart: string, side: string } {
+    for (const [bodyPart, sides] of Object.entries(bodyPartOptions)) {
+      for (const [side, coding] of Object.entries(sides)) {
+        if (code !== undefined && coding.code === code) {
+          return { bodyPart, side };
         }
       }
     }
-    if (conditions.length > 0) {
-      values.bodyPartConcerns = conditions;
-    } else {
-      values.bodyPartConcerns = [copyOf(defaults.bodyPartConcern)];
-    }
+    return { bodyPart: '', side: '' };
+  }
+
+  function initializeConditionFields(rhs: ResourceHelper[]) {
+    const conditions = getConditionResources(rhs).map(condition => ({
+      id: entryIdFromResource(condition, SOURCE.url),
+      ...findBodyPart(condition.bodySite?.[0]?.coding?.[0]?.code),
+      concern: condition.code?.text ?? defaults.bodyPartConcern.concern,
+      date: condition.recordedDate ?? defaults.bodyPartConcern.date
+    }));
+    values.bodyPartConcerns = conditions.length > 0 ? conditions : [newEntry()];
   }
 
   function initializeFieldsForFormData() {
@@ -459,16 +462,30 @@
   }
 
   function initializeDefaultFields() {
-    values = copyOf(defaultValues);
+    values = createDefaultValues();
+  }
+
+  // The code for an entry's body part and side. A side that doesn't apply to the body part (not
+  // chosen, or left over from a previous body part) falls back to the body part's only option, or
+  // to both sides.
+  function codingFor(entry: BodyConcernEntry): CodeableConcept | undefined {
+    const sides = bodyPartOptions[entry.bodyPart] ?? {};
+    const keys = Object.keys(sides);
+    return sides[entry.side] ?? (keys.length === 1 ? sides[keys[0]] : sides['Both']);
   }
 
   function prepareConditionResource(entry: BodyConcernEntry) {
     if (entry.bodyPart === '' && entry.concern === '') return;
-    let currentCondition = getUniqueResourceObject(conditionTemplate);
+    let currentCondition = resourceFromTemplate(conditionTemplate, entry.id);
     currentCondition.code.text = entry.concern;
-    currentCondition.bodySite.coding.push(bodyPartOptions[entry.bodyPart][entry.side]);
-    currentCondition.recordedDate = new Date().toISOString().slice(0, 10);;
-    return currentCondition;
+    const bodySite = codingFor(entry);
+    if (bodySite) {
+      currentCondition.bodySite = [{ coding: [bodySite] }];
+    }
+    // An entry keeps the date it was first saved with
+    entry.date ||= today();
+    currentCondition.recordedDate = entry.date;
+    return withoutEmptyValues(currentCondition);
   }
 
   function prepareIps() {
@@ -485,7 +502,7 @@
   }
 
   function addStatus() {
-    values.bodyPartConcerns = [...values.bodyPartConcerns, {bodyPart: '', side: '', concern: ''}];
+    values.bodyPartConcerns = [...values.bodyPartConcerns, newEntry()];
   }
 
   function removeBodyPart(i: number) {

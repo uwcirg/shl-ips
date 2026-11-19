@@ -15,7 +15,8 @@
   import { METHODS, CATEGORIES } from '$lib/config/tags';
   import { OBSERVATION_CATEGORY_SYSTEM } from '$lib/config/config';
   import { ResourceHelper } from '$lib/utils/ResourceHelper';
-  import { copyOf, getUniqueResourceObject } from '$lib/utils/util';
+  import { copyOf } from '$lib/utils/util';
+  import { createEntryId, entryIdFromResource, resourceFromTemplate, today, withoutEmptyValues } from '$lib/utils/formEntryIds';
 
   export let disabled = false;
   export let formData: IResourceCollection | undefined;
@@ -47,12 +48,20 @@
     goal: {value: '', checked: false, date: ""}
   }
 
-  let defaultValues = {
-    story: defaults.story,
-    goals: [copyOf(defaults.goal)]
+  // Each goal, and the story, keeps the id its resource is saved under (see formEntryIds)
+  function newGoal() {
+    return {...copyOf(defaults.goal), id: createEntryId()};
   }
 
-  let values = copyOf(defaultValues);
+  function createDefaultValues() {
+    return {
+      storyId: createEntryId(),
+      story: defaults.story,
+      goals: [newGoal()]
+    };
+  }
+
+  let values = createDefaultValues();
 
   let observationResourceTemplate: Observation = {
     resourceType: "Observation",
@@ -130,6 +139,7 @@
   function initializeStoryFields(rhs: ResourceHelper[]) {
     const storyResource = getStoryResource(rhs);
     if (!storyResource) { return; }
+    values.storyId = entryIdFromResource(storyResource, SOURCE.url);
     values.story = storyResource.valueString ?? "";
   }
   
@@ -138,6 +148,7 @@
     let goals = [];
     for (const resource of goalResources) {
       const goal = {
+        id: entryIdFromResource(resource, SOURCE.url),
         value: resource.description.text ?? defaults.goal.value,
         checked: resource.achievementStatus?.coding?.[0]?.code === "in-progress",
         date: resource.statusDate ?? defaults.goal.date
@@ -147,7 +158,7 @@
     if (goals.length > 0) {
       values.goals = goals;
     } else {
-      values.goals = [copyOf(defaults.goal)];
+      values.goals = [newGoal()];
     }
   }
 
@@ -162,11 +173,11 @@
   }
 
   function initializeDefaultFields() {
-    values = copyOf(defaultValues);
+    values = createDefaultValues();
   }
 
   function addGoal() {
-    values.goals = [...values.goals, copyOf(defaults.goal)];
+    values.goals = [...values.goals, newGoal()];
   }
   
   function removeGoal(i: number) {
@@ -182,22 +193,24 @@
     if (!goal.value) {
       return;
     }
-    let goalResource = getUniqueResourceObject(goalResourceTemplate);
-    goalResource.statusDate = new Date().toISOString().slice(0, 10);
+    let goalResource = resourceFromTemplate(goalResourceTemplate, goal.id);
+    // A goal keeps the date it was first saved with
+    goal.date ||= today();
+    goalResource.statusDate = goal.date;
     goalResource.description.text = goal.value;
     goalResource.achievementStatus.coding[0] = progressCodings[goal.checked ? "in-progress" : "not-achieved"];
     goalResource.text.div = `<div xmlns="http://www.w3.org/1999/xhtml"><p>${goal.value} (${goal.date}${goal.checked ? ", Making Progress" : ""})</p></div>`;
-    return goalResource;
+    return withoutEmptyValues(goalResource);
   }
 
   function prepareObservationResource() {
     if (!values.story) {
       return;
     }
-    let observationResource = getUniqueResourceObject(observationResourceTemplate);
+    let observationResource = resourceFromTemplate(observationResourceTemplate, values.storyId);
     observationResource.valueString = values.story;
     observationResource.text.div = `<div xmlns="http://www.w3.org/1999/xhtml"><p>${values.story}</p></div>`;
-    return observationResource;
+    return withoutEmptyValues(observationResource);
   }
 
   function prepareIps() {
