@@ -1,5 +1,10 @@
 export const AUTOCODER_API_KEY = process.env.AUTOCODER_API_KEY;
 
+// OpenAI-compatible LLM gateway used by the health record chat (/api/health-chat)
+export const LLM_API_KEY = process.env.LLM_API_KEY;
+export const LLM_API_BASE = process.env.LLM_API_BASE || 'https://llm.co.dev.cirg.uw.edu/v1';
+export const LLM_MODEL = process.env.LLM_MODEL || 'ollama/mistral:7b';
+
 export const API_BASE = process.env.VITE_API_BASE;
 
 export const REDIRECT_URI = process.env.REDIRECT_URI;
