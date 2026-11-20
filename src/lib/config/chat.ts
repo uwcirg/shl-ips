@@ -5,6 +5,17 @@
 export const HEALTH_CHAT_API = '/api/health-chat';
 
 /**
+ * How the chat gives the model the patient's record:
+ * - 'record': the serialized record is sent with every question (see MAX_RECORD_CHARS)
+ * - 'tools':  no record is sent; the model calls client-side tools (recordTools.ts) to search it
+ */
+export type HealthChatMode = 'record' | 'tools';
+export const HEALTH_CHAT_MODE: HealthChatMode = 'tools';
+
+/** Most model calls per question in 'tools' mode (each tool round trip is one more) */
+export const MAX_TOOL_STEPS = 6;
+
+/**
  * Upper bound on the serialized health record sent with each question. Kept below
  * adapter-node's default 512 KB BODY_SIZE_LIMIT with room left for the conversation itself.
  * Smarter context selection and compression happen downstream of this app.
