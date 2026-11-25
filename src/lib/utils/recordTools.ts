@@ -8,8 +8,8 @@ import { compactResource } from '$lib/utils/recordContext';
 import { collectReferences, ReferenceIndex } from '$lib/utils/referenceIndex';
 import { getResourceDateSpan, getSearchText } from '$lib/utils/resourceSearch';
 
-// Client-side implementations of the health chat's record tools (see RECORD_TOOLS in
-// $lib/server/healthChat). The model asks for data by tool call; these run in the browser over
+// Client-side implementations of the health chat's record tools (see RECORD_TOOL_DEFINITIONS in
+// $lib/config/chatTools). The model asks for data by tool call; these run in the browser over
 // the resources the user has included, so only what the model asks for is sent to the server.
 
 /** Hard cap on results per search, whatever the model asks for */
@@ -65,8 +65,8 @@ export function listRecordTypes(collections: ResourceCollection[]) {
     .map(([type, e]) => ({ type, count: e.count, earliest: isoDate(e.earliest), latest: isoDate(e.latest) }));
 }
 
-// Tells the model why a search came back empty, so it retries instead of concluding the data
-// is absent: either the requested types aren't in the record at all, or the text didn't match
+// Explains an empty search: either the requested types aren't in the record at all, or no
+// resource of those types matched the other filters
 function emptyResultHelp(collections: ResourceCollection[], requested: Set<string>) {
   const typesPresent = listRecordTypes(collections).map((t) => t.type);
   const missing = [...requested].filter((r) => !typesPresent.includes(r));
@@ -91,7 +91,7 @@ function statusCodes(resource: Resource): string[] {
 
 export interface SearchRecordsArgs {
   types?: string[];
-  status?: string[];
+  statuses?: string[];
   text?: string;
   since?: string;
   until?: string;
@@ -110,14 +110,14 @@ export function searchRecords(collections: ResourceCollection[], args: SearchRec
   const until = args.until ? Date.parse(args.until) : undefined;
   const limit = Math.min(Math.max(1, Math.floor(args.limit ?? 10)), MAX_RESULTS);
   const types = new Set(args.types ?? []);
-  const statuses = new Set((args.status ?? []).map((s) => s.toLowerCase()));
+  const statuses = new Set((args.statuses ?? []).map((s) => s.toLowerCase()));
 
   const matches = items
     .filter(({ rh }) => !types.size || types.has(rh.resource.resourceType))
     .filter(({ rh }) => !statuses.size || statusCodes(rh.resource).some((s) => statuses.has(s)))
     .filter((item) => {
       if (!words.length) return true;
-      const text = getSearchText(item as CategorizedResource, index);
+      const text = getSearchText(item as unknown as CategorizedResource, index);
       return words.every((w) => text.includes(w));
     })
     .map((item) => ({ item, span: getResourceDateSpan(item.rh.resource) }))
@@ -146,7 +146,6 @@ export function searchRecords(collections: ResourceCollection[], args: SearchRec
     length += size;
   }
 
-  // Lets the model narrow a broad search by type when only some results fit
   const matchesByType: Record<string, number> = {};
   for (const { item } of matches) {
     const type = item.rh.resource.resourceType;
@@ -160,8 +159,7 @@ export function searchRecords(collections: ResourceCollection[], args: SearchRec
     ...(results.length < matches.length && {
       note: `Incomplete: ${results.length} of ${matches.length} matches returned.`
     }),
-    results,
-    // Help the model recover from an empty search instead of concluding the data is absent
-    ...(matches.length === 0 && emptyResultHelp(collections, types))
+    ...(matches.length === 0 && emptyResultHelp(collections, types)),
+    results
   };
 }

@@ -13,7 +13,8 @@
   import type FHIRDataService from '$lib/utils/FHIRDataService';
   import type { IAuthService } from '$lib/utils/types';
   import { buildRecordContext, type RecordContext } from '$lib/utils/recordContext';
-  import { listRecordTypes, searchRecords, type SearchRecordsArgs } from '$lib/utils/recordTools';
+  import { isRecordToolName, parseRecordToolArgs } from '$lib/config/chatTools';
+  import { listRecordTypes, searchRecords } from '$lib/utils/recordTools';
 
   const authService: IAuthService = getContext('authService');
   const fhirDataService: FHIRDataService = getContext('fhirDataService');
@@ -27,16 +28,19 @@
     body: { mode: HEALTH_CHAT_MODE },
     maxSteps: useTools ? MAX_TOOL_STEPS : 1,
     // Runs the model's tool calls against the data in the browser; the returned value is sent
-    // back as the tool result and useChat asks the model again
+    // back as the tool result and useChat asks the model again. Unknown tools and invalid
+    // arguments are answered with an error result, so the model can correct the call.
     onToolCall: async ({ toolCall }) => {
+      const name = toolCall.toolName;
+      if (!isRecordToolName(name)) return { error: `Unknown tool: ${name}` };
       const collections = fhirDataService.getAllResourceCollections();
-      switch (toolCall.toolName) {
+      switch (name) {
         case 'listRecordTypes':
-          return listRecordTypes(collections);
-        case 'searchRecords':
-          return searchRecords(collections, toolCall.args as SearchRecordsArgs);
-        default:
-          return { error: `Unknown tool: ${toolCall.toolName}` };
+          return { types: listRecordTypes(collections) };
+        case 'searchRecords': {
+          const parsed = parseRecordToolArgs(name, toolCall.args);
+          return parsed.success ? searchRecords(collections, parsed.args) : { error: parsed.error };
+        }
       }
     },
     // The token is fetched per request so silent renewals are picked up
@@ -73,7 +77,7 @@
         .join(', ');
       return `: ${result.returned} of ${result.totalMatches} matches${byType ? ` (${byType})` : ''}`;
     }
-    if (Array.isArray(result)) return `: ${result.length} types`;
+    if (Array.isArray(result?.types)) return `: ${result.types.length} types`;
     return result?.error ? `: ${result.error}` : ': done';
   }
 

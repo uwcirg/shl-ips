@@ -2,82 +2,33 @@ import { json, type RequestEvent, type RequestHandler } from '@sveltejs/kit';
 import {
   APICallError,
   convertToCoreMessages,
+  jsonSchema,
   streamText,
   tool,
+  zodSchema,
   type CoreMessage,
   type LanguageModelV1,
   type Message
 } from 'ai';
 import { z } from 'zod';
 import { MAX_HISTORY_MESSAGES, MAX_MESSAGE_CHARS, MAX_RECORD_CHARS } from '$lib/config/chat';
+import { RECORD_TOOL_DEFINITIONS } from '$lib/config/chatTools';
 
 /**
  * Tools the model can call in 'tools' mode. They have no execute function, so the AI SDK
  * streams each call to the browser, where useChat's onToolCall runs it (recordTools.ts) and
  * sends the result back with the next request.
+ *
+ * The model gets each tool's JSON Schema, but the SDK does not validate arguments here: an
+ * invalid call would otherwise fail the whole response. The browser validates instead and
+ * answers an invalid call with an error result the model can correct (see chatTools.ts).
  */
-export const RECORD_TOOLS = {
-  listRecordTypes: tool({
-    description:
-      "List the kinds of data in the patient's record (FHIR resource types), with how many of " +
-      'each and the date range they cover. Call this first if unsure what the record contains.',
-    parameters: z.object({})
-  }),
-  searchRecords: tool({
-    description:
-      "Search the patient's record for FHIR R4 resources. Every filter given must match; omit " +
-      'a filter to leave it unrestricted. ' +
-      'Returns { totalMatches, returned, matchesByType, results, note? }: results are the ' +
-      'matching resources, newest first, each with the resources it references attached as ' +
-      '"referenced" (e.g. the Medication behind a MedicationRequest). matchesByType counts all ' +
-      'matches, including those not returned. When returned is less than totalMatches the ' +
-      'results are incomplete, so refine the filters to see the rest before relying on them to ' +
-      'answer. A note explains an empty or incomplete result.',
-    parameters: z.object({
-      types: z
-        .array(z.string())
-        .optional()
-        .describe(
-          'FHIR resource types to include, matched exactly against resourceType, e.g. ' +
-            '["Observation"]. Medications may be recorded as MedicationRequest, ' +
-            'MedicationStatement or MedicationAdministration; use listRecordTypes to see which ' +
-            'types the record contains.'
-        ),
-      status: z
-        .array(z.string())
-        .optional()
-        .describe(
-          'Status codes to include, matched against the resource\'s status (e.g. "active", ' +
-            '"completed", "stopped") or clinicalStatus code (e.g. "active", "resolved"). ' +
-            'Current medications, conditions and allergies have status "active".'
-        ),
-      text: z
-        .string()
-        .optional()
-        .describe(
-          'Words that must all appear (case-insensitive substring match) in the values of the ' +
-            'resource or the resources it references, such as coded display names, values, ' +
-            'units and notes. Does not match resourceType, ids or code system URLs, e.g. ' +
-            '"a1c", "metformin", "blood pressure".'
-        ),
-      since: z
-        .string()
-        .optional()
-        .describe('ISO 8601 date. Only resources whose clinical date is on or after it.'),
-      until: z
-        .string()
-        .optional()
-        .describe('ISO 8601 date. Only resources whose clinical date is on or before it.'),
-      limit: z
-        .number()
-        .int()
-        .min(1)
-        .max(20)
-        .optional()
-        .describe('Most results to return, 1 to 20 (default 10)')
-    })
-  })
-};
+export const RECORD_TOOLS = Object.fromEntries(
+  Object.entries(RECORD_TOOL_DEFINITIONS).map(([name, { description, parameters }]) => [
+    name,
+    tool({ description, parameters: jsonSchema(zodSchema(parameters).jsonSchema) })
+  ])
+);
 
 export interface HealthChatHandlerOptions {
   /**
