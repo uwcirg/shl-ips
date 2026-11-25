@@ -10,7 +10,8 @@ export const HEALTH_CHAT_API = '/api/health-chat';
  * - 'tools':  no record is sent; the model calls client-side tools (recordTools.ts) to search it
  */
 export type HealthChatMode = 'record' | 'tools';
-export const HEALTH_CHAT_MODE: HealthChatMode = 'tools';
+/** Mode the chat starts in; users can switch it in the chat */
+export const DEFAULT_HEALTH_CHAT_MODE: HealthChatMode = 'record';
 
 /** Most model calls per question in 'tools' mode (each tool round trip is one more) */
 export const MAX_TOOL_STEPS = 6;

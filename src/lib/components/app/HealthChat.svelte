@@ -8,8 +8,8 @@
 <script lang="ts">
   import { afterUpdate, getContext } from 'svelte';
   import { useChat } from '@ai-sdk/svelte';
-  import { Alert, Button, Icon, Spinner } from '@sveltestrap/sveltestrap';
-  import { HEALTH_CHAT_API, HEALTH_CHAT_MODE, MAX_TOOL_STEPS } from '$lib/config/chat';
+  import { Alert, Button, Icon, Input, Spinner } from '@sveltestrap/sveltestrap';
+  import { DEFAULT_HEALTH_CHAT_MODE, HEALTH_CHAT_API, MAX_TOOL_STEPS } from '$lib/config/chat';
   import type FHIRDataService from '$lib/utils/FHIRDataService';
   import type { IAuthService } from '$lib/utils/types';
   import { buildRecordContext, type RecordContext } from '$lib/utils/recordContext';
@@ -19,14 +19,14 @@
   const authService: IAuthService = getContext('authService');
   const fhirDataService: FHIRDataService = getContext('fhirDataService');
   const syncing = fhirDataService.syncing;
-  const useTools = HEALTH_CHAT_MODE === 'tools';
+  // Toggled by the switch above the conversation; applies from the next question on
+  let useTools = DEFAULT_HEALTH_CHAT_MODE === 'tools';
 
   const { messages, input, handleSubmit, status, error, stop } = useChat({
     api: HEALTH_CHAT_API,
-    // Hook-level body is sent on every request, including the automatic follow-ups that carry
-    // tool results (per-call bodies passed to handleSubmit are not)
-    body: { mode: HEALTH_CHAT_MODE },
-    maxSteps: useTools ? MAX_TOOL_STEPS : 1,
+    // Only matters in 'tools' mode: in 'record' mode the server offers no tools, so every
+    // answer takes a single step
+    maxSteps: MAX_TOOL_STEPS,
     // Runs the model's tool calls against the data in the browser; the returned value is sent
     // back as the tool result and useChat asks the model again. Unknown tools and invalid
     // arguments are answered with an error result, so the model can correct the call.
@@ -43,12 +43,19 @@
         }
       }
     },
-    // The token is fetched per request so silent renewals are picked up
+    // The token is fetched per request so silent renewals are picked up. The mode is added here
+    // rather than through useChat's body option, which is fixed when the hook is created, so
+    // every request (including the automatic follow-ups carrying tool results) gets the
+    // switch's current value
     fetch: async (url, init) => {
       const headers = new Headers(init?.headers);
       const token = await authService.getAccessToken();
       if (token) headers.set('Authorization', `Bearer ${token}`);
-      return fetch(url, { ...init, headers });
+      const body =
+        typeof init?.body === 'string'
+          ? JSON.stringify({ ...JSON.parse(init.body), mode: useTools ? 'tools' : 'record' })
+          : init?.body;
+      return fetch(url, { ...init, headers, body });
     }
   });
 
@@ -85,6 +92,7 @@
     event?.preventDefault();
     if (!canSubmit) return;
     if (useTools) {
+      lastContext = undefined;
       handleSubmit();
       return;
     }
@@ -111,6 +119,25 @@
     record and may be inaccurate or incomplete. This is not medical advice; talk with your care
     team about health decisions.
   </p>
+
+  <!-- Locked while answering so a question and its tool follow-ups share one mode -->
+  <div class="d-flex flex-column align-items-end">
+    <!-- reverse puts the label to the left of the switch; the label inherits the muted text -->
+    <Input
+      type="switch"
+      id="health-chat-mode"
+      reverse
+      bind:checked={useTools}
+      disabled={busy}
+      label="Enable tool calls"
+      aria-describedby="health-chat-mode-help"
+    />
+    <span id="health-chat-mode-help" class="text-muted small">
+      {useTools
+        ? 'Enabled: The model will search your record as needed'
+        : 'Disabled: Your record will be sent with each question'}
+    </span>
+  </div>
 
   <!-- Conversation -->
   <div
