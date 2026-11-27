@@ -2,6 +2,7 @@
   import DataSummary from '$lib/components/app/DataSummary.svelte';
   import ManageData from '$lib/components/app/ManageData.svelte';
   import FilterBar from '$lib/components/app/FilterBar.svelte';
+  import HealthChat from '$lib/components/app/HealthChat.svelte';
   import { INSTANCE_CONFIG } from '$lib/config/instance_config';
   import {
     TabContent,
@@ -26,5 +27,9 @@
   <TabPane tabId="sources" class="py-3">
     <span slot="tab">My Imports</span>
     <ManageData />
+  </TabPane>
+  <TabPane tabId="chat" class="py-3">
+    <span slot="tab">Ask About My Data</span>
+    <HealthChat />
   </TabPane>
 </TabContent>
